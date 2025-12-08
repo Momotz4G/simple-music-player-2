@@ -15,26 +15,30 @@
 *   **Glassmorphism Design**: A sleek, modern interface with frosted glass effects and dynamic backgrounds.
 *   **Custom Window Frame**: A fully custom, borderless window experience that blends seamlessly with your desktop.
 *   **Themes**: Beautiful dark mode and accent color customization.
+*   **Smart Art**: Dynamic album art that adapts to your music, with automatic online fetching.
 
 ### 🎧 **Advanced Audio Experience**
 *   **Powerful Equalizer**: Fine-tune your audio with a built-in multi-band equalizer.
-*   **Visualizer**: Watch your music come to life with real-time audio visualization.
+*   **Visualizer**: Watch your music come to life with real-time audio visualization using `libwinmedia`.
 *   **Gapless Playback**: Seamless transitions between tracks.
+*   **Sleep Timer**: Fall asleep to your favorite tunes with a customizable timer.
 
 ### 🎤 **Lyrics & Metadata**
-*   **Synced Lyrics**: Sing along with time-synced lyrics that scroll automatically.
+*   **Synced Lyrics**: Sing along with time-synced lyrics (LRC) fetched automatically from LRCLIB.net.
 *   **Metadata Editor**: Edit song tags, album art, and details directly within the app.
-*   **Smart Recognition**: Automatically fetch missing metadata and album art.
+*   **Smart Recognition**: Automatically fetch missing metadata and album art using advanced matching algorithms.
 
-### 📥 **Smart Downloader**
-*   **YouTube & SoundCloud Support**: Download your favorite tracks directly from popular streaming platforms.
-*   **High Quality**: Get the best audio quality available.
+### 🌟 **Smart Downloader**
+*   **YouTube Support**: Download your favorite tracks directly with high-quality audio extraction.
+*   **Resilient Downloading**: Robust error handling prevents crashes even if network issues occur.
+*   **Metadata Tagging**: Automatically tags downloaded files with correct artist, title, and album art.
 
 ### 🛠️ **Power User Tools**
 *   **Discord Rich Presence**: Show off what you're listening to on your Discord profile.
 *   **Auto-Updates**: Seamless background updates so you're always on the latest version.
-*   **Taskbar Integration**: Control playback directly from the Windows taskbar thumb buttons.
-*   **Mini Player**: Keep the music playing in a compact window while you work.
+*   **Taskbar Integration**: Control playback directly from the Windows taskbar thumb buttons (SMTC).
+*   **Mini Player**: Keep the music playing in a stable, compact, fixed-size window while you work.
+*   **Remote Control**: Control the player from your phone via QR code pairing.
 
 ## 🚀 Installation
 
@@ -47,9 +51,12 @@
 
 *   **Framework**: [Flutter](https://flutter.dev/)
 *   **Language**: [Dart](https://dart.dev/)
-*   **Audio Engine**: `just_audio` & `media_kit`
-*   **Database**: `Isar`
-*   **State Management**: `Riverpod` & `Provider`
+*   **Audio Engine**: `just_audio`
+*   **Database**: `Isar` (High-performance NoSQL)
+*   **State Management**: `Riverpod`
+*   **Lyrics & Metadata**: `metadata_god`, `flutter_media_metadata`, `LRCLIB API`
+*   **Windows Integration**: `bitsdojo_window`, `smtc_windows`, `window_manager`
+*   **Downloader**: `yt-dlp` (via process), `ffmpeg`
 *   **Styling**: Custom Glassmorphism components
 
 ## 🤝 Contributing
