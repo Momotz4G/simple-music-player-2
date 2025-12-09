@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../providers/settings_provider.dart';
 import '../../providers/library_provider.dart';
@@ -20,6 +21,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   String _cacheSizeText = "Calculating...";
+  String _versionText = "Version ...";
   final YoutubeDownloaderService _ytService = YoutubeDownloaderService();
 
   final TextEditingController _formatCtrl = TextEditingController();
@@ -31,6 +33,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     super.initState();
     _loadCacheSize();
     _loadFormat();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() {
+        _versionText = "Version ${info.version}";
+      });
+    }
   }
 
   @override
@@ -629,7 +641,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 _handleAdminTap(context);
               },
               child: Text(
-                "Version 1.2.0",
+                _versionText,
                 style: TextStyle(
                     color: subtitleColor?.withOpacity(0.5), fontSize: 12),
               ),
