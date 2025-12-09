@@ -48,6 +48,15 @@
 4.  Enjoy!
 
 > **For Developers:** If you want to build from source or fork the project, please check out the [Setup Guide](SETUP.md) to configure API keys.
+
+### ⚠️ **Limitations**
+*   **Daily Download Cap**: To ensure service quality and fair usage for everyone, downloads are limited to **50 songs per day** per user.
+
+## 🔒 Privacy Policy
+
+*   **Data Collection**: We value your privacy. Your machine's hardware information is gathered and securely hashed to build a unique, anonymous ID.
+*   **Usage**: This unique ID is used strictly to system ban devices that exceed the high-frequency download limits. No personal data is stored or transmitted.
+
 ## 🛠️ Tech Stack
 
 *   **Framework**: [Flutter](https://flutter.dev/)
