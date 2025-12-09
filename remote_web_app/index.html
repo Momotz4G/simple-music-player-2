@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Music Remote</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- Using Google Material Symbols for sharper icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0"
+        rel="stylesheet" />
+
+    <style>
+        :root {
+            --primary: #6C5CE7;
+            --bg: #0F0F0F;
+            --surface: #1E1E1E;
+            --text: #FFFFFF;
+            --text-sec: #AAAAAA;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ambient-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            filter: blur(80px) brightness(0.4);
+            z-index: -1;
+            transition: background-image 1s ease;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            padding-top: env(safe-area-inset-top, 24px);
+            padding-bottom: env(safe-area-inset-bottom, 32px);
+            justify-content: space-evenly;
+            align-items: center;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Responsive Artwork */
+        .art-container {
+            width: 100%;
+            aspect-ratio: 1/1;
+            max-width: 320px;
+            max-height: 40vh;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            background: var(--surface);
+            position: relative;
+            margin: 16px 0;
+        }
+
+        .art-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .art-img.loaded {
+            opacity: 1;
+        }
+
+        .playing .art-img {
+            transform: scale(1.05);
+        }
+
+        /* Default Art Placeholder */
+        .art-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #1e1e1e, #2a2a2a);
+        }
+
+        .art-placeholder span {
+            font-size: 64px;
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        .meta {
+            text-align: center;
+            width: 100%;
+            padding: 0 16px;
+            margin-bottom: 24px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .artist {
+            font-size: 16px;
+            color: var(--text-sec);
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 350px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:active {
+            transform: scale(0.9);
+            opacity: 0.8;
+        }
+
+        /* Glassy buttons for Next/Prev */
+        .btn-side {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-large {
+            width: 80px;
+            height: 80px;
+            background: white;
+            color: black;
+            border-radius: 50%;
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 16px;
+            padding: 0 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 30px;
+            height: 50px;
+        }
+
+        /* Modern Slider */
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s;
+        }
+
+        .slider::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+        .status-pill {
+            margin-bottom: 16px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: #E74C3C;
+            border-radius: 50%;
+        }
+
+        .connected .dot {
+            background: #2ECC71;
+        }
+
+        /* Icon Styling */
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+        }
+
+        #toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #E74C3C;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 200;
+        }
+
+        #toast.show {
+            opacity: 1;
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            font-size: 18px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader"> Connecting... </div>
+    <div id="toast">Error</div>
+
+    <div class="ambient-bg" id="ambientBg"></div>
+
+    <div class="container">
+        <div class="status-pill" id="statusPill">
+            <div class="dot"></div> <span id="statusText">Disconnected</span>
+        </div>
+
+        <div class="art-container" id="artContainer">
+            <div class="art-placeholder">
+                <span class="material-symbols-rounded">music_note</span>
+            </div>
+            <img src="" alt="Art" class="art-img" id="artImg" onload="this.classList.add('loaded')">
+        </div>
+
+        <div class="meta">
+            <div class="title" id="title">Not Playing</div>
+            <div class="artist" id="artist">--</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-side" onclick="sendCommand('previous')">
+                <span class="material-symbols-rounded" style="font-size: 32px">skip_previous</span>
+            </button>
+            <button class="btn btn-large" id="playBtn" onclick="togglePlay()">
+                <span class="material-symbols-rounded" style="font-size: 40px" id="playIcon">play_arrow</span>
+            </button>
+            <button class="btn btn-side" onclick="sendCommand('next')">
+                <span class="material-symbols-rounded" style="font-size: 32px">skip_next</span>
+            </button>
+        </div>
+
+        <div class="volume-container">
+            <span class="material-symbols-rounded"
+                style="font-size: 20px; color: #aaa; margin-left: 4px;">volume_mute</span>
+            <input type="range" class="slider" id="volumeSlider" min="0" max="1" step="0.05"
+                onchange="sendVolume(this.value)">
+            <span class="material-symbols-rounded"
+                style="font-size: 20px; color: #aaa; margin-right: 4px;">volume_up</span>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            // 🚨 PASTE YOUR FIREBASE CONFIG HERE 🚨
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            measurementId: "YOUR_MEASUREMENT_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUid = urlParams.get('uid');
+
+        const els = {
+            title: document.getElementById('title'),
+            artist: document.getElementById('artist'),
+            artImg: document.getElementById('artImg'),
+            ambient: document.getElementById('ambientBg'),
+            playIcon: document.getElementById('playIcon'),
+            statusText: document.getElementById('statusText'),
+            statusPill: document.getElementById('statusPill'),
+            loader: document.getElementById('loader'),
+            slider: document.getElementById('volumeSlider'),
+            toast: document.getElementById('toast'),
+            artContainer: document.getElementById('artContainer')
+        };
+
+        let isPlaying = false;
+
+        function showToast(msg) {
+            els.toast.innerText = msg;
+            els.toast.classList.add('show');
+            setTimeout(() => els.toast.classList.remove('show'), 3000);
+        }
+
+        async function init() {
+            if (!targetUid) {
+                els.loader.innerText = "Error: Invalid Link (No ID)";
+                return;
+            }
+
+            try {
+                await signInAnonymously(auth);
+                els.loader.style.display = 'none';
+                setStatus(true);
+                startListening();
+            } catch (e) {
+                console.error(e);
+                els.loader.innerText = "Auth Failed";
+                showToast("Auth Failed: " + e.message);
+            }
+        }
+
+        function setStatus(connected) {
+            if (connected) {
+                els.statusPill.classList.add('connected');
+                els.statusText.innerText = "Connected";
+            } else {
+                els.statusPill.classList.remove('connected');
+                els.statusText.innerText = "Disconnected";
+            }
+        }
+
+        function startListening() {
+            const docRef = doc(db, "metrics", targetUid, "remote_state", "current");
+
+            onSnapshot(docRef, (doc) => {
+                const data = doc.data();
+                if (!data) return;
+
+                // Update UI
+                els.title.innerText = data.title || "Unknown";
+                els.artist.innerText = data.artist || "Unknown";
+
+                if (data.artUrl) {
+                    els.artImg.src = data.artUrl;
+                    els.ambient.style.backgroundImage = `url(${data.artUrl})`;
+                    els.artImg.classList.add('loaded');
+                } else {
+                    els.ambient.style.backgroundImage = 'none';
+                    els.artImg.src = '';
+                    els.artImg.classList.remove('loaded');
+                }
+
+                isPlaying = data.isPlaying;
+                els.playIcon.innerText = isPlaying ? "pause" : "play_arrow";
+                els.artContainer.className = isPlaying ? "art-container playing" : "art-container";
+
+                if (document.activeElement !== els.slider) {
+                    els.slider.value = data.volume;
+                }
+
+            }, (error) => {
+                console.error("Listen failed: ", error);
+                setStatus(false);
+                showToast("Lost Connection");
+            });
+        }
+
+        window.togglePlay = function () {
+            const action = isPlaying ? 'pause' : 'play';
+            sendCommand(action);
+            isPlaying = !isPlaying;
+            els.playIcon.innerText = isPlaying ? "pause" : "play_arrow";
+        }
+
+        window.sendCommand = async function (action, value = null) {
+            try {
+                const colRef = collection(db, "metrics", targetUid, "remote_commands");
+                await addDoc(colRef, {
+                    action: action,
+                    value: value,
+                    timestamp: serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Send failed", e);
+                showToast("Command Failed");
+            }
+        }
+
+        window.sendVolume = function (val) {
+            sendCommand('volume', parseFloat(val));
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
