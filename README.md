@@ -16,6 +16,7 @@
 *   **Custom Window Frame**: A fully custom, borderless window experience that blends seamlessly with your desktop.
 *   **Themes**: Beautiful dark mode and accent color customization.
 *   **Smart Art**: Dynamic album art that adapts to your music, with automatic online fetching.
+*   **Canvas**: Dynamic canvas video player while in full-screen mode, with automatic online fetching.
 
 ### 🎧 **Advanced Audio Experience**
 *   **Powerful Equalizer**: Fine-tune your audio with a built-in multi-band equalizer.
