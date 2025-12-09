@@ -26,7 +26,7 @@
 ### 🎤 **Lyrics & Metadata**
 *   **Synced Lyrics**: Sing along with time-synced lyrics (LRC) fetched automatically from LRCLIB.net.
 *   **Metadata Editor**: Edit song tags, album art, and details directly within the app.
-*   **Smart Recognition**: Automatically fetch missing metadata and album art using advanced matching algorithms.
+*   **Smart Recognition**: Manually search song and fetched missing metadata and album art using advanced matching algorithms.
 
 ### 🌟 **Smart Downloader**
 *   **YouTube Support**: Download your favorite tracks directly with high-quality audio extraction.
