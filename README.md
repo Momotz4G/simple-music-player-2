@@ -48,7 +48,6 @@
 4.  Enjoy!
 
 > **For Developers:** If you want to build from source or fork the project, please check out the [Setup Guide](SETUP.md) to configure API keys.
-
 ## 🛠️ Tech Stack
 
 *   **Framework**: [Flutter](https://flutter.dev/)
