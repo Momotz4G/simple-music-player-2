@@ -1,4 +1,4 @@
-# ![Simple Music Player Home]https://github.com/Momotz4G/simple-music-player-2/blob/main/assets/app_icon.ico Simple Music Player New Gen
+# 🎵 Simple Music Player New Gen
 
 ![Simple Music Player Home](assets/screenshots/home_preview.png)
 
