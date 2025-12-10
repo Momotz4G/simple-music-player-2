@@ -10,6 +10,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/stats_provider.dart';
 import '../../services/youtube_downloader_service.dart';
+import '../../services/metrics_service.dart';
 import 'admin_stats_page.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -25,8 +26,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   final YoutubeDownloaderService _ytService = YoutubeDownloaderService();
 
   final TextEditingController _formatCtrl = TextEditingController();
+  final TextEditingController _playlistFormatCtrl = TextEditingController();
+
   String _savedPattern = "{artist} - {title}";
-  bool _hasUnsavedChanges = false;
+  String _savedPlaylistPattern = "{artist} - {title}";
+
+  bool get _unsavedSingle => _formatCtrl.text != _savedPattern;
+  bool get _unsavedPlaylist =>
+      _playlistFormatCtrl.text != _savedPlaylistPattern;
 
   @override
   void initState() {
@@ -48,6 +55,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   void dispose() {
     _formatCtrl.dispose();
+    _playlistFormatCtrl.dispose();
     super.dispose();
   }
 
@@ -63,26 +71,38 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Future<void> _loadFormat() async {
     final prefs = await SharedPreferences.getInstance();
     final pattern = prefs.getString('filename_pattern') ?? "{artist} - {title}";
-    setState(() {
-      _savedPattern = pattern;
-      _formatCtrl.text = pattern;
-      _hasUnsavedChanges = false;
-    });
+    final playlistPattern =
+        prefs.getString('playlist_filename_pattern') ?? "{artist} - {title}";
+
+    if (mounted) {
+      setState(() {
+        _savedPattern = pattern;
+        _savedPlaylistPattern = playlistPattern;
+
+        _formatCtrl.text = pattern;
+        _playlistFormatCtrl.text = playlistPattern;
+      });
+    }
   }
 
   void _onFormatChanged(String value) {
-    setState(() {
-      _hasUnsavedChanges = value != _savedPattern;
-    });
+    setState(() {});
+  }
+
+  void _onPlaylistFormatChanged(String value) {
+    setState(() {});
   }
 
   Future<void> _saveFormat() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('filename_pattern', _formatCtrl.text);
+    await prefs.setString(
+        'playlist_filename_pattern', _playlistFormatCtrl.text);
+
     if (mounted) {
       setState(() {
         _savedPattern = _formatCtrl.text;
-        _hasUnsavedChanges = false;
+        _savedPlaylistPattern = _playlistFormatCtrl.text;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Format saved!")),
@@ -393,7 +413,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Filename Format", style: TextStyle(color: textColor)),
+                Text("Single Tracks", style: TextStyle(color: textColor)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _formatCtrl,
@@ -417,7 +437,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ),
                   ),
                 ),
-                if (_hasUnsavedChanges)
+                if (_unsavedSingle)
                   const Padding(
                     padding: EdgeInsets.only(top: 4, bottom: 4),
                     child: Row(
@@ -433,6 +453,51 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       ],
                     ),
                   ),
+                const SizedBox(height: 24),
+
+                // Playlist / Album Header
+                Text("Playlist / Album Tracks",
+                    style: TextStyle(color: textColor)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _playlistFormatCtrl,
+                  style: TextStyle(color: textColor),
+                  onChanged: _onPlaylistFormatChanged,
+                  onSubmitted: (_) => _saveFormat(),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: isDark ? Colors.white10 : Colors.grey[100],
+                    hintText: "{artist} - {title}",
+                    hintStyle: TextStyle(color: subtitleColor),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.save),
+                      color: accentColor,
+                      tooltip: "Save Format",
+                      onPressed: _saveFormat,
+                    ),
+                  ),
+                ),
+                if (_unsavedPlaylist)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4, bottom: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded,
+                            color: Colors.amber, size: 16),
+                        SizedBox(width: 4),
+                        Text("You have unsaved changes",
+                            style: TextStyle(
+                                color: Colors.amber,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -444,7 +509,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     _buildTagChip("{number}", Colors.orange),
                     _buildTagChip("{year}", Colors.grey),
                     _buildTagChip("{track}", Colors.grey),
-                    _buildTagChip("{date}", Colors.grey),
                   ],
                 ),
               ],
@@ -703,33 +767,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
 
     if (success == true && controller.text.isNotEmpty) {
-      // Verify Code with Firestore
-      // We check 'settings/admin' document
-      try {
-        final doc = await FirebaseFirestore.instance
-            .collection('settings')
-            .doc('admin')
-            .get();
-        if (doc.exists && doc.data()?['access_code'] == controller.text) {
-          if (context.mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminStatsPage()),
-            );
-          }
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text("❌ Invalid Access Code"),
-                  backgroundColor: Colors.red),
-            );
-          }
+      // Verify Code (Supports Windows via REST)
+      final isValid = await MetricsService().verifyAdminCode(controller.text);
+
+      if (isValid) {
+        if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminStatsPage()),
+          );
         }
-      } catch (e) {
+      } else {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+            const SnackBar(
+                content: Text("❌ Invalid Access Code"),
+                backgroundColor: Colors.red),
           );
         }
       }

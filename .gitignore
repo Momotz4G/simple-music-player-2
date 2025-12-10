@@ -46,5 +46,9 @@ app.*.map.json
 
 .env
 
+
 # Envied generated file
 lib/env/env.g.dart
+
+# Remote Web App Config
+remote_web_app/config.js

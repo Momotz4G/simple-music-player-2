@@ -2,9 +2,21 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../services/metrics_service.dart';
 
 class AdminStatsPage extends StatelessWidget {
   const AdminStatsPage({super.key});
+
+  // Helper to safely parse timestamp (Handles String or Timestamp)
+  Timestamp? _parseTimestamp(dynamic value) {
+    if (value is Timestamp) return value;
+    if (value is String) {
+      try {
+        return Timestamp.fromDate(DateTime.parse(value));
+      } catch (_) {}
+    }
+    return null;
+  }
 
   // Helper to format date
   String _formatDate(Timestamp? timestamp) {
@@ -29,8 +41,8 @@ class AdminStatsPage extends StatelessWidget {
           )
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('metrics').snapshots(),
+      body: StreamBuilder<List<AdminUserData>>(
+        stream: MetricsService().getAllUserMetrics(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
@@ -39,16 +51,15 @@ class AdminStatsPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final docs = snapshot.data!.docs;
+          final docs = snapshot.data ?? [];
           if (docs.isEmpty) {
             return const Center(child: Text("No user data found."));
           }
 
           // 🚀 METRICS AGGREGATION
           final totalUsers = docs.length;
-          final activeUsers = docs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final timestamp = data['last_active'] as Timestamp?;
+          final activeUsers = docs.where((user) {
+            final timestamp = _parseTimestamp(user.data['last_active']);
             if (timestamp == null) return false;
             return DateTime.now().difference(timestamp.toDate()).inMinutes < 2;
           }).length;
@@ -87,13 +98,13 @@ class AdminStatsPage extends StatelessWidget {
                         DataColumn(label: Text('Action')),
                       ],
                       rows: List.generate(docs.length, (index) {
-                        final doc = docs[index];
-                        final data = doc.data() as Map<String, dynamic>;
+                        final user = docs[index];
+                        final data = user.data;
                         final isBanned = data['is_banned'] == true;
 
                         // QUOTA LOGIC
                         final lastDate =
-                            (data['last_download_date'] as Timestamp?)
+                            _parseTimestamp(data['last_download_date'])
                                 ?.toDate();
                         final now = DateTime.now();
                         final isToday = lastDate != null &&
@@ -106,7 +117,7 @@ class AdminStatsPage extends StatelessWidget {
 
                         // DAILY PLAYS LOGIC
                         final lastPlayDate =
-                            (data['last_play_date'] as Timestamp?)?.toDate();
+                            _parseTimestamp(data['last_play_date'])?.toDate();
                         final isPlayToday = lastPlayDate != null &&
                             lastPlayDate.day == now.day &&
                             lastPlayDate.month == now.month &&
@@ -131,7 +142,7 @@ class AdminStatsPage extends StatelessWidget {
                                         style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 11)),
-                                    Text(doc.id.substring(0, 8),
+                                    Text(user.id.substring(0, 8),
                                         style: const TextStyle(
                                             fontFamily: 'monospace',
                                             fontSize: 10,
@@ -163,11 +174,8 @@ class AdminStatsPage extends StatelessWidget {
                                   tooltip: "Reset Daily Quota",
                                   splashRadius: 20,
                                   onPressed: () {
-                                    FirebaseFirestore.instance
-                                        .collection('metrics')
-                                        .doc(doc.id)
-                                        .set({'daily_download_count': 0},
-                                            SetOptions(merge: true));
+                                    MetricsService()
+                                        .adminAction(user.id, 'reset_quota');
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                           content: Text("Quota Reset!"),
@@ -181,7 +189,7 @@ class AdminStatsPage extends StatelessWidget {
                           DataCell(
                             Builder(builder: (context) {
                               final timestamp =
-                                  data['last_active'] as Timestamp?;
+                                  _parseTimestamp(data['last_active']);
                               if (timestamp == null) return const Text("Never");
 
                               final lastActive = timestamp.toDate();
@@ -228,11 +236,8 @@ class AdminStatsPage extends StatelessWidget {
                                   tooltip: isBanned ? "Unban User" : "Ban User",
                                   onPressed: () {
                                     // Toggle Ban
-                                    FirebaseFirestore.instance
-                                        .collection('metrics')
-                                        .doc(doc.id)
-                                        .set({'is_banned': !isBanned},
-                                            SetOptions(merge: true));
+                                    MetricsService().adminAction(
+                                        user.id, isBanned ? 'unban' : 'ban');
 
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
@@ -269,10 +274,8 @@ class AdminStatsPage extends StatelessWidget {
                                     );
 
                                     if (confirm == true) {
-                                      await FirebaseFirestore.instance
-                                          .collection('metrics')
-                                          .doc(doc.id)
-                                          .delete();
+                                      MetricsService()
+                                          .adminAction(user.id, 'delete');
                                     }
                                   },
                                 ),

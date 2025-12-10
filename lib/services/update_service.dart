@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
+import '../models/download_progress.dart';
 
 class UpdateService {
   // REPLACE WITH YOUR GITHUB USERNAME AND REPO NAME
@@ -53,6 +54,21 @@ class UpdateService {
       }
     } catch (e) {
       print("Error checking for updates: $e");
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> getLatestRelease() async {
+    try {
+      final response = await http.get(Uri.parse(_releasesUrl));
+      if (response.statusCode == 200) {
+        final List releases = json.decode(response.body);
+        if (releases.isNotEmpty) {
+          return releases.first as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      print("Error fetching latest release: $e");
     }
     return null;
   }
@@ -185,17 +201,4 @@ class UpdateService {
   }
 }
 
-// Helper Class for Progress
-class DownloadProgress {
-  final double receivedMB;
-  final double totalMB;
-  final double progress; // 0.0 to 1.0
-  final String status;
-
-  DownloadProgress({
-    required this.receivedMB,
-    required this.totalMB,
-    required this.progress,
-    required this.status,
-  });
-}
+// DownloadProgress class moved to models/download_progress.dart

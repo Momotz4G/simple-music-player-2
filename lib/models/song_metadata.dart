@@ -2,23 +2,25 @@ class SongMetadata {
   final String title;
   final String artist;
   final String album;
-  final String year;
-  final String genre;
+  final String? year;
+  final String? genre;
   final int? trackNumber;
   final int? discNumber;
   final int durationSeconds;
   final String albumArtUrl;
+  final String? isrc; // New field
 
   SongMetadata({
     required this.title,
     required this.artist,
     required this.album,
-    required this.year,
-    required this.genre,
+    this.year,
+    this.genre,
     this.trackNumber,
     this.discNumber,
     required this.durationSeconds,
     required this.albumArtUrl,
+    this.isrc,
   });
 
   SongMetadata copyWith({
@@ -31,6 +33,7 @@ class SongMetadata {
     int? discNumber,
     int? durationSeconds,
     String? albumArtUrl,
+    String? isrc,
   }) {
     return SongMetadata(
       title: title ?? this.title,
@@ -42,6 +45,7 @@ class SongMetadata {
       discNumber: discNumber ?? this.discNumber,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       albumArtUrl: albumArtUrl ?? this.albumArtUrl,
+      isrc: isrc ?? this.isrc,
     );
   }
 }

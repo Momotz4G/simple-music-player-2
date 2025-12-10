@@ -28,10 +28,14 @@ Future<void> main() async {
 
   // Initialize Analytics (Startup)
   // Don't let analytics block the app start for more than 2 seconds
-  await MetricsService().init().timeout(const Duration(seconds: 2),
-      onTimeout: () {
-    debugPrint("⚠️ MetricsService init timed out in main");
-  });
+  try {
+    await MetricsService().init().timeout(const Duration(seconds: 5),
+        onTimeout: () {
+      debugPrint("⚠️ MetricsService init timed out in main");
+    });
+  } catch (e) {
+    debugPrint("⚠️ Critical Metrics Init Error: $e");
+  }
 
   // SYNC LOCAL STATS IMMEDIATELY
   try {
@@ -50,8 +54,10 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
-  // 2. Initialize Window Manager (Required for Full Screen toggle)
-  await windowManager.ensureInitialized();
+  // 2. Initialize Window Manager (Required for Full Screen toggle or Desktop)
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    await windowManager.ensureInitialized();
+  }
 
   // Initialize SMTC
   if (Platform.isWindows) {
@@ -78,14 +84,17 @@ Future<void> main() async {
   );
 
   // 4. Configure Custom Window (BitsDojo)
-  doWhenWindowReady(() {
-    const initialSize = Size(1280, 800);
-    appWindow.minSize = const Size(800, 600);
-    appWindow.size = initialSize;
-    appWindow.alignment = Alignment.center;
-    appWindow.title = "Simple Music Player";
-    appWindow.show();
-  });
+  // 4. Configure Custom Window (BitsDojo)
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    doWhenWindowReady(() {
+      const initialSize = Size(1280, 800);
+      appWindow.minSize = const Size(800, 600);
+      appWindow.size = initialSize;
+      appWindow.alignment = Alignment.center;
+      appWindow.title = "Simple Music Player";
+      appWindow.show();
+    });
+  }
 }
 
 class MyApp extends ConsumerWidget {

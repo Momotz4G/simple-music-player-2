@@ -13,6 +13,13 @@ class SongModel {
   final String? sourceUrl; // Stores the YouTube URL (for re-streaming)
   final String?
       onlineArtUrl; // Stores the Spotify Image URL (for display when file is missing)
+  final String? isrc; // Stores ISRC for accurate matching
+
+  // NEW METADATA FIELDS
+  final int? trackNumber;
+  final int? discNumber;
+  final String? year;
+  final String? genre;
 
   SongModel({
     required this.title,
@@ -24,6 +31,11 @@ class SongModel {
     this.albumArtBytes,
     this.sourceUrl,
     this.onlineArtUrl,
+    this.isrc,
+    this.trackNumber,
+    this.discNumber,
+    this.year,
+    this.genre,
   });
 
   // Factory constructor for creating from file scan
@@ -34,8 +46,12 @@ class SongModel {
     String album,
     double duration,
     String extension,
-    Uint8List? artwork,
-  ) {
+    Uint8List? artwork, {
+    int? trackNumber,
+    int? discNumber,
+    String? year,
+    String? genre,
+  }) {
     return SongModel(
       title: title,
       artist: artist,
@@ -46,6 +62,11 @@ class SongModel {
       albumArtBytes: artwork,
       sourceUrl: null,
       onlineArtUrl: null,
+      isrc: null,
+      trackNumber: trackNumber,
+      discNumber: discNumber,
+      year: year,
+      genre: genre,
     );
   }
 
@@ -59,6 +80,11 @@ class SongModel {
     Uint8List? albumArtBytes,
     String? sourceUrl,
     String? onlineArtUrl,
+    String? isrc,
+    int? trackNumber,
+    int? discNumber,
+    String? year,
+    String? genre,
   }) {
     return SongModel(
       title: title ?? this.title,
@@ -70,6 +96,11 @@ class SongModel {
       albumArtBytes: albumArtBytes ?? this.albumArtBytes,
       sourceUrl: sourceUrl ?? this.sourceUrl,
       onlineArtUrl: onlineArtUrl ?? this.onlineArtUrl,
+      isrc: isrc ?? this.isrc,
+      trackNumber: trackNumber ?? this.trackNumber,
+      discNumber: discNumber ?? this.discNumber,
+      year: year ?? this.year,
+      genre: genre ?? this.genre,
     );
   }
 
@@ -84,6 +115,11 @@ class SongModel {
       'duration': duration,
       'sourceUrl': sourceUrl,
       'onlineArtUrl': onlineArtUrl,
+      'isrc': isrc,
+      'trackNumber': trackNumber,
+      'discNumber': discNumber,
+      'year': year,
+      'genre': genre,
       // Note: We don't save albumArtBytes to JSON as it's too heavy.
       // We rely on reloading it from file or URL.
     };
@@ -100,6 +136,11 @@ class SongModel {
       sourceUrl: json['sourceUrl'],
       onlineArtUrl: json['onlineArtUrl'],
       albumArtBytes: null, // Will be loaded lazily if needed
+      isrc: json['isrc'],
+      trackNumber: json['trackNumber'],
+      discNumber: json['discNumber'],
+      year: json['year'],
+      genre: json['genre'],
     );
   }
 }

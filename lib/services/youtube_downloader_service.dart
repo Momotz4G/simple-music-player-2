@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/youtube_search_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart' as yt_explode;
 
 class YoutubeDownloaderService {
   static final YoutubeDownloaderService _instance =
@@ -202,6 +203,7 @@ class YoutubeDownloaderService {
   }
 
   // --- Download Function ---
+  // --- Hybrid Download Function ---
   Future<void> startDownloadFromUrl({
     required String youtubeUrl,
     required String outputFilePath,
@@ -209,11 +211,83 @@ class YoutubeDownloaderService {
     required Function(bool success) onComplete,
     String audioFormat = 'mp3',
   }) async {
+    // 1. MOBILE (Android/iOS): Native Dart Download (YoutubeExplode)
+    if (Platform.isAndroid || Platform.isIOS) {
+      await _downloadMobile(
+          youtubeUrl, outputFilePath, onProgress, onComplete, audioFormat);
+      return;
+    }
+
+    // 2. DESKTOP (Win/Mac/Linux): yt-dlp + ffmpeg
     if (!_isInitialized) {
       onComplete(false);
       return;
     }
+    await _downloadDesktop(
+        youtubeUrl, outputFilePath, onProgress, onComplete, audioFormat);
+  }
 
+  // --- Mobile Implementation (Dart Only) ---
+  Future<void> _downloadMobile(
+    String videoUrl,
+    String savePath,
+    Function(double) onProgress,
+    Function(bool) onComplete,
+    String expectedFormat,
+  ) async {
+    final yt = yt_explode.YoutubeExplode();
+    try {
+      // 1. Get ID
+      var videoId = yt_explode.VideoId.parseVideoId(videoUrl);
+      if (videoId == null) throw "Invalid Video URL";
+
+      // 2. Get Manifest
+      var manifest = await yt.videos.streamsClient.getManifest(videoId);
+
+      // 3. Get Audio Stream (M4A/AAC preferred for mobile native play)
+      var streamInfo = manifest.audioOnly.withHighestBitrate();
+
+      // Note: We ignore 'expectedFormat' (mp3) on mobile because we can't convert.
+      // We just download the best audio available (usually m4a/webm).
+      // The player handles m4a fine.
+
+      var stream = yt.videos.streamsClient.get(streamInfo);
+
+      // 4. Download File
+      var file = File(savePath);
+      var fileSink = file.openWrite();
+
+      var len = streamInfo.size.totalBytes;
+      var count = 0;
+
+      await stream.listen((data) {
+        count += data.length;
+        fileSink.add(data);
+        if (len > 0) {
+          onProgress((count / len).clamp(0.0, 1.0));
+        }
+      }).asFuture();
+
+      await fileSink.flush();
+      await fileSink.close();
+
+      onComplete(true);
+    } catch (e) {
+      if (kDebugMode) print("📱 Mobile DL Error: $e");
+      onComplete(false);
+    } finally {
+      yt.close();
+    }
+  }
+
+  // --- Desktop Implementation (yt-dlp) ---
+  Future<void> _downloadDesktop(
+    String youtubeUrl,
+    String outputFilePath,
+    Function(double) onProgress,
+    Function(bool) onComplete,
+    String audioFormat,
+  ) async {
     // SINGLE SHOT COMPLETION: Ensure we only call onComplete once
     bool hasCompleted = false;
     void safeComplete(bool success) {
@@ -232,11 +306,10 @@ class YoutubeDownloaderService {
       '--force-overwrites',
 
       // TELL YTDLP WHERE FFMPEG IS
-      // Not usually needed if they are in the same folder, but safer to be explicit
       '--ffmpeg-location', File(_ffmpegPath).parent.path,
 
       '--output', outputFilePath,
-      '--no-part',
+      '--no-part', // Write directly to file (easier for file watcher)
       youtubeUrl,
     ];
 
@@ -254,12 +327,11 @@ class YoutubeDownloaderService {
               onProgress(progress.clamp(0.0, 1.0));
             }
           } catch (_) {
-            // Ignore parsing errors in stream
+            // Ignore parsing errors
           }
         },
         onError: (e) {
           if (kDebugMode) print("Stdout stream error: $e");
-          // Don't fail here, just log
         },
         cancelOnError: false,
       );
@@ -278,7 +350,7 @@ class YoutubeDownloaderService {
         cancelOnError: false,
       );
 
-      // Wait for process exit with error handling
+      // Wait for process exit
       int exitCode = -1;
       try {
         exitCode = await process.exitCode;
@@ -293,9 +365,6 @@ class YoutubeDownloaderService {
         if (await file.exists()) {
           safeComplete(true);
         } else {
-          if (kDebugMode) {
-            print("❌ Error: Exit code 0 but file not found at $outputFilePath");
-          }
           safeComplete(false);
         }
       } else {

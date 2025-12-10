@@ -14,7 +14,12 @@ class SpotifyService {
 
   // --- 1. AUTHENTICATION ---
   static Future<String?> _getAccessToken() async {
-    if (_clientId.isEmpty || _clientSecret.isEmpty) return null;
+    print(
+        "DEBUG: _getAccessToken called. ID len: ${_clientId.length}, Secret len: ${_clientSecret.length}");
+    if (_clientId.isEmpty || _clientSecret.isEmpty) {
+      print("DEBUG: Credentials empty!");
+      return null;
+    }
 
     if (_accessToken != null &&
         _tokenExpiry != null &&
@@ -26,6 +31,7 @@ class SpotifyService {
       final bytes = utf8.encode("$_clientId:$_clientSecret");
       final base64Str = base64.encode(bytes);
 
+      print("DEBUG: Sending Auth Request...");
       final response = await http.post(
         Uri.parse("https://accounts.spotify.com/api/token"),
         headers: {
@@ -34,6 +40,7 @@ class SpotifyService {
         },
         body: {"grant_type": "client_credentials"},
       );
+      print("DEBUG: Auth Response received: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -41,6 +48,9 @@ class SpotifyService {
         _tokenExpiry =
             DateTime.now().add(Duration(seconds: data['expires_in']));
         return _accessToken;
+      } else {
+        print("❌ Auth Failed. Status: ${response.statusCode}");
+        print("Body: ${response.body}");
       }
     } catch (e) {
       print("❌ Spotify Auth Error: $e");
@@ -125,11 +135,74 @@ class SpotifyService {
             'track_number': item['track_number'],
             'disc_number': item['disc_number'],
             'artist_id': primaryArtistId, // Needed for genre
+            'isrc': item['external_ids']?['isrc'], // EXTRACT ISRC
           };
         }).toList();
       }
     } catch (e) {
       print("Metadata Search Error: $e");
+    }
+    return [];
+  }
+
+  // --- 3.5 SEARCH BY ISRC ---
+  static Future<List<SongMetadata>> searchByIsrc(String isrc) async {
+    final token = await _getAccessToken();
+    if (token == null) return [];
+
+    try {
+      // Use the specific 'isrc:code' syntax for highest precision
+      final query = "isrc:$isrc";
+
+      final uri = Uri.https('api.spotify.com', '/v1/search', {
+        'q': query,
+        'type': 'track',
+        'limit': '1',
+        'market': 'US',
+      });
+
+      final response =
+          await http.get(uri, headers: {"Authorization": "Bearer $token"});
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final items = data['tracks']['items'] as List;
+
+        if (items.isNotEmpty) {
+          final item = items[0];
+          final album = item['album'];
+          final artistsList = (item['artists'] as List);
+          // Capitalize first letter of artist name for display consistency if needed
+          final artistName =
+              artistsList.isNotEmpty ? artistsList[0]['name'] : "Unknown";
+
+          String imageUrl = "";
+          if ((album['images'] as List).isNotEmpty) {
+            imageUrl = album['images'][0]['url'];
+          }
+
+          // Fetch genre (optional, but good for consistency)
+          // We can skip it for speed or fetch it. Let's stick to "Pop" or basic fetch if critical.
+          // For now, let's keep it fast and simple as per requirements.
+
+          return [
+            SongMetadata(
+              title: item['name'],
+              artist: artistName,
+              album: album['name'],
+              year: (album['release_date'] as String).split('-')[0],
+              genre: "Pop", // Default
+              trackNumber: item['track_number'],
+              discNumber: item['disc_number'],
+              durationSeconds: (item['duration_ms'] as int) ~/ 1000,
+              albumArtUrl: imageUrl,
+              isrc: item['external_ids']?['isrc'], // Capture ISRC
+            )
+          ];
+        }
+      }
+    } catch (e) {
+      print("ISRC Search Error: $e");
     }
     return [];
   }
@@ -150,6 +223,7 @@ class SpotifyService {
       final String year = item['year'] as String? ?? '';
       final int? trackNum = item['track_number'] as int?;
       final int? discNum = item['disc_number'] as int?;
+      final String? isrc = item['isrc'] as String?; // Retrieve from map
       // NEW: Fetch Genre using the Artist ID
       String genre = "Pop"; // Default
       final String artistId = item['artist_id'] as String? ?? "";
@@ -167,6 +241,7 @@ class SpotifyService {
         discNumber: discNum,
         durationSeconds: durationMs ~/ 1000,
         albumArtUrl: imageUrl,
+        isrc: isrc,
       );
     });
 
@@ -499,9 +574,9 @@ class SpotifyService {
   static Future<List<SongMetadata>> getAlbumTracks(String albumId) async {
     final token = await _getAccessToken();
 
-    // Correct URL for fetching album tracks (uses $albumId, NOT $query)
-    final url =
-        Uri.parse('https://api.spotify.com/v1/albums/$albumId/tracks?limit=50');
+    // 1. First fetch the simplified tracks to get IDs
+    final url = Uri.parse(
+        'https://api.spotify.com/v1/albums/$albumId/tracks?limit=50&market=US');
 
     final response = await http.get(
       url,
@@ -512,23 +587,60 @@ class SpotifyService {
       final data = jsonDecode(response.body);
       final List items = data['items'];
 
-      return items.map((e) {
-        return SongMetadata(
-          title: e['name'],
-          artist: (e['artists'] as List).isNotEmpty
-              ? e['artists'][0]['name']
-              : "Unknown",
-          // Note: The tracks endpoint doesn't give images, we assume the UI passes the album cover
-          albumArtUrl: "",
-          album: "", // Filled in UI
-          year: "",
-          durationSeconds: (e['duration_ms'] ?? 0) ~/ 1000,
-          genre: "Pop",
-        );
-      }).toList();
-    } else {
-      return [];
+      // 2. Extract IDs for Batch Lookup (Limit 50 per call)
+      // Note: Album tracks endpoint returns 'simplified' objects which lack ISRC.
+      // We must fetch the full track object.
+      List<String> trackIds = [];
+      for (var item in items) {
+        trackIds.add(item['id']);
+      }
+
+      if (trackIds.isEmpty) return [];
+
+      // 3. Batch Fetch Full Track Details (to get ISRC)
+      final String idsParam = trackIds.join(',');
+      final fullTracksUrl = Uri.https('api.spotify.com', '/v1/tracks', {
+        'ids': idsParam,
+        'market': 'US',
+      });
+
+      final fullResponse = await http.get(
+        fullTracksUrl,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (fullResponse.statusCode == 200) {
+        final fullData = jsonDecode(fullResponse.body);
+        final List fullItems = fullData['tracks'];
+
+        return fullItems.map((e) {
+          final album = e['album'];
+          // Get image from the full track's album object if available,
+          // otherwise it might be null if the tracks endpoint was called without album context,
+          // but /tracks?ids returns the album object usually.
+          String imageUrl = "";
+          if (album != null && (album['images'] as List).isNotEmpty) {
+            imageUrl = album['images'][0]['url'];
+          }
+
+          return SongMetadata(
+            title: e['name'],
+            artist: (e['artists'] as List).isNotEmpty
+                ? e['artists'][0]['name']
+                : "Unknown",
+            albumArtUrl: imageUrl,
+            album: album?['name'] ?? "",
+            year: album?['release_date']?.split('-')?.first,
+            durationSeconds: (e['duration_ms'] ?? 0) ~/ 1000,
+            genre: null, // Default to null instead of "Pop"
+            trackNumber: e['track_number'],
+            discNumber: e['disc_number'],
+            isrc: e['external_ids']?['isrc'], // ✅ ISRC NOW CAPTURED
+          );
+        }).toList();
+      }
     }
+    return [];
   }
 
   // 9. FETCH ARTIST IMAGE TO ALBUM DETAIL PAGE

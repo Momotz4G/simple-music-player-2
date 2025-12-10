@@ -30,8 +30,18 @@ abstract class Env {
   static final String firebaseMessagingSenderId =
       _Env.firebaseMessagingSenderId;
 
-  @EnviedField(varName: 'FIREBASE_APP_ID', obfuscate: true)
-  static final String firebaseAppId = _Env.firebaseAppId;
+  // Multi-Platform App IDs
+  @EnviedField(varName: 'FIREBASE_APP_ID_WINDOWS', obfuscate: true)
+  static final String firebaseAppIdWindows = _Env.firebaseAppIdWindows;
+
+  @EnviedField(varName: 'FIREBASE_APP_ID_ANDROID', obfuscate: true)
+  static final String firebaseAppIdAndroid = _Env.firebaseAppIdAndroid;
+
+  @EnviedField(varName: 'FIREBASE_APP_ID_IOS', obfuscate: true)
+  static final String firebaseAppIdIos = _Env.firebaseAppIdIos;
+
+  @EnviedField(varName: 'FIREBASE_APP_ID_MACOS', obfuscate: true)
+  static final String firebaseAppIdMacos = _Env.firebaseAppIdMacos;
 
   @EnviedField(varName: 'FIREBASE_MEASUREMENT_ID', obfuscate: true)
   static final String firebaseMeasurementId = _Env.firebaseMeasurementId;

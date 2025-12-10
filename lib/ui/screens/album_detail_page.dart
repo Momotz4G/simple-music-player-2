@@ -10,6 +10,7 @@ import '../../models/song_model.dart';
 import '../../services/spotify_service.dart';
 import '../../services/smart_download_service.dart';
 import '../../services/youtube_downloader_service.dart';
+import '../../services/bulk_download_service.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../providers/library_presentation_provider.dart';
@@ -105,6 +106,11 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
           fileExtension: '.mp3',
           duration: t.durationSeconds.toDouble(),
           onlineArtUrl: widget.album.imageUrl,
+          isrc: t.isrc,
+          trackNumber: t.trackNumber,
+          discNumber: t.discNumber,
+          year: t.year,
+          genre: t.genre,
         );
       }));
 
@@ -478,6 +484,25 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                   }
                                 },
                               );
+                            },
+                          ),
+
+                          const SizedBox(width: 24),
+
+                          // 🚀 DOWNLOAD ALL BUTTON
+                          IconButton(
+                            icon: Icon(Icons.download_rounded,
+                                color: textColor.withOpacity(0.7), size: 32),
+                            tooltip: "Download All",
+                            onPressed: () {
+                              BulkDownloadService()
+                                  .downloadAlbum(widget.album.title, _tracks);
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
+                                content:
+                                    Text("Started downloading all songs..."),
+                                duration: Duration(seconds: 2),
+                              ));
                             },
                           ),
 

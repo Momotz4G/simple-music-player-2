@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../services/update_service.dart';
+import '../../models/download_progress.dart';
 
 class DownloadProgressWidget extends StatelessWidget {
   final DownloadProgress progress;
@@ -61,7 +61,8 @@ class DownloadProgressWidget extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            "${progress.receivedMB.toStringAsFixed(1)} MB / ${progress.totalMB.toStringAsFixed(1)} MB",
+            progress.details ??
+                "${progress.receivedMB.toStringAsFixed(1)} MB / ${progress.totalMB.toStringAsFixed(1)} MB",
             style: TextStyle(
               fontSize: 11,
               color: textColor?.withOpacity(0.7),

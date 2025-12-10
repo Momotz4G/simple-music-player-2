@@ -320,22 +320,21 @@
         </div>
     </div>
 
+    <!-- Load Config (Gitignored) -->
+    <script src="config.js"></script>
+    <script>
+        if (!window.FIREBASE_CONFIG) {
+            alert("⚠️ Missing config.js! \n\n1. Rename 'config.example.js' to 'config.js'\n2. Paste your Firebase keys inside.");
+        }
+    </script>
+
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            // 🚨 PASTE YOUR FIREBASE CONFIG HERE 🚨
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID",
-            measurementId: "YOUR_MEASUREMENT_ID"
-        };
+        const firebaseConfig = window.FIREBASE_CONFIG;
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);

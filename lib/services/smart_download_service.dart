@@ -38,7 +38,15 @@ class SmartDownloadService {
 
   // --- Search Logic ---
   Future<DebugMatchResult?> searchYouTubeForMatch(SongMetadata metadata) async {
-    final query = "${metadata.artist} - ${metadata.title} Official Audio";
+    // 🚀 IMPROVED QUERY: Use ISRC if available for higher accuracy
+    String query = "${metadata.artist} - ${metadata.title}";
+
+    if (metadata.isrc != null && metadata.isrc!.isNotEmpty) {
+      query += " \"${metadata.isrc}\""; // Strong quote search for ISRC
+    } else {
+      query += " Official Audio";
+    }
+
     final yt = YoutubeExplode();
     List<YoutubeSearchResult> youtubeMatches = [];
 
@@ -193,11 +201,17 @@ class SmartDownloadService {
       print("🏷️ TAGGING: Starting tag process for $filePath");
 
       Uint8List? imageBytes;
+      String mimeType = 'image/jpeg'; // Default
+
       if (metadata.albumArtUrl.isNotEmpty) {
         try {
           final response = await http.get(Uri.parse(metadata.albumArtUrl));
           if (response.statusCode == 200) {
             imageBytes = response.bodyBytes;
+            // Try to get mime from headers
+            if (response.headers.containsKey('content-type')) {
+              mimeType = response.headers['content-type']!;
+            }
           }
         } catch (e) {
           print("⚠️ TAGGING: Failed to download album art: $e");
@@ -210,14 +224,16 @@ class SmartDownloadService {
           title: metadata.title,
           artist: metadata.artist,
           album: metadata.album,
-          year: int.tryParse(metadata.year.split('-').first), // YEAR PARSING
+          year: (metadata.year != null && metadata.year!.isNotEmpty)
+              ? int.tryParse(metadata.year!.split('-').first)
+              : null, // YEAR PARSING
           genre: metadata.genre,
           trackNumber: metadata.trackNumber,
           discNumber: metadata.discNumber,
           picture: imageBytes != null
               ? Picture(
                   data: imageBytes,
-                  mimeType: 'image/jpeg',
+                  mimeType: mimeType,
                 )
               : null,
         ),
@@ -235,12 +251,12 @@ class SmartDownloadService {
   }
 
   // FILENAME GENERATOR (Moved OUT of tagFile)
-  Future<String> generateFilename(SongMetadata meta) async {
+  Future<String> generateFilename(SongMetadata meta,
+      {String patternKey = 'filename_pattern'}) async {
     final prefs = await SharedPreferences.getInstance();
 
     // 1. Get Pattern (Default: "{artist} - {title}")
-    String pattern =
-        prefs.getString('filename_pattern') ?? "{artist} - {title}";
+    String pattern = prefs.getString(patternKey) ?? "{artist} - {title}";
 
     // 2. Handle {number} (Global Increment)
     if (pattern.contains('{number}')) {
@@ -259,7 +275,8 @@ class SmartDownloadService {
         .replaceAll('{title}', meta.title)
         .replaceAll(
             '{album}', meta.album.isNotEmpty ? meta.album : 'Unknown Album')
-        .replaceAll('{year}', meta.year.isNotEmpty ? meta.year : '0000')
+        .replaceAll('{year}',
+            (meta.year != null && meta.year!.isNotEmpty) ? meta.year! : '0000')
         .replaceAll('{track}', meta.trackNumber?.toString() ?? '0')
         .replaceAll('{disc}', meta.discNumber?.toString() ?? '1')
         .replaceAll(

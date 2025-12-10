@@ -4,6 +4,7 @@ import 'package:flutter/services.dart'; // 🚀 Required for LogicalKeyboardKey
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:package_info_plus/package_info_plus.dart'; // 🚀 IMPORT
+import 'package:shared_preferences/shared_preferences.dart';
 
 // --- PROVIDER IMPORTS ---
 import '../../providers/player_provider.dart';
@@ -34,10 +35,12 @@ import 'album_detail_page.dart';
 import 'playlist_detail_page.dart';
 import 'artist_detail_page.dart';
 import '../../services/update_service.dart';
+import '../../services/bulk_download_service.dart';
 import '../components/download_progress_widget.dart';
 
 import '../../providers/interface_provider.dart';
 import 'mini_player.dart';
+import '../../models/download_progress.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
@@ -55,7 +58,65 @@ class _MainShellState extends ConsumerState<MainShell> {
     // 🚀 CHECK FOR UPDATES ON STARTUP
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForUpdates();
+      _checkWhatsNew();
     });
+  }
+
+  Future<void> _checkWhatsNew() async {
+    final prefs = await SharedPreferences.getInstance();
+    final info = await PackageInfo.fromPlatform();
+    final currentVersion = info.version;
+    final lastVersion = prefs.getString('last_start_version');
+
+    if (lastVersion != currentVersion) {
+      // New version detected!
+      final release = await _updateService.getLatestRelease();
+      if (release != null && mounted) {
+        // Only show if the tag matches or contains the current version (approx)
+        // or just show it anyway as "What's New in the invalid latest"
+        // Better: Show it if we updated.
+        _showWhatsNewDialog(release, currentVersion);
+        await prefs.setString('last_start_version', currentVersion);
+      }
+    }
+  }
+
+  void _showWhatsNewDialog(Map<String, dynamic> release, String version) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        title: Row(
+          children: [
+            const Icon(Icons.celebration, color: Colors.orange),
+            const SizedBox(width: 8),
+            Text("What's New in v$version"),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  release['body'] ?? "No changelog available.",
+                  style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Awesome!"),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _checkForUpdates() async {
@@ -508,6 +569,18 @@ class _MainShellState extends ConsumerState<MainShell> {
               // 🚀 DOWNLOAD PROGRESS WIDGET
               ValueListenableBuilder<DownloadProgress?>(
                 valueListenable: _updateService.progressNotifier,
+                builder: (context, progress, child) {
+                  if (progress == null) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: DownloadProgressWidget(progress: progress),
+                  );
+                },
+              ),
+
+              // 🚀 BULK DOWNLOAD PROGRESS WIDGET
+              ValueListenableBuilder<DownloadProgress?>(
+                valueListenable: BulkDownloadService().progressNotifier,
                 builder: (context, progress, child) {
                   if (progress == null) return const SizedBox.shrink();
                   return Padding(

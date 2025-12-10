@@ -605,6 +605,34 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
   }
 
+  // JIT CACHE HELPER
+  Future<SongModel> _ensureFileExists(SongModel song) async {
+    if (await File(song.filePath).exists()) return song;
+
+    print("⚠️ File missing: ${song.filePath}. Triggering JIT Cache...");
+    final meta = SongMetadata(
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      albumArtUrl: song.onlineArtUrl ?? "",
+      durationSeconds: song.duration.toInt(),
+      year: "",
+      genre: "",
+      isrc: song.isrc,
+    );
+
+    // Attempt Cache
+    await _smartService.cacheSong(meta, youtubeUrl: song.sourceUrl);
+
+    final cachedPath = await _smartService.getPredictedCachePath(meta);
+    if (await File(cachedPath).exists()) {
+      print("✅ JIT Success! New path: $cachedPath");
+      return song.copyWith(filePath: cachedPath);
+    }
+
+    return song;
+  }
+
   Future<void> playRandom(List<SongModel> newQueue) async {
     if (newQueue.isEmpty) return;
     _finalizePlaySession();
@@ -650,11 +678,42 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         durationSeconds: nextSong.duration.toInt(),
         year: "", // Missing in SongModel, acceptable
         genre: "", // Missing
+        isrc: nextSong.isrc,
       );
 
       // Trigger Background Cache
       _smartService.cacheSong(meta, youtubeUrl: nextSong.sourceUrl);
     }
+  }
+
+  // PRELOAD PREVIOUS SONG
+  Future<void> _preloadPreviousSong() async {
+    if (state.playlist.isEmpty) return;
+
+    int prevIndex = _playlistIndex - 1;
+    if (prevIndex < 0) {
+      if (state.loopMode == ja.LoopMode.all) {
+        prevIndex = state.playlist.length - 1;
+      } else {
+        return;
+      }
+    }
+
+    final prevSong = state.playlist[prevIndex];
+    if (await File(prevSong.filePath).exists()) return;
+
+    print("🚀 PRELOAD PREV: ${prevSong.title}");
+    final meta = SongMetadata(
+      title: prevSong.title,
+      artist: prevSong.artist,
+      album: prevSong.album,
+      albumArtUrl: prevSong.onlineArtUrl ?? "",
+      durationSeconds: prevSong.duration.toInt(),
+      year: "",
+      genre: "",
+      isrc: prevSong.isrc,
+    );
+    _smartService.cacheSong(meta, youtubeUrl: prevSong.sourceUrl);
   }
 
   Future<void> playSong(SongModel song,
@@ -720,7 +779,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         durationSeconds: song.duration.toInt(),
         year: "",
         genre: "",
+        isrc: song.isrc,
       );
+      print("🚀 JIT Cache Triggered for: ${song.title}");
+      if (song.isrc != null) print("   ✅ Using ISRC: ${song.isrc}");
 
       // We use cacheSong but we need to wait for it!
       await _smartService.cacheSong(meta, youtubeUrl: song.sourceUrl);
@@ -761,8 +823,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _saveSettings(); // SAVE STATE
     _saveQueueState(); // SAVE QUEUE
 
-    // TRIGGER PRELOAD
+    _updateDiscord();
+    _saveSettings(); // SAVE STATE
+    _saveQueueState(); // SAVE QUEUE
+
+    // TRIGGER PRELOAD (Next + Previous)
     _preloadNextSong();
+    _preloadPreviousSong();
   }
 
   Future<void> playNext({bool autoPlay = false}) async {
@@ -923,11 +990,19 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _isSwitchingSong = true;
     state = state.copyWith(currentSong: prevSong, isPlaying: true);
 
-    // EXTRACT COLOR
-    _extractPalette(prevSong.filePath);
+    // JIT CACHE CHECK FOR PREVIOUS
+    final readySong = await _ensureFileExists(prevSong);
+    state = state.copyWith(currentSong: readySong);
 
-    _musicService.play(prevSong);
+    // EXTRACT COLOR (Safe now)
+    _extractPalette(readySong.filePath);
+
+    _musicService.play(readySong);
     _updateDiscord();
+
+    // Trigger Preloads
+    _preloadNextSong();
+    _preloadPreviousSong();
   }
 
   Future<void> togglePlay() async {
