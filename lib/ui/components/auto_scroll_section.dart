@@ -107,6 +107,7 @@ class _AutoScrollSectionState extends ConsumerState<AutoScrollSection> {
         genre: "",
         durationSeconds: song.duration.toInt(),
         albumArtUrl: song.onlineArtUrl ?? "",
+        isrc: song.isrc,
       );
 
       // Perform Just-In-Time YouTube Search if URL is missing or invalid (Spotify)

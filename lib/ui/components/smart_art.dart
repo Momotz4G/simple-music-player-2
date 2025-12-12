@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:metadata_god/metadata_god.dart';
@@ -11,6 +12,9 @@ class SmartArt extends StatelessWidget {
   // 1. STATIC CACHE (Moved inside the class)
   static final Map<String, Uint8List?> _cache = {};
 
+  // Track paths that don't exist to avoid repeated file checks
+  static final Set<String> _nonExistentPaths = {};
+
   // 2. HELPER TO CHECK CACHE
   static bool isCached(String path) {
     return _cache.containsKey(path) && _cache[path] != null;
@@ -19,6 +23,7 @@ class SmartArt extends StatelessWidget {
   // 3. INVALIDATE CACHE
   static void invalidateCache(String path) {
     _cache.remove(path);
+    _nonExistentPaths.remove(path);
   }
 
   const SmartArt({
@@ -50,20 +55,42 @@ class SmartArt extends StatelessWidget {
       return _buildImage(_cache[path]);
     }
 
+    // 🚀 SKIP: If path is known to not exist (e.g., Spotify imports)
+    if (_nonExistentPaths.contains(path)) {
+      return _buildPlaceholder();
+    }
+
     return _buildFileArt();
   }
 
   Widget _buildFileArt() {
-    return FutureBuilder<Metadata?>(
-      future: MetadataGod.readMetadata(file: path),
-      builder: (context, snapshot) {
-        if (snapshot.hasData && snapshot.data?.picture != null) {
-          final bytes = snapshot.data!.picture!.data;
-          // Save to static cache
-          _cache[path] = bytes;
-          return _buildImage(bytes);
+    // 🚀 CHECK FILE EXISTS FIRST (Avoids freeze on Spotify imports)
+    return FutureBuilder<bool>(
+      future: File(path).exists(),
+      builder: (context, existsSnapshot) {
+        if (existsSnapshot.connectionState != ConnectionState.done) {
+          return _buildPlaceholder();
         }
-        return _buildPlaceholder();
+
+        if (existsSnapshot.data != true) {
+          // Cache the fact that this file doesn't exist
+          _nonExistentPaths.add(path);
+          return _buildPlaceholder();
+        }
+
+        // File exists, now read metadata
+        return FutureBuilder<Metadata?>(
+          future: MetadataGod.readMetadata(file: path),
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data?.picture != null) {
+              final bytes = snapshot.data!.picture!.data;
+              // Save to static cache
+              _cache[path] = bytes;
+              return _buildImage(bytes);
+            }
+            return _buildPlaceholder();
+          },
+        );
       },
     );
   }

@@ -273,7 +273,7 @@ class YoutubeDownloaderService {
 
       onComplete(true);
     } catch (e) {
-      if (kDebugMode) print("📱 Mobile DL Error: $e");
+      print("📱 Mobile DL Error: $e"); // ALWAYS PRINT
       onComplete(false);
     } finally {
       yt.close();
@@ -341,7 +341,7 @@ class YoutubeDownloaderService {
         (data) {
           if (!data.contains('[download]') &&
               !data.contains('[ExtractAudio]')) {
-            if (kDebugMode) print('❌ YTDLP ERR: $data');
+            print('❌ YTDLP ERR: $data'); // ALWAYS PRINT
           }
         },
         onError: (e) {

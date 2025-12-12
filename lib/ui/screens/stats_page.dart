@@ -130,6 +130,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         genre: "",
         durationSeconds: song.duration.toInt(),
         albumArtUrl: restoreArt ?? "",
+        isrc: song.isrc,
       );
 
       // FIX: Perform Just-In-Time YouTube Search if URL is missing or invalid (Spotify)

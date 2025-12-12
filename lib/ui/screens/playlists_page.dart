@@ -142,18 +142,33 @@ class PlaylistsPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🚀 4-TILE COLLAGE
+              // 🚀 4-TILE COLLAGE or SPOTIFY COVER
               Expanded(
                 child: ClipRRect(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: PlaylistCollage(
-                      imagePaths: imagePaths,
-                      onlineArtUrls: playlist.entries
-                          .take(4)
-                          .map((e) => e.artUrl)
-                          .toList(),
-                      size: 200), // ✅ PASS PATHS & URLS
+                  // Use Spotify cover if available, else collage
+                  child:
+                      playlist.coverUrl != null && playlist.coverUrl!.isNotEmpty
+                          ? Image.network(
+                              playlist.coverUrl!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (_, __, ___) => PlaylistCollage(
+                                  imagePaths: imagePaths,
+                                  onlineArtUrls: playlist.entries
+                                      .take(4)
+                                      .map((e) => e.artUrl)
+                                      .toList(),
+                                  size: 200),
+                            )
+                          : PlaylistCollage(
+                              imagePaths: imagePaths,
+                              onlineArtUrls: playlist.entries
+                                  .take(4)
+                                  .map((e) => e.artUrl)
+                                  .toList(),
+                              size: 200),
                 ),
               ),
 
@@ -204,6 +219,50 @@ class PlaylistsPage extends ConsumerWidget {
   }
 
   void _showCreateDialog(BuildContext context, PlaylistNotifier notifier) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text("Create Playlist",
+            style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Option 1: Create Empty Playlist
+            ListTile(
+              leading: const Icon(Icons.add_box_outlined),
+              title: const Text("Empty Playlist"),
+              subtitle: const Text("Create a new empty playlist"),
+              onTap: () {
+                Navigator.pop(context);
+                _showNameDialog(context, notifier);
+              },
+            ),
+            const Divider(),
+            // Option 2: Import from Spotify
+            ListTile(
+              leading: const Icon(Icons.cloud_download_outlined,
+                  color: Colors.green),
+              title: const Text("Import from Spotify"),
+              subtitle: const Text("Paste a Spotify playlist URL"),
+              onTap: () {
+                Navigator.pop(context);
+                _showSpotifyImportDialog(context, notifier);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")),
+        ],
+      ),
+    );
+  }
+
+  void _showNameDialog(BuildContext context, PlaylistNotifier notifier) {
     final controller = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
@@ -232,6 +291,126 @@ class PlaylistsPage extends ConsumerWidget {
             child: const Text("Create"),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showSpotifyImportDialog(
+      BuildContext context, PlaylistNotifier notifier) {
+    final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final statusNotifier = ValueNotifier<String?>(null);
+    final isLoadingNotifier = ValueNotifier<bool>(false);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: Theme.of(context).cardColor,
+          title: Row(
+            children: [
+              Icon(Icons.music_note, color: Colors.green[400]),
+              const SizedBox(width: 8),
+              Text("Import Spotify Playlist",
+                  style:
+                      TextStyle(color: isDark ? Colors.white : Colors.black)),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                  decoration: const InputDecoration(
+                    hintText: "https://open.spotify.com/playlist/...",
+                    prefixIcon: Icon(Icons.link),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ValueListenableBuilder<String?>(
+                  valueListenable: statusNotifier,
+                  builder: (context, status, _) {
+                    if (status == null) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        status,
+                        style: TextStyle(
+                          color: status.startsWith("❌")
+                              ? Colors.red
+                              : status.startsWith("✅")
+                                  ? Colors.green
+                                  : Colors.grey,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: isLoadingNotifier,
+                  builder: (context, isLoading, _) {
+                    if (!isLoading) return const SizedBox.shrink();
+                    return const Padding(
+                      padding: EdgeInsets.only(top: 12),
+                      child: LinearProgressIndicator(),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ValueListenableBuilder<bool>(
+              valueListenable: isLoadingNotifier,
+              builder: (context, isLoading, _) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed:
+                          isLoading ? null : () => Navigator.pop(context),
+                      child: const Text("Cancel"),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              if (controller.text.isEmpty) return;
+
+                              isLoadingNotifier.value = true;
+
+                              final result =
+                                  await notifier.importSpotifyPlaylist(
+                                controller.text,
+                                onProgress: (status) {
+                                  statusNotifier.value = status;
+                                },
+                              );
+
+                              isLoadingNotifier.value = false;
+
+                              if (result != null && context.mounted) {
+                                await Future.delayed(
+                                    const Duration(milliseconds: 500));
+                                if (context.mounted) Navigator.pop(context);
+                              }
+                            },
+                      icon: const Icon(Icons.download),
+                      label: const Text("Import"),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

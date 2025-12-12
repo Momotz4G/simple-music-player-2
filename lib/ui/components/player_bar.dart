@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:qr_flutter/qr_flutter.dart'; // QR Code
-import '../../services/metrics_service.dart'; // User ID
+import '../../services/pocketbase_service.dart'; // Session ID
 
 import '../../providers/player_provider.dart';
 import '../../providers/timer_provider.dart';
@@ -777,16 +777,23 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   }
 
   // REMOTE CONTROL DIALOG
-  void _showRemotePairingDialog() {
-    final userId = MetricsService().userId;
-    if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error: User ID not initialized yet.")),
-      );
+  void _showRemotePairingDialog() async {
+    // Get the session record ID (not user_id) for security
+    final sessionId = await PocketBaseService().getUniqueSessionId();
+    if (sessionId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error: Could not create session.")),
+        );
+      }
       return;
     }
 
-    final url = "https://glittering-basbousa-564237.netlify.app/?uid=$userId";
+    // Use session record ID in URL instead of user_id
+    final url =
+        "https://glittering-basbousa-564237.netlify.app/?sid=$sessionId";
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -820,7 +827,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
             ),
             const SizedBox(height: 8),
             SelectableText(
-              "ID: ${userId.substring(0, 8)}...",
+              "Session: $sessionId",
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],

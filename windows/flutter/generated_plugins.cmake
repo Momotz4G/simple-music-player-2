@@ -4,9 +4,6 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_windows
-  cloud_firestore
-  firebase_auth
-  firebase_core
   flutter_media_metadata
   isar_flutter_libs
   just_audio_windows

@@ -11,18 +11,47 @@ import '../../models/song_model.dart';
 import '../components/song_card_overlay.dart';
 import '../components/playlist_collage.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../services/bulk_download_service.dart';
 
-class PlaylistDetailPage extends ConsumerWidget {
+class PlaylistDetailPage extends ConsumerStatefulWidget {
   final String playlistId;
 
   const PlaylistDetailPage({super.key, required this.playlistId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlaylistDetailPage> createState() => _PlaylistDetailPageState();
+}
+
+class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
+  String? _loadingSongTitle;
+
+  Future<void> _playTrack(SongModel song, List<SongModel> queue) async {
+    if (_loadingSongTitle != null) return;
+
+    setState(() => _loadingSongTitle = song.title);
+
+    try {
+      if (mounted) {
+        await ref.read(playerProvider.notifier).playSong(song, newQueue: queue);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loadingSongTitle = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final playlists = ref.watch(playlistProvider);
     final notifier = ref.read(playlistProvider.notifier);
 
-    final playlistIndex = playlists.indexWhere((p) => p.id == playlistId);
+    final playlistIndex =
+        playlists.indexWhere((p) => p.id == widget.playlistId);
     if (playlistIndex == -1) {
       return const Scaffold(body: Center(child: Text("Playlist not found")));
     }
@@ -30,7 +59,11 @@ class PlaylistDetailPage extends ConsumerWidget {
     final playlist = playlists[playlistIndex];
 
     final library = p.Provider.of<LibraryProvider>(context);
-    final allLibrarySongs = library.songs;
+
+    // 🚀 OPTIMIZATION: Create HashMap for O(1) lookup instead of O(n) firstWhere
+    final Map<String, SongModel> libraryMap = {
+      for (var song in library.songs) song.filePath: song
+    };
 
     // Map Entries to Songs + Dates
     final List<_PlaylistRowData> rowData = [];
@@ -39,19 +72,18 @@ class PlaylistDetailPage extends ConsumerWidget {
     final List<String?> headerArtUrls = [];
 
     for (var entry in playlist.entries) {
-      // 🚀 TRY TO FIND IN LIBRARY FIRST
-      try {
-        final song =
-            allLibrarySongs.firstWhere((s) => s.filePath == entry.path);
-        rowData.add(_PlaylistRowData(song, entry.dateAdded));
+      // 🚀 O(1) LOOKUP instead of O(n) firstWhere
+      final librarySong = libraryMap[entry.path];
+
+      if (librarySong != null) {
+        rowData.add(_PlaylistRowData(librarySong, entry.dateAdded));
 
         if (headerImagePaths.length < 4) {
-          headerImagePaths.add(song.filePath);
-          headerArtUrls.add(song.onlineArtUrl);
+          headerImagePaths.add(librarySong.filePath);
+          headerArtUrls.add(librarySong.onlineArtUrl);
         }
-      } catch (e) {
-        // 🚀 FALLBACK: USE METADATA FROM ENTRY
-        // Even if title is null, we should try to show something
+      } else {
+        // 🚀 FALLBACK: USE METADATA FROM ENTRY (For Spotify imports)
         final title = entry.title ?? entry.path.split('/').last;
 
         final song = SongModel(
@@ -60,9 +92,13 @@ class PlaylistDetailPage extends ConsumerWidget {
           album: entry.album ?? "Unknown Album",
           filePath: entry.path,
           fileExtension: ".mp3", // Assumption
-          duration: 0, // We might not have duration
+          duration: (entry.duration ?? 0).toDouble(), // 🚀 USE SAVED DURATION
           onlineArtUrl: entry.artUrl,
-          sourceUrl: entry.sourceUrl ?? "", // USE SOURCE URL
+          sourceUrl: (entry.sourceUrl != null &&
+                  !entry.sourceUrl!.contains("spotify.com"))
+              ? entry.sourceUrl
+              : "", // 🚀 IGNORE SPOTIFY URLS
+          isrc: entry.isrc, // USE ISRC
         );
         rowData.add(_PlaylistRowData(song, entry.dateAdded));
         if (headerImagePaths.length < 4) {
@@ -77,6 +113,9 @@ class PlaylistDetailPage extends ConsumerWidget {
     final accentColor = Theme.of(context).colorScheme.primary;
     final textColor = isDark ? Colors.white : Colors.black;
     final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
+    // 🚀 Use Spotify cover if available
+    final hasCover = playlist.coverUrl != null && playlist.coverUrl!.isNotEmpty;
 
     return Scaffold(
       body: CustomScrollView(
@@ -98,14 +137,24 @@ class PlaylistDetailPage extends ConsumerWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Background Blur
-                  if (headerImagePaths.isNotEmpty)
+                  // Background Blur - Use Spotify cover or collage
+                  if (hasCover)
+                    ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                      child: Opacity(
+                        opacity: 0.4,
+                        child: Image.network(
+                          playlist.coverUrl!,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    )
+                  else if (headerImagePaths.isNotEmpty)
                     ImageFiltered(
                       imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                       child: Opacity(
                         opacity: 0.4,
                         child: PlaylistCollage(
-                            // ✅ PASS PATHS & URLS
                             imagePaths: headerImagePaths,
                             onlineArtUrls: headerArtUrls,
                             size: 400),
@@ -125,7 +174,7 @@ class PlaylistDetailPage extends ConsumerWidget {
                     ),
                   ),
 
-                  // Foreground Collage
+                  // Foreground Cover - Use Spotify cover or collage
                   Center(
                     child: Container(
                       decoration: const BoxDecoration(boxShadow: [
@@ -136,11 +185,17 @@ class PlaylistDetailPage extends ConsumerWidget {
                       ]),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: PlaylistCollage(
-                            // ✅ PASS PATHS & URLS
-                            imagePaths: headerImagePaths,
-                            onlineArtUrls: headerArtUrls,
-                            size: 160),
+                        child: hasCover
+                            ? Image.network(
+                                playlist.coverUrl!,
+                                width: 160,
+                                height: 160,
+                                fit: BoxFit.cover,
+                              )
+                            : PlaylistCollage(
+                                imagePaths: headerImagePaths,
+                                onlineArtUrls: headerArtUrls,
+                                size: 160),
                       ),
                     ),
                   ),
@@ -151,10 +206,8 @@ class PlaylistDetailPage extends ConsumerWidget {
                     child: FloatingActionButton(
                       onPressed: rowData.isNotEmpty
                           ? () {
-                              ref.read(playerProvider.notifier).playSong(
-                                  rowData.first.song,
-                                  newQueue:
-                                      rowData.map((r) => r.song).toList());
+                              _playTrack(rowData.first.song,
+                                  rowData.map((r) => r.song).toList());
                             }
                           : null,
                       backgroundColor: accentColor,
@@ -165,11 +218,30 @@ class PlaylistDetailPage extends ConsumerWidget {
               ),
             ),
             actions: [
+              // 🚀 DOWNLOAD ALL BUTTON
+              IconButton(
+                icon: Icon(Icons.download_rounded, color: textColor, size: 28),
+                tooltip: "Download All",
+                onPressed: () {
+                  if (rowData.isEmpty) return;
+
+                  // Convert RowData back to SongModel list
+                  final songsToDownload = rowData.map((r) => r.song).toList();
+
+                  BulkDownloadService()
+                      .downloadAlbum(playlist.name, songsToDownload);
+
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Started downloading all songs..."),
+                    duration: Duration(seconds: 2),
+                  ));
+                },
+              ),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
                 onSelected: (value) {
                   if (value == 'delete') {
-                    notifier.deletePlaylist(playlistId);
+                    notifier.deletePlaylist(widget.playlistId);
                     // POP FROM STACK
                     ref.read(navigationStackProvider.notifier).pop();
                   } else if (value == 'rename') {
@@ -198,20 +270,29 @@ class PlaylistDetailPage extends ConsumerWidget {
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final data = rowData[index];
+                  final isThisLoading = _loadingSongTitle == data.song.title;
                   return ListTile(
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     leading: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Number
+                        // Number OR Spinner
                         SizedBox(
                             width: 30,
-                            child: Text("${index + 1}",
-                                style: TextStyle(
-                                    color: subtitleColor,
-                                    fontWeight: FontWeight.bold),
-                                textAlign: TextAlign.center)),
+                            child: isThisLoading
+                                ? Center(
+                                    child: SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: accentColor)))
+                                : Text("${index + 1}",
+                                    style: TextStyle(
+                                        color: subtitleColor,
+                                        fontWeight: FontWeight.bold),
+                                    textAlign: TextAlign.center)),
                         const SizedBox(width: 10),
                         // Overlay
                         SongCardOverlay(
@@ -221,22 +302,12 @@ class PlaylistDetailPage extends ConsumerWidget {
                             radius: 6),
                       ],
                     ),
-                    title: Row(
-                      children: [
-                        Expanded(
-                            child: Text(data.song.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500))),
-                        const SizedBox(width: 10),
-                        // Date Added
-                        Text(_formatDate(data.dateAdded),
-                            style:
-                                TextStyle(color: subtitleColor, fontSize: 12)),
-                      ],
-                    ),
+                    title: Text(data.song.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: isThisLoading ? accentColor : textColor,
+                            fontWeight: FontWeight.w500)),
                     subtitle: Text(
                         (data.song.artist == "Unknown Artist" ||
                                 data.song.artist == "Unknown")
@@ -244,16 +315,39 @@ class PlaylistDetailPage extends ConsumerWidget {
                             : data.song.artist,
                         maxLines: 1,
                         style: TextStyle(color: subtitleColor, fontSize: 12)),
-                    trailing: IconButton(
-                      icon: Icon(Icons.remove_circle_outline,
-                          color: subtitleColor),
-                      tooltip: "Remove from Playlist",
-                      onPressed: () => notifier.removeSongFromPlaylist(
-                          playlistId, data.song.filePath),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Duration (Fixed Width)
+                        SizedBox(
+                          width: 45,
+                          child: Text(_formatDuration(data.song.duration),
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                  color: subtitleColor, fontSize: 12)),
+                        ),
+                        const SizedBox(width: 32), // 🚀 DOUBLED GAP
+                        // Date (Fixed Width)
+                        SizedBox(
+                          width: 75,
+                          child: Text(_formatDate(data.dateAdded),
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                  color: subtitleColor, fontSize: 12)),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(Icons.remove_circle_outline,
+                              color: subtitleColor),
+                          tooltip: "Remove from Playlist",
+                          onPressed: () => notifier.removeSongFromPlaylist(
+                              widget.playlistId, data.song.filePath),
+                        ),
+                      ],
                     ),
                     onTap: () {
-                      ref.read(playerProvider.notifier).playSong(data.song,
-                          newQueue: rowData.map((r) => r.song).toList());
+                      _playTrack(
+                          data.song, rowData.map((r) => r.song).toList());
                     },
                   );
                 },
@@ -304,6 +398,13 @@ class PlaylistDetailPage extends ConsumerWidget {
 
   String _formatDate(DateTime date) {
     return "${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}";
+  }
+
+  String _formatDuration(double duration) {
+    if (duration <= 0) return "--:--";
+    final int minutes = duration ~/ 60;
+    final int seconds = (duration % 60).toInt();
+    return "$minutes:${seconds.toString().padLeft(2, '0')}";
   }
 }
 

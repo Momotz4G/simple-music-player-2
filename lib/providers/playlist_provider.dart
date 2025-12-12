@@ -5,6 +5,8 @@ import 'package:uuid/uuid.dart';
 
 import '../models/playlist_model.dart';
 import '../models/song_model.dart';
+import '../services/spotify_service.dart';
+import '../services/smart_download_service.dart';
 import 'settings_provider.dart';
 
 class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
@@ -75,7 +77,9 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
                   artist: song.artist,
                   album: song.album,
                   artUrl: song.onlineArtUrl,
-                  sourceUrl: song.sourceUrl) // SAVE SOURCE URL
+                  sourceUrl: song.sourceUrl, // SAVE SOURCE URL
+                  isrc: song.isrc, // SAVE ISRC
+                  duration: song.duration.toInt()) // SAVE DURATION
             ])
           else
             p
@@ -102,6 +106,8 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
                       album: s.album,
                       artUrl: s.onlineArtUrl,
                       sourceUrl: s.sourceUrl, // SAVE SOURCE URL
+                      isrc: s.isrc, // SAVE ISRC
+                      duration: s.duration.toInt(), // SAVE DURATION
                     ))
           ])
         else
@@ -141,6 +147,85 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
     );
 
     addSongToPlaylist(likedPlaylist.id, song);
+  }
+
+  // 🚀 IMPORT SPOTIFY PLAYLIST
+  /// Imports a Spotify playlist by URL and creates a new local playlist
+  /// Returns the new playlist ID on success, null on failure
+  Future<String?> importSpotifyPlaylist(
+    String spotifyUrl, {
+    Function(String status)? onProgress,
+  }) async {
+    try {
+      // 1. Extract playlist ID
+      final playlistId = SpotifyService.extractPlaylistId(spotifyUrl);
+      if (playlistId == null) {
+        onProgress?.call("❌ Invalid Spotify playlist URL");
+        return null;
+      }
+
+      onProgress?.call("📋 Fetching playlist info...");
+
+      // 2. Get playlist info (name, cover)
+      final info = await SpotifyService.getPlaylistInfo(playlistId);
+      if (info == null) {
+        onProgress?.call("❌ Could not fetch playlist info");
+        return null;
+      }
+
+      final playlistName = info['name'] ?? "Imported Playlist";
+      final coverUrl = info['image'];
+
+      onProgress?.call("🎵 Fetching tracks from \"$playlistName\"...");
+
+      // 3. Fetch all tracks
+      final tracks = await SpotifyService.getPlaylistTracks(playlistId);
+      if (tracks.isEmpty) {
+        onProgress?.call("❌ No tracks found in playlist");
+        return null;
+      }
+
+      onProgress?.call("📝 Creating playlist with ${tracks.length} tracks...");
+
+      // 4. Convert to SongModels with predicted paths
+      final smartService = SmartDownloadService();
+      final entries = <PlaylistEntry>[];
+
+      for (var track in tracks) {
+        final predictedPath = await smartService.getPredictedCachePath(track);
+        entries.add(PlaylistEntry(
+          path: predictedPath,
+          dateAdded: DateTime.now(),
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+          artUrl: track.albumArtUrl.isNotEmpty ? track.albumArtUrl : coverUrl,
+          sourceUrl: null, // Will be resolved via YouTube on play
+          isrc: track.isrc,
+          duration: track.durationSeconds,
+        ));
+      }
+
+      // 5. Create the playlist
+      final newId = _uuid.v4();
+      final newPlaylist = PlaylistModel(
+        id: newId,
+        name: playlistName,
+        entries: entries,
+        createdAt: DateTime.now(),
+        coverUrl: coverUrl,
+      );
+
+      state = [...state, newPlaylist];
+      await _save();
+
+      onProgress?.call("✅ Imported ${tracks.length} tracks!");
+      return newId;
+    } catch (e) {
+      print("Import Error: $e");
+      onProgress?.call("❌ Import failed: $e");
+      return null;
+    }
   }
 }
 

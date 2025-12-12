@@ -118,6 +118,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   bool _isSwitchingSong = false;
   bool _isLooping = false;
   bool _isHandlingCompletion = false;
+  final Set<int> _preloadCheckpoints = {}; // 🚀 Track preload at 0%, 30%, 70%
 
   // Stats config
   bool _isThresholdMet = false;
@@ -196,6 +197,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       // Initialize Remote Control
       _remoteService.init().then((_) {
         _remoteService.startListening(onCommand: _handleRemoteCommand);
+        _broadcastRemoteState(); // Sync Initial State
       });
     });
 
@@ -235,6 +237,22 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       if (state.loopMode == ja.LoopMode.one && duration > 0) {
         if (currentSecs >= (duration - 0.5)) {
           _forceLoopOne();
+        }
+      }
+
+      // 🚀 MULTI-CHECKPOINT PRELOAD: Trigger at 0%, 30%, 70%
+      if (duration > 0) {
+        final progressPercent = currentSecs / duration;
+
+        // Check each threshold
+        for (final threshold in [0, 30, 70]) {
+          if (!_preloadCheckpoints.contains(threshold) &&
+              progressPercent >= threshold / 100) {
+            _preloadCheckpoints.add(threshold);
+            print("🎯 $threshold% reached - triggering preload");
+            _preloadNextSong();
+            break; // Only trigger one per position update
+          }
         }
       }
 
@@ -294,6 +312,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         state = state.copyWith(isPlaying: isPlaying);
         _updateDiscord();
         _updateTaskbar(); // UPDATE TASKBAR STATUS
+        _broadcastRemoteState(); // Sync Play/Pause
       }
     });
   }
@@ -424,6 +443,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     await _musicService.play(song);
     _updateDiscord();
+    _broadcastRemoteState(); // Sync Song Change
   }
 
   // --- COLOR EXTRACTION (Fixed for MP3s) ---
@@ -476,6 +496,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     final prefs = await SharedPreferences.getInstance();
     final savedVolume = prefs.getDouble('volume') ?? 0.5;
     await _musicService.setVolume(savedVolume);
+    _broadcastRemoteState(); // Sync Volume
 
     final savedShuffle = prefs.getBool('shuffle') ?? false;
     final savedLoopIndex = prefs.getInt('loopMode') ?? 0;
@@ -600,6 +621,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _isSessionLogged = false;
     _lastLogPosition = 0.0;
     _cumulativeSecondsListened = 0.0;
+    _preloadCheckpoints.clear(); // 🚀 Reset preload checkpoints for new song
     if (resetTime) {
       _lastSongChangeTime = DateTime.now();
     }
@@ -823,9 +845,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _saveSettings(); // SAVE STATE
     _saveQueueState(); // SAVE QUEUE
 
-    _updateDiscord();
-    _saveSettings(); // SAVE STATE
-    _saveQueueState(); // SAVE QUEUE
+    _broadcastRemoteState(); // Sync Song Change
 
     // TRIGGER PRELOAD (Next + Previous)
     _preloadNextSong();
@@ -890,6 +910,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
       _musicService.play(nextSong);
       _updateDiscord();
+      _broadcastRemoteState(); // Sync Next Song Change
 
       // TRIGGER PRELOAD
       _preloadNextSong();
@@ -999,6 +1020,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     _musicService.play(readySong);
     _updateDiscord();
+    _broadcastRemoteState(); // Sync Prev Song Change
 
     // Trigger Preloads
     _preloadNextSong();
@@ -1232,6 +1254,19 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
         break;
     }
+  }
+
+  void _broadcastRemoteState() {
+    _remoteService.broadcastState(
+      title: state.currentSong?.title,
+      artist: state.currentSong?.artist,
+      isPlaying: state.isPlaying,
+      volume: state.volume,
+      positionSeconds: state.currentPosition.toInt(),
+      durationSeconds: state.totalDuration.toInt(),
+      artUrl: state.currentSong?.onlineArtUrl,
+      filePath: state.currentSong?.filePath,
+    );
   }
 }
 

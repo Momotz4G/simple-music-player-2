@@ -323,25 +323,26 @@
     <!-- Load Config (Gitignored) -->
     <script src="config.js"></script>
     <script>
-        if (!window.FIREBASE_CONFIG) {
-            alert("⚠️ Missing config.js! \n\n1. Rename 'config.example.js' to 'config.js'\n2. Paste your Firebase keys inside.");
+        if (!window.POCKETBASE_CONFIG || !window.POCKETBASE_CONFIG.url) {
+            // No config.js found - display error instead of exposing endpoint
+            console.error("FATAL: config.js is missing or invalid. Cannot connect to server.");
+            document.getElementById('loader').innerText = "Configuration Error: Missing config.js";
+            // Prevent further execution by setting a flag
+            window.POCKETBASE_CONFIG = { url: null, error: true };
         }
     </script>
 
-    <!-- Firebase SDKs -->
+    <!-- PocketBase SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+        import PocketBase from 'https://unpkg.com/pocketbase/dist/pocketbase.es.mjs';
 
-        const firebaseConfig = window.FIREBASE_CONFIG;
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        const pb = new PocketBase(window.POCKETBASE_CONFIG.url);
+        pb.autoCancellation(false);
 
         const urlParams = new URLSearchParams(window.location.search);
-        const targetUid = urlParams.get('uid');
+        // Support both old (uid) and new (sid) URL formats
+        const targetSessionId = urlParams.get('sid'); // New: direct session record ID
+        const legacyUid = urlParams.get('uid'); // Old: user_id (deprecated)
 
         const els = {
             title: document.getElementById('title'),
@@ -358,6 +359,8 @@
         };
 
         let isPlaying = false;
+        let sessionRecordId = null;
+        let lastInteractionTime = 0; // Timestamp of last user action
 
         function showToast(msg) {
             els.toast.innerText = msg;
@@ -366,20 +369,48 @@
         }
 
         async function init() {
-            if (!targetUid) {
-                els.loader.innerText = "Error: Invalid Link (No ID)";
+            // Check for configuration error first
+            if (window.POCKETBASE_CONFIG.error) {
+                return; // Error already displayed by config check
+            }
+
+            // New secure method: use session record ID directly
+            if (targetSessionId) {
+                sessionRecordId = targetSessionId;
+            } else if (legacyUid) {
+                // Legacy fallback: try to find by user_id (may fail if List is locked)
+                els.loader.innerText = "Connecting (legacy mode)...";
+                try {
+                    const record = await pb.collection('sessions').getFirstListItem(`user_id="${legacyUid}"`);
+                    sessionRecordId = record.id;
+                } catch (e) {
+                    els.loader.innerText = "Error: Legacy mode not supported. Please regenerate QR code.";
+                    return;
+                }
+            } else {
+                els.loader.innerText = "Error: Invalid Link (No Session ID)";
                 return;
             }
 
             try {
-                await signInAnonymously(auth);
+                els.loader.innerText = "Connecting...";
+
+                // Get session directly by record ID (only needs View permission)
+                const record = await pb.collection('sessions').getOne(sessionRecordId);
+
+                // Load initial state
+                updateUI(record);
+
+                // Subscribe
+                startListening();
+
                 els.loader.style.display = 'none';
                 setStatus(true);
-                startListening();
+
             } catch (e) {
                 console.error(e);
-                els.loader.innerText = "Auth Failed";
-                showToast("Auth Failed: " + e.message);
+                els.loader.innerText = "Connection Failed: " + (e.message || e);
+                showToast("Connection Failed");
             }
         }
 
@@ -393,57 +424,108 @@
             }
         }
 
+        function updateUI(data) {
+            if (!data) return;
+
+            // IGNORE UPDATE if user just interacted (prevent flickering)
+            if (Date.now() - lastInteractionTime < 2500) {
+                return;
+            }
+
+            els.title.innerText = data.current_title || "Not Playing";
+            // Note: 'artist' field might need to be added to PB schema if not present,
+            // or we might need to parse 'current_song' JSON if we stored it that way.
+            // For now assuming we just show title.
+            els.artist.innerText = data.current_artist || "";
+
+            // Art is tricky. If we stored art URL in session, great.
+            // If not, we might need to fetch it.
+            // Let's assume 'album_art_url' is in the session record for now, or fallback.
+            if (data.album_art_url) {
+                els.artImg.src = data.album_art_url;
+                els.ambient.style.backgroundImage = `url(${data.album_art_url})`;
+                els.artImg.classList.add('loaded');
+            } else {
+                els.ambient.style.backgroundImage = 'none';
+                els.artImg.src = '';
+                els.artImg.classList.remove('loaded');
+            }
+
+            isPlaying = data.is_playing;
+            els.playIcon.innerText = isPlaying ? "pause" : "play_arrow";
+            els.artContainer.className = isPlaying ? "art-container playing" : "art-container";
+
+            if (document.activeElement !== els.slider) {
+                els.slider.value = data.volume !== undefined ? data.volume : 1.0;
+            }
+        }
+
         function startListening() {
-            const docRef = doc(db, "metrics", targetUid, "remote_state", "current");
+            if (!sessionRecordId) return;
 
-            onSnapshot(docRef, (doc) => {
-                const data = doc.data();
-                if (!data) return;
-
-                // Update UI
-                els.title.innerText = data.title || "Unknown";
-                els.artist.innerText = data.artist || "Unknown";
-
-                if (data.artUrl) {
-                    els.artImg.src = data.artUrl;
-                    els.ambient.style.backgroundImage = `url(${data.artUrl})`;
-                    els.artImg.classList.add('loaded');
-                } else {
-                    els.ambient.style.backgroundImage = 'none';
-                    els.artImg.src = '';
-                    els.artImg.classList.remove('loaded');
+            // 1. Realtime (Best Effort)
+            pb.collection('sessions').subscribe(sessionRecordId, function (e) {
+                if (e.action === 'update') {
+                    updateUI(e.record);
+                } else if (e.action === 'delete') {
+                    setStatus(false);
+                    showToast("Device Disconnected");
                 }
-
-                isPlaying = data.isPlaying;
-                els.playIcon.innerText = isPlaying ? "pause" : "play_arrow";
-                els.artContainer.className = isPlaying ? "art-container playing" : "art-container";
-
-                if (document.activeElement !== els.slider) {
-                    els.slider.value = data.volume;
-                }
-
-            }, (error) => {
-                console.error("Listen failed: ", error);
-                setStatus(false);
-                showToast("Lost Connection");
+            }).catch(err => {
+                console.error("Subscribe error:", err);
+                // Don't show toast for subscribe error if polling works
             });
+
+            // 2. Polling Fallback (Reliability)
+            // Poll every 1 second to get the latest state (Play/Pause, Song Title, etc.)
+            setInterval(async () => {
+                try {
+                    const record = await pb.collection('sessions').getOne(sessionRecordId, { requestKey: null }); // disable auto cancel
+                    updateUI(record);
+                    setStatus(true);
+                } catch (e) {
+                    // console.error("Polling error", e);
+                    // Only show status disconnected if polling fails consistently?
+                    // For now, let's just log it. 
+                }
+            }, 1000);
         }
 
         window.togglePlay = function () {
+            // Calculate action based on CURRENT state
             const action = isPlaying ? 'pause' : 'play';
-            sendCommand(action);
+
+            // OPTIMISTIC UPDATE: Update UI immediately
+            lastInteractionTime = Date.now(); // SET INTERACTION TIMESTAMP
             isPlaying = !isPlaying;
             els.playIcon.innerText = isPlaying ? "pause" : "play_arrow";
+            els.artContainer.className = isPlaying ? "art-container playing" : "art-container";
+
+            // Send command
+            sendCommand(action);
         }
 
         window.sendCommand = async function (action, value = null) {
+            if (!sessionRecordId) return;
             try {
-                const colRef = collection(db, "metrics", targetUid, "remote_commands");
-                await addDoc(colRef, {
-                    action: action,
-                    value: value,
-                    timestamp: serverTimestamp()
-                });
+                // We update 'last_command' with a unique ID to ensure the PC sees it as a new change
+                // Format: "command|timestamp"
+                const uniqueCmd = `${action}|${Date.now()}`;
+
+                const data = {
+                    last_command: uniqueCmd
+                };
+                if (value !== null) {
+                    // If we need to send volume, we might need a separate field or parse it.
+                    // The Dart code 'RemoteControlService.dart' reads 'volume' directly if we update it.
+                    // Let's update 'volume' field if action is volume.
+                    if (action === 'volume') {
+                        data.volume = value;
+                    }
+                }
+
+                await pb.collection('sessions').update(sessionRecordId, data);
+
             } catch (e) {
                 console.error("Send failed", e);
                 showToast("Command Failed");

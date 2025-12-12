@@ -13,6 +13,7 @@ enum NavigationType {
   artist,
   album,
   playlist,
+  track, // 🚀 ADDED TRACK
 }
 
 class NavigationItem {

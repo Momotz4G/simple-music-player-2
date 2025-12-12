@@ -34,6 +34,8 @@ import 'search_page.dart';
 import 'album_detail_page.dart';
 import 'playlist_detail_page.dart';
 import 'artist_detail_page.dart';
+import 'track_detail_page.dart'; // 🚀 IMPORTED
+import '../../models/song_metadata.dart'; // 🚀 IMPORTED
 import '../../services/update_service.dart';
 import '../../services/bulk_download_service.dart';
 import '../components/download_progress_widget.dart';
@@ -60,6 +62,31 @@ class _MainShellState extends ConsumerState<MainShell> {
       _checkForUpdates();
       _checkWhatsNew();
     });
+
+    // 🚀 LISTEN FOR BULK DOWNLOAD ERRORS (Ban/Limit)
+    BulkDownloadService().errorNotifier.addListener(_onBulkDownloadError);
+  }
+
+  void _onBulkDownloadError() {
+    final error = BulkDownloadService().errorNotifier.value;
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor:
+              error.contains("suspended") ? Colors.red : Colors.orange,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      // Clear the error after showing
+      BulkDownloadService().errorNotifier.value = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    BulkDownloadService().errorNotifier.removeListener(_onBulkDownloadError);
+    super.dispose();
   }
 
   Future<void> _checkWhatsNew() async {
@@ -258,6 +285,8 @@ class _MainShellState extends ConsumerState<MainShell> {
           return AlbumDetailPage(album: item.data as AlbumModel);
         case NavigationType.playlist:
           return PlaylistDetailPage(playlistId: item.data as String);
+        case NavigationType.track:
+          return TrackDetailPage(songMetadata: item.data as SongMetadata);
         default:
           return _getCurrentPage(currentView);
       }

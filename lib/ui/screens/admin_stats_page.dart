@@ -1,27 +1,29 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/metrics_service.dart';
 
 class AdminStatsPage extends StatelessWidget {
-  const AdminStatsPage({super.key});
+  final String role; // 'admin' or 'viewer'
 
-  // Helper to safely parse timestamp (Handles String or Timestamp)
-  Timestamp? _parseTimestamp(dynamic value) {
-    if (value is Timestamp) return value;
+  const AdminStatsPage({super.key, required this.role});
+
+  bool get isAdmin => role == 'admin';
+
+  // Helper to safely parse timestamp (Handles String or generic dynamic)
+  DateTime? _parseTimestamp(dynamic value) {
+    if (value is DateTime) return value;
     if (value is String) {
       try {
-        return Timestamp.fromDate(DateTime.parse(value));
+        return DateTime.parse(value);
       } catch (_) {}
     }
     return null;
   }
 
   // Helper to format date
-  String _formatDate(Timestamp? timestamp) {
-    if (timestamp == null) return "Never";
-    final date = timestamp.toDate();
+  String _formatDate(DateTime? date) {
+    if (date == null) return "Never";
     return "${date.year}-${date.month}-${date.day} ${date.hour}:${date.minute}";
   }
 
@@ -29,7 +31,7 @@ class AdminStatsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Admin Dashboard"),
+        title: Text(isAdmin ? "Admin Dashboard" : "Dashboard (View Only)"),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: const [
@@ -48,12 +50,14 @@ class AdminStatsPage extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            // return const Center(child: CircularProgressIndicator());
+            // Return empty container or loading if strict waiting, but stream might be instant empty.
           }
 
           final docs = snapshot.data ?? [];
           if (docs.isEmpty) {
-            return const Center(child: Text("No user data found."));
+            return const Center(
+                child: Text("No user data found (PocketBase Mode)."));
           }
 
           // 🚀 METRICS AGGREGATION
@@ -61,7 +65,7 @@ class AdminStatsPage extends StatelessWidget {
           final activeUsers = docs.where((user) {
             final timestamp = _parseTimestamp(user.data['last_active']);
             if (timestamp == null) return false;
-            return DateTime.now().difference(timestamp.toDate()).inMinutes < 2;
+            return DateTime.now().difference(timestamp).inMinutes < 2;
           }).length;
 
           return Column(
@@ -104,8 +108,7 @@ class AdminStatsPage extends StatelessWidget {
 
                         // QUOTA LOGIC
                         final lastDate =
-                            _parseTimestamp(data['last_download_date'])
-                                ?.toDate();
+                            _parseTimestamp(data['last_download_date']);
                         final now = DateTime.now();
                         final isToday = lastDate != null &&
                             lastDate.day == now.day &&
@@ -117,7 +120,7 @@ class AdminStatsPage extends StatelessWidget {
 
                         // DAILY PLAYS LOGIC
                         final lastPlayDate =
-                            _parseTimestamp(data['last_play_date'])?.toDate();
+                            _parseTimestamp(data['last_play_date']);
                         final isPlayToday = lastPlayDate != null &&
                             lastPlayDate.day == now.day &&
                             lastPlayDate.month == now.month &&
@@ -169,20 +172,37 @@ class AdminStatsPage extends StatelessWidget {
                                       fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.refresh, size: 16),
-                                  tooltip: "Reset Daily Quota",
-                                  splashRadius: 20,
-                                  onPressed: () {
-                                    MetricsService()
-                                        .adminAction(user.id, 'reset_quota');
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text("Quota Reset!"),
-                                          duration: Duration(seconds: 1)),
-                                    );
-                                  },
-                                ),
+                                // Reset Quota Button
+                                // Admin: can reset anyone
+                                // Viewer: can only reset their own (matching user_id)
+                                Builder(builder: (context) {
+                                  final currentUserId = MetricsService().userId;
+                                  final isOwnDevice = user.id == currentUserId;
+                                  final canReset = isAdmin || isOwnDevice;
+
+                                  if (!canReset) return const SizedBox.shrink();
+
+                                  return IconButton(
+                                    icon: const Icon(Icons.refresh, size: 16),
+                                    tooltip: isOwnDevice
+                                        ? "Reset My Quota"
+                                        : "Reset User Quota",
+                                    splashRadius: 20,
+                                    onPressed: () {
+                                      MetricsService()
+                                          .adminAction(user.id, 'reset_quota');
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(isOwnDevice
+                                                ? "✅ Your quota has been reset!"
+                                                : "Quota Reset!"),
+                                            duration:
+                                                const Duration(seconds: 1)),
+                                      );
+                                    },
+                                  );
+                                }),
                               ],
                             ),
                           ),
@@ -192,9 +212,8 @@ class AdminStatsPage extends StatelessWidget {
                                   _parseTimestamp(data['last_active']);
                               if (timestamp == null) return const Text("Never");
 
-                              final lastActive = timestamp.toDate();
                               final isOnline = DateTime.now()
-                                      .difference(lastActive)
+                                      .difference(timestamp)
                                       .inMinutes <
                                   2;
 
@@ -224,61 +243,89 @@ class AdminStatsPage extends StatelessWidget {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                IconButton(
-                                  icon: Icon(
-                                      isBanned
-                                          ? Icons
-                                              .settings_backup_restore_rounded // Restore (Unban)
-                                          : Icons
-                                              .remove_circle_outline, // Ban Action
-                                      color:
-                                          isBanned ? Colors.green : Colors.red),
-                                  tooltip: isBanned ? "Unban User" : "Ban User",
-                                  onPressed: () {
-                                    // Toggle Ban
-                                    MetricsService().adminAction(
-                                        user.id, isBanned ? 'unban' : 'ban');
+                                // Ban/Unban Button - Admin Only
+                                if (isAdmin)
+                                  IconButton(
+                                    icon: Icon(
+                                        isBanned
+                                            ? Icons
+                                                .settings_backup_restore_rounded
+                                            : Icons.remove_circle_outline,
+                                        color: isBanned
+                                            ? Colors.green
+                                            : Colors.red),
+                                    tooltip:
+                                        isBanned ? "Unban User" : "Ban User",
+                                    onPressed: () {
+                                      // Toggle Ban
+                                      MetricsService().adminAction(
+                                          user.id, isBanned ? 'unban' : 'ban');
 
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(isBanned
-                                              ? "✅ User Unbanned"
-                                              : "⛔ User Banned")),
-                                    );
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.grey),
-                                  tooltip: "Delete User",
-                                  onPressed: () async {
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text("Delete User?"),
-                                        content: const Text(
-                                            "This will remove their history and limits from the cloud. Usage stats will reset."),
-                                        actions: [
-                                          TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(ctx).pop(false),
-                                              child: const Text("Cancel")),
-                                          TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(ctx).pop(true),
-                                              child: const Text("Delete",
-                                                  style: TextStyle(
-                                                      color: Colors.red))),
-                                        ],
-                                      ),
-                                    );
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(isBanned
+                                                ? "✅ User Unbanned"
+                                                : "⛔ User Banned")),
+                                      );
+                                    },
+                                  ),
+                                // Delete Button - Admin Only
+                                if (isAdmin)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.grey),
+                                    tooltip: "Delete User",
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: const Text("Delete User?"),
+                                          content: const Text(
+                                              "This will remove their history and limits from the cloud. Usage stats will reset."),
+                                          actions: [
+                                            TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(ctx)
+                                                        .pop(false),
+                                                child: const Text("Cancel")),
+                                            TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(ctx).pop(true),
+                                                child: const Text("Delete",
+                                                    style: TextStyle(
+                                                        color: Colors.red))),
+                                          ],
+                                        ),
+                                      );
 
-                                    if (confirm == true) {
-                                      MetricsService()
-                                          .adminAction(user.id, 'delete');
-                                    }
-                                  },
-                                ),
+                                      if (confirm == true) {
+                                        // Pass both user_id and record ID
+                                        MetricsService().adminAction(
+                                          user.id,
+                                          'delete',
+                                          recordId: data['id'],
+                                        );
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text("🗑️ User Deleted"),
+                                            duration: Duration(seconds: 1),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                // Show message for viewers
+                                if (!isAdmin)
+                                  const Text(
+                                    "View Only",
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 12,
+                                    ),
+                                  ),
                               ],
                             ),
                           ),

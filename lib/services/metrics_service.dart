@@ -4,14 +4,10 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import '../env/env.dart';
 import '../data/schemas.dart';
 import '../models/song_model.dart';
+import 'pocketbase_service.dart';
 
 class MetricsService {
   static final MetricsService _instance = MetricsService._internal();
@@ -22,11 +18,11 @@ class MetricsService {
   bool get initialized => _initialized;
   String? _userId;
   String? get userId => _userId;
-  Timer? _heartbeatTimer;
 
-  // REST API Config (For Windows)
-  static final String _firestoreBaseUrl =
-      'https://firestore.googleapis.com/v1/projects/${Env.firebaseProjectId}/databases/(default)/documents';
+  // 🚀 LOCAL SESSION TRACKING (for accurate quota enforcement)
+  int _sessionDownloadCount = 0;
+  DateTime? _sessionStartDate;
+  int? _cachedDailyCountAtStart;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -35,48 +31,23 @@ class MetricsService {
       // 0. Load Persistent Device ID
       _userId = await _getStableUserId();
       debugPrint("📊 MetricsService: Stable Device ID loaded: $_userId");
-      debugPrint("📊 MetricsService: Check Windows: ${Platform.isWindows}");
 
-      // 1. Initialize Firebase (Native only for Non-Windows)
-      // On Windows, we skip native init to avoid DLL crashes, and use REST instead.
-      if (!Platform.isWindows) {
-        await Firebase.initializeApp(
-          options: FirebaseOptions(
-            apiKey: Env.firebaseApiKey,
-            appId: Platform.isAndroid
-                ? Env.firebaseAppIdAndroid
-                : Platform.isIOS
-                    ? Env.firebaseAppIdIos
-                    : Platform.isMacOS
-                        ? Env.firebaseAppIdMacos
-                        : Env.firebaseAppIdWindows,
-            messagingSenderId: Env.firebaseMessagingSenderId,
-            projectId: Env.firebaseProjectId,
-            storageBucket: Env.firebaseStorageBucket,
-            measurementId: Env.firebaseMeasurementId,
-            authDomain: Env.firebaseAuthDomain,
-          ),
-        );
-
-        // 2. Sign in Anonymously (Native only)
-        await FirebaseAuth.instance.signInAnonymously();
-      } else {
-        debugPrint("🪟 Windows: Utilizing REST API for Metrics (Stable Mode).");
-        debugPrint("🪟 Windows: REST URL: $_firestoreBaseUrl");
-      }
+      // 1. Initialize PocketBase (Unified for all platforms)
+      debugPrint("🚀 Initializing PocketBase Service...");
+      await PocketBaseService().init(userId: _userId);
 
       _initialized = true;
 
-      // 3. Track App Open (Session)
+      // 2. Track App Open (Session)
       _trackEvent('app_session_start', {
         'platform': defaultTargetPlatform.name,
         'timestamp': _serverTimestamp(),
       });
 
-      // Start Heartbeat
+      // 3. Start Heartbeat (UNLIMITED ENABLED!)
       _startHeartbeat();
 
-      // Update Identity info
+      // 4. Update Identity info
       debugPrint("📊 MetricsService: Updating Identity...");
       await _updateUserIdentity();
       debugPrint("📊 MetricsService: Identity Updated.");
@@ -86,415 +57,282 @@ class MetricsService {
     }
   }
 
-  // --- REST API HELPER (Windows Only) ---
+  // --- CORE WRAPPER ---
+
+  // POCKETBASE WRITE HELPER
+  Future<void> _pbWrite(Map<String, dynamic> fields) async {
+    await PocketBaseService().saveData(fields);
+  }
+
+  // Legacy Redirects
   Future<void> _restWrite(
       String collectionPath, String docId, Map<String, dynamic> fields,
       {bool isUpdate = false}) async {
-    // Convert generic map to Firestore JSON syntax
-    final firestoreFields = <String, dynamic>{};
-    fields.forEach((key, value) {
-      firestoreFields[key] = _toFirestoreValue(value);
-    });
-
-    final url = Uri.parse(
-        '$_firestoreBaseUrl/$collectionPath/$docId${isUpdate ? '?updateMask.fieldPaths=${fields.keys.join('&updateMask.fieldPaths=')}' : ''}');
-    debugPrint("🌐 REST WRITE: $url");
-
-    try {
-      final response = await http.patch(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'fields': firestoreFields}),
-      );
-      if (response.statusCode >= 400) {
-        debugPrint("⚠️ REST Error [${response.statusCode}]: ${response.body}");
-      }
-    } catch (e) {
-      debugPrint("⚠️ REST Exception: $e");
-    }
+    await _pbWrite(fields);
   }
 
   Future<void> _restAdd(
       String collectionPath, Map<String, dynamic> fields) async {
-    // Convert generic map to Firestore JSON syntax
-    final firestoreFields = <String, dynamic>{};
-    fields.forEach((key, value) {
-      firestoreFields[key] = _toFirestoreValue(value);
-    });
-
-    final url = Uri.parse('$_firestoreBaseUrl/$collectionPath');
-    debugPrint("🌐 REST ADD: $url");
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'fields': firestoreFields}),
-      );
-      if (response.statusCode >= 400) {
-        debugPrint(
-            "⚠️ REST Add Error [${response.statusCode}]: ${response.body}");
-      }
-    } catch (e) {
-      debugPrint("⚠️ REST Add Exception: $e");
-    }
-  }
-
-  dynamic _toFirestoreValue(dynamic value) {
-    if (value is String) return {'stringValue': value};
-    if (value is int) return {'integerValue': value.toString()};
-    if (value is double) return {'doubleValue': value};
-    if (value is bool) return {'booleanValue': value};
-    // Timestamp handling for REST (ISO string)
-    if (value is String && value == "SERVER_TIMESTAMP") {
-      return {'timestampValue': DateTime.now().toUtc().toIso8601String()};
-    }
-    return {'stringValue': value.toString()};
+    // For 'add', we just merge it into the user's record or ignore if it's an event
+    // Events might ideally go to a separate 'events' collection, but for now we simplify.
+    // If it's a critical event, we log it.
+    // Ensure we don't overwrite main 'metrics' with random event data unless intended.
+    // Actually _trackEvent calls this.
+    // transforming event to log?
+    // Let's just log it to console or ignore for now as users own DB.
+    debugPrint("PB Log: $fields");
   }
 
   dynamic _serverTimestamp() {
-    if (Platform.isWindows) return "SERVER_TIMESTAMP";
-    return FieldValue.serverTimestamp();
+    return DateTime.now().toUtc().toIso8601String();
   }
-
-  // --- CORE METHODS ---
 
   Future<void> _trackEvent(String eventName, Map<String, dynamic> data) async {
     if (!_initialized || _userId == null) return;
-
-    if (Platform.isWindows) {
-      await _restAdd('metrics/$_userId/events', {'name': eventName, ...data});
-      return;
-    }
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('metrics')
-          .doc(_userId)
-          .collection('events')
-          .add({
-        'name': eventName,
-        ...data,
-      });
-    } catch (e) {
-      debugPrint("⚠️ Failed to track event: $e");
-    }
+    // Optional: Log events to PocketBase if desired
+    // await _pbWrite({'last_event': eventName, ...data});
   }
 
-  // --- Specific Events ---
+  // --- SPECIFIC ACTIONS ---
 
   Future<void> trackSongPlay(Song song, {int? localTotal}) async {
-    await _trackEvent('song_play', {
-      'title': song.title,
-      'artist': song.artist,
-      'duration': song.duration,
-      'local_total_plays': localTotal,
-      'timestamp': _serverTimestamp(),
-    });
-    // Increment Total Plays (and Daily Plays)
+    // Increment Total Plays
     await _incrementUserStat('play_count');
-
-    // Sync Local Total directly to User doc if provided
+    // Sync Local Total
     if (localTotal != null) {
-      if (Platform.isWindows) {
-        await _restWrite(
-            'metrics',
-            _userId!,
-            {
-              'local_total_plays': localTotal,
-              'play_count': localTotal, // FORCE SYNC
-            },
-            isUpdate: true);
-      } else {
-        FirebaseFirestore.instance.collection('metrics').doc(_userId).set({
-          'local_total_plays': localTotal,
-          'play_count': localTotal, // FORCE SYNC
-        }, SetOptions(merge: true));
-      }
+      await _restWrite(
+          'metrics',
+          _userId!,
+          {
+            'local_total_plays': localTotal,
+            'play_count': localTotal, // Force sync
+          },
+          isUpdate: true);
     }
   }
 
-  // Overload for SongModel (StatsProvider / PlayerProvider)
   Future<void> trackSongPlayModel(SongModel song, {int? localTotal}) async {
-    await _trackEvent('song_play', {
-      'title': song.title,
-      'artist': song.artist,
-      'duration': song.duration,
-      'local_total_plays': localTotal, // Sync Local Total
-      'timestamp': _serverTimestamp(),
-    });
-    // Increment Total Plays (and Daily Plays)
     await _incrementUserStat('play_count');
-
-    // Sync Local Total directly to User doc if provided
     if (localTotal != null) {
-      if (Platform.isWindows) {
-        await _restWrite(
-            'metrics',
-            _userId!,
-            {
-              'local_total_plays': localTotal,
-              'play_count': localTotal, // FORCE SYNC
-            },
-            isUpdate: true);
-      } else {
-        FirebaseFirestore.instance.collection('metrics').doc(_userId).set({
-          'local_total_plays': localTotal,
-          'play_count': localTotal, // FORCE SYNC
-        }, SetOptions(merge: true));
-      }
+      await _restWrite(
+          'metrics',
+          _userId!,
+          {
+            'local_total_plays': localTotal,
+            'play_count': localTotal,
+          },
+          isUpdate: true);
     }
   }
 
   Future<void> trackDownload(Song song) async {
-    await _trackEvent('song_download', {
-      'title': song.title,
-      'artist': song.artist,
-      'timestamp': _serverTimestamp(),
-    });
-    // Increment Total Downloads
     await _incrementUserStat('download_count');
   }
 
-  // Helper for Search Page (where we only have metadata)
   Future<void> trackDownloadMetadata(dynamic metadata) async {
-    await _trackEvent('song_download', {
-      'title': metadata.title,
-      'artist': metadata.artist,
-      'source': 'youtube_search',
-      'timestamp': _serverTimestamp(),
-    });
-    // Increment Total Downloads
+    // 🚀 INCREMENT LOCAL SESSION COUNTER FIRST (instant, no race condition)
+    _sessionDownloadCount++;
+    debugPrint("📊 Session download count: $_sessionDownloadCount");
+
+    // Then sync to PocketBase (async, might have delay)
     await _incrementUserStat('download_count');
   }
 
-  // BAN & LIMIT CHECK
+  // --- LIMITS & QUOTA ---
+
+  static const int dailyDownloadLimit = 50;
+
+  // Check if user is banned
+  Future<bool> isUserBanned() async {
+    try {
+      final currentData = await PocketBaseService().getUserMetrics();
+      if (currentData == null) return false;
+      return currentData['is_banned'] == true;
+    } catch (e) {
+      debugPrint("⚠️ Ban Check Error: $e");
+      return false; // On error, allow access
+    }
+  }
+
   Future<bool> canDownload() async {
-    if (!_initialized || _userId == null) {
-      return true; // Fail open if offline/error
+    // Check ban status first
+    final banned = await isUserBanned();
+    if (banned) {
+      debugPrint("⛔ User is banned - download blocked");
+      return false;
     }
 
+    // Check quota
+    final remaining = await getRemainingQuota();
+    return remaining > 0;
+  }
+
+  Future<int> getRemainingQuota() async {
     try {
-      Map<String, dynamic>? data;
+      final now = DateTime.now().toUtc();
 
-      if (Platform.isWindows) {
-        // Windows REST Read
-        final url = Uri.parse('$_firestoreBaseUrl/metrics/$_userId');
-        final response = await http.get(url);
-        if (response.statusCode == 200) {
-          final json = jsonDecode(response.body);
-          data = _convertFirestoreFields(json['fields'] ?? {});
-        } else if (response.statusCode == 404) {
-          return true; // New user
+      // 🚀 CHECK IF LOCAL SESSION IS FROM TODAY
+      if (_sessionStartDate != null) {
+        final sessionDate = _sessionStartDate!;
+        if (sessionDate.year != now.year ||
+            sessionDate.month != now.month ||
+            sessionDate.day != now.day) {
+          // New day - reset local session
+          _sessionDownloadCount = 0;
+          _sessionStartDate = now;
+          _cachedDailyCountAtStart = null;
         }
-      } else {
-        final doc = await FirebaseFirestore.instance
-            .collection('metrics')
-            .doc(_userId)
-            .get();
-        if (doc.exists) data = doc.data();
       }
 
-      if (data == null) return true;
+      final currentData = await PocketBaseService().getUserMetrics();
+      if (currentData == null)
+        return dailyDownloadLimit - _sessionDownloadCount;
 
-      // 1. Check Global Ban
-      if (data['is_banned'] == true) {
-        debugPrint("⛔ User is BANNED from downloads.");
-        return false;
+      // Check if user is banned - return 0 quota
+      if (currentData['is_banned'] == true) {
+        return 0;
       }
 
-      // 2. Check Daily Limit (GMT+7 Reset)
-      // Timestamp handling differs slightly between Native and REST helper result
-      final dynamic rawDate = data['last_download_date'];
-      DateTime? lastDownloadDate;
-      if (rawDate is Timestamp) {
-        lastDownloadDate = rawDate.toDate();
-      } else if (rawDate is String) {
-        lastDownloadDate = DateTime.tryParse(rawDate);
-      } else if (rawDate is DateTime) {
-        lastDownloadDate = rawDate;
+      // Check if it's a new day
+      final lastDateStr = currentData['last_download_date'];
+      int serverDailyCount = currentData['daily_download_count'] ?? 0;
+
+      if (lastDateStr != null && lastDateStr.isNotEmpty) {
+        try {
+          final lastDate = DateTime.parse(lastDateStr).toUtc();
+
+          // If it's a new day, reset server count
+          if (lastDate.year != now.year ||
+              lastDate.month != now.month ||
+              lastDate.day != now.day) {
+            serverDailyCount = 0;
+          }
+        } catch (e) {
+          // Parse error, assume count is valid
+        }
       }
 
-      // SERVER TIME LOGIC (GMT+7)
-      final serverNow = DateTime.now().toUtc().add(const Duration(hours: 7));
-      int dailyCount = data['daily_download_count'] is int
-          ? data['daily_download_count']
-          : 0;
+      // 🚀 CACHE THE SERVER COUNT AT START OF SESSION
+      if (_cachedDailyCountAtStart == null) {
+        _cachedDailyCountAtStart = serverDailyCount;
+        _sessionStartDate = now;
+        _sessionDownloadCount = 0; // Reset session count when caching
+      }
 
+      // 🚀 USE LOCAL SESSION COUNTER FOR ACCURATE REAL-TIME QUOTA
+      // Total = cached server count at start + downloads in this session
+      final effectiveCount = _cachedDailyCountAtStart! + _sessionDownloadCount;
+
+      debugPrint(
+          "📊 Quota Check: server=$serverDailyCount, cached=$_cachedDailyCountAtStart, session=$_sessionDownloadCount, effective=$effectiveCount");
+
+      return (dailyDownloadLimit - effectiveCount).clamp(0, dailyDownloadLimit);
+    } catch (e) {
+      debugPrint("⚠️ Get Quota Error: $e");
+      // On error, use local session count as fallback
+      return (dailyDownloadLimit - _sessionDownloadCount)
+          .clamp(0, dailyDownloadLimit);
+    }
+  }
+
+  // --- COUNTERS ---
+
+  Future<void> _incrementUserStat(String fieldName) async {
+    if (!_initialized || _userId == null) return;
+
+    try {
+      // 1. Fetch Current Data
+      final currentData = await PocketBaseService().getUserMetrics();
+      final Map<String, dynamic> updates = {};
+
+      // 2. Prepare Current Values
+      int currentTotal = 0;
+      int currentDaily = 0;
+      String? lastDateStr;
+
+      // Determine which daily field matches the total field
+      String dailyFieldName = '';
+      String dateFieldName = '';
+
+      if (fieldName == 'play_count') {
+        currentTotal = currentData?['play_count'] ?? 0;
+        currentDaily = currentData?['daily_play_count'] ?? 0;
+        lastDateStr = currentData?['last_play_date'];
+        dailyFieldName = 'daily_play_count';
+        dateFieldName = 'last_play_date';
+      } else if (fieldName == 'download_count') {
+        currentTotal = currentData?['download_count'] ?? 0;
+        currentDaily = currentData?['daily_download_count'] ?? 0;
+        lastDateStr = currentData?['last_download_date'];
+        dailyFieldName = 'daily_download_count';
+        dateFieldName = 'last_download_date';
+      }
+
+      // 3. Logic: Daily Reset Check
+      final now = DateTime.now().toUtc();
       bool isNewDay = true;
-      if (lastDownloadDate != null) {
-        final lastDownloadGmt7 =
-            lastDownloadDate.toUtc().add(const Duration(hours: 7));
-        if (lastDownloadGmt7.day == serverNow.day &&
-            lastDownloadGmt7.month == serverNow.month &&
-            lastDownloadGmt7.year == serverNow.year) {
-          isNewDay = false;
+
+      if (lastDateStr != null && lastDateStr.isNotEmpty) {
+        try {
+          final lastDate = DateTime.parse(lastDateStr).toUtc();
+          if (lastDate.year == now.year &&
+              lastDate.month == now.month &&
+              lastDate.day == now.day) {
+            isNewDay = false;
+          }
+        } catch (e) {
+          // ignore parse errors, assume new day
         }
       }
 
       if (isNewDay) {
-        dailyCount = 0;
+        currentDaily = 0; // Reset for new day
       }
 
-      if (dailyCount >= 50) {
-        debugPrint("⏳ Daily Download Limit Reached ($dailyCount/50).");
-        return false;
+      // 4. Increment
+      currentTotal += 1;
+      currentDaily += 1;
+
+      // 5. Prepare Payload
+      updates[fieldName] = currentTotal;
+      if (dailyFieldName.isNotEmpty) {
+        updates[dailyFieldName] = currentDaily;
+      }
+      if (dateFieldName.isNotEmpty) {
+        updates[dateFieldName] = now.toIso8601String();
       }
 
-      return true;
+      // Always update last active
+      updates['last_active'] = now.toIso8601String();
+
+      // 6. Write Back
+      await _restWrite('metrics', _userId!, updates, isUpdate: true);
+
+      debugPrint(
+          "📊 Verified Increment: $fieldName=$currentTotal, Daily=$currentDaily");
     } catch (e) {
-      debugPrint("⚠️ CanDownload Check Error: $e");
-      return true; // Fail open
+      debugPrint("⚠️ Increment Error: $e");
     }
   }
 
-  // Counter Logic (Updated for Daily Limit)
-  Future<void> _incrementUserStat(String fieldName) async {
-    if (!_initialized || _userId == null) return;
+  // --- HEARTBEAT ---
 
-    if (Platform.isWindows &&
-        fieldName != 'download_count' &&
-        fieldName != 'play_count') {
-      // Windows: Use client-side UTC time for simple stats
-      await _restWrite('metrics', _userId!,
-          {'last_active': DateTime.now().toUtc().toIso8601String()},
-          isUpdate: true);
-      return;
-    }
-
-    try {
-      // For Windows complex logic (Read-Modify-Write)
-      if (Platform.isWindows) {
-        // 1. READ
-        final url = Uri.parse('$_firestoreBaseUrl/metrics/$_userId');
-        final response = await http.get(url);
-        Map<String, dynamic> data = {};
-        if (response.statusCode == 200) {
-          final json = jsonDecode(response.body);
-          data = _convertFirestoreFields(json['fields'] ?? {});
-        }
-
-        final Map<String, dynamic> updates = {};
-        updates['last_active'] = DateTime.now().toUtc().toIso8601String();
-
-        // Increment Simple Stat
-        int currentVal = (data[fieldName] is int) ? data[fieldName] : 0;
-        updates[fieldName] = currentVal + 1;
-
-        // Daily Logic
-        if (fieldName == 'download_count' || fieldName == 'play_count') {
-          String lastDateKey = fieldName == 'download_count'
-              ? 'last_download_date'
-              : 'last_play_date';
-          String dailyCountKey = fieldName == 'download_count'
-              ? 'daily_download_count'
-              : 'daily_play_count';
-
-          updates[lastDateKey] = DateTime.now().toUtc().toIso8601String();
-
-          final dynamic rawDate = data[lastDateKey];
-          DateTime? lastDate;
-          if (rawDate is String) lastDate = DateTime.tryParse(rawDate);
-          if (rawDate is DateTime) lastDate = rawDate;
-
-          final serverNow =
-              DateTime.now().toUtc().add(const Duration(hours: 7));
-          bool isNewDay = true;
-          if (lastDate != null) {
-            final lastDateGmt7 = lastDate.toUtc().add(const Duration(hours: 7));
-            if (lastDateGmt7.day == serverNow.day &&
-                lastDateGmt7.month == serverNow.month &&
-                lastDateGmt7.year == serverNow.year) {
-              isNewDay = false;
-            }
-          }
-
-          int dailyVal = (data[dailyCountKey] is int) ? data[dailyCountKey] : 0;
-          if (isNewDay) {
-            updates[dailyCountKey] = 1;
-          } else {
-            updates[dailyCountKey] = dailyVal + 1;
-          }
-        }
-
-        // 2. WRITE
-        await _restWrite('metrics', _userId!, updates, isUpdate: true);
-        return;
-      }
-
-      // NATIVE LOGIC
-      final Map<String, dynamic> updates = {
-        fieldName: FieldValue.increment(1),
-        'last_active': FieldValue.serverTimestamp(),
-      };
-
-      // Specifically for daily counters (downloads & plays)
-      if (fieldName == 'download_count' || fieldName == 'play_count') {
-        String lastDateKey = fieldName == 'download_count'
-            ? 'last_download_date'
-            : 'last_play_date';
-        String dailyCountKey = fieldName == 'download_count'
-            ? 'daily_download_count'
-            : 'daily_play_count';
-
-        updates[lastDateKey] = FieldValue.serverTimestamp();
-
-        // ⚠️ REFACTORED: Removed Transaction to prevent Windows Native Crash
-        final docRef =
-            FirebaseFirestore.instance.collection('metrics').doc(_userId);
-        final snapshot = await docRef.get();
-
-        if (!snapshot.exists) {
-          await docRef
-              .set({...updates, dailyCountKey: 1}, SetOptions(merge: true));
-        } else {
-          final data = snapshot.data()!;
-          final lastDate = (data[lastDateKey] as Timestamp?)?.toDate();
-
-          // SERVER TIME LOGIC (GMT+7)
-          final serverNow =
-              DateTime.now().toUtc().add(const Duration(hours: 7));
-
-          bool isNewDay = true;
-          if (lastDate != null) {
-            final lastDateGmt7 = lastDate.toUtc().add(const Duration(hours: 7));
-            if (lastDateGmt7.day == serverNow.day &&
-                lastDateGmt7.month == serverNow.month &&
-                lastDateGmt7.year == serverNow.year) {
-              isNewDay = false;
-            }
-          }
-
-          if (isNewDay) {
-            updates[dailyCountKey] = 1; // Reset to 1 (New Day)
-          } else {
-            updates[dailyCountKey] = FieldValue.increment(1); // Increment
-          }
-          await docRef.set(updates, SetOptions(merge: true));
-        }
-        return;
-      }
-
-      await FirebaseFirestore.instance
-          .collection('metrics')
-          .doc(_userId)
-          .set(updates, SetOptions(merge: true));
-    } catch (e) {
-      debugPrint("⚠️ Update Stat Error: $e");
-    }
-  }
-
-  // HEARTBEAT LOGIC
   void _startHeartbeat() {
-    _heartbeatTimer?.cancel();
-    _heartbeatTimer = Timer.periodic(const Duration(seconds: 60), (timer) {
-      if (_userId != null) {
-        _incrementUserStat('heartbeat_ticks');
+    // Send immediate heartbeat on startup
+    if (_initialized && _userId != null) {
+      PocketBaseService().sendHeartbeat();
+    }
+
+    // Then send every 45 seconds
+    Stream.periodic(const Duration(seconds: 45)).listen((_) {
+      if (_initialized && _userId != null) {
+        PocketBaseService().sendHeartbeat();
       }
     });
   }
 
-  // UPDATE IDENTITY (Hostname etc)
+  // --- IDENTITY ---
+
   Future<void> _updateUserIdentity() async {
     if (!_initialized || _userId == null) return;
     try {
@@ -502,61 +340,39 @@ class MetricsService {
       final os = Platform.operatingSystem;
       final osVersion = Platform.operatingSystemVersion;
 
-      if (Platform.isWindows) {
-        await _restWrite(
-            'metrics',
-            _userId!,
-            {
-              'hostname': hostname,
-              'os': os,
-              'os_version': osVersion,
-              'last_active': DateTime.now().toUtc().toIso8601String(),
-            },
-            isUpdate: true);
-      } else {
-        await FirebaseFirestore.instance
-            .collection('metrics')
-            .doc(_userId)
-            .set({
-          'hostname': hostname,
-          'os': os,
-          'os_version': osVersion,
-          'last_active': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-      }
+      await _restWrite(
+          'metrics',
+          _userId!,
+          {
+            'hostname': hostname,
+            'os': os,
+            'os_version': osVersion,
+            'last_active': DateTime.now().toUtc().toIso8601String(),
+          },
+          isUpdate: true);
     } catch (e) {
       debugPrint("⚠️ Update Identity Error: $e");
     }
   }
 
-  // SYNC LOCAL STATS (Called on Startup)
   Future<void> syncLocalStats(int localTotal) async {
     if (!_initialized || _userId == null) return;
     try {
-      if (Platform.isWindows) {
-        await _restWrite(
-            'metrics',
-            _userId!,
-            {
-              'local_total_plays': localTotal,
-              'play_count': localTotal, // FORCE SYNC TO MAIN COUNTER
-            },
-            isUpdate: true);
-      } else {
-        await FirebaseFirestore.instance
-            .collection('metrics')
-            .doc(_userId)
-            .set({
-          'local_total_plays': localTotal,
-          'play_count': localTotal, // FORCE SYNC TO MAIN COUNTER
-        }, SetOptions(merge: true));
-      }
+      await _restWrite(
+          'metrics',
+          _userId!,
+          {
+            'local_total_plays': localTotal,
+            'play_count': localTotal,
+          },
+          isUpdate: true);
     } catch (e) {
       debugPrint("⚠️ Sync Local Stats Error: $e");
     }
   }
 
-  // Helper to get or generate a stable ID (Hashed Hardware ID)
+  // --- HARDWARE ID ---
+
   Future<String> _getStableUserId() async {
     try {
       final deviceInfo = DeviceInfoPlugin();
@@ -567,10 +383,10 @@ class MetricsService {
         rawId = webInfo.userAgent ?? 'web_user';
       } else if (Platform.isWindows) {
         final winInfo = await deviceInfo.windowsInfo;
-        rawId = winInfo.deviceId; // Machine GUID
+        rawId = winInfo.deviceId;
       } else if (Platform.isAndroid) {
         final androidInfo = await deviceInfo.androidInfo;
-        rawId = androidInfo.id; // SSAID
+        rawId = androidInfo.id;
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
         rawId = iosInfo.identifierForVendor ?? 'ios_user';
@@ -581,18 +397,14 @@ class MetricsService {
         final linuxInfo = await deviceInfo.linuxInfo;
         rawId = linuxInfo.machineId ?? 'linux_user';
       } else {
-        // Fallback for unknown platforms
         rawId = "fallback_${Platform.localHostname}";
       }
 
-      // HASH THE ID (Privacy)
-      // SHA-256(RawID) -> Unique Anonymous ID
       final bytes = utf8.encode(rawId);
       final digest = sha256.convert(bytes);
       return digest.toString();
     } catch (e) {
       debugPrint("⚠️ Hardware ID Error: $e");
-      // Fallback to Prefs logic if Hardware check completely fails
       final prefs = await SharedPreferences.getInstance();
       var id = prefs.getString('unique_device_id');
       if (id == null) {
@@ -604,137 +416,52 @@ class MetricsService {
     }
   }
 
-  // --- ADMIN METHODS ---
-
-  // Verify Admin Access Code
-  Future<bool> verifyAdminCode(String code) async {
-    if (Platform.isWindows) {
-      try {
-        final url = Uri.parse('$_firestoreBaseUrl/settings/admin');
-        final response = await http.get(url);
-        if (response.statusCode == 200) {
-          final json = jsonDecode(response.body);
-          final fields = json['fields'];
-          final serverCode = fields['access_code']?['stringValue'];
-          return serverCode == code;
-        }
-      } catch (e) {
-        debugPrint("⚠️ Admin Verify Error: $e");
-      }
-      return false;
-    } else {
-      try {
-        final doc = await FirebaseFirestore.instance
-            .collection('settings')
-            .doc('admin')
-            .get();
-        return doc.exists && doc.data()?['access_code'] == code;
-      } catch (e) {
-        return false;
-      }
-    }
+  // --- STUBS FOR ADMIN (Removed/Disabled) ---
+  // Returns: 'admin', 'viewer', or null
+  Future<String?> verifyAdminCode(String code) async {
+    return await PocketBaseService().verifyAdminAccessCode(code);
   }
 
-  // Admin Data Model
-  // Simple wrapper to unify Native Snapshot and REST JSON
+  // --- ADMIN FUNCTIONALITY ---
+
   Stream<List<AdminUserData>> getAllUserMetrics() {
-    if (Platform.isWindows) {
-      // POLLING STREAM (Every 15 seconds)
-      return Stream.periodic(const Duration(seconds: 15), (_) async {
-        return await _fetchAllMetricsRest();
-      }).asyncMap((event) async => await event);
-    } else {
-      // NATIVE STREAM
-      return FirebaseFirestore.instance
-          .collection('metrics')
-          .snapshots()
-          .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          return AdminUserData(id: doc.id, data: doc.data());
-        }).toList();
-      });
-    }
+    // Poll every 1 second for "Live" feel
+    return Stream.periodic(const Duration(seconds: 1)).asyncMap((_) async {
+      final data = await PocketBaseService().fetchAllMetrics();
+      return data
+          .map((d) => AdminUserData(id: d['user_id'] ?? 'unknown', data: d))
+          .toList();
+    }).asBroadcastStream();
   }
 
-  Future<List<AdminUserData>> _fetchAllMetricsRest() async {
-    try {
-      final url = Uri.parse('$_firestoreBaseUrl/metrics?pageSize=100');
-      final response = await http.get(url);
+  Future<void> adminAction(String userId, String action,
+      {String? recordId}) async {
+    // For delete, we need the PocketBase record ID, not the user_id
+    // Other actions use user_id to find and update
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        final documents = json['documents'] as List?;
-        if (documents == null) return [];
+    final updateData = <String, dynamic>{};
 
-        return documents.map((doc) {
-          final name = doc['name'] as String; // .../metrics/USER_ID
-          final id = name.split('/').last;
-          final fields = doc['fields'] as Map<String, dynamic>? ?? {};
-          final data = _convertFirestoreFields(fields);
-          return AdminUserData(id: id, data: data);
-        }).toList();
-      }
-    } catch (e) {
-      // Silent error for polling
-    }
-    return [];
-  }
-
-  // Helper to convert Firestore REST JSON to standard Map
-  Map<String, dynamic> _convertFirestoreFields(Map<String, dynamic> fields) {
-    final Map<String, dynamic> data = {};
-    fields.forEach((key, value) {
-      if (value['stringValue'] != null) {
-        data[key] = value['stringValue'];
-      } else if (value['integerValue'] != null) {
-        data[key] = int.tryParse(value['integerValue']);
-      } else if (value['doubleValue'] != null) {
-        data[key] = value['doubleValue'];
-      } else if (value['booleanValue'] != null) {
-        data[key] = value['booleanValue'];
-      } else if (value['timestampValue'] != null) {
-        data[key] = Timestamp.fromDate(DateTime.parse(value['timestampValue']));
-      }
-    });
-    return data;
-  }
-
-  // Admin Actions
-  Future<void> adminAction(String userId, String action) async {
-    // action: 'ban', 'unban', 'reset_quota', 'delete'
-    if (Platform.isWindows) {
-      if (action == 'delete') {
-        await _restDelete('metrics/$userId');
-      } else {
-        Map<String, dynamic> update = {};
-        if (action == 'ban') update = {'is_banned': true};
-        if (action == 'unban') update = {'is_banned': false};
-        if (action == 'reset_quota') update = {'daily_download_count': 0};
-
-        if (update.isNotEmpty) {
-          await _restWrite('metrics', userId, update, isUpdate: true);
+    if (action == 'ban') {
+      updateData['is_banned'] = true;
+    } else if (action == 'unban') {
+      updateData['is_banned'] = false;
+    } else if (action == 'reset_quota') {
+      updateData['daily_download_count'] = 0;
+    } else if (action == 'delete') {
+      // Delete requires the record ID
+      if (recordId != null) {
+        final success = await PocketBaseService().deleteMetricsRecord(recordId);
+        if (success) {
+          debugPrint("🗑️ Admin deleted user: $userId");
         }
+      } else {
+        debugPrint("⚠️ Delete failed: No record ID provided");
       }
-    } else {
-      final ref = FirebaseFirestore.instance.collection('metrics').doc(userId);
-      if (action == 'delete') {
-        await ref.delete();
-      } else if (action == 'ban') {
-        await ref.set({'is_banned': true}, SetOptions(merge: true));
-      } else if (action == 'unban') {
-        await ref.set({'is_banned': false}, SetOptions(merge: true));
-      } else if (action == 'reset_quota') {
-        await ref.set({'daily_download_count': 0}, SetOptions(merge: true));
-      }
+      return;
     }
-  }
 
-  Future<void> _restDelete(String docPath) async {
-    final url = Uri.parse('$_firestoreBaseUrl/$docPath');
-    try {
-      await http.delete(url);
-    } catch (e) {
-      debugPrint("⚠️ REST Delete Error: $e");
+    if (updateData.isNotEmpty) {
+      await _restWrite('metrics', userId, updateData, isUpdate: true);
     }
   }
 }

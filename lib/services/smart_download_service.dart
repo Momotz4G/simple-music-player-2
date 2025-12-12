@@ -38,20 +38,29 @@ class SmartDownloadService {
 
   // --- Search Logic ---
   Future<DebugMatchResult?> searchYouTubeForMatch(SongMetadata metadata) async {
-    // 🚀 IMPROVED QUERY: Use ISRC if available for higher accuracy
-    String query = "${metadata.artist} - ${metadata.title}";
-
-    if (metadata.isrc != null && metadata.isrc!.isNotEmpty) {
-      query += " \"${metadata.isrc}\""; // Strong quote search for ISRC
-    } else {
-      query += " Official Audio";
-    }
-
     final yt = YoutubeExplode();
     List<YoutubeSearchResult> youtubeMatches = [];
 
     try {
-      final searchList = await yt.search(query);
+      dynamic searchList;
+
+      // 1. PRIORITY: SEARCH BY ISRC
+      if (metadata.isrc != null && metadata.isrc!.isNotEmpty) {
+        try {
+          print("🔍 Priority Search: ISRC ${metadata.isrc}");
+          // Quote the ISRC for exact match
+          searchList = await yt.search("\"${metadata.isrc}\"");
+        } catch (e) {
+          print("⚠️ ISRC Search Failed: $e");
+        }
+      }
+
+      // 2. FALLBACK: STANDARD SEARCH
+      if (searchList == null || (searchList as Iterable).isEmpty) {
+        String query = "${metadata.artist} - ${metadata.title} Official Audio";
+        print("🔍 Standard Search: $query");
+        searchList = await yt.search(query);
+      }
 
       // Map to our model
       var candidates = searchList.map((video) {
@@ -252,7 +261,7 @@ class SmartDownloadService {
 
   // FILENAME GENERATOR (Moved OUT of tagFile)
   Future<String> generateFilename(SongMetadata meta,
-      {String patternKey = 'filename_pattern'}) async {
+      {String patternKey = 'filename_pattern', int? playlistIndex}) async {
     final prefs = await SharedPreferences.getInstance();
 
     // 1. Get Pattern (Default: "{artist} - {title}")
@@ -279,6 +288,11 @@ class SmartDownloadService {
             (meta.year != null && meta.year!.isNotEmpty) ? meta.year! : '0000')
         .replaceAll('{track}', meta.trackNumber?.toString() ?? '0')
         .replaceAll('{disc}', meta.discNumber?.toString() ?? '1')
+        .replaceAll(
+            '{playlist_index}',
+            (playlistIndex ?? 0)
+                .toString()
+                .padLeft(2, '0')) // 🚀 PLAYLIST INDEX
         .replaceAll(
             '{date}', DateTime.now().toString().split(' ')[0]); // YYYY-MM-DD
 
@@ -311,8 +325,8 @@ class SmartDownloadService {
 
     String? targetUrl = youtubeUrl;
 
-    // 1. Search (ONLY IF URL IS MISSING)
-    if (targetUrl == null) {
+    // 1. Search (ONLY IF URL IS MISSING OR EMPTY)
+    if (targetUrl == null || targetUrl.isEmpty) {
       final debugResult = await searchYouTubeForMatch(metadata);
       if (debugResult == null || debugResult.youtubeMatches.isEmpty) {
         print("Preload Error: No match found for ${metadata.title}");

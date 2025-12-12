@@ -45,4 +45,14 @@ abstract class Env {
 
   @EnviedField(varName: 'FIREBASE_MEASUREMENT_ID', obfuscate: true)
   static final String firebaseMeasurementId = _Env.firebaseMeasurementId;
+
+  // 🚀 PocketBase Config
+  @EnviedField(varName: 'POCKETBASE_URL', obfuscate: true)
+  static final String pocketbaseUrl = _Env.pocketbaseUrl;
+
+  @EnviedField(varName: 'POCKETBASE_ADMIN_EMAIL', obfuscate: true)
+  static final String pocketbaseAdminEmail = _Env.pocketbaseAdminEmail;
+
+  @EnviedField(varName: 'POCKETBASE_ADMIN_PASSWORD', obfuscate: true)
+  static final String pocketbaseAdminPassword = _Env.pocketbaseAdminPassword;
 }

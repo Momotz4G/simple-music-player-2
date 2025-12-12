@@ -205,10 +205,22 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     });
 
     // 🚀 GATEKEEPER CHECK (Ban/Limit)
+    // Check ban status first
+    final isBanned = await MetricsService().isUserBanned();
+    if (isBanned) {
+      if (mounted) {
+        _showError(
+            "⛔ Your account has been suspended. Downloads are disabled.");
+        _resetDownloadState();
+      }
+      return;
+    }
+
     final canDownload = await MetricsService().canDownload();
     if (!canDownload) {
       if (mounted) {
-        _showError("⛔ Download Restricted (Ban or Daily Limit Reached)");
+        _showError(
+            "📊 Daily Download Limit Reached (50/day). Try again tomorrow!");
         _resetDownloadState();
       }
       return;

@@ -547,6 +547,7 @@ class SpotifyService {
           year: year,
           durationSeconds: (e['duration_ms'] ?? 0) ~/ 1000,
           genre: "Pop",
+          isrc: e['external_ids']?['isrc'], // 🚀 CAPTURE ISRC IN SEARCH_ALL
         );
       }).toList();
 
@@ -758,6 +759,147 @@ class SpotifyService {
     return [];
   }
 
+  // --- 12. GET SPOTIFY PLAYLIST TRACKS ---
+  /// Fetches all tracks from a Spotify playlist, with pagination support for large playlists
+  /// Returns a tuple of (playlist name, cover image, tracks)
+  static Future<Map<String, dynamic>?> getPlaylistInfo(
+      String playlistId) async {
+    final token = await _getAccessToken();
+    if (token == null) return null;
+
+    try {
+      final uri = Uri.https('api.spotify.com', '/v1/playlists/$playlistId', {
+        'fields': 'name,images,description,owner(display_name)',
+      });
+
+      final response =
+          await http.get(uri, headers: {"Authorization": "Bearer $token"});
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final images = data['images'] as List;
+        return {
+          'name': data['name'],
+          'description': data['description'],
+          'owner': data['owner']?['display_name'],
+          'image': images.isNotEmpty ? images[0]['url'] : null,
+        };
+      }
+    } catch (e) {
+      print("Playlist Info Error: $e");
+    }
+    return null;
+  }
+
+  /// Fetches all tracks from a Spotify playlist (handles pagination for 100+ tracks)
+  static Future<List<SongMetadata>> getPlaylistTracks(String playlistId) async {
+    final token = await _getAccessToken();
+    if (token == null) return [];
+
+    List<SongMetadata> allTracks = [];
+    String? nextUrl =
+        'https://api.spotify.com/v1/playlists/$playlistId/tracks?limit=50&market=US';
+
+    try {
+      while (nextUrl != null) {
+        final response = await http.get(
+          Uri.parse(nextUrl),
+          headers: {"Authorization": "Bearer $token"},
+        );
+
+        if (response.statusCode != 200) break;
+
+        final data = jsonDecode(response.body);
+        final items = data['items'] as List;
+
+        // Extract track IDs for batch lookup (to get ISRC)
+        List<String> trackIds = [];
+        for (var item in items) {
+          final track = item['track'];
+          if (track != null && track['id'] != null) {
+            trackIds.add(track['id']);
+          }
+        }
+
+        if (trackIds.isNotEmpty) {
+          // Batch fetch full track details (to get ISRC)
+          final String idsParam = trackIds.join(',');
+          final fullTracksUrl = Uri.https('api.spotify.com', '/v1/tracks', {
+            'ids': idsParam,
+            'market': 'US',
+          });
+
+          final fullResponse = await http.get(
+            fullTracksUrl,
+            headers: {'Authorization': 'Bearer $token'},
+          );
+
+          if (fullResponse.statusCode == 200) {
+            final fullData = jsonDecode(fullResponse.body);
+            final List fullItems = fullData['tracks'];
+
+            for (var e in fullItems) {
+              if (e == null) continue;
+
+              final album = e['album'];
+              String imageUrl = "";
+              if (album != null && (album['images'] as List).isNotEmpty) {
+                imageUrl = album['images'][0]['url'];
+              }
+
+              allTracks.add(SongMetadata(
+                title: e['name'] ?? "Unknown",
+                artist: (e['artists'] as List).isNotEmpty
+                    ? e['artists'][0]['name']
+                    : "Unknown",
+                albumArtUrl: imageUrl,
+                album: album?['name'] ?? "",
+                year: album?['release_date']?.split('-')?.first,
+                durationSeconds: (e['duration_ms'] ?? 0) ~/ 1000,
+                genre: null,
+                trackNumber: e['track_number'],
+                discNumber: e['disc_number'],
+                isrc: e['external_ids']?['isrc'],
+              ));
+            }
+          }
+        }
+
+        // Get next page URL (pagination)
+        nextUrl = data['next'];
+
+        // Rate limiting protection
+        if (nextUrl != null) {
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+      }
+
+      print("✅ Fetched ${allTracks.length} tracks from playlist");
+      return allTracks;
+    } catch (e) {
+      print("Playlist Tracks Error: $e");
+    }
+    return allTracks;
+  }
+
+  /// Extracts playlist ID from a Spotify URL
+  /// Supports: https://open.spotify.com/playlist/xxxxx or spotify:playlist:xxxxx
+  static String? extractPlaylistId(String url) {
+    // Handle spotify:playlist:ID format
+    if (url.startsWith('spotify:playlist:')) {
+      return url.split(':').last;
+    }
+
+    // Handle https://open.spotify.com/playlist/ID?... format
+    final regex = RegExp(r'playlist[/:]([a-zA-Z0-9]+)');
+    final match = regex.firstMatch(url);
+    if (match != null) {
+      return match.group(1);
+    }
+
+    return null;
+  }
+
   // --- PRIVATE HELPERS ---
 
   static Future<String?> _findArtistIdByTrack(
@@ -818,6 +960,71 @@ class SpotifyService {
         return bestMatch['id'];
       }
     } catch (e) {/* Ignore */}
+    return null;
+  }
+
+  // --- 8.5 GET BEST MATCH METADATA (For tagging) ---
+  static Future<SongMetadata?> getBestMatchMetadata(
+      String title, String artist) async {
+    final token = await _getAccessToken();
+    if (token == null) return null;
+
+    try {
+      // Clean terms for better matching
+      final cleanTitle = _cleanTerm(title);
+      final cleanArtist = _cleanTerm(artist);
+      final query = "track:$cleanTitle artist:$cleanArtist";
+
+      final uri = Uri.https('api.spotify.com', '/v1/search', {
+        'q': query,
+        'type': 'track',
+        'limit': '1',
+      });
+
+      final response =
+          await http.get(uri, headers: {"Authorization": "Bearer $token"});
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final items = data['tracks']['items'] as List;
+        if (items.isNotEmpty) {
+          final item = items[0];
+          final album = item['album'];
+          final artistsList = (item['artists'] as List);
+          // Capitalize first letter of artist name
+          final artistName =
+              artistsList.isNotEmpty ? artistsList[0]['name'] : "Unknown";
+
+          String imageUrl = "";
+          if ((album['images'] as List).isNotEmpty) {
+            imageUrl = album['images'][0]['url'];
+          }
+
+          // Fetch genre
+          String genre = "Pop";
+          final String artistId =
+              artistsList.isNotEmpty ? artistsList[0]['id'] : "";
+          if (artistId.isNotEmpty) {
+            genre = await getArtistGenres(artistId);
+          }
+
+          return SongMetadata(
+            title: item['name'],
+            artist: artistName,
+            album: album['name'],
+            year: (album['release_date'] as String).split('-')[0],
+            genre: genre,
+            trackNumber: item['track_number'],
+            discNumber: item['disc_number'],
+            durationSeconds: (item['duration_ms'] as int) ~/ 1000,
+            albumArtUrl: imageUrl,
+            isrc: item['external_ids']?['isrc'],
+          );
+        }
+      }
+    } catch (e) {
+      // print("Error fetching best match metadata: $e");
+    }
     return null;
   }
 

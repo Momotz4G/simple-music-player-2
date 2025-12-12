@@ -104,11 +104,10 @@ class _TopSearchBarState extends ConsumerState<TopSearchBar> {
     _focusNode.unfocus();
     _removeOverlay();
 
-    // 1. Navigate to Search Page
-    ref.read(libraryPresentationProvider.notifier).setView(LibraryView.search);
-
-    // 2. Trigger Bridge (Auto-matches song on Search Page)
-    ref.read(searchBridgeProvider.notifier).state = song;
+    // Navigate to Track Detail Page (NEW)
+    ref.read(navigationStackProvider.notifier).push(
+          NavigationItem(type: NavigationType.track, data: song),
+        );
   }
 
   void _onAlbumSelected(AlbumModel album) {

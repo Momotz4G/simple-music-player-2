@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
 import 'package:file_picker/file_picker.dart';
@@ -509,6 +509,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     _buildTagChip("{number}", Colors.orange),
                     _buildTagChip("{year}", Colors.grey),
                     _buildTagChip("{track}", Colors.grey),
+                    _buildTagChip("{playlist_index}", Colors.orange),
                   ],
                 ),
               ],
@@ -767,14 +768,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
 
     if (success == true && controller.text.isNotEmpty) {
-      // Verify Code (Supports Windows via REST)
-      final isValid = await MetricsService().verifyAdminCode(controller.text);
+      // Verify Code - returns 'admin', 'viewer', or null
+      final role = await MetricsService().verifyAdminCode(controller.text);
 
-      if (isValid) {
+      if (role != null) {
         if (context.mounted) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AdminStatsPage()),
+            MaterialPageRoute(
+              builder: (context) => AdminStatsPage(role: role),
+            ),
           );
         }
       } else {
