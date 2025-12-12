@@ -39,7 +39,7 @@ Ensure all checks pass for your target platform (Windows/Android).
 ## 2. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/simple-music-player-2.git
+git clone https://github.com/Momotz4G/simple-music-player-2.git
 cd simple-music-player-2
 ```
 
