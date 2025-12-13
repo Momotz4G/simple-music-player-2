@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -145,11 +144,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     if (_isBuffering || _isDownloading) return;
 
     final metadata = _currentMatchData!.spotifyMetadata;
+    final streamingQuality = ref.read(settingsProvider).streamingQuality;
 
     setState(() {
       _isBuffering = true;
       _bufferingVideoId = video.url;
-      _currentStatus = "Buffering...";
+      _currentStatus = streamingQuality == 'lossless'
+          ? "Buffering (Lossless)..."
+          : "Buffering...";
     });
 
     try {
@@ -157,6 +159,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         video: video,
         metadata: metadata,
         onProgress: (p) {},
+        streamingQuality: streamingQuality,
       );
 
       if (song != null && mounted) {
@@ -196,16 +199,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final tempFileName = finalTitle;
 
     final preferredFormat = ref.read(settingsProvider).audioFormat;
+    final isFlacRequested = preferredFormat == 'flac';
 
     setState(() {
       _isDownloading = true;
       _downloadingTitle = finalTitle;
-      _currentStatus = 'Checking permissions...'; // Updated status
+      _currentStatus = 'Checking permissions...';
       _progressValue = 0.0;
     });
 
     // 🚀 GATEKEEPER CHECK (Ban/Limit)
-    // Check ban status first
     final isBanned = await MetricsService().isUserBanned();
     if (isBanned) {
       if (mounted) {
@@ -226,13 +229,60 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       return;
     }
 
+    // 🎵 FLAC DOWNLOAD PATH (when FLAC format selected and spotifyId available)
+    if (isFlacRequested && metadata.spotifyId != null) {
+      if (mounted) {
+        setState(
+            () => _currentStatus = 'Downloading FLAC from Deezer/Tidal...');
+      }
+
+      try {
+        final flacResult = await _smartDownloadService.downloadFlac(
+          metadata: metadata.copyWith(spotifyId: metadata.spotifyId),
+          onProgress: (p) {
+            if (mounted) {
+              setState(() {
+                _progressValue = p;
+                _currentStatus =
+                    'Downloading FLAC ${(p * 100).toStringAsFixed(0)}%';
+              });
+            }
+          },
+        );
+
+        if (flacResult != null) {
+          _showSuccess('FLAC Download Complete', finalTitle);
+          MetricsService().trackDownloadMetadata(metadata);
+          if (mounted) {
+            setState(() => _currentMatchData = null);
+          }
+          _resetDownloadState();
+          return; // Success! Exit early
+        }
+
+        // FLAC failed - show error (no MP3 fallback)
+        _showError(
+            'FLAC not available for this track. Try a different song or change format in Settings.');
+        _resetDownloadState();
+        return;
+      } catch (e) {
+        debugPrint('FLAC download failed: $e');
+        _showError('FLAC download failed. Check your connection or try again.');
+        _resetDownloadState();
+        return;
+      }
+    }
+
+    // 📺 YOUTUBE DOWNLOAD PATH (fallback or primary)
+    final actualFormat = isFlacRequested
+        ? 'mp3'
+        : preferredFormat; // Don't fake FLAC from YouTube
     if (mounted) {
-      setState(
-          () => _currentStatus = 'Starting download ($preferredFormat)...');
+      setState(() => _currentStatus = 'Starting download ($actualFormat)...');
     }
 
     final outputPath =
-        await _ytDlpService.getDownloadPath(tempFileName, ext: preferredFormat);
+        await _ytDlpService.getDownloadPath(tempFileName, ext: actualFormat);
 
     if (outputPath == null) {
       _showError('Storage permission denied.');
@@ -243,7 +293,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     await _ytDlpService.startDownloadFromUrl(
       youtubeUrl: result.url,
       outputFilePath: outputPath,
-      audioFormat: preferredFormat,
+      audioFormat: actualFormat,
       onProgress: (p) {
         setState(() {
           _progressValue = p;
@@ -266,8 +316,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           }
 
           _showSuccess('Download Complete', finalTitle);
-
-          // 🚀 Track Download
           MetricsService().trackDownloadMetadata(metadata);
 
           if (mounted) {
@@ -586,7 +634,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                   IconButton(
                                     icon: const Icon(Icons.download),
                                     color: accentColor,
-                                    tooltip: "Download Permanently",
+                                    tooltip: "Download",
                                     onPressed: (_isDownloading || _isBuffering)
                                         ? null
                                         : () =>

@@ -38,6 +38,7 @@ import 'track_detail_page.dart'; // 🚀 IMPORTED
 import '../../models/song_metadata.dart'; // 🚀 IMPORTED
 import '../../services/update_service.dart';
 import '../../services/bulk_download_service.dart';
+import '../../services/smart_download_service.dart';
 import '../components/download_progress_widget.dart';
 
 import '../../providers/interface_provider.dart';
@@ -610,6 +611,18 @@ class _MainShellState extends ConsumerState<MainShell> {
               // 🚀 BULK DOWNLOAD PROGRESS WIDGET
               ValueListenableBuilder<DownloadProgress?>(
                 valueListenable: BulkDownloadService().progressNotifier,
+                builder: (context, progress, child) {
+                  if (progress == null) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: DownloadProgressWidget(progress: progress),
+                  );
+                },
+              ),
+
+              // 🚀 SINGLE SONG DOWNLOAD PROGRESS WIDGET (from context menu)
+              ValueListenableBuilder<DownloadProgress?>(
+                valueListenable: SmartDownloadService.progressNotifier,
                 builder: (context, progress, child) {
                   if (progress == null) return const SizedBox.shrink();
                   return Padding(

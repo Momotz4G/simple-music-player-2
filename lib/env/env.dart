@@ -55,4 +55,9 @@ abstract class Env {
 
   @EnviedField(varName: 'POCKETBASE_ADMIN_PASSWORD', obfuscate: true)
   static final String pocketbaseAdminPassword = _Env.pocketbaseAdminPassword;
+
+  // 🚀 Qobuz Config
+  @EnviedField(
+      varName: 'QOBUZ_APP_ID', obfuscate: true, defaultValue: '798273057')
+  static final String qobuzAppId = _Env.qobuzAppId;
 }

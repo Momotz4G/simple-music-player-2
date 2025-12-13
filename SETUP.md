@@ -76,6 +76,13 @@ POCKETBASE_ADMIN_PASSWORD=your-admin-password
 # DISCORD_APP_ID=your_discord_app_id
 
 # ══════════════════════════════════════════════════════════════
+# QOBUZ APP ID (Optional)
+# Used for FLAC metadata lookups.
+# Default public ID is used if left blank (no registration needed).
+# ══════════════════════════════════════════════════════════════
+# QOBUZ_APP_ID=798273057
+
+# ══════════════════════════════════════════════════════════════
 # ACOUSTID (Optional - Under Development)
 # For audio fingerprinting / song recognition
 # Get yours at: https://acoustid.org/applications
@@ -98,6 +105,11 @@ POCKETBASE_ADMIN_PASSWORD=your-admin-password
 2. Click **"New Application"**
 3. Name it (this name shows on Discord status)
 4. Copy the **Application ID**
+
+#### Qobuz App ID (Optional)
+- **No registration required.**
+- The app comes with a default public ID (`798273057`) which works out of the box.
+- You only need to change this if you have a specific private App ID.
 
 ---
 

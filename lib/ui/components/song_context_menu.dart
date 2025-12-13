@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/song_model.dart';
+import '../../models/song_metadata.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/playlist_provider.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/smart_download_service.dart';
+import '../../services/youtube_downloader_service.dart';
+import '../../services/spotify_service.dart';
+import '../../models/download_progress.dart';
 import 'music_notification.dart';
 
 enum SongAction {
@@ -13,7 +19,8 @@ enum SongAction {
   addToQueue,
   addToPlaylist,
   addToFavorites,
-  goToArtist
+  goToArtist,
+  download
 }
 
 class SongContextMenuRegion extends ConsumerWidget {
@@ -28,8 +35,8 @@ class SongContextMenuRegion extends ConsumerWidget {
     required this.child,
   });
 
-  static void handleAction(
-      BuildContext context, WidgetRef ref, SongAction action, SongModel song) {
+  static Future<void> handleAction(BuildContext context, WidgetRef ref,
+      SongAction action, SongModel song) async {
     final notifier = ref.read(playerProvider.notifier);
 
     switch (action) {
@@ -115,18 +122,41 @@ class SongContextMenuRegion extends ConsumerWidget {
         break;
 
       case SongAction.addToFavorites:
+        final playlists = ref.read(playlistProvider);
         final playlistNotifier = ref.read(playlistProvider.notifier);
-        playlistNotifier.addToLikedSongs(song);
 
-        showCenterNotification(context,
-            label: "LIKED SONGS",
-            title: "Added to Liked Songs",
-            subtitle: song.title,
-            // FIX: Use artPath instead of artBytes
-            artPath: song.filePath,
-            onlineArtUrl: song.onlineArtUrl,
-            icon: Icons.favorite_rounded, // 🚀 Heart Icon
-            backgroundColor: Colors.pinkAccent.withOpacity(0.85));
+        // 🚀 CHECK IF ALREADY IN LIKED SONGS
+        final likedPlaylist = playlists.firstWhere(
+          (p) => p.name == "Liked Songs",
+          orElse: () => playlists.first, // Won't match if no playlists
+        );
+
+        final alreadyExists = likedPlaylist.name == "Liked Songs" &&
+            likedPlaylist.entries
+                .any((e) => e.title == song.title && e.artist == song.artist);
+
+        if (alreadyExists) {
+          // 🔴 ALREADY EXISTS - Show Error
+          showCenterNotification(context,
+              label: "ALREADY IN LIKED SONGS",
+              title: song.title,
+              subtitle: "This song is already in your favorites",
+              artPath: song.filePath,
+              onlineArtUrl: song.onlineArtUrl,
+              icon: Icons.favorite_rounded,
+              backgroundColor: Colors.orangeAccent.withOpacity(0.85));
+        } else {
+          // ✅ ADD TO LIKED SONGS
+          playlistNotifier.addToLikedSongs(song);
+          showCenterNotification(context,
+              label: "LIKED SONGS",
+              title: "Added to Liked Songs",
+              subtitle: song.title,
+              artPath: song.filePath,
+              onlineArtUrl: song.onlineArtUrl,
+              icon: Icons.favorite_rounded,
+              backgroundColor: Colors.pinkAccent.withOpacity(0.85));
+        }
         break;
 
       case SongAction.goToArtist:
@@ -145,6 +175,212 @@ class SongContextMenuRegion extends ConsumerWidget {
                 ),
               ),
             );
+        break;
+      case SongAction.download:
+        // Download song with settings format (like search_page flow)
+        final smartService = SmartDownloadService();
+        final ytService = YoutubeDownloaderService();
+        final settings = ref.read(settingsProvider);
+        final preferredFormat = settings.audioFormat; // mp3, m4a, flac
+        final isFlacRequested = preferredFormat == 'flac';
+
+        // 🔍 STEP 0: Search Spotify FIRST to get metadata + album art
+        String? spotifyArtUrl = song.onlineArtUrl;
+        String? spotifyId;
+        String? isrc = song.isrc;
+
+        debugPrint("🔍 Searching Spotify for metadata...");
+        showCenterNotification(context,
+            label: "PREPARING DOWNLOAD",
+            title: song.title,
+            subtitle: "Fetching metadata from Spotify...",
+            artPath: song.onlineArtUrl,
+            onlineArtUrl: song.onlineArtUrl,
+            icon: song.onlineArtUrl == null ? Icons.search_rounded : null);
+
+        final spotifyResults = await SpotifyService.searchMetadata(
+          "${song.artist} ${song.title}",
+        );
+
+        if (spotifyResults.isNotEmpty) {
+          final firstResult = spotifyResults.first;
+          spotifyId = firstResult['spotify_id'] as String?;
+          spotifyArtUrl = firstResult['image_url'] as String? ?? spotifyArtUrl;
+          isrc = (firstResult['isrc'] as String?) ?? isrc;
+          debugPrint(
+              "✓ Found Spotify metadata: ID=$spotifyId, Art=$spotifyArtUrl");
+        }
+
+        // Build metadata with Spotify data
+        final meta = SongMetadata(
+          title: song.title,
+          artist: song.artist,
+          album: song.album,
+          albumArtUrl: spotifyArtUrl ?? '',
+          durationSeconds: song.duration.toInt(),
+          year: song.year ?? '',
+          genre: song.genre ?? '',
+          isrc: isrc,
+          spotifyId: spotifyId,
+        );
+
+        showCenterNotification(context,
+            label: "DOWNLOAD STARTED",
+            title: song.title,
+            subtitle: "Preparing download ($preferredFormat)...",
+            artPath: spotifyArtUrl,
+            onlineArtUrl: spotifyArtUrl);
+
+        // 🚀 UPDATE SIDEBAR PROGRESS
+        SmartDownloadService.progressNotifier.value = DownloadProgress(
+          receivedMB: 0,
+          totalMB: 0,
+          progress: 0.0,
+          status: "Downloading: ${song.title}",
+          details: "Searching...",
+        );
+
+        // 1. Get YouTube URL (use existing sourceUrl or search)
+        String? youtubeUrl = song.sourceUrl;
+        if (youtubeUrl == null || youtubeUrl.isEmpty) {
+          showCenterNotification(context,
+              label: "SEARCHING",
+              title: song.title,
+              subtitle: "Finding best match on YouTube...",
+              artPath: spotifyArtUrl,
+              onlineArtUrl: spotifyArtUrl);
+
+          final searchResult = await smartService.searchYouTubeForMatch(meta);
+          if (searchResult != null && searchResult.youtubeMatches.isNotEmpty) {
+            youtubeUrl = searchResult.youtubeMatches.first.url;
+          }
+        }
+
+        if (youtubeUrl == null || youtubeUrl.isEmpty) {
+          showCenterNotification(context,
+              label: "DOWNLOAD FAILED",
+              title: song.title,
+              subtitle: "No YouTube match found",
+              onlineArtUrl: spotifyArtUrl,
+              icon: Icons.error_rounded,
+              backgroundColor: Colors.red.withOpacity(0.85));
+          break;
+        }
+
+        // 2. FLAC path (if requested and spotifyId available)
+        if (isFlacRequested &&
+            (meta.spotifyId != null ||
+                (meta.isrc != null && meta.isrc!.isNotEmpty))) {
+          try {
+            showCenterNotification(context,
+                label: "DOWNLOADING FLAC",
+                title: song.title,
+                subtitle: "Fetching lossless audio...",
+                artPath: spotifyArtUrl,
+                onlineArtUrl: spotifyArtUrl);
+
+            final flacResult = await smartService.downloadFlac(
+              metadata: meta,
+              onProgress: (p) {
+                // 🚀 UPDATE SIDEBAR PROGRESS FOR FLAC
+                SmartDownloadService.progressNotifier.value = DownloadProgress(
+                  receivedMB: p * 30, // FLAC is larger
+                  totalMB: 30,
+                  progress: p,
+                  status: "Downloading: ${song.title}",
+                  details: "${(p * 100).toInt()}% - FLAC",
+                );
+              },
+              isStreaming: false,
+            );
+
+            if (flacResult != null) {
+              // 🚀 CLEAR SIDEBAR PROGRESS
+              SmartDownloadService.progressNotifier.value = null;
+
+              showCenterNotification(context,
+                  label: "DOWNLOAD COMPLETE",
+                  title: song.title,
+                  subtitle: "FLAC saved to Downloads",
+                  artPath: flacResult.filePath,
+                  onlineArtUrl: spotifyArtUrl,
+                  backgroundColor: Colors.green.withOpacity(0.85));
+              break;
+            }
+            // FLAC failed - fall through to YouTube
+            debugPrint("⚠️ FLAC unavailable, falling back to YouTube...");
+          } catch (e) {
+            debugPrint("FLAC download failed: $e");
+          }
+        }
+
+        // 3. YouTube download path (MP3/M4A or FLAC fallback)
+        final actualFormat = isFlacRequested ? 'mp3' : preferredFormat;
+        final finalTitle = await smartService.generateFilename(meta);
+        final outputPath =
+            await ytService.getDownloadPath(finalTitle, ext: actualFormat);
+
+        if (outputPath == null) {
+          showCenterNotification(context,
+              label: "DOWNLOAD FAILED",
+              title: song.title,
+              subtitle: "Storage permission denied",
+              artPath: spotifyArtUrl,
+              onlineArtUrl: spotifyArtUrl,
+              backgroundColor: Colors.red.withOpacity(0.85));
+          break;
+        }
+
+        showCenterNotification(context,
+            label: "DOWNLOADING",
+            title: song.title,
+            subtitle: "Downloading $actualFormat...",
+            artPath: spotifyArtUrl,
+            onlineArtUrl: spotifyArtUrl);
+
+        await ytService.startDownloadFromUrl(
+          youtubeUrl: youtubeUrl,
+          outputFilePath: outputPath,
+          audioFormat: actualFormat,
+          onProgress: (p) {
+            // 🚀 UPDATE SIDEBAR PROGRESS
+            SmartDownloadService.progressNotifier.value = DownloadProgress(
+              receivedMB: p * 10, // Estimated
+              totalMB: 10,
+              progress: p,
+              status: "Downloading: ${song.title}",
+              details: "${(p * 100).toInt()}% - $actualFormat",
+            );
+          },
+          onComplete: (success) async {
+            // 🚀 CLEAR SIDEBAR PROGRESS
+            SmartDownloadService.progressNotifier.value = null;
+
+            if (success) {
+              try {
+                await smartService.tagFile(
+                    filePath: outputPath, metadata: meta);
+              } catch (e) {
+                debugPrint("Tagging warning: $e");
+              }
+              showCenterNotification(context,
+                  label: "DOWNLOAD COMPLETE",
+                  title: song.title,
+                  subtitle: "Saved as $actualFormat",
+                  artPath: outputPath,
+                  onlineArtUrl: spotifyArtUrl,
+                  backgroundColor: Colors.green.withOpacity(0.85));
+            } else {
+              showCenterNotification(context,
+                  label: "DOWNLOAD FAILED",
+                  title: song.title,
+                  subtitle: "Download error",
+                  artPath: spotifyArtUrl,
+                  onlineArtUrl: spotifyArtUrl,
+                  backgroundColor: Colors.red.withOpacity(0.85));
+            }
+          },
+        );
         break;
     }
   }

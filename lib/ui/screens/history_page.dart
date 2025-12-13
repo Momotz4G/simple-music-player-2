@@ -6,6 +6,7 @@ import 'package:metadata_god/metadata_god.dart';
 import '../../data/schemas.dart'; // Required for HistoryEntry
 import '../../providers/history_provider.dart';
 import '../../providers/player_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/smart_download_service.dart';
 import '../../models/song_model.dart';
 import '../../models/song_metadata.dart';
@@ -131,10 +132,12 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       );
 
       // Re-Download and Play
+      final streamingQuality = ref.read(settingsProvider).streamingQuality;
       final song = await _smartService.cacheAndPlay(
         video: ytResult,
         metadata: meta,
         onProgress: (_) {},
+        streamingQuality: streamingQuality,
       );
 
       if (song != null) {

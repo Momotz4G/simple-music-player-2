@@ -224,6 +224,7 @@ class SpotifyService {
       final int? trackNum = item['track_number'] as int?;
       final int? discNum = item['disc_number'] as int?;
       final String? isrc = item['isrc'] as String?; // Retrieve from map
+      final String? spotifyId = item['spotify_id'] as String?;
       // NEW: Fetch Genre using the Artist ID
       String genre = "Pop"; // Default
       final String artistId = item['artist_id'] as String? ?? "";
@@ -242,6 +243,7 @@ class SpotifyService {
         durationSeconds: durationMs ~/ 1000,
         albumArtUrl: imageUrl,
         isrc: isrc,
+        spotifyId: spotifyId,
       );
     });
 
@@ -547,7 +549,8 @@ class SpotifyService {
           year: year,
           durationSeconds: (e['duration_ms'] ?? 0) ~/ 1000,
           genre: "Pop",
-          isrc: e['external_ids']?['isrc'], // 🚀 CAPTURE ISRC IN SEARCH_ALL
+          isrc: e['external_ids']?['isrc'],
+          spotifyId: e['id'], // 🚀 CAPTURE SPOTIFY ID
         );
       }).toList();
 

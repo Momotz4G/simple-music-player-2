@@ -35,6 +35,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool get _unsavedPlaylist =>
       _playlistFormatCtrl.text != _savedPlaylistPattern;
 
+  String _getStreamingQualityDescription(String quality) {
+    switch (quality) {
+      case 'standard':
+        return 'MP3 - Smaller files, faster buffering';
+      case 'high':
+        return 'M4A - Better quality, balanced';
+      case 'lossless':
+        return 'FLAC - Lossless quality from Deezer/Tidal';
+      default:
+        return 'Select streaming quality';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -539,6 +552,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   DropdownMenuItem(value: 'mp3', child: Text("MP3 (Standard)")),
                   DropdownMenuItem(value: 'm4a', child: Text("M4A (Better)")),
                   DropdownMenuItem(value: 'aac', child: Text("AAC (Raw)")),
+                  DropdownMenuItem(
+                      value: 'flac', child: Text("FLAC (Lossless)")),
                 ],
                 onChanged: (String? newFormat) {
                   if (newFormat != null) {
@@ -548,6 +563,35 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             ),
           ),
+
+          // FLAC Note (only shown when FLAC is selected)
+          if (settings.audioFormat == 'flac')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "Note: FLAC is available for single track downloads only. Bulk playlist downloads use M4A format.",
+                        style: TextStyle(
+                          color: Colors.orange.shade300,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           // Download Location
           FutureBuilder<SharedPreferences>(
@@ -587,6 +631,81 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               );
             },
           ),
+
+          const SizedBox(height: 30),
+
+          // STREAMING
+          Text("STREAMING",
+              style:
+                  TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
+
+          // Streaming Quality Selector
+          const SizedBox(height: 8),
+          ListTile(
+            title:
+                Text("Streaming Quality", style: TextStyle(color: textColor)),
+            subtitle: Text(
+              _getStreamingQualityDescription(settings.streamingQuality),
+              style: TextStyle(color: subtitleColor),
+            ),
+            trailing: Theme(
+              data: Theme.of(context).copyWith(
+                hoverColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+              ),
+              child: DropdownButton<String>(
+                value: settings.streamingQuality,
+                dropdownColor: Theme.of(context).cardColor,
+                style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                underline: Container(),
+                icon:
+                    Icon(Icons.keyboard_arrow_down_rounded, color: accentColor),
+                focusColor: Colors.transparent,
+                items: const [
+                  DropdownMenuItem(
+                      value: 'standard', child: Text("Standard (MP3)")),
+                  DropdownMenuItem(value: 'high', child: Text("High (M4A)")),
+                  DropdownMenuItem(
+                      value: 'lossless', child: Text("Lossless (Auto)")),
+                ],
+                onChanged: (String? newQuality) {
+                  if (newQuality != null) {
+                    settingsNotifier.setStreamingQuality(newQuality);
+                  }
+                },
+              ),
+            ),
+          ),
+
+          // Lossless Note (only shown when lossless is selected)
+          if (settings.streamingQuality == 'lossless')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.high_quality, color: Colors.blue, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "Streams lossless FLAC from Deezer/Tidal when available. Falls back to M4A if unavailable.",
+                        style: TextStyle(
+                          color: Colors.blue.shade300,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           const SizedBox(height: 30),
 

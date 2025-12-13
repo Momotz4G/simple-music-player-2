@@ -8,7 +8,8 @@ class SongMetadata {
   final int? discNumber;
   final int durationSeconds;
   final String albumArtUrl;
-  final String? isrc; // New field
+  final String? isrc; // International Standard Recording Code
+  final String? spotifyId; // Spotify track ID for FLAC matching
 
   SongMetadata({
     required this.title,
@@ -21,6 +22,7 @@ class SongMetadata {
     required this.durationSeconds,
     required this.albumArtUrl,
     this.isrc,
+    this.spotifyId,
   });
 
   SongMetadata copyWith({
@@ -34,6 +36,7 @@ class SongMetadata {
     int? durationSeconds,
     String? albumArtUrl,
     String? isrc,
+    String? spotifyId,
   }) {
     return SongMetadata(
       title: title ?? this.title,
@@ -46,6 +49,7 @@ class SongMetadata {
       durationSeconds: durationSeconds ?? this.durationSeconds,
       albumArtUrl: albumArtUrl ?? this.albumArtUrl,
       isrc: isrc ?? this.isrc,
+      spotifyId: spotifyId ?? this.spotifyId,
     );
   }
 }

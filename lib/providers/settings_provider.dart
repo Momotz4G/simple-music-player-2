@@ -19,6 +19,7 @@ class SettingsState {
   final VisualizerStyle visualizerStyle;
   final String audioFormat;
   final String spotifyMarket;
+  final String streamingQuality; // standard, high, lossless
 
   SettingsState({
     this.isDarkMode = true,
@@ -31,6 +32,7 @@ class SettingsState {
     this.visualizerStyle = VisualizerStyle.spectrum,
     this.audioFormat = 'mp3',
     this.spotifyMarket = 'KR',
+    this.streamingQuality = 'high', // Default to high (M4A)
   });
 
   SettingsState copyWith({
@@ -44,6 +46,7 @@ class SettingsState {
     VisualizerStyle? visualizerStyle,
     String? audioFormat,
     String? spotifyMarket,
+    String? streamingQuality,
   }) {
     return SettingsState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -57,6 +60,7 @@ class SettingsState {
       visualizerStyle: visualizerStyle ?? this.visualizerStyle,
       audioFormat: audioFormat ?? this.audioFormat,
       spotifyMarket: spotifyMarket ?? this.spotifyMarket,
+      streamingQuality: streamingQuality ?? this.streamingQuality,
     );
   }
 }
@@ -85,6 +89,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
     final format = _prefs.getString('audioFormat') ?? 'mp3';
     final market = _prefs.getString('spotifyMarket') ?? 'KR';
+    final streaming = _prefs.getString('streamingQuality') ?? 'high';
 
     state = SettingsState(
       isDarkMode: isDark,
@@ -97,6 +102,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       visualizerStyle: style,
       audioFormat: format,
       spotifyMarket: market,
+      streamingQuality: streaming,
     );
   }
 
@@ -151,6 +157,12 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> setSpotifyMarket(String market) async {
     await _prefs.setString('spotifyMarket', market);
     state = state.copyWith(spotifyMarket: market);
+  }
+
+  // Set Streaming Quality (standard, high, lossless)
+  Future<void> setStreamingQuality(String quality) async {
+    await _prefs.setString('streamingQuality', quality);
+    state = state.copyWith(streamingQuality: quality);
   }
 }
 

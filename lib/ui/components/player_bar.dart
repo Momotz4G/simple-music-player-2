@@ -17,6 +17,7 @@ import 'timer_display.dart';
 import 'audio_wave_visualizer.dart';
 import 'equalizer_sheet.dart';
 import 'version_selection_dialog.dart';
+import 'song_context_menu.dart';
 
 enum TimeUnit { hour, minute, second }
 
@@ -29,6 +30,7 @@ class PlayerBar extends ConsumerStatefulWidget {
 
 class _PlayerBarState extends ConsumerState<PlayerBar> {
   bool _isArtistHovered = false;
+  bool _isTitleHovered = false;
 
   String _formatTime(double seconds) {
     if (seconds.isNaN || seconds.isInfinite) return "0:00";
@@ -144,14 +146,33 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              hasSong ? song.title : "No Song Playing",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: hasSong ? primaryColor : Colors.grey,
+                            // Song Title with right-click context menu
+                            MouseRegion(
+                              cursor: hasSong
+                                  ? SystemMouseCursors.click
+                                  : SystemMouseCursors.basic,
+                              onEnter: (_) =>
+                                  setState(() => _isTitleHovered = true),
+                              onExit: (_) =>
+                                  setState(() => _isTitleHovered = false),
+                              child: GestureDetector(
+                                onSecondaryTapUp: hasSong
+                                    ? (details) => _showTitleContextMenu(
+                                        context, details.globalPosition, song)
+                                    : null,
+                                child: Text(
+                                  hasSong ? song.title : "No Song Playing",
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: hasSong ? primaryColor : Colors.grey,
+                                    decoration: (_isTitleHovered && hasSong)
+                                        ? TextDecoration.underline
+                                        : null,
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -595,6 +616,71 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
         ],
       ),
     );
+  }
+
+  // --- SONG TITLE CONTEXT MENU ---
+  void _showTitleContextMenu(
+      BuildContext context, Offset position, SongModel song) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final accentColor = Theme.of(context).colorScheme.primary;
+
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx + 1,
+        position.dy + 1,
+      ),
+      color: Theme.of(context).cardColor,
+      items: [
+        PopupMenuItem<String>(
+          value: 'add_to_playlist',
+          child: Row(
+            children: [
+              Icon(Icons.playlist_add, color: textColor, size: 20),
+              const SizedBox(width: 12),
+              Text("Add to Playlist", style: TextStyle(color: textColor)),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'add_to_favorite',
+          child: Row(
+            children: [
+              Icon(Icons.favorite_border, color: Colors.redAccent, size: 20),
+              const SizedBox(width: 12),
+              Text("Add to Favorite", style: TextStyle(color: textColor)),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'download',
+          child: Row(
+            children: [
+              Icon(Icons.download_rounded, color: accentColor, size: 20),
+              const SizedBox(width: 12),
+              Text("Download Song", style: TextStyle(color: textColor)),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'add_to_playlist') {
+        // Use song context menu handler for Add to Playlist
+        SongContextMenuRegion.handleAction(
+            context, ref, SongAction.addToPlaylist, song);
+      } else if (value == 'add_to_favorite') {
+        // Add to favorites
+        SongContextMenuRegion.handleAction(
+            context, ref, SongAction.addToFavorites, song);
+      } else if (value == 'download') {
+        // Download song
+        SongContextMenuRegion.handleAction(
+            context, ref, SongAction.download, song);
+      }
+    });
   }
 
   // --- TIMER DIALOG METHODS (Kept as is) ---

@@ -119,6 +119,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   bool _isLooping = false;
   bool _isHandlingCompletion = false;
   final Set<int> _preloadCheckpoints = {}; // 🚀 Track preload at 0%, 30%, 70%
+  String? _preloadingTitle; // 🚀 Guard: currently preloading song title
 
   // Stats config
   bool _isThresholdMet = false;
@@ -689,6 +690,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       // Check if file exists
       if (await File(nextSong.filePath).exists()) return;
 
+      // 🚀 Guard: Skip if already preloading this song
+      if (_preloadingTitle == nextSong.title) {
+        print("⏭️ PRELOAD: Already preloading ${nextSong.title}, skipping...");
+        return;
+      }
+
+      _preloadingTitle = nextSong.title;
       print("🚀 PRELOAD: Preloading next song: ${nextSong.title}");
 
       // Reconstruct Metadata
@@ -703,8 +711,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         isrc: nextSong.isrc,
       );
 
-      // Trigger Background Cache
-      _smartService.cacheSong(meta, youtubeUrl: nextSong.sourceUrl);
+      // Trigger Background Cache (awaited now!)
+      await _smartService.cacheSong(meta, youtubeUrl: nextSong.sourceUrl);
+      _preloadingTitle = null; // Clear guard after completion
     }
   }
 

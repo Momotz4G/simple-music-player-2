@@ -17,6 +17,7 @@ import '../../providers/library_presentation_provider.dart';
 import '../../providers/playlist_provider.dart';
 import '../components/music_notification.dart';
 import '../components/song_context_menu.dart';
+import '../components/song_card_overlay.dart';
 
 class AlbumDetailPage extends ConsumerStatefulWidget {
   final AlbumModel album;
@@ -521,44 +522,69 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                         final song = _tracks[index];
                         final isThisLoading = _loadingSongTitle == song.title;
 
+                        // 🎵 Check if this song is currently playing
+                        final playerState = ref.watch(playerProvider);
+                        final isNowPlaying = playerState.currentSong != null &&
+                            playerState.currentSong!.title == song.title &&
+                            playerState.currentSong!.artist == song.artist;
+
                         return SongContextMenuRegion(
                           song: song,
                           currentQueue: _tracks,
                           child: ListTile(
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 32, vertical: 0),
-                            leading: SizedBox(
-                              width: 30,
-                              height: 30,
-                              child: isThisLoading
-                                  ? Center(
-                                      child: SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: accentColor)))
-                                  : Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        (index + 1).toString(),
-                                        style: TextStyle(
-                                            color: textColor.withOpacity(0.6),
-                                            fontSize: 14),
-                                      ),
-                                    ),
+                            leading: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 30,
+                                  child: isThisLoading
+                                      ? Center(
+                                          child: SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  color: accentColor)))
+                                      : Text(
+                                          "${index + 1}",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: isNowPlaying
+                                                ? accentColor
+                                                : textColor.withOpacity(0.5),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Album art with play/pause overlay
+                                SongCardOverlay(
+                                  song: song,
+                                  size: 40,
+                                  radius: 4,
+                                  playQueue: _tracks,
+                                ),
+                              ],
                             ),
                             title: Text(song.title,
                                 style: TextStyle(
-                                    color:
-                                        isThisLoading ? accentColor : textColor,
+                                    color: isNowPlaying
+                                        ? accentColor
+                                        : (isThisLoading
+                                            ? accentColor
+                                            : textColor),
                                     fontWeight: FontWeight.w500,
                                     fontSize: 15),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis),
                             subtitle: Text(song.artist,
                                 style: TextStyle(
-                                    color: textColor.withOpacity(0.6),
+                                    color: isNowPlaying
+                                        ? accentColor.withOpacity(0.7)
+                                        : textColor.withOpacity(0.6),
                                     fontSize: 13),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis),

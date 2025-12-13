@@ -7,6 +7,7 @@ import '../../models/song_model.dart';
 import '../../models/song_metadata.dart';
 import '../../models/youtube_search_result.dart';
 import '../../providers/player_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/smart_download_service.dart';
 import 'smart_art.dart';
 import 'music_notification.dart';
@@ -131,10 +132,12 @@ class _AutoScrollSectionState extends ConsumerState<AutoScrollSection> {
         thumbnailUrl: song.onlineArtUrl ?? "",
       );
 
+      final streamingQuality = ref.read(settingsProvider).streamingQuality;
       final restoredSong = await _smartService.cacheAndPlay(
         video: ytResult,
         metadata: meta,
         onProgress: (_) {},
+        streamingQuality: streamingQuality,
       );
 
       if (restoredSong != null) {

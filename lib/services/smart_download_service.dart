@@ -13,11 +13,19 @@ import '../models/youtube_search_result.dart';
 import '../models/debug_match_result.dart';
 import '../models/song_model.dart';
 import '../services/youtube_downloader_service.dart';
+import '../services/spotify_service.dart';
+import '../services/flac_downloader_service.dart';
 import '../ui/components/smart_art.dart';
+import '../models/download_progress.dart';
 
 class SmartDownloadService {
   final YoutubeDownloaderService _ytDlpService = YoutubeDownloaderService();
+  final FlacDownloaderService _flacService = FlacDownloaderService();
   static const int maxDurationDifferenceSeconds = 5;
+
+  // 🚀 SINGLE SONG DOWNLOAD PROGRESS NOTIFIER (for sidebar display)
+  static final ValueNotifier<DownloadProgress?> progressNotifier =
+      ValueNotifier<DownloadProgress?>(null);
 
   // --- Helper: Parse Duration ---
   int? parseDurationToSeconds(String durationString) {
@@ -122,14 +130,64 @@ class SmartDownloadService {
   }
 
   // STREAM (CACHE & PLAY) FUNCTION
+  // quality: 'standard' (MP3), 'high' (M4A), 'lossless' (FLAC with M4A fallback)
   Future<SongModel?> cacheAndPlay({
     required YoutubeSearchResult video,
     required SongMetadata metadata,
     required Function(double) onProgress,
+    String streamingQuality = 'high',
   }) async {
     final fileName = "${metadata.artist} - ${metadata.title}";
 
-    // 1. Get Temp Path
+    // 🎵 LOSSLESS PATH: Try FLAC from Deezer/Tidal first
+    if (streamingQuality == 'lossless') {
+      print("🎧 Lossless streaming: Trying FLAC from Deezer/Tidal...");
+
+      // If spotifyId is missing, try to find it via Spotify search
+      SongMetadata flacMeta = metadata;
+      if (metadata.spotifyId == null || metadata.spotifyId!.isEmpty) {
+        print("🔍 Searching Spotify for track ID...");
+        try {
+          final spotifyResults = await SpotifyService.searchMetadata(
+              '${metadata.artist} ${metadata.title}');
+          if (spotifyResults.isNotEmpty) {
+            final firstResult = spotifyResults.first;
+            final foundSpotifyId = firstResult['spotify_id'] as String?;
+            final foundIsrc = firstResult['isrc'] as String?;
+
+            flacMeta = metadata.copyWith(
+              spotifyId: foundSpotifyId,
+              isrc: foundIsrc ?? metadata.isrc,
+            );
+            if (foundSpotifyId != null) {
+              print("✓ Found Spotify ID: $foundSpotifyId");
+            }
+          }
+        } catch (e) {
+          print("⚠️ Spotify search failed: $e");
+        }
+      }
+
+      // Try FLAC download if we have Spotify ID or ISRC
+      if (flacMeta.spotifyId != null ||
+          (flacMeta.isrc != null && flacMeta.isrc!.isNotEmpty)) {
+        final flacResult = await downloadFlac(
+          metadata: flacMeta,
+          onProgress: onProgress,
+          isStreaming: true,
+        );
+
+        if (flacResult != null) {
+          print("✓ Lossless stream ready: ${flacResult.filePath}");
+          return flacResult;
+        }
+      }
+
+      // FLAC failed, fall back to M4A
+      print("⚠️ FLAC unavailable, falling back to M4A...");
+    }
+
+    // 📺 YOUTUBE PATH: Standard/High quality or lossless fallback
     final cachePath = await _ytDlpService.getCachePath(fileName);
     if (cachePath == null) {
       print("Stream Error: Could not resolve cache path.");
@@ -144,7 +202,7 @@ class SmartDownloadService {
       return _createSongModel(file, metadata, video.url);
     }
 
-    // 2. Download to Cache
+    // Download to Cache
     final completer = Completer<bool>();
 
     try {
@@ -172,14 +230,14 @@ class SmartDownloadService {
     // Wait for file handle release
     await Future.delayed(const Duration(milliseconds: 500));
 
-    // 3. Tag the File
+    // Tag the File
     try {
       await tagFile(filePath: cachePath, metadata: metadata);
     } catch (e) {
       print("Stream Warning: Tagging failed, but playing anyway. $e");
     }
 
-    // 4. Return Model
+    // Return Model
     return _createSongModel(file, metadata, video.url);
   }
 
@@ -305,13 +363,82 @@ class SmartDownloadService {
   // PREDICT CACHE PATH (For Queue Building)
   Future<String> getPredictedCachePath(SongMetadata metadata) async {
     final fileName = "${metadata.artist} - ${metadata.title}";
+
+    // Check streaming quality - if lossless, check FLAC cache first
+    final prefs = await SharedPreferences.getInstance();
+    final streamingQuality = prefs.getString('streamingQuality') ?? 'high';
+
+    if (streamingQuality == 'lossless') {
+      // Check FLAC cache in temp folder first
+      final flacPath = await _flacService.getFlacCachePath(fileName);
+      if (await File(flacPath).exists()) {
+        return flacPath;
+      }
+    }
+
+    // Fallback to YouTube cache path
     final path = await _ytDlpService.getCachePath(fileName);
     return path ?? "";
   }
 
   // BACKGROUND CACHE (PRELOAD) FUNCTION
+  // Now respects streaming quality for FLAC support
   Future<void> cacheSong(SongMetadata metadata, {String? youtubeUrl}) async {
     final fileName = "${metadata.artist} - ${metadata.title}";
+
+    // Read streaming quality from settings
+    final prefs = await SharedPreferences.getInstance();
+    final streamingQuality = prefs.getString('streamingQuality') ?? 'high';
+
+    // 🎵 LOSSLESS PATH: Try FLAC first if quality is 'lossless'
+    if (streamingQuality == 'lossless') {
+      print("🎧 Preload: Lossless mode - trying FLAC for ${metadata.title}");
+
+      // If spotifyId is missing, try to find it via Spotify search
+      SongMetadata flacMeta = metadata;
+      if (metadata.spotifyId == null || metadata.spotifyId!.isEmpty) {
+        print("🔍 Preload: Searching Spotify for track ID...");
+        try {
+          final spotifyResults = await SpotifyService.searchMetadata(
+              '${metadata.artist} ${metadata.title}');
+          if (spotifyResults.isNotEmpty) {
+            final firstResult = spotifyResults.first;
+            final foundSpotifyId = firstResult['spotify_id'] as String?;
+            final foundIsrc = firstResult['isrc'] as String?;
+
+            // Update metadata with Spotify info for FLAC lookup
+            flacMeta = metadata.copyWith(
+              spotifyId: foundSpotifyId,
+              isrc: foundIsrc ?? metadata.isrc,
+            );
+            if (foundSpotifyId != null) {
+              print("✓ Found Spotify ID: $foundSpotifyId");
+            }
+          }
+        } catch (e) {
+          print("⚠️ Spotify search failed: $e");
+        }
+      }
+
+      // Try FLAC download if we have either Spotify ID or ISRC
+      if (flacMeta.spotifyId != null ||
+          (flacMeta.isrc != null && flacMeta.isrc!.isNotEmpty)) {
+        final flacResult = await downloadFlac(
+          metadata: flacMeta,
+          onProgress: (_) {},
+          isStreaming: true,
+        );
+
+        if (flacResult != null) {
+          print("✓ Preload: FLAC cached successfully for ${metadata.title}");
+          return; // Success! No need for YouTube fallback
+        }
+      }
+
+      print("⚠️ Preload: FLAC unavailable, falling back to YouTube...");
+    }
+
+    // 📺 YOUTUBE PATH: Standard/High quality or lossless fallback
     final cachePath = await _ytDlpService.getCachePath(fileName);
     if (cachePath == null) return;
 
@@ -367,5 +494,73 @@ class SmartDownloadService {
     } else {
       print("Preload Error: Download failed for ${metadata.title}");
     }
+  }
+
+  // ============================================================
+  // FLAC DOWNLOAD (Lossless from Deezer/Tidal)
+  // ============================================================
+
+  /// Download FLAC for a track using its Spotify ID
+  /// Returns the downloaded file as a SongModel, or null on failure
+  /// isStreaming: if true, saves to temp cache folder; if false, saves to downloads folder
+  Future<SongModel?> downloadFlac({
+    required SongMetadata metadata,
+    required Function(double) onProgress,
+    bool isStreaming = false,
+  }) async {
+    // FLAC download requires Spotify ID
+    if (metadata.spotifyId == null || metadata.spotifyId!.isEmpty) {
+      debugPrint(
+          '❌ FLAC Download: No Spotify ID available for ${metadata.title}');
+      return null;
+    }
+
+    debugPrint(
+        '🎵 Starting FLAC ${isStreaming ? "stream" : "download"} for: ${metadata.title}');
+
+    // Get output path - cache for streaming, downloads for permanent
+    final filename = await generateFilename(metadata);
+    final outputPath = isStreaming
+        ? await _flacService.getFlacCachePath(filename)
+        : await _flacService.getFlacDownloadPath(filename);
+
+    // Check if already exists
+    final file = File(outputPath);
+    if (await file.exists()) {
+      debugPrint('✓ FLAC already exists: $outputPath');
+      return _createSongModel(file, metadata, null);
+    }
+
+    // Download via FLAC service
+    final result = await _flacService.downloadFlac(
+      spotifyTrackId: metadata.spotifyId!,
+      outputPath: outputPath,
+      isrc: metadata.isrc,
+      trackName: metadata.title,
+      artistName: metadata.artist,
+      albumName: metadata.album,
+      onProgress: onProgress,
+    );
+
+    if (result.success && result.file != null) {
+      debugPrint('✓ FLAC Download Success via ${result.service}');
+
+      // Tag the file
+      try {
+        await tagFile(filePath: result.file!.path, metadata: metadata);
+      } catch (e) {
+        debugPrint('⚠️ FLAC Tagging failed: $e');
+      }
+
+      return _createSongModel(result.file!, metadata, null);
+    }
+
+    debugPrint('❌ FLAC Download failed: ${result.error}');
+    return null;
+  }
+
+  /// Check if FLAC download is available for this track
+  bool canDownloadFlac(SongMetadata metadata) {
+    return metadata.spotifyId != null && metadata.spotifyId!.isNotEmpty;
   }
 }
