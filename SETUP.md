@@ -88,6 +88,12 @@ POCKETBASE_ADMIN_PASSWORD=your-admin-password
 # Get yours at: https://acoustid.org/applications
 # ══════════════════════════════════════════════════════════════
 # ACOUSTID_API_KEY=your_acoustid_key
+
+# ══════════════════════════════════════════════════════════════
+# REMOTE CONTROL (Required for QR Code Remote)
+# Your self-hosted remote control web app URL
+# ══════════════════════════════════════════════════════════════
+REMOTE_CONTROL_URL=https://your-remote-control-url.com
 ```
 
 ### How to Get API Keys
@@ -365,10 +371,16 @@ The remote control web app is located in `remote_web_app/` folder.
 
 2. **For local testing:** Open `remote_web_app/index.html` in a browser
 
-3. **For deployment (Netlify/Vercel):**
+3. **For deployment (Self-Hosted via Cloudflare Tunnel - Recommended):**
+   - Copy files to your VPS: `/var/www/remote/`
+   - Configure nginx to serve on port 8091
+   - Add a public hostname in Cloudflare Tunnel (e.g., `remote.yourdomain.com` → `localhost:8091`)
+   - Update the QR code URL in `lib/ui/components/player_bar.dart`
+
+4. **Alternative (Netlify/Vercel):**
    - Deploy the `remote_web_app/` folder
    - Make sure `config.js` is included in the deployment
-   - The web app URL will be embedded in the QR code
+   - Update the web app URL in the QR code
 
 ---
 

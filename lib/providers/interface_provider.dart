@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
@@ -32,6 +33,8 @@ class InterfaceNotifier extends StateNotifier<InterfaceState> {
 
   Future<void> enterMiniPlayer() async {
     if (state.isMiniPlayer) return;
+    // Mini player only works on desktop
+    if (!(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) return;
 
     // 1. Capture current bounds
     final size = await windowManager.getSize();
@@ -59,6 +62,8 @@ class InterfaceNotifier extends StateNotifier<InterfaceState> {
 
   Future<void> exitMiniPlayer() async {
     if (!state.isMiniPlayer) return;
+    // Mini player only works on desktop
+    if (!(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) return;
 
     // Capture Mini Position before resizing
     final miniPos = await windowManager.getPosition();

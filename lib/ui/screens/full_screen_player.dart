@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,7 +36,10 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
   @override
   void initState() {
     super.initState();
-    windowManager.addListener(this);
+    // Desktop-only: window listener
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      windowManager.addListener(this);
+    }
 
     // 1. Setup Window
     _initWindowMode();
@@ -54,7 +58,10 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
 
   @override
   void dispose() {
-    windowManager.removeListener(this);
+    // Desktop-only: window listener
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      windowManager.removeListener(this);
+    }
     _videoController?.dispose();
     _hideTimer?.cancel();
     super.dispose();
@@ -65,6 +72,9 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
   // --------------------------------------------------------------------------
 
   Future<void> _initWindowMode() async {
+    // Desktop-only window management
+    if (!(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) return;
+
     // Check if user was maximized before we started
     bool isMaximized = await windowManager.isMaximized();
 
@@ -105,16 +115,19 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
   // 🚀 SIMPLE EXIT
   // Just revert full screen and close. No delays.
   Future<void> _exitAndPop() async {
-    // 1. Revert Full Screen
-    if (_wasMaximizedOnEntry) {
-      // Await the transition to ensure window state is clean before popping
-      await windowManager.setFullScreen(false);
+    // Desktop-only: window management
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      // 1. Revert Full Screen
+      if (_wasMaximizedOnEntry) {
+        // Await the transition to ensure window state is clean before popping
+        await windowManager.setFullScreen(false);
 
-      // Small buffer to let OS catch up
-      await Future.delayed(const Duration(milliseconds: 50));
+        // Small buffer to let OS catch up
+        await Future.delayed(const Duration(milliseconds: 50));
 
-      if (mounted) {
-        await windowManager.maximize();
+        if (mounted) {
+          await windowManager.maximize();
+        }
       }
     }
 

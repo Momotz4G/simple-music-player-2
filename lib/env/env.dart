@@ -60,4 +60,8 @@ abstract class Env {
   @EnviedField(
       varName: 'QOBUZ_APP_ID', obfuscate: true, defaultValue: '798273057')
   static final String qobuzAppId = _Env.qobuzAppId;
+
+  // 🚀 Remote Control Config
+  @EnviedField(varName: 'REMOTE_CONTROL_URL', obfuscate: true)
+  static final String remoteControlUrl = _Env.remoteControlUrl;
 }

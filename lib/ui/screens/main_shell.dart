@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // 🚀 Required for LogicalKeyboardKey
@@ -359,7 +360,9 @@ class _MainShellState extends ConsumerState<MainShell> {
 
             // 2. MAIN CONTENT AREA (Sidebar + Page)
             Positioned.fill(
-              top: 32, // Respect title bar
+              top: (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                  ? 32
+                  : 0, // Title bar on desktop only
               child: Row(
                 children: [
                   if (isDesktop)
@@ -382,31 +385,32 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
             ),
 
-            // 3. CUSTOM TITLE BAR (Top Layer)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 40,
-              child: ClipRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                  child: Container(
-                    color: glassBgColor,
-                    child: WindowTitleBarBox(
-                      child: Row(
-                        children: [
-                          Expanded(child: MoveWindow()),
-                          const TopSearchBar(),
-                          Expanded(child: MoveWindow()),
-                          const WindowButtons(),
-                        ],
+            // 3. CUSTOM TITLE BAR (Top Layer - Desktop Only)
+            if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 40,
+                child: ClipRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: Container(
+                      color: glassBgColor,
+                      child: WindowTitleBarBox(
+                        child: Row(
+                          children: [
+                            Expanded(child: MoveWindow()),
+                            const TopSearchBar(),
+                            Expanded(child: MoveWindow()),
+                            const WindowButtons(),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
 
             // 4. LYRICS PANEL OVERLAY
             AnimatedPositioned(

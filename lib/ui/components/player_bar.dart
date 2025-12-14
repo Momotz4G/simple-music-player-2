@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:qr_flutter/qr_flutter.dart'; // QR Code
 import '../../services/pocketbase_service.dart'; // Session ID
+import '../../env/env.dart'; // Secure environment variables
 
 import '../../providers/player_provider.dart';
 import '../../providers/timer_provider.dart';
@@ -876,8 +877,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     }
 
     // Use session record ID in URL instead of user_id
-    final url =
-        "https://glittering-basbousa-564237.netlify.app/?sid=$sessionId";
+    final url = "${Env.remoteControlUrl}/?sid=$sessionId";
 
     if (!mounted) return;
 

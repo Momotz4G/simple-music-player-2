@@ -1,7 +1,7 @@
 name: simple_music_player_2
 description: "A new modern Flutter music player."
 publish_to: 'none'
-version: 1.6.0+1
+version: 1.7.0+1
 
 environment:
   sdk: '>=3.2.3 <4.0.0'

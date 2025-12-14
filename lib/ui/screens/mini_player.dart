@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:simple_music_player_2/providers/player_provider.dart';
@@ -17,9 +18,11 @@ class MiniPlayer extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: GestureDetector(
-        // Allow dragging the window from anywhere
+        // Allow dragging the window from anywhere (desktop only)
         onPanUpdate: (details) async {
-          await windowManager.startDragging();
+          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+            await windowManager.startDragging();
+          }
         },
         child: Container(
           decoration: const BoxDecoration(
