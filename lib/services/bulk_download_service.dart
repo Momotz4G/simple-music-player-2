@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../models/song_model.dart';
 import '../models/song_metadata.dart';
@@ -11,6 +10,7 @@ import 'smart_download_service.dart';
 import 'youtube_downloader_service.dart';
 import 'metrics_service.dart';
 import 'spotify_service.dart';
+import 'notification_service.dart'; // 🚀 IMPORT
 
 class BulkDownloadService {
   static final BulkDownloadService _instance = BulkDownloadService._internal();
@@ -43,6 +43,11 @@ class BulkDownloadService {
     int total = songs.length;
     int completed = 0;
 
+    // 🚀 INIT NOTIFICATIONS
+    final notif = NotificationService();
+    // Unique ID based on time
+    final notifId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
     try {
       // 0. ENSURE YOUTUBE DOWNLOADER IS INITIALIZED
       await _ytService.initialize();
@@ -57,6 +62,14 @@ class BulkDownloadService {
 
       print("📂 Downloading to: ${baseDir.path}");
 
+      // 🚀 Notify Start
+      await notif.showProgress(
+          id: notifId,
+          progress: 0,
+          max: total,
+          title: "Downloading $albumTitle",
+          body: "Starting download...");
+
       for (var i = 0; i < songs.length; i++) {
         final song = songs[i];
 
@@ -67,6 +80,7 @@ class BulkDownloadService {
           _updateProgress(completed, total, "⛔ Account Suspended");
           errorNotifier.value =
               "⛔ Your account has been suspended. Downloads are disabled.";
+          notif.cancel(notifId); // 🚀 Cancel
           break;
         }
 
@@ -77,15 +91,28 @@ class BulkDownloadService {
           _updateProgress(completed, total, "📊 Limit Reached");
           errorNotifier.value =
               "📊 Daily Download Limit Reached (50/day). Try again tomorrow!";
+          notif.showComplete(
+              id: notifId,
+              title: "Download Paused",
+              body:
+                  "Daily limit reached ($completed/$total)."); // 🚀 Show Paused
           break;
         }
 
         // Update Progress: "Downloading... (x/total)"
         _updateProgress(completed, total, "Downloading...");
 
-        // 2. Prepare Metadata
+        // 🚀 UPDATE NOTIF (Current Song)
+        // Show "Song Title • 1 of 10"
+        notif.showProgress(
+            id: notifId,
+            progress: completed,
+            max: total,
+            title: "Downloading $albumTitle",
+            body: "${song.title} • ${i + 1} of $total");
 
         // 2. Prepare Metadata
+
         // Use provided coverUrl if song's art is missing, or prefer coverUrl for uniformity in album dl
         String artUrl = (coverUrl != null && coverUrl.isNotEmpty)
             ? coverUrl
@@ -211,6 +238,12 @@ class BulkDownloadService {
       int remaining = await MetricsService().getRemainingQuota();
       _updateProgress(total, total, "Completed ($remaining left)");
 
+      // 🚀 DONE
+      await notif.showComplete(
+          id: notifId,
+          title: "Download Complete",
+          body: "$albumTitle downloaded successfully.");
+
       // Clear after a delay
       await Future.delayed(const Duration(seconds: 3));
       progressNotifier.value = null;
@@ -249,25 +282,52 @@ class BulkDownloadService {
 
   Future<Directory?> _getAlbumDownloadDirectory(String albumTitle) async {
     // downloads/SimpleMusicDownloads/playlists/{Album Title}
-    // We reuse logic from YoutubeDownloaderService to get "SimpleMusicDownloads"
 
-    // Or just manually:
-    Directory? downloadDir;
-    if (Platform.isAndroid || Platform.isIOS) {
-      /* Mobile logic if needed */
-      // Assuming YoutubeDownloaderService handles permission, but we need it here to get path.
-      if (await Permission.storage.request().isDenied) {
-        return null;
+    String? basePath;
+
+    if (Platform.isAndroid) {
+      // 🚀 FIX: Use public Download directory on Android
+      // /storage/emulated/0/Download/SimpleMusicDownloads/Playlists
+      try {
+        final externalDir = await getExternalStorageDirectory();
+        if (externalDir != null) {
+          final updatePath = Directory("/storage/emulated/0/Download");
+          if (await updatePath.exists()) {
+            basePath = updatePath.path;
+          } else {
+            final path = externalDir.path;
+            final androidIndex = path.indexOf("/Android/");
+            if (androidIndex != -1) {
+              basePath = "${path.substring(0, androidIndex)}/Download";
+            } else {
+              basePath = externalDir.path;
+            }
+          }
+        }
+      } catch (e) {
+        print("⛔ Error getting external storage: $e");
       }
-      downloadDir = await getDownloadsDirectory();
+
+      // Fallback to app documents directory
+      if (basePath == null) {
+        final appDocDir = await getApplicationDocumentsDirectory();
+        basePath = appDocDir.path;
+      }
+    } else if (Platform.isIOS) {
+      // iOS uses app documents directory
+      final appDocDir = await getApplicationDocumentsDirectory();
+      basePath = appDocDir.path;
     } else {
-      downloadDir = await getDownloadsDirectory();
+      // Desktop: Use Downloads directory
+      final downloadDir = await getDownloadsDirectory();
+      if (downloadDir != null) {
+        basePath = downloadDir.path;
+      }
     }
 
-    if (downloadDir == null) return null;
+    if (basePath == null) return null;
 
-    final base =
-        Directory("${downloadDir.path}/SimpleMusicDownloads/playlists");
+    final base = Directory("$basePath/SimpleMusicDownloads/playlists");
     if (!await base.exists()) {
       await base.create(recursive: true);
     }

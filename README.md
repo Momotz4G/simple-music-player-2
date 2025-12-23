@@ -2,11 +2,14 @@
 
 ![Simple Music Player Home](assets/screenshots/home_preview.png)
 
-> A stunning, modern, and feature-rich music player built with Flutter for Windows. Experience your music with a beautiful Glassmorphism UI and powerful tools.
+> A stunning, modern, and feature-rich music player built with Flutter. Experience your music with a beautiful Glassmorphism UI and powerful tools. Available on Windows, macOS, Linux, Android, and iOS.
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
-![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![iOS](https://img.shields.io/badge/iOS-000000?style=for-the-badge&logo=ios&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 ---
@@ -75,14 +78,89 @@
 
 ## 🚀 Installation
 
-### For Users
+### 📦 Download
 
-1. Go to the [Releases](https://github.com/Momotz4G/simple-music-player-2/releases) page
-2. Download the latest installer (`.exe`)
-3. Run the installer
-4. Enjoy!
+Go to the [Releases](https://github.com/Momotz4G/simple-music-player-2/releases) page and download the file for your platform:
 
-### For Developers
+| Platform | File | Install Method |
+|----------|------|----------------|
+| **Windows** | `.exe` | Run installer |
+| **macOS** | `.dmg` | Drag to Applications |
+| **Linux** | `.AppImage` | Make executable and run |
+| **Android** | `.apk` | Enable unknown sources, tap to install |
+| **iOS** | `.ipa` | Sideload (see below) |
+
+---
+
+### 🪟 Windows
+1. Download the `.exe` installer
+2. Run the installer
+3. Done! Launch from Start menu
+
+---
+
+### 🍎 macOS
+1. Download the `.dmg` file
+2. Open and drag app to Applications folder
+3. Right-click app → Open (first time only, to bypass Gatekeeper)
+
+---
+
+### 🐧 Linux
+```bash
+# Download the AppImage
+chmod +x Simple_Music_Player*.AppImage
+./Simple_Music_Player*.AppImage
+```
+
+---
+
+### 🤖 Android
+1. Download the `.apk` file
+2. Enable "Install from unknown sources" in Settings
+3. Tap the APK to install
+4. Done!
+
+---
+
+### 📱 iOS (Sideloading Required)
+
+> ⚠️ **Note:** iOS requires sideloading because this app is not on the App Store. Apps sideloaded with a free Apple ID expire every **7 days** and must be re-installed.
+
+#### Method 1: AltStore (Recommended)
+
+**On your computer:**
+1. Download [AltStore](https://altstore.io) for Windows/Mac
+2. Install **iCloud** (Windows: from Apple website, NOT Microsoft Store)
+3. Run **AltServer**
+4. Connect your iPhone via USB
+5. Click AltServer icon → Install AltStore → Select your device
+6. Enter your Apple ID when prompted
+
+**On your iPhone:**
+1. Download the `.ipa` file from Releases
+2. Open Files app → tap the IPA → Share → **AltStore**
+3. Wait for installation to complete
+4. Go to **Settings → General → VPN & Device Management** → Trust your Apple ID
+
+#### Method 2: Sideloadly
+
+1. Download [Sideloadly](https://sideloadly.io) for Windows/Mac
+2. Connect iPhone via USB
+3. Drag `.ipa` file into Sideloadly
+4. Enter your Apple ID → Click Start
+5. Trust the developer in Settings (see step 4 above)
+
+#### Method 3: 3uTools (Windows only)
+
+1. Download [3uTools](https://www.3u.com)
+2. Connect iPhone
+3. Go to Apps → Import & Install IPA
+4. Trust the developer in Settings
+
+---
+
+### 🛠️ For Developers
 
 If you want to build from source or fork the project, check out the [Setup Guide](SETUP.md) to configure API keys and backend services.
 
@@ -96,16 +174,20 @@ flutter pub get
 
 # Configure environment (see SETUP.md)
 # Then run:
-flutter run -d windows
+flutter run -d windows   # Windows
+flutter run -d macos     # macOS
+flutter run -d linux     # Linux
+flutter run              # Android (with device connected)
 ```
 
 ---
 
 ## ⚠️ Limitations
 
-- **Daily Download Cap**: To ensure service quality and fair usage for everyone, downloads are limited to **50 songs per day** per user
-- **Windows Only**: Currently optimized for Windows (Android support in development)
-- **Internet Required**: Some features require internet (lyrics, metadata, remote control)
+- **Daily Download Cap**: To ensure service quality and fair usage, downloads are limited to **50 songs per day** per user
+- **iOS Sideloading**: iOS requires sideloading (not on App Store). Apps expire every **7 days** with a free Apple ID
+- **Equalizer**: Audio equalizer only works on Android
+- **Internet Required**: Some features require internet (lyrics, metadata, streaming, remote control)
 
 ---
 

@@ -230,12 +230,12 @@ class SmartDownloadService {
     // Wait for file handle release
     await Future.delayed(const Duration(milliseconds: 500));
 
-    // Tag the File
-    try {
-      await tagFile(filePath: cachePath, metadata: metadata);
-    } catch (e) {
-      print("Stream Warning: Tagging failed, but playing anyway. $e");
-    }
+    // Tag the File (DISABLED for streaming to prevent corruption risk on mobile)
+    // try {
+    //   await tagFile(filePath: cachePath, metadata: metadata);
+    // } catch (e) {
+    //   print("Stream Warning: Tagging failed, but playing anyway. $e");
+    // }
 
     // Return Model
     return _createSongModel(file, metadata, video.url);

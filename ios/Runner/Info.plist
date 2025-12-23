@@ -57,5 +57,7 @@
 	</dict>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>We need access to your music library to play local songs.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used to save album art images.</string>
 </dict>
 </plist>

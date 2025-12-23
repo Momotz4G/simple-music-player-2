@@ -15,6 +15,7 @@ dependencies:
   
   # Audio
   just_audio: ^0.9.36
+  audio_service: ^0.18.12  # Android notification media controls
   just_audio_windows:
   equalizer_flutter: ^0.0.1 # Standard Android EQ wrapper
 
@@ -64,8 +65,9 @@ dependencies:
 
   # Youtube Parser
   permission_handler: ^11.0.0
-  youtube_explode_dart: ^2.0.2
-  # ffmpeg_kit_flutter_new_gpl: ^1.6.5
+  youtube_explode_dart: ^2.5.0
+  flutter_local_notifications: ^17.0.0 # 🚀 Notifications
+  # flutter_ffmpeg: ^0.4.2 # 🚀 FFmpeg (Incompatible with AGP 8.x - missing namespace)
 
   # Utilities
   uuid: ^4.3.3

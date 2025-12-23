@@ -87,6 +87,74 @@ class UpdateService {
     return l.length > c.length;
   }
 
+  /// Gets the correct asset for the current platform from the release
+  /// Returns {downloadUrl, fileName} or null if no matching asset found
+  Map<String, String>? getAssetForPlatform(Map<String, dynamic> release) {
+    final assets = release['assets'] as List?;
+    if (assets == null || assets.isEmpty) return null;
+
+    String extension;
+    List<String> fallbackExtensions = [];
+
+    if (Platform.isAndroid) {
+      extension = '.apk';
+    } else if (Platform.isWindows) {
+      extension = '.exe';
+    } else if (Platform.isMacOS) {
+      extension = '.dmg';
+      fallbackExtensions = ['.zip', '.app.zip'];
+    } else if (Platform.isLinux) {
+      extension = '.AppImage';
+      fallbackExtensions = ['.tar.gz', '.deb'];
+    } else if (Platform.isIOS) {
+      // iOS sideloading - users need to re-sign with their own Apple ID
+      extension = '.ipa';
+    } else {
+      return null;
+    }
+
+    // Try primary extension first
+    var asset = assets.firstWhere(
+      (a) =>
+          a['name'].toString().toLowerCase().endsWith(extension.toLowerCase()),
+      orElse: () => null,
+    );
+
+    // Try fallback extensions
+    if (asset == null) {
+      for (final fallback in fallbackExtensions) {
+        asset = assets.firstWhere(
+          (a) => a['name']
+              .toString()
+              .toLowerCase()
+              .endsWith(fallback.toLowerCase()),
+          orElse: () => null,
+        );
+        if (asset != null) break;
+      }
+    }
+
+    if (asset != null) {
+      return {
+        'downloadUrl': asset['browser_download_url'] as String,
+        'fileName': asset['name'] as String,
+        'size': (asset['size'] ?? 0).toString(),
+      };
+    }
+
+    return null;
+  }
+
+  /// Get platform name for UI display
+  String get platformName {
+    if (Platform.isAndroid) return 'Android';
+    if (Platform.isWindows) return 'Windows';
+    if (Platform.isMacOS) return 'macOS';
+    if (Platform.isLinux) return 'Linux';
+    if (Platform.isIOS) return 'iOS';
+    return 'Unknown';
+  }
+
   /// Downloads the installer asset and executes it.
   Future<void> downloadAndInstall(String downloadUrl, String fileName) async {
     try {
@@ -176,8 +244,31 @@ class UpdateService {
     // Give UI a moment to show "Installing..." if it hasn't yet
     await Future.delayed(const Duration(milliseconds: 500));
 
-    // Run the installer (Silent if Windows)
-    if (Platform.isWindows) {
+    if (Platform.isAndroid) {
+      // Android: Open APK with package installer
+      // Note: This requires REQUEST_INSTALL_PACKAGES permission in manifest
+      // For now, we'll open the file which triggers the system installer
+      progressNotifier.value = DownloadProgress(
+        receivedMB: 0,
+        totalMB: 0,
+        progress: 1.0,
+        status: "Opening installer...",
+      );
+
+      // Use Android's ACTION_VIEW intent to install APK
+      // This needs to be handled via a platform channel or url_launcher
+      // For now, just notify user the APK is downloaded
+      print("APK downloaded to: $filePath");
+      print(
+          "Android APK installation requires user to manually install from Downloads");
+
+      // Reset progress after a delay
+      await Future.delayed(const Duration(seconds: 2));
+      progressNotifier.value = null;
+
+      // Don't exit app on Android - user needs to manually install
+      return;
+    } else if (Platform.isWindows) {
       // Inno Setup flags:
       // /VERYSILENT = No progress window (Invisible)
       // /SUPPRESSMSGBOXES = No error/info boxes
@@ -187,8 +278,36 @@ class UpdateService {
         ['/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'],
         mode: ProcessStartMode.detached,
       );
+    } else if (Platform.isMacOS) {
+      // macOS: Open DMG or ZIP
+      if (filePath.endsWith('.dmg')) {
+        await Process.start('open', [filePath],
+            mode: ProcessStartMode.detached);
+      } else if (filePath.endsWith('.zip')) {
+        // Unzip and open
+        await Process.start('open', [filePath],
+            mode: ProcessStartMode.detached);
+      }
+    } else if (Platform.isIOS) {
+      // iOS: User needs to install via AltStore/Sideloadly
+      progressNotifier.value = DownloadProgress(
+        receivedMB: 0,
+        totalMB: 0,
+        progress: 1.0,
+        status: "IPA downloaded! Open in AltStore to install.",
+      );
+
+      print("IPA downloaded to: $filePath");
+      print("iOS: User must install via AltStore, Sideloadly, or similar tool");
+
+      // Keep message visible for a few seconds
+      await Future.delayed(const Duration(seconds: 3));
+      progressNotifier.value = null;
+
+      // Don't exit app on iOS
+      return;
     } else {
-      // macOS/Linux: Just open it
+      // Linux: Open AppImage or other
       await Process.start(
         filePath,
         [],
@@ -196,8 +315,10 @@ class UpdateService {
       );
     }
 
-    // Exit the app so the installer can replace files
-    exit(0);
+    // Exit the app so the installer can replace files (desktop only)
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      exit(0);
+    }
   }
 }
 

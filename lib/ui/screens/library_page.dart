@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../providers/library_provider.dart';
 import '../../providers/player_provider.dart';
@@ -24,7 +26,6 @@ class LibraryPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ... (This part of your code was fine, keeping it same) ...
     final library = p.Provider.of<LibraryProvider>(context);
     final presentationState = ref.watch(libraryPresentationProvider);
     final isGridView = presentationState.isGridView;
@@ -46,15 +47,19 @@ class LibraryPage extends ConsumerWidget {
           children: [
             const SizedBox(height: 40),
 
-            // HEADER
-            Text(
-              'Local Library',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: titleColor,
-                    fontSize: 32,
-                    letterSpacing: 0.5,
-                  ),
+            // HEADER (Shifted Mobile)
+            Padding(
+              padding: EdgeInsets.only(
+                  left: (Platform.isAndroid || Platform.isIOS) ? 40.0 : 0.0),
+              child: Text(
+                'Local Library',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: titleColor,
+                      fontSize: 32,
+                      letterSpacing: 0.5,
+                    ),
+              ),
             ),
 
             const SizedBox(height: 24),
@@ -184,7 +189,50 @@ class LibraryPage extends ConsumerWidget {
       );
     }
 
-    if (library.selectedFolder == null || library.songs.isEmpty) {
+    if (library.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded,
+                size: 48, color: Colors.redAccent),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                library.error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: textColor, fontSize: 15),
+              ),
+            ),
+            const SizedBox(height: 24),
+            if (library.isPermissionDenied)
+              ElevatedButton.icon(
+                onPressed: () async {
+                  await Permission.audio.request();
+                  await Permission.storage.request();
+                  await Permission.manageExternalStorage.request();
+                  library.requestPermissions();
+                },
+                icon: const Icon(Icons.lock_open_rounded),
+                label: const Text("Grant Access"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+              )
+            else
+              OutlinedButton.icon(
+                onPressed: library.pickFolder,
+                icon: const Icon(Icons.folder_open_rounded),
+                label: const Text("Select Different Folder"),
+              ),
+          ],
+        ),
+      );
+    }
+
+    if (library.selectedFolder == null) {
       return Center(
         child: OutlinedButton(
           onPressed: library.pickFolder,
@@ -192,6 +240,27 @@ class LibraryPage extends ConsumerWidget {
               side: const BorderSide(color: Colors.grey),
               foregroundColor: textColor),
           child: const Text("Select Folder"),
+        ),
+      );
+    }
+
+    if (library.songs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.music_off_rounded, size: 48, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              "No songs found in this folder.",
+              style: TextStyle(color: textColor, fontSize: 16),
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton(
+              onPressed: library.pickFolder,
+              child: const Text("Select Different Folder"),
+            ),
+          ],
         ),
       );
     }
@@ -232,7 +301,6 @@ class LibraryPage extends ConsumerWidget {
   }
 }
 
-// --- UPDATED LIST TILE ---
 class SongListTile extends ConsumerWidget {
   final SongModel song;
   final List<SongModel> allSongs;
@@ -272,7 +340,6 @@ class SongListTile extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
               children: [
-                // 1. NUMBER (Index)
                 SizedBox(
                   width: 30,
                   child: Text(
@@ -284,21 +351,14 @@ class SongListTile extends ConsumerWidget {
                         fontWeight: FontWeight.bold),
                   ),
                 ),
-
                 const SizedBox(width: 8),
-
-                // 2. ART (Hover Overlay)
-                // Note: We need to fix this file next!
                 SongCardOverlay(
                   song: song,
                   size: 56,
                   radius: 6,
                   playQueue: allSongs,
                 ),
-
                 const SizedBox(width: 16),
-
-                // 3. INFO COLUMN
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,19 +397,13 @@ class SongListTile extends ConsumerWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(width: 16),
-
-                // 4. DURATION
                 Text(_formatDuration(song.duration),
                     style: TextStyle(
                         fontSize: 13,
                         color: metaColor,
                         fontFeatures: const [FontFeature.tabularFigures()])),
-
                 const SizedBox(width: 16),
-
-                // 5. MENU INDICATOR
                 Icon(Icons.more_vert_rounded, color: metaColor, size: 20),
               ],
             ),
@@ -360,7 +414,6 @@ class SongListTile extends ConsumerWidget {
   }
 }
 
-// --- UPDATED GRID TILE (Smart Art Used Here) ---
 class SongGridTile extends ConsumerWidget {
   final SongModel song;
   final List<SongModel> allSongs;
@@ -418,7 +471,6 @@ class SongGridTile extends ConsumerWidget {
                     width: double.infinity,
                     child: Hero(
                       tag: 'art_grid_${song.filePath}',
-                      // 2. REPLACE ALBUM ART WITH SMART ART
                       child: SmartArt(
                           path: song.filePath,
                           size: 200,

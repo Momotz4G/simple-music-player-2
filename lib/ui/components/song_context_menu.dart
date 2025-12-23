@@ -12,6 +12,7 @@ import '../../services/smart_download_service.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../services/spotify_service.dart';
 import '../../models/download_progress.dart';
+import '../../services/notification_service.dart'; // 🚀 IMPORT
 import 'music_notification.dart';
 
 enum SongAction {
@@ -184,6 +185,11 @@ class SongContextMenuRegion extends ConsumerWidget {
         final preferredFormat = settings.audioFormat; // mp3, m4a, flac
         final isFlacRequested = preferredFormat == 'flac';
 
+        // 🚀 INIT NOTIFICATIONS
+        final notif = NotificationService();
+        await notif.init();
+        final notifId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
         // 🔍 STEP 0: Search Spotify FIRST to get metadata + album art
         String? spotifyArtUrl = song.onlineArtUrl;
         String? spotifyId;
@@ -197,6 +203,14 @@ class SongContextMenuRegion extends ConsumerWidget {
             artPath: song.onlineArtUrl,
             onlineArtUrl: song.onlineArtUrl,
             icon: song.onlineArtUrl == null ? Icons.search_rounded : null);
+
+        // Notify Start
+        notif.showProgress(
+            id: notifId,
+            progress: 0,
+            max: 100,
+            title: "Preparing Download",
+            body: song.title);
 
         final spotifyResults = await SpotifyService.searchMetadata(
           "${song.artist} ${song.title}",
@@ -264,6 +278,7 @@ class SongContextMenuRegion extends ConsumerWidget {
               onlineArtUrl: spotifyArtUrl,
               icon: Icons.error_rounded,
               backgroundColor: Colors.red.withOpacity(0.85));
+          notif.cancel(notifId);
           break;
         }
 
@@ -279,6 +294,13 @@ class SongContextMenuRegion extends ConsumerWidget {
                 artPath: spotifyArtUrl,
                 onlineArtUrl: spotifyArtUrl);
 
+            notif.showProgress(
+                id: notifId,
+                progress: 0,
+                max: 100,
+                title: "Downloading FLAC",
+                body: song.title);
+
             final flacResult = await smartService.downloadFlac(
               metadata: meta,
               onProgress: (p) {
@@ -290,6 +312,13 @@ class SongContextMenuRegion extends ConsumerWidget {
                   status: "Downloading: ${song.title}",
                   details: "${(p * 100).toInt()}% - FLAC",
                 );
+                // 🚀 NOTIF
+                notif.showProgress(
+                    id: notifId,
+                    progress: (p * 100).toInt(),
+                    max: 100,
+                    title: "Downloading FLAC",
+                    body: song.title);
               },
               isStreaming: false,
             );
@@ -305,12 +334,53 @@ class SongContextMenuRegion extends ConsumerWidget {
                   artPath: flacResult.filePath,
                   onlineArtUrl: spotifyArtUrl,
                   backgroundColor: Colors.green.withOpacity(0.85));
+
+              notif.showComplete(
+                  id: notifId,
+                  title: "Download Complete",
+                  body: "${song.title} (FLAC)");
               break;
             }
-            // FLAC failed - fall through to YouTube
-            debugPrint("⚠️ FLAC unavailable, falling back to YouTube...");
+            // 🚀 FLAC UNAVAILABLE - NOTIFY USER (NO AUTO-FALLBACK)
+            SmartDownloadService.progressNotifier.value = null;
+
+            showCenterNotification(context,
+                label: "FLAC UNAVAILABLE",
+                title: song.title,
+                subtitle:
+                    "FLAC not available for this song. Please choose another output format in Settings.",
+                artPath: spotifyArtUrl,
+                onlineArtUrl: spotifyArtUrl,
+                icon: Icons.info_outline_rounded,
+                backgroundColor: Colors.orange.withOpacity(0.85));
+
+            notif.showComplete(
+                id: notifId,
+                title: "FLAC Unavailable",
+                body:
+                    "${song.title} - Please change output format in Settings");
+
+            debugPrint("⚠️ FLAC unavailable for ${song.title}");
+            break; // Stop here, don't fallback to M4A/MP3
           } catch (e) {
-            debugPrint("FLAC download failed: $e");
+            // 🚀 SHOW ERROR TO USER
+            SmartDownloadService.progressNotifier.value = null;
+
+            showCenterNotification(context,
+                label: "FLAC UNAVAILABLE",
+                title: song.title,
+                subtitle:
+                    "FLAC not available. Please choose another output format in Settings.",
+                artPath: spotifyArtUrl,
+                onlineArtUrl: spotifyArtUrl,
+                icon: Icons.error_outline_rounded,
+                backgroundColor: Colors.orange.withOpacity(0.85));
+
+            notif.showComplete(
+                id: notifId,
+                title: "FLAC Unavailable",
+                body: "${song.title} - Please change output format");
+            break; // Stop here
           }
         }
 
@@ -328,6 +398,7 @@ class SongContextMenuRegion extends ConsumerWidget {
               artPath: spotifyArtUrl,
               onlineArtUrl: spotifyArtUrl,
               backgroundColor: Colors.red.withOpacity(0.85));
+          notif.cancel(notifId);
           break;
         }
 
@@ -337,6 +408,13 @@ class SongContextMenuRegion extends ConsumerWidget {
             subtitle: "Downloading $actualFormat...",
             artPath: spotifyArtUrl,
             onlineArtUrl: spotifyArtUrl);
+
+        notif.showProgress(
+            id: notifId,
+            progress: 0,
+            max: 100,
+            title: "Downloading $actualFormat",
+            body: song.title);
 
         await ytService.startDownloadFromUrl(
           youtubeUrl: youtubeUrl,
@@ -351,6 +429,13 @@ class SongContextMenuRegion extends ConsumerWidget {
               status: "Downloading: ${song.title}",
               details: "${(p * 100).toInt()}% - $actualFormat",
             );
+            // 🚀 NOTIF
+            notif.showProgress(
+                id: notifId,
+                progress: (p * 100).toInt(),
+                max: 100,
+                title: "Downloading Audio",
+                body: song.title);
           },
           onComplete: (success) async {
             // 🚀 CLEAR SIDEBAR PROGRESS
@@ -370,6 +455,11 @@ class SongContextMenuRegion extends ConsumerWidget {
                   artPath: outputPath,
                   onlineArtUrl: spotifyArtUrl,
                   backgroundColor: Colors.green.withOpacity(0.85));
+
+              notif.showComplete(
+                  id: notifId,
+                  title: "Download Complete",
+                  body: "${song.title} ($actualFormat)");
             } else {
               showCenterNotification(context,
                   label: "DOWNLOAD FAILED",
@@ -378,6 +468,7 @@ class SongContextMenuRegion extends ConsumerWidget {
                   artPath: spotifyArtUrl,
                   onlineArtUrl: spotifyArtUrl,
                   backgroundColor: Colors.red.withOpacity(0.85));
+              notif.cancel(notifId);
             }
           },
         );

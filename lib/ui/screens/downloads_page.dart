@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:metadata_god/metadata_god.dart';
 
@@ -33,16 +32,43 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
     setState(() => _isLoading = true);
 
     try {
+      // SharedPreferences is LOCAL storage - no timeout needed
       final prefs = await SharedPreferences.getInstance();
       String? path = prefs.getString('custom_download_path');
 
       if (path == null) {
-        if (Platform.isAndroid || Platform.isIOS) {
-          await Permission.storage.request();
-        }
-        final dir = await getDownloadsDirectory();
-        if (dir != null) {
+        if (Platform.isAndroid) {
+          // 🚀 Use public Download directory on Android
+          try {
+            final updatePath = Directory("/storage/emulated/0/Download");
+            if (await updatePath.exists()) {
+              path = '${updatePath.path}/SimpleMusicDownloads';
+            } else {
+              // Fallback logic - path_provider is LOCAL, no timeout needed
+              final externalDir = await getExternalStorageDirectory();
+              if (externalDir != null) {
+                final androidPath = externalDir.path;
+                final androidIndex = androidPath.indexOf("/Android/");
+                if (androidIndex != -1) {
+                  path =
+                      "${androidPath.substring(0, androidIndex)}/Download/SimpleMusicDownloads";
+                }
+              }
+            }
+          } catch (e) {
+            print("Error accessing public directory: $e");
+            // 🚀 Hardcoded fallback for offline mode
+            path = "/storage/emulated/0/Download/SimpleMusicDownloads";
+          }
+        } else if (Platform.isIOS) {
+          final dir = await getApplicationDocumentsDirectory();
           path = '${dir.path}/SimpleMusicDownloads';
+        } else {
+          // Desktop
+          final dir = await getDownloadsDirectory();
+          if (dir != null) {
+            path = '${dir.path}/SimpleMusicDownloads';
+          }
         }
       }
 
@@ -232,37 +258,43 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 40),
-            // HEADER
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Downloads',
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: textColor,
-                              ),
-                    ),
-                    if (_downloadPath != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          _downloadPath!,
-                          style: TextStyle(color: subTextColor, fontSize: 10),
-                        ),
+            // HEADER (Shifted Mobile)
+            Padding(
+              padding: EdgeInsets.only(
+                  left: (Platform.isAndroid || Platform.isIOS) ? 40.0 : 0.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Downloads',
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
                       ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: _loadFiles,
-                  tooltip: "Refresh List",
-                ),
-              ],
+                      if (_downloadPath != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            _downloadPath!,
+                            style: TextStyle(color: subTextColor, fontSize: 10),
+                          ),
+                        ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: _loadFiles,
+                    tooltip: "Refresh List",
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -12,6 +13,9 @@ import '../../providers/player_provider.dart';
 import '../../providers/library_presentation_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../models/album_model.dart';
+import '../../providers/library_provider.dart'; // 🚀 IMPORT (For refresh)
+import '../../providers/settings_provider.dart'; // 🚀 DEBUG BUTTON SETTING
+import 'package:permission_handler/permission_handler.dart'; // 🚀 IMPORT
 
 // --- COMPONENT IMPORTS ---
 import '../components/player_bar.dart';
@@ -45,6 +49,7 @@ import '../components/download_progress_widget.dart';
 import '../../providers/interface_provider.dart';
 import 'mini_player.dart';
 import '../../models/download_progress.dart';
+import '../components/debug_panel.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
@@ -55,18 +60,94 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   final UpdateService _updateService = UpdateService();
+  // 🚀 GlobalKey for drawer control on mobile
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // 🚀 CONNECTIVITY MONITORING
+  bool _wasOffline = false;
+  Timer? _connectivityTimer;
 
   @override
   void initState() {
     super.initState();
     // 🚀 CHECK FOR UPDATES ON STARTUP
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _requestPermissions(); // 🚀 Request Permissions
       _checkForUpdates();
       _checkWhatsNew();
+      _startConnectivityMonitor(); // 🚀 Start monitoring
     });
 
     // 🚀 LISTEN FOR BULK DOWNLOAD ERRORS (Ban/Limit)
     BulkDownloadService().errorNotifier.addListener(_onBulkDownloadError);
+  }
+
+  // 🚀 CONNECTIVITY MONITOR
+  void _startConnectivityMonitor() {
+    _checkConnectivity(); // Initial check
+    _connectivityTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _checkConnectivity(),
+    );
+  }
+
+  Future<void> _checkConnectivity() async {
+    try {
+      final result = await InternetAddress.lookup('google.com')
+          .timeout(const Duration(seconds: 3));
+      final isOnline = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+
+      // 🚀 Show toast when transitioning from offline to online
+      if (_wasOffline && isOnline && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.wifi, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Connected to Internet'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 150, left: 16, right: 16),
+          ),
+        );
+      }
+
+      _wasOffline = !isOnline;
+    } catch (_) {
+      // Offline
+      _wasOffline = true;
+    }
+  }
+
+  // 🚀 REQUEST RUNTIME PERMISSIONS (Fix for Android 13+ / 10+)
+  Future<void> _requestPermissions() async {
+    if (!Platform.isAndroid) return;
+
+    bool granted = false;
+
+    // 1. Try Audio (Android 13+)
+    if (await Permission.audio.request().isGranted) {
+      granted = true;
+    }
+    // 2. Try Legacy Storage (Android < 13)
+    else if (await Permission.storage.request().isGranted) {
+      granted = true;
+    }
+
+    // 🚀 3. Request Notification Permission (Android 13+)
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+
+    // 3. If granted, ensure Library scans
+    if (granted) {
+      // Refresh library to ensure files are picked up
+      ref.read(libraryProvider).refreshLibrary();
+    }
   }
 
   void _onBulkDownloadError() {
@@ -87,6 +168,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   void dispose() {
+    _connectivityTimer?.cancel(); // 🚀 Cancel connectivity monitor
     BulkDownloadService().errorNotifier.removeListener(_onBulkDownloadError);
     super.dispose();
   }
@@ -211,16 +293,12 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Future<void> _downloadAndInstall(Map<String, dynamic> release) async {
-    // Find the .exe asset
-    final assets = release['assets'] as List;
-    final exeAsset = assets.firstWhere(
-      (asset) => asset['name'].toString().endsWith('.exe'),
-      orElse: () => null,
-    );
+    // 🚀 Platform-aware asset selection
+    final asset = _updateService.getAssetForPlatform(release);
 
-    if (exeAsset != null) {
-      final downloadUrl = exeAsset['browser_download_url'];
-      final fileName = exeAsset['name'];
+    if (asset != null) {
+      final downloadUrl = asset['downloadUrl']!;
+      final fileName = asset['fileName']!;
 
       // 🚀 Remove SnackBar, just start download.
       // The sidebar widget will appear automatically because it listens to the notifier.
@@ -237,7 +315,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No installer found in release.")),
+        SnackBar(
+            content: Text(
+                "No ${_updateService.platformName} installer found in release.")),
       );
     }
   }
@@ -350,7 +430,12 @@ class _MainShellState extends ConsumerState<MainShell> {
         return KeyEventResult.ignored;
       },
       child: Scaffold(
+        key: _scaffoldKey, // 🚀 Use GlobalKey for drawer access
         endDrawer: const QueueDrawer(),
+        // 🚀 MOBILE: Navigation Drawer (Hamburger Menu)
+        drawer: !isDesktop
+            ? _buildMobileDrawer(context, currentView, isDark)
+            : null,
         body: Stack(
           children: [
             // 1. AMBIENT BACKGROUND LAYER (Bottom)
@@ -375,8 +460,10 @@ class _MainShellState extends ConsumerState<MainShell> {
                             ? 'stack_${navigationStack.length}_${navigationStack.last.type}'
                             : currentView),
                         padding: navigationStack.isNotEmpty
-                            ? EdgeInsets.zero
-                            : const EdgeInsets.only(bottom: 105),
+                            ? (isDesktop
+                                ? EdgeInsets.zero
+                                : const EdgeInsets.only(bottom: 140))
+                            : EdgeInsets.only(bottom: isDesktop ? 105 : 140),
                         child: _buildMainContent(navigationStack, currentView),
                       ),
                     ),
@@ -413,38 +500,59 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
 
             // 4. LYRICS PANEL OVERLAY
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeInOutCubic,
-              left: 0,
-              right: 0,
-              top: isLyricsVisible ? 32 : screenHeight,
-              height: screenHeight - 32,
-              child: const LyricsPanel(),
-            ),
+            // 4. LYRICS PANEL OVERLAY (Desktop Only)
+            if (isDesktop)
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOutCubic,
+                left: 0,
+                right: 0,
+                top: isLyricsVisible ? 32 : screenHeight,
+                height: screenHeight - 32,
+                child: const LyricsPanel(),
+              ),
 
             // 5. PLAYER BAR (Fixed Bottom)
             const Positioned(left: 0, right: 0, bottom: 0, child: PlayerBar()),
+
+            // 6. MOBILE: Hamburger Menu Button (Overlay)
+            // 🚀 Only show on main pages (empty stack), otherwise rely on Back button
+            if (!isDesktop && navigationStack.isEmpty)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 16,
+                left: 16,
+                child: Builder(
+                  // Use Builder to get the Scaffold's context
+                  builder: (scaffoldContext) => Container(
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.black.withOpacity(0.7)
+                          : Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.menu_rounded),
+                      iconSize: 28,
+                      color: isDark ? Colors.white : Colors.black,
+                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                    ),
+                  ),
+                ),
+              ),
+
+            // 7. DEBUG FLOATING BUTTON (Conditional - All Platforms)
+            if (ref.watch(settingsProvider).showDebugButton)
+              const DebugFloatingButton(child: SizedBox.shrink()),
           ],
         ),
-        bottomNavigationBar: !isDesktop
-            ? NavigationBar(
-                selectedIndex: currentView == LibraryView.settings ? 1 : 0,
-                onDestinationSelected: (i) {
-                  final notifier =
-                      ref.read(libraryPresentationProvider.notifier);
-                  // Clear navigation stack if navigating away
-                  ref.read(navigationStackProvider.notifier).clear();
-                  if (i == 0) notifier.setView(LibraryView.browse);
-                  if (i == 1) notifier.setView(LibraryView.settings);
-                },
-                destinations: const [
-                  NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-                  NavigationDestination(
-                      icon: Icon(Icons.settings), label: 'Settings'),
-                ],
-              )
-            : null,
+        // 🚀 Removed NavigationBar - replaced with drawer
       ),
     );
   }
@@ -678,6 +786,228 @@ class _MainShellState extends ConsumerState<MainShell> {
           notifier.setView(targetView);
         },
       ),
+    );
+  }
+
+  // 🚀 MOBILE NAVIGATION DRAWER
+  Widget _buildMobileDrawer(
+      BuildContext context, LibraryView currentView, bool isDark) {
+    final notifier = ref.read(libraryPresentationProvider.notifier);
+    final navigationStack = ref.watch(navigationStackProvider);
+    final hasSelection = navigationStack.isNotEmpty;
+    final accentColor = Theme.of(context).colorScheme.primary;
+
+    return Drawer(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                'Navigation',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+
+            // Navigation Items
+            _buildMobileNavItem(
+                context,
+                'Browse',
+                Icons.home_rounded,
+                LibraryView.browse,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+            _buildMobileNavItem(
+                context,
+                'Search',
+                Icons.search_rounded,
+                LibraryView.search,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+            _buildMobileNavItem(
+                context,
+                'History',
+                Icons.history_rounded,
+                LibraryView.history,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+            _buildMobileNavItem(
+                context,
+                'Stats',
+                Icons.bar_chart_rounded,
+                LibraryView.stats,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+
+            const Divider(height: 16),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, bottom: 8),
+              child: Text('LIBRARY',
+                  style: TextStyle(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12)),
+            ),
+
+            _buildMobileNavItem(
+                context,
+                'Playlists',
+                Icons.playlist_play_rounded,
+                LibraryView.playlists,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+            _buildMobileNavItem(
+                context,
+                'Artists',
+                Icons.person_rounded,
+                LibraryView.artists,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+            _buildMobileNavItem(
+                context,
+                'Albums',
+                Icons.album_rounded,
+                LibraryView.albums,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+            _buildMobileNavItem(
+                context,
+                'Local Library',
+                Icons.folder_rounded,
+                LibraryView.localLibrary,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+
+            const Divider(height: 16),
+
+            _buildMobileNavItem(
+                context,
+                'Downloads',
+                Icons.download_rounded,
+                LibraryView.downloads,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+            _buildMobileNavItem(
+                context,
+                'Settings',
+                Icons.settings_rounded,
+                LibraryView.settings,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+
+            // 🚀 DOWNLOAD PROGRESS WIDGETS
+            const Divider(height: 16),
+            ValueListenableBuilder<DownloadProgress?>(
+              valueListenable: UpdateService().progressNotifier,
+              builder: (context, progress, child) {
+                if (progress == null) return const SizedBox.shrink();
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: DownloadProgressWidget(progress: progress),
+                );
+              },
+            ),
+            ValueListenableBuilder<DownloadProgress?>(
+              valueListenable: BulkDownloadService().progressNotifier,
+              builder: (context, progress, child) {
+                if (progress == null) return const SizedBox.shrink();
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: DownloadProgressWidget(progress: progress),
+                );
+              },
+            ),
+            ValueListenableBuilder<DownloadProgress?>(
+              valueListenable: SmartDownloadService.progressNotifier,
+              builder: (context, progress, child) {
+                if (progress == null) return const SizedBox.shrink();
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: DownloadProgressWidget(progress: progress),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileNavItem(
+      BuildContext context,
+      String title,
+      IconData icon,
+      LibraryView targetView,
+      LibraryView currentView,
+      LibraryPresentationNotifier notifier,
+      bool isDark,
+      bool hasSelection,
+      Color accentColor) {
+    final isSelected = (targetView == currentView) && !hasSelection;
+    final defaultColor = isDark ? Colors.grey[400] : Colors.grey[800];
+    final selectedColor = accentColor;
+
+    return ListTile(
+      leading: Icon(icon, color: isSelected ? selectedColor : defaultColor),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isSelected
+              ? selectedColor
+              : (isDark ? Colors.white : Colors.black),
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      selected: isSelected,
+      selectedTileColor: accentColor.withOpacity(0.1),
+      onTap: () {
+        // Close drawer first
+        Navigator.of(context).pop();
+        // Navigate
+        ref.read(navigationStackProvider.notifier).clear();
+        notifier.setView(targetView);
+      },
     );
   }
 }

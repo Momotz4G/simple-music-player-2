@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -189,7 +190,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         padding: const EdgeInsets.all(32),
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 30, top: 20),
+            padding: EdgeInsets.only(
+                bottom: 30,
+                top: 20,
+                left: (Platform.isAndroid || Platform.isIOS) ? 40.0 : 0.0),
             child: Text('Settings',
                 style: Theme.of(context)
                     .textTheme
@@ -597,7 +601,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           FutureBuilder<SharedPreferences>(
             future: SharedPreferences.getInstance(),
             builder: (context, snapshot) {
-              String currentPath = "Default (Downloads/SimpleMusicDownloads)";
+              String currentPath = (Platform.isAndroid)
+                  ? "Default (/storage/emulated/0/Download/SimpleMusicDownloads)"
+                  : "Default (Downloads/SimpleMusicDownloads)";
               bool hasCustomPath = false;
               if (snapshot.hasData) {
                 final path = snapshot.data!.getString('custom_download_path');
@@ -812,6 +818,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 }
               }
             },
+          ),
+          const SizedBox(height: 50),
+
+          // DEBUGGING
+          Text("DEBUGGING",
+              style:
+                  TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          SwitchListTile(
+            title: Text("Show Floating Debug Button",
+                style: TextStyle(color: textColor)),
+            subtitle: Text("Toggle visibility of the floating debug console",
+                style: TextStyle(color: subtitleColor)),
+            value: settings.showDebugButton,
+            activeColor: accentColor,
+            onChanged: (val) => settingsNotifier.toggleShowDebugButton(val),
           ),
           const SizedBox(height: 50),
 

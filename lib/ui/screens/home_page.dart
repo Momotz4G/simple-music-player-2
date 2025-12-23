@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -263,7 +264,9 @@ class _HomePageState extends ConsumerState<HomePage> {
           children: [
             const SizedBox(height: 40),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              padding: EdgeInsets.only(
+                  left: (Platform.isAndroid || Platform.isIOS) ? 72.0 : 32.0,
+                  right: 32.0),
               child: Row(
                 children: [
                   Text(

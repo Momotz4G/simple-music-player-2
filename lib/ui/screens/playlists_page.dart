@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
@@ -38,12 +39,17 @@ class PlaylistsPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 40),
-            Text(
-              'Playlists',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
+            // HEADER (Shifted Mobile)
+            Padding(
+              padding: EdgeInsets.only(
+                  left: (Platform.isAndroid || Platform.isIOS) ? 40.0 : 0.0),
+              child: Text(
+                'Playlists',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+              ),
             ),
             const SizedBox(height: 24),
             if (playlists.isEmpty)

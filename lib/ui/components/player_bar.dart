@@ -11,8 +11,10 @@ import '../../providers/timer_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/interface_provider.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../providers/library_presentation_provider.dart';
 import '../../models/song_model.dart';
 import '../screens/full_screen_player.dart';
+import '../screens/mobile_full_player.dart';
 import 'smart_art.dart';
 import 'timer_display.dart';
 import 'audio_wave_visualizer.dart';
@@ -53,7 +55,14 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? Colors.white : Colors.black;
 
-    // DYNAMIC COLOR LOGIC
+    // 🚀 MOBILE: Show simplified mini player bar
+    final isMobile = Platform.isAndroid || Platform.isIOS;
+    if (isMobile) {
+      return _buildMobilePlayerBar(
+          context, playerState, notifier, song, hasSong, isDark, settings);
+    }
+
+    // DYNAMIC COLOR LOGIC (Desktop only)
     Color visualizerColor = settings.accentColor;
 
     if (settings.syncThemeWithAlbumArt) {
@@ -923,6 +932,340 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
               onPressed: () => Navigator.pop(context),
               child: const Text("Close")),
         ],
+      ),
+    );
+  }
+
+  // 🚀 MOBILE MINI PLAYER BAR (Floating design) + Bottom Navigation
+  Widget _buildMobilePlayerBar(
+    BuildContext context,
+    PlayerState playerState,
+    PlayerNotifier notifier,
+    SongModel? song,
+    bool hasSong,
+    bool isDark,
+    SettingsState settings,
+  ) {
+    // Progress calculation
+    double progress = 0.0;
+    if (hasSong && playerState.totalDuration > 0) {
+      progress = playerState.currentPosition / playerState.totalDuration;
+      if (progress.isNaN || progress.isInfinite) progress = 0.0;
+      if (progress > 1.0) progress = 1.0;
+    }
+
+    final presentationNotifier = ref.read(libraryPresentationProvider.notifier);
+    final currentView = ref.watch(libraryPresentationProvider).currentView;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Floating Mini Player
+        Container(
+          margin: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
+          child: GestureDetector(
+            onTap: hasSong
+                ? () {
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        opaque:
+                            false, // 🚀 Allow seeing behind when dragging down
+                        transitionDuration: const Duration(milliseconds: 300),
+                        reverseTransitionDuration:
+                            const Duration(milliseconds: 250),
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            const MobileFullPlayer(),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 1),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            )),
+                            child: child,
+                          );
+                        },
+                      ),
+                    );
+                  }
+                : null,
+            // 🚀 GESTURE: Pull Up to Expand
+            // 🚀 GESTURE: Pull Up to Expand
+            onVerticalDragEnd: (details) {
+              if (hasSong && details.primaryVelocity! < -150) {
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    opaque: false, // 🚀 Allow seeing behind when dragging down
+                    transitionDuration: const Duration(milliseconds: 300),
+                    reverseTransitionDuration:
+                        const Duration(milliseconds: 250),
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        const MobileFullPlayer(),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        )),
+                        child: child,
+                      );
+                    },
+                  ),
+                );
+              }
+            },
+            child: TweenAnimationBuilder<Color?>(
+              // 🚀 ANIMATE color changes for smooth transitions
+              duration: const Duration(milliseconds: 500),
+              tween: ColorTween(
+                begin: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                // Mobile always uses dominant color (no setting check)
+                end: playerState.dominantColor ??
+                    (isDark ? const Color(0xFF1E1E1E) : Colors.white),
+              ),
+              builder: (context, animatedColor, child) {
+                // Determine if we're using a colored background
+                final hasCustomColor = playerState.dominantColor != null;
+
+                return Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    // 🚀 Use dominant album color with reduced opacity
+                    color: hasCustomColor
+                        ? animatedColor!.withOpacity(0.25) // Much more subtle!
+                        : animatedColor,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Container(
+                    // Dark overlay for better text readability
+                    decoration: BoxDecoration(
+                      color: hasCustomColor
+                          ? Colors.black.withOpacity(0.4) // Dark overlay
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Column(
+                        children: [
+                          // Content
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              child: Row(
+                                children: [
+                                  // Album art
+                                  Hero(
+                                    tag: 'mobile_player_art',
+                                    child: hasSong
+                                        ? SmartArt(
+                                            path: song!.filePath,
+                                            size: 40,
+                                            borderRadius: 6,
+                                            onlineArtUrl: song.onlineArtUrl,
+                                          )
+                                        : Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[800],
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: const Icon(Icons.music_note,
+                                                color: Colors.white24,
+                                                size: 20),
+                                          ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  // Title and Artist
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          hasSong
+                                              ? song!.title
+                                              : "No Song Playing",
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                            color: hasSong
+                                                ? (isDark
+                                                    ? Colors.white
+                                                    : Colors.black)
+                                                : Colors.grey,
+                                          ),
+                                        ),
+                                        Text(
+                                          hasSong
+                                              ? song!.artist
+                                              : "Select a track",
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: isDark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Play/Pause button
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: hasSong
+                                          ? (isDark
+                                              ? Colors.white
+                                              : Colors.black)
+                                          : Colors.grey.withOpacity(0.3),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: IconButton(
+                                      icon: Icon(
+                                        playerState.isPlaying
+                                            ? Icons.pause_rounded
+                                            : Icons.play_arrow_rounded,
+                                        color: isDark
+                                            ? Colors.black
+                                            : Colors.white,
+                                        size: 20,
+                                      ),
+                                      onPressed:
+                                          hasSong ? notifier.togglePlay : null,
+                                      padding: EdgeInsets.zero,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Progress indicator at BOTTOM
+                          SizedBox(
+                            height: 3,
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              backgroundColor:
+                                  isDark ? Colors.white12 : Colors.black12,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                settings.accentColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ), // Close dark overlay Container
+                );
+              },
+            ),
+          ),
+        ),
+        // Bottom Navigation Bar
+        Container(
+          padding:
+              const EdgeInsets.only(left: 24, right: 24, bottom: 8, top: 4),
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // Home
+              _buildNavButton(
+                icon: Icons.home_rounded,
+                label: "Home",
+                isActive: currentView == LibraryView.browse,
+                onTap: () {
+                  ref.read(navigationStackProvider.notifier).clear();
+                  presentationNotifier.setView(LibraryView.browse);
+                },
+                isDark: isDark,
+                accentColor: settings.accentColor,
+              ),
+              // Search
+              _buildNavButton(
+                icon: Icons.search_rounded,
+                label: "Search",
+                isActive: currentView == LibraryView.search,
+                onTap: () {
+                  ref.read(navigationStackProvider.notifier).clear();
+                  presentationNotifier.setView(LibraryView.search);
+                },
+                isDark: isDark,
+                accentColor: settings.accentColor,
+              ),
+              // Settings
+              _buildNavButton(
+                icon: Icons.settings_rounded,
+                label: "Settings",
+                isActive: currentView == LibraryView.settings,
+                onTap: () {
+                  ref.read(navigationStackProvider.notifier).clear();
+                  presentationNotifier.setView(LibraryView.settings);
+                },
+                isDark: isDark,
+                accentColor: settings.accentColor,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavButton({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+    required bool isDark,
+    required Color accentColor,
+  }) {
+    final color =
+        isActive ? accentColor : (isDark ? Colors.grey[500] : Colors.grey[600]);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 24, color: color),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

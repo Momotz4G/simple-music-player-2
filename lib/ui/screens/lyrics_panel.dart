@@ -175,7 +175,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 48),
+                      // Removed: const SizedBox(width: 48) to prevent overlap
                     ],
                   ),
                 ),

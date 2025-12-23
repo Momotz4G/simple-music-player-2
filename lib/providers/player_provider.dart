@@ -25,6 +25,7 @@ import 'settings_provider.dart';
 
 import '../services/db_service.dart';
 import '../services/remote_control_service.dart';
+import '../services/audio_handler.dart';
 
 // --- STATE CLASS ---
 class PlayerState {
@@ -200,6 +201,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _remoteService.startListening(onCommand: _handleRemoteCommand);
         _broadcastRemoteState(); // Sync Initial State
       });
+
+      // Connect AudioHandler for Android/iOS/macOS notification controls
+      if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
+        _connectAudioHandler();
+      }
     });
 
     // LISTEN FOR SETTINGS CHANGES
@@ -219,7 +225,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     // Extract color immediately if a song is already loaded (Persistence)
     if (state.currentSong != null) {
-      _extractPalette(state.currentSong!.filePath);
+      _extractPalette(state.currentSong!);
     }
 
     _musicService.player.durationStream.listen((duration) {
@@ -437,7 +443,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           artUrl: song.onlineArtUrl,
         );
 
-    _extractPalette(song.filePath);
+    _extractPalette(song);
 
     _isSwitchingSong = true;
     state = state.copyWith(currentSong: song, isPlaying: true);
@@ -447,49 +453,80 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _broadcastRemoteState(); // Sync Song Change
   }
 
-  // --- COLOR EXTRACTION (Fixed for MP3s) ---
-  Future<void> _extractPalette(String filePath) async {
-    if (filePath.isEmpty) {
-      state = state.copyWith(dominantColor: null);
-      return;
+  // --- COLOR EXTRACTION (Fixed for MP3s and Streaming) ---
+  Future<void> _extractPalette(SongModel song) async {
+    final filePath = song.filePath;
+
+    // 1. TRY LOCAL FILE FIRST (faster for offline, works without network)
+    if (filePath.isNotEmpty) {
+      try {
+        final file = File(filePath);
+        if (await file.exists()) {
+          // Read metadata from file to get image bytes
+          final metadata = await MetadataGod.readMetadata(file: filePath);
+          final bytes = metadata.picture?.data;
+
+          if (bytes != null) {
+            // Use MemoryImage with the bytes we just read
+            final palette = await PaletteGenerator.fromImageProvider(
+              MemoryImage(bytes),
+              maximumColorCount: 20,
+            );
+
+            Color? color = palette.lightVibrantColor?.color ??
+                palette.vibrantColor?.color ??
+                palette.lightMutedColor?.color ??
+                palette.dominantColor?.color;
+
+            if (color != null) {
+              final hsl = HSLColor.fromColor(color);
+              final poppedColor = hsl
+                  .withLightness(max(hsl.lightness, 0.6))
+                  .withSaturation(min(hsl.saturation + 0.2, 1.0))
+                  .toColor();
+
+              state = state.copyWith(dominantColor: poppedColor);
+              return; // Success with local art
+            }
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print("Local art color extraction failed: $e");
+        // Fall through to try online art
+      }
     }
 
-    try {
-      // Read metadata from file to get image bytes first!
-      final metadata = await MetadataGod.readMetadata(file: filePath);
-      final bytes = metadata.picture?.data;
+    // 2. FALLBACK TO ONLINE ART (only if local failed and URL exists)
+    if (song.onlineArtUrl != null && song.onlineArtUrl!.isNotEmpty) {
+      try {
+        final palette = await PaletteGenerator.fromImageProvider(
+          NetworkImage(song.onlineArtUrl!),
+          maximumColorCount: 20,
+        ).timeout(const Duration(
+            seconds: 5)); // 🚀 Timeout to prevent blocking offline
 
-      if (bytes == null) {
-        state = state.copyWith(dominantColor: null);
-        return;
+        Color? color = palette.lightVibrantColor?.color ??
+            palette.vibrantColor?.color ??
+            palette.lightMutedColor?.color ??
+            palette.dominantColor?.color;
+
+        if (color != null) {
+          final hsl = HSLColor.fromColor(color);
+          final poppedColor = hsl
+              .withLightness(max(hsl.lightness, 0.6))
+              .withSaturation(min(hsl.saturation + 0.2, 1.0))
+              .toColor();
+
+          state = state.copyWith(dominantColor: poppedColor);
+          return; // Success with online art
+        }
+      } catch (e) {
+        if (kDebugMode) print("Online art color extraction failed: $e");
       }
-
-      // Use MemoryImage with the bytes we just read
-      final palette = await PaletteGenerator.fromImageProvider(
-        MemoryImage(bytes),
-        maximumColorCount: 20,
-      );
-
-      Color? color = palette.lightVibrantColor?.color ??
-          palette.vibrantColor?.color ??
-          palette.lightMutedColor?.color ??
-          palette.dominantColor?.color;
-
-      if (color != null) {
-        final hsl = HSLColor.fromColor(color);
-        final poppedColor = hsl
-            .withLightness(max(hsl.lightness, 0.6))
-            .withSaturation(min(hsl.saturation + 0.2, 1.0))
-            .toColor();
-
-        state = state.copyWith(dominantColor: poppedColor);
-      } else {
-        state = state.copyWith(dominantColor: null);
-      }
-    } catch (e) {
-      if (kDebugMode) print("Error extracting colors: $e");
-      state = state.copyWith(dominantColor: null);
     }
+
+    // No color extracted
+    state = state.copyWith(dominantColor: null);
   }
 
   // --- SETTINGS LOADING ---
@@ -763,7 +800,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         );
 
     // EXTRACT COLOR
-    _extractPalette(song.filePath);
+    _extractPalette(song);
 
     if (newQueue != null) {
       if (state.isShuffle) {
@@ -853,6 +890,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _updateDiscord();
     _saveSettings(); // SAVE STATE
     _saveQueueState(); // SAVE QUEUE
+    _updateNotificationMetadata(song); // UPDATE NOTIFICATION MEDIA CONTROLS
 
     _broadcastRemoteState(); // Sync Song Change
 
@@ -883,7 +921,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       state = state.copyWith(currentSong: nextSong, isPlaying: true);
 
       // EXTRACT COLOR
-      _extractPalette(nextSong.filePath);
+      _extractPalette(nextSong);
 
       // JIT CACHING CHECK
       if (!await File(nextSong.filePath).exists()) {
@@ -954,7 +992,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     state = state.copyWith(currentSong: nextSong, isPlaying: true);
 
     // EXTRACT COLOR
-    _extractPalette(nextSong.filePath);
+    _extractPalette(nextSong);
 
     // JIT CACHING CHECK
     if (!await File(nextSong.filePath).exists()) {
@@ -1025,7 +1063,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     state = state.copyWith(currentSong: readySong);
 
     // EXTRACT COLOR (Safe now)
-    _extractPalette(readySong.filePath);
+    _extractPalette(readySong);
 
     _musicService.play(readySong);
     _updateDiscord();
@@ -1276,6 +1314,40 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       artUrl: state.currentSong?.onlineArtUrl,
       filePath: state.currentSong?.filePath,
     );
+  }
+
+  // --- ANDROID NOTIFICATION MEDIA CONTROLS ---
+  void _connectAudioHandler() {
+    try {
+      // Hook up notification button callbacks to our methods
+      audioHandler.onPlay = () => _musicService.resume();
+      audioHandler.onPause = () => _musicService.pause();
+      audioHandler.onSkipToNext = () => playNext();
+      audioHandler.onSkipToPrevious = () => playPrevious();
+      audioHandler.onSeek = (position) => seek(position.inSeconds.toDouble());
+      debugPrint("✅ AudioHandler connected to PlayerNotifier");
+    } catch (e) {
+      debugPrint("⚠️ Failed to connect AudioHandler: $e");
+    }
+  }
+
+  Future<void> _updateNotificationMetadata(SongModel song) async {
+    if (!Platform.isAndroid && !Platform.isIOS && !Platform.isMacOS) return;
+
+    try {
+      // Update the notification with current song info
+      await audioHandler.setCurrentSong(
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        duration: Duration(seconds: song.duration.toInt()),
+        artUri: song.onlineArtUrl != null && song.onlineArtUrl!.isNotEmpty
+            ? Uri.parse(song.onlineArtUrl!)
+            : null,
+      );
+    } catch (e) {
+      debugPrint("⚠️ Failed to update notification metadata: $e");
+    }
   }
 }
 

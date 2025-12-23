@@ -21,10 +21,14 @@ class LibraryProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _selectedFolder;
+  String? _error;
+  bool _isPermissionDenied = false;
 
   List<SongModel> get songs => _searchQuery.isEmpty ? _songs : _filteredSongs;
   bool get isLoading => _isLoading;
   String? get selectedFolder => _selectedFolder;
+  String? get error => _error;
+  bool get isPermissionDenied => _isPermissionDenied;
 
   final List<String> _audioExtensions = [
     '.mp3',
@@ -34,6 +38,22 @@ class LibraryProvider extends ChangeNotifier {
     '.ogg',
     '.aac'
   ];
+
+  // 🚀 New Method: Request Permissions manually
+  Future<void> requestPermissions() async {
+    // Note: We need to import permission_handler.
+    // Usually providers should be UI-agnostic but this is a specific requirement.
+    // Instead of importing logic here, we will handle it in the UI button callback.
+    // BUT to reset the state:
+    _error = null;
+    _isPermissionDenied = false;
+    notifyListeners();
+    // After UI requests permission, it should call pickFolder or reload.
+    // Actually, let's just retry scanning current folder if exists.
+    if (_selectedFolder != null) {
+      await _scanFolder(_selectedFolder!);
+    }
+  }
 
   // Constructor now requires 'Ref'
   LibraryProvider(this.ref) {
@@ -48,13 +68,15 @@ class LibraryProvider extends ChangeNotifier {
     await _fetchFromDatabase();
 
     // 2. Then, if we have a path, verify it and scan for changes
-    if (savedPath != null && await Directory(savedPath).exists()) {
+    if (savedPath != null) {
       _selectedFolder = savedPath;
       notifyListeners();
       // Run scan in background so UI shows DB data immediately
       _scanFolder(savedPath);
     }
   }
+
+  // ... (Keeping _fetchFromDatabase, _mapToModel, search as is) ...
 
   // Fetch from Isar Database
   Future<void> _fetchFromDatabase() async {
@@ -110,6 +132,8 @@ class LibraryProvider extends ChangeNotifier {
       _selectedFolder = result;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('saved_music_folder', result);
+      _error = null;
+      _isPermissionDenied = false;
       await _scanFolder(result);
     }
   }
@@ -117,6 +141,8 @@ class LibraryProvider extends ChangeNotifier {
   Future<void> _scanFolder(String path) async {
     if (_isLoading) return;
     _isLoading = true;
+    _error = null; // Reset error
+    _isPermissionDenied = false;
     notifyListeners();
 
     final dbService = ref.read(dbServiceProvider);
@@ -153,9 +179,17 @@ class LibraryProvider extends ChangeNotifier {
         if (batchToAdd.isNotEmpty) {
           await dbService.saveSongs(batchToAdd);
         }
+      } else {
+        _error = "Directory does not exist or access denied.";
       }
     } catch (e) {
       print("Scan Error: $e");
+      _error = "Scan failed: $e";
+      if (e.toString().contains("Permission denied") ||
+          e.toString().contains("os_error: 13")) {
+        _isPermissionDenied = true;
+        _error = "Permission Denied. Please grant Storage access.";
+      }
     }
 
     // Scan complete, now refresh the UI from the Source of Truth (DB)

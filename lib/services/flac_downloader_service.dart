@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../env/env.dart';
+// import 'package:flutter_ffmpeg/flutter_ffmpeg.dart'; // 🚀 Mobile FFmpeg (Incompatible with AGP 8)
 
 /// Service for downloading lossless FLAC audio from various streaming platforms.
 /// Based on SpotiFLAC implementation (https://github.com/afkarxyz/SpotiFLAC).
@@ -745,52 +746,66 @@ class FlacDownloaderService {
 
       // Use FFmpeg to convert fMP4 to proper FLAC container
       debugPrint('🔄 Converting to FLAC container with FFmpeg...');
-      final ffmpegPath = await _getFFmpegPath();
 
-      if (ffmpegPath != null) {
-        try {
-          final result = await Process.run(
-            ffmpegPath,
-            [
-              '-y', // Overwrite output
-              '-i', tempPath, // Input temp file
-              '-c:a', 'copy', // Copy audio (no re-encode)
-              outputPath, // Output as .flac
-            ],
-            runInShell: true,
-          );
+      // 🚀 Platform-aware FFmpeg conversion
+      bool conversionSuccess = false;
 
-          if (result.exitCode == 0 && await File(outputPath).exists()) {
-            debugPrint('✓ FFmpeg conversion successful');
-            // Delete temp file
-            await tempFile.delete();
-
-            final file = File(outputPath);
-            final fileSize = await file.length();
-            debugPrint(
-                '📁 Hi-Res Downloaded: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
-            return file;
-          } else {
-            debugPrint('⚠️ FFmpeg conversion failed: ${result.stderr}');
-            // Fall back to using temp file as FLAC (rename)
-            await tempFile.rename(outputPath);
-            final file = File(outputPath);
-            final fileSize = await file.length();
-            debugPrint(
-                '📁 Hi-Res Downloaded (raw): ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
-            return file;
-          }
-        } catch (e) {
-          debugPrint('⚠️ FFmpeg error: $e');
-          // Fall back to using temp file as FLAC
-          await tempFile.rename(outputPath);
-          return File(outputPath);
-        }
+      if (Platform.isAndroid || Platform.isIOS) {
+        // Mobile FFmpeg disabled - both packages incompatible
+        // flutter_ffmpeg: requires AGP namespace (package too old)
+        // ffmpeg_kit: Maven dependency issues (package discontinued)
+        debugPrint('📱 Mobile FFmpeg unavailable - using raw segments');
       } else {
-        // No FFmpeg, just rename temp to output
-        debugPrint('⚠️ FFmpeg not found, using raw segments');
+        // Use system FFmpeg for desktop
+        debugPrint('🖥️ Using system FFmpeg for desktop conversion...');
+        final ffmpegPath = await _getFFmpegPath();
+
+        if (ffmpegPath != null) {
+          try {
+            final result = await Process.run(
+              ffmpegPath,
+              [
+                '-y', // Overwrite output
+                '-i', tempPath, // Input temp file
+                '-c:a', 'copy', // Copy audio (no re-encode)
+                outputPath, // Output as .flac
+              ],
+              runInShell: true,
+            );
+
+            if (result.exitCode == 0 && await File(outputPath).exists()) {
+              conversionSuccess = true;
+              debugPrint('✓ FFmpeg conversion successful');
+            } else {
+              debugPrint('⚠️ FFmpeg conversion failed: ${result.stderr}');
+            }
+          } catch (e) {
+            debugPrint('⚠️ FFmpeg error: $e');
+          }
+        } else {
+          debugPrint('⚠️ FFmpeg not found on system');
+        }
+      }
+
+      // Handle conversion result
+      if (conversionSuccess) {
+        // Delete temp file
+        await tempFile.delete();
+
+        final file = File(outputPath);
+        final fileSize = await file.length();
+        debugPrint(
+            '📁 Hi-Res Downloaded: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
+        return file;
+      } else {
+        // Fall back to using temp file as FLAC (rename)
+        debugPrint('⚠️ FFmpeg unavailable, using raw segments');
         await tempFile.rename(outputPath);
-        return File(outputPath);
+        final file = File(outputPath);
+        final fileSize = await file.length();
+        debugPrint(
+            '📁 Hi-Res Downloaded (raw): ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
+        return file;
       }
     } catch (e) {
       debugPrint('❌ DASH download error: $e');
@@ -887,12 +902,44 @@ class FlacDownloaderService {
       }
     }
 
-    Directory? dir = await getDownloadsDirectory();
-    if (dir == null) {
-      dir = await getApplicationDocumentsDirectory();
+    // 🚀 Use public Download directory on Android
+    String? basePath;
+
+    if (Platform.isAndroid) {
+      try {
+        final updatePath = Directory("/storage/emulated/0/Download");
+        if (await updatePath.exists()) {
+          basePath = updatePath.path;
+        } else {
+          final externalDir = await getExternalStorageDirectory();
+          if (externalDir != null) {
+            final androidPath = externalDir.path;
+            final androidIndex = androidPath.indexOf("/Android/");
+            if (androidIndex != -1) {
+              basePath = "${androidPath.substring(0, androidIndex)}/Download";
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("Error accessing public directory: $e");
+      }
+    } else if (Platform.isIOS) {
+      final dir = await getApplicationDocumentsDirectory();
+      basePath = dir.path;
+    } else {
+      // Desktop: Use Downloads directory
+      final dir = await getDownloadsDirectory();
+      if (dir != null) {
+        basePath = dir.path;
+      }
     }
 
-    final outputDir = Directory('${dir.path}/SimpleMusicDownloads');
+    if (basePath == null) {
+      final dir = await getApplicationDocumentsDirectory();
+      basePath = dir.path;
+    }
+
+    final outputDir = Directory('$basePath/SimpleMusicDownloads');
     if (!await outputDir.exists()) {
       await outputDir.create(recursive: true);
     }

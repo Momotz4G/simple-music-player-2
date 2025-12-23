@@ -38,6 +38,8 @@ class PocketBaseService {
   }
 
   String? _cachedMetricsId; // Cache metrics record ID
+  static const _networkTimeout =
+      Duration(seconds: 5); // 🚀 Timeout for network calls
 
   // SAVE DATA (Upsert: Create or Update) - No List permission needed
   Future<void> saveData(Map<String, dynamic> data) async {
@@ -46,10 +48,13 @@ class PocketBaseService {
     // 1. Try to use cached metrics record ID
     if (_cachedMetricsId != null) {
       try {
-        await pb.collection('metrics').update(_cachedMetricsId!, body: data);
+        await pb
+            .collection('metrics')
+            .update(_cachedMetricsId!, body: data)
+            .timeout(_networkTimeout);
         return;
       } catch (e) {
-        // Record might be deleted, clear cache
+        // Record might be deleted or timeout, clear cache
         _cachedMetricsId = null;
       }
     }
@@ -60,11 +65,14 @@ class PocketBaseService {
       final storedId = prefs.getString('pb_metrics_id');
       if (storedId != null) {
         try {
-          await pb.collection('metrics').update(storedId, body: data);
+          await pb
+              .collection('metrics')
+              .update(storedId, body: data)
+              .timeout(_networkTimeout);
           _cachedMetricsId = storedId;
           return;
         } catch (e) {
-          // Stored record no longer exists
+          // Stored record no longer exists or timeout
           await prefs.remove('pb_metrics_id');
         }
       }
@@ -74,16 +82,22 @@ class PocketBaseService {
 
     // 3. 🚀 SEARCH for existing record by user_id BEFORE creating new one
     try {
-      final existingRecords = await pb.collection('metrics').getList(
+      final existingRecords = await pb
+          .collection('metrics')
+          .getList(
             page: 1,
             perPage: 1,
             filter: 'user_id = "$_userId"',
-          );
+          )
+          .timeout(_networkTimeout);
 
       if (existingRecords.items.isNotEmpty) {
         // Found existing record - update it
         final existingId = existingRecords.items.first.id;
-        await pb.collection('metrics').update(existingId, body: data);
+        await pb
+            .collection('metrics')
+            .update(existingId, body: data)
+            .timeout(_networkTimeout);
         _cachedMetricsId = existingId;
 
         // Save to local storage
@@ -111,7 +125,7 @@ class PocketBaseService {
         'hostname': hostname,
         'os': Platform.operatingSystem,
         ...data,
-      });
+      }).timeout(_networkTimeout);
       _cachedMetricsId = rec.id;
 
       // Store for future use

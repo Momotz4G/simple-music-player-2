@@ -20,6 +20,7 @@ class SettingsState {
   final String audioFormat;
   final String spotifyMarket;
   final String streamingQuality; // standard, high, lossless
+  final bool showDebugButton;
 
   SettingsState({
     this.isDarkMode = true,
@@ -33,6 +34,7 @@ class SettingsState {
     this.audioFormat = 'mp3',
     this.spotifyMarket = 'KR',
     this.streamingQuality = 'high', // Default to high (M4A)
+    this.showDebugButton = false,
   });
 
   SettingsState copyWith({
@@ -47,6 +49,7 @@ class SettingsState {
     String? audioFormat,
     String? spotifyMarket,
     String? streamingQuality,
+    bool? showDebugButton,
   }) {
     return SettingsState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -61,6 +64,7 @@ class SettingsState {
       audioFormat: audioFormat ?? this.audioFormat,
       spotifyMarket: spotifyMarket ?? this.spotifyMarket,
       streamingQuality: streamingQuality ?? this.streamingQuality,
+      showDebugButton: showDebugButton ?? this.showDebugButton,
     );
   }
 }
@@ -90,6 +94,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final format = _prefs.getString('audioFormat') ?? 'mp3';
     final market = _prefs.getString('spotifyMarket') ?? 'KR';
     final streaming = _prefs.getString('streamingQuality') ?? 'high';
+    final showDebug = _prefs.getBool('showDebugButton') ?? false;
 
     state = SettingsState(
       isDarkMode: isDark,
@@ -103,6 +108,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       audioFormat: format,
       spotifyMarket: market,
       streamingQuality: streaming,
+      showDebugButton: showDebug,
     );
   }
 
@@ -163,6 +169,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> setStreamingQuality(String quality) async {
     await _prefs.setString('streamingQuality', quality);
     state = state.copyWith(streamingQuality: quality);
+  }
+
+  Future<void> toggleShowDebugButton(bool enabled) async {
+    await _prefs.setBool('showDebugButton', enabled);
+    state = state.copyWith(showDebugButton: enabled);
   }
 }
 

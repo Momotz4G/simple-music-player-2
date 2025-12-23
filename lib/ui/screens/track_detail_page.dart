@@ -205,78 +205,82 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                     ),
                     const SizedBox(width: 24),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          const Text("SONG",
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1)),
-                          const SizedBox(height: 8),
-                          Text(
-                            song.title,
-                            style: TextStyle(
-                              fontSize: 50,
-                              fontWeight: FontWeight.w800,
-                              color: textColor,
-                              height: 1.0,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 12,
-                                backgroundColor: Colors.grey,
-                                backgroundImage: _artistImageUrl != null
-                                    ? NetworkImage(_artistImageUrl!)
-                                    : null,
-                                child: _artistImageUrl == null
-                                    ? const Icon(Icons.person, size: 14)
-                                    : null,
-                              ),
-                              const SizedBox(width: 8),
-                              MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                onEnter: (_) =>
-                                    setState(() => _isArtistHovered = true),
-                                onExit: (_) =>
-                                    setState(() => _isArtistHovered = false),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    ref
-                                        .read(navigationStackProvider.notifier)
-                                        .push(
-                                          NavigationItem(
-                                            type: NavigationType.artist,
-                                            data: ArtistSelection(
-                                                artistName: song.artist,
-                                                songs: <SongModel>[]),
-                                          ),
-                                        );
-                                  },
-                                  child: Text(song.artist,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          decoration: _isArtistHovered
-                                              ? TextDecoration.underline
-                                              : null,
-                                          decorationColor: textColor,
-                                          color: textColor)),
-                                ),
-                              ),
-                              Text(
-                                " • ${song.year?.split('-').first ?? "Unknown"} • ${song.duration.toInt() ~/ 60}:${(song.duration.toInt() % 60).toString().padLeft(2, '0')}",
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            const Text("SONG",
                                 style: TextStyle(
-                                    color: textColor.withOpacity(0.7)),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1)),
+                            const SizedBox(height: 8),
+                            Text(
+                              song.title,
+                              style: TextStyle(
+                                fontSize: 50,
+                                fontWeight: FontWeight.w800,
+                                color: textColor,
+                                height: 1.0,
                               ),
-                            ],
-                          ),
-                        ],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: Colors.grey,
+                                  backgroundImage: _artistImageUrl != null
+                                      ? NetworkImage(_artistImageUrl!)
+                                      : null,
+                                  child: _artistImageUrl == null
+                                      ? const Icon(Icons.person, size: 14)
+                                      : null,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _MarqueeText(
+                                    text: song.artist,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      decoration: _isArtistHovered
+                                          ? TextDecoration.underline
+                                          : null,
+                                      decorationColor: textColor,
+                                      color: textColor,
+                                    ),
+                                    onTap: () {
+                                      ref
+                                          .read(
+                                              navigationStackProvider.notifier)
+                                          .push(
+                                            NavigationItem(
+                                              type: NavigationType.artist,
+                                              data: ArtistSelection(
+                                                  artistName: song.artist,
+                                                  songs: <SongModel>[]),
+                                            ),
+                                          );
+                                    },
+                                    onHover: (isHovered) => setState(
+                                        () => _isArtistHovered = isHovered),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "${song.year?.split('-').first ?? "Unknown"} • ${song.duration.toInt() ~/ 60}:${(song.duration.toInt() % 60).toString().padLeft(2, '0')}",
+                              style: TextStyle(
+                                  color: textColor.withOpacity(0.7),
+                                  fontSize: 13),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -320,6 +324,13 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                             context, ref, action, song);
                       },
                       itemBuilder: (context) => [
+                        const PopupMenuItem(
+                            value: SongAction.download,
+                            child: Row(children: [
+                              Icon(Icons.download_rounded),
+                              SizedBox(width: 12),
+                              Text('Download')
+                            ])),
                         const PopupMenuItem(
                             value: SongAction.playNext,
                             child: Row(children: [
@@ -416,6 +427,13 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                           },
                           itemBuilder: (context) => [
                             const PopupMenuItem(
+                                value: SongAction.download,
+                                child: Row(children: [
+                                  Icon(Icons.download_rounded),
+                                  SizedBox(width: 12),
+                                  Text('Download')
+                                ])),
+                            const PopupMenuItem(
                                 value: SongAction.playNext,
                                 child: Row(children: [
                                   Icon(Icons.playlist_play),
@@ -454,6 +472,131 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 160)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- MARQUEE TEXT WIDGET ---
+class _MarqueeText extends StatefulWidget {
+  final String text;
+  final TextStyle? style;
+  final VoidCallback? onTap;
+  final Function(bool)? onHover;
+
+  const _MarqueeText({
+    required this.text,
+    this.style,
+    this.onTap,
+    this.onHover,
+  });
+
+  @override
+  State<_MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<_MarqueeText>
+    with SingleTickerProviderStateMixin {
+  late ScrollController _scrollController;
+  late AnimationController _animationController;
+  bool _needsScroll = false;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkOverflow());
+  }
+
+  void _checkOverflow() {
+    if (!mounted) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    if (maxScroll > 0) {
+      setState(() => _needsScroll = true);
+      _startScrolling();
+    }
+  }
+
+  void _startScrolling() {
+    if (!_needsScroll || !mounted) return;
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      _animateScroll();
+    });
+  }
+
+  void _animateScroll() async {
+    if (!mounted || !_needsScroll) return;
+
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    if (maxScroll <= 0) return;
+
+    // Scroll to end
+    await _scrollController.animateTo(
+      maxScroll,
+      duration:
+          Duration(milliseconds: (maxScroll * 30).toInt().clamp(2000, 8000)),
+      curve: Curves.linear,
+    );
+
+    if (!mounted) return;
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Scroll back to start
+    if (!mounted) return;
+    await _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOut,
+    );
+
+    if (!mounted) return;
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Repeat
+    _animateScroll();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        setState(() => _isHovered = true);
+        widget.onHover?.call(true);
+      },
+      onExit: (_) {
+        setState(() => _isHovered = false);
+        widget.onHover?.call(false);
+      },
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: ClipRect(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Text(
+              widget.text,
+              style: widget.style,
+              maxLines: 1,
+            ),
+          ),
         ),
       ),
     );
