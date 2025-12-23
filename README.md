@@ -2,14 +2,13 @@
 
 ![Simple Music Player Home](assets/screenshots/home_preview.png)
 
-> A stunning, modern, and feature-rich music player built with Flutter. Experience your music with a beautiful Glassmorphism UI and powerful tools. Available on Windows, macOS, Linux, Android, and iOS.
+> A stunning, modern, and feature-rich music player built with Flutter. Experience your music with a beautiful Glassmorphism UI and powerful tools. Available on Windows, macOS, Android, and iOS.
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![iOS](https://img.shields.io/badge/iOS-000000?style=for-the-badge&logo=ios&logoColor=white)
-![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 ---
@@ -85,8 +84,7 @@ Go to the [Releases](https://github.com/Momotz4G/simple-music-player-2/releases)
 | Platform | File | Install Method |
 |----------|------|----------------|
 | **Windows** | `.exe` | Run installer |
-| **macOS** | `.dmg` | Drag to Applications |
-| **Linux** | `.AppImage` | Make executable and run |
+| **macOS** | `.zip` | Extract and run setup script |
 | **Android** | `.apk` | Enable unknown sources, tap to install |
 | **iOS** | `.ipa` | Sideload (see below) |
 
@@ -100,18 +98,13 @@ Go to the [Releases](https://github.com/Momotz4G/simple-music-player-2/releases)
 ---
 
 ### 🍎 macOS
-1. Download the `.dmg` file
-2. Open and drag app to Applications folder
-3. Right-click app → Open (first time only, to bypass Gatekeeper)
+1. Download and extract the `.zip` file
+2. **Double-click** `SimpleMusicPlayer_Setup.command`
+3. Done! The app will launch automatically
 
----
+> 💡 **First stream:** macOS may ask to allow binaries (yt-dlp, ffmpeg). Go to **System Preferences → Privacy & Security** and click "Allow Anyway"
 
-### 🐧 Linux
-```bash
-# Download the AppImage
-chmod +x Simple_Music_Player*.AppImage
-./Simple_Music_Player*.AppImage
-```
+> 📖 See `README.txt` in the ZIP for detailed instructions
 
 ---
 
@@ -176,7 +169,6 @@ flutter pub get
 # Then run:
 flutter run -d windows   # Windows
 flutter run -d macos     # macOS
-flutter run -d linux     # Linux
 flutter run              # Android (with device connected)
 ```
 
