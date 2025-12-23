@@ -2,13 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- App Sandbox disabled to allow execution of external binaries (yt-dlp, ffmpeg, ffprobe) -->
+	<!-- This is required for YouTube streaming/download functionality -->
+	<!-- For App Store distribution, binaries would need to be code-signed -->
+	<!--
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	-->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
 	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.network.server</key>
 	<true/>
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
 	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
+	<key>com.apple.security.device.audio-input</key>
 	<true/>
 </dict>
 </plist>

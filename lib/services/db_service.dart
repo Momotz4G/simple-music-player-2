@@ -4,14 +4,23 @@ import 'dart:io';
 import '../data/schemas.dart';
 
 class DBService {
-  late Future<Isar> db;
+  // Singleton pattern
+  static final DBService _instance = DBService._internal();
+  factory DBService() => _instance;
+  DBService._internal();
 
-  DBService() {
-    db = openDB();
+  // Single database instance
+  static Isar? _db;
+  Future<Isar> get db async {
+    if (_db != null) return _db!;
+    _db = await openDB();
+    return _db!;
   }
 
-  // 1. Initialize the Database
+  // 1. Initialize the Database - Only opens once
   Future<Isar> openDB() async {
+    if (_db != null) return _db!;
+
     if (Isar.instanceNames.isEmpty) {
       final docDir = await getApplicationDocumentsDirectory();
       final dir = Directory('${docDir.path}/SimpleMusicDB');
@@ -20,7 +29,7 @@ class DBService {
         await dir.create(recursive: true);
       }
 
-      return await Isar.open(
+      _db = await Isar.open(
         [
           SongSchema,
           PlaylistSchema,
@@ -30,8 +39,10 @@ class DBService {
         directory: dir.path,
         inspector: true, // Allows you to debug DB content while app runs!
       );
+      return _db!;
     }
-    return Isar.getInstance()!;
+    _db = Isar.getInstance();
+    return _db!;
   }
 
   // 2. Save Scanned Songs (The "Scanner" Logic)
