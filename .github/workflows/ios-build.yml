@@ -1,0 +1,63 @@
+name: Build iOS IPA
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.8.0
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'  # Match your Flutter version
+          channel: 'stable'
+      
+      - name: Get Dependencies
+        run: flutter pub get
+      
+      - name: Build iOS (No Codesign)
+        run: |
+          flutter build ios --release --no-codesign
+      
+      - name: Create IPA
+        run: |
+          # Create Payload directory
+          mkdir -p Payload
+          
+          # Copy .app bundle
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          
+          # Create IPA (zip)
+          zip -r Simple.Music.Player.ipa Payload
+          
+      - name: Get Version
+        id: version
+        run: |
+          # Extract version from pubspec.yaml
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Simple.Music.Player.ipa
+          path: Simple.Music.Player.ipa
+          retention-days: 90
+      
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: Simple.Music.Player.ipa
+          name: Release version ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

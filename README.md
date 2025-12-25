@@ -120,36 +120,33 @@ Go to the [Releases](https://github.com/Momotz4G/simple-music-player-2/releases)
 
 > ⚠️ **Note:** iOS requires sideloading because this app is not on the App Store. Apps sideloaded with a free Apple ID expire every **7 days** and must be re-installed.
 
-#### Method 1: AltStore (Recommended)
+> 📖 **Full Guide:** See [IOS_SIDELOAD_GUIDE.md](IOS_SIDELOAD_GUIDE.md) for detailed instructions, troubleshooting, and all installation methods.
 
-**On your computer:**
-1. Download [AltStore](https://altstore.io) for Windows/Mac
-2. Install **iCloud** (Windows: from Apple website, NOT Microsoft Store)
-3. Run **AltServer**
-4. Connect your iPhone via USB
-5. Click AltServer icon → Install AltStore → Select your device
-6. Enter your Apple ID when prompted
+#### Quick Install Options
 
-**On your iPhone:**
-1. Download the `.ipa` file from Releases
-2. Open Files app → tap the IPA → Share → **AltStore**
-3. Wait for installation to complete
-4. Go to **Settings → General → VPN & Device Management** → Trust your Apple ID
+**Method 1: AltStore** (iOS 12.2+) - Most Compatible
+- Install AltStore on your computer
+- Connect iPhone via USB
+- Add the IPA through AltStore app
+- Re-sign every 7 days
 
-#### Method 2: Sideloadly
+**Method 2: Sideloadly** - Simplest
+- Download [Sideloadly](https://sideloadly.io)
+- Connect iPhone, drag IPA, enter Apple ID
+- Re-sign every 7 days
 
-1. Download [Sideloadly](https://sideloadly.io) for Windows/Mac
-2. Connect iPhone via USB
-3. Drag `.ipa` file into Sideloadly
-4. Enter your Apple ID → Click Start
-5. Trust the developer in Settings (see step 4 above)
+**Method 3: TrollStore** (iOS 14-16.6.1 only) - **PERMANENT!** ⭐
+- No re-signing needed
+- One-time installation
+- Not compatible with iOS 17+
+- See guide for installation steps
 
-#### Method 3: 3uTools (Windows only)
-
-1. Download [3uTools](https://www.3u.com)
-2. Connect iPhone
-3. Go to Apps → Import & Install IPA
-4. Trust the developer in Settings
+#### What Works on iOS?
+✅ Dynamic Island media controls (iPhone 14 Pro+)  
+✅ Lock screen controls  
+✅ Background playback  
+✅ All music player features  
+❌ Push notifications (sideloading limitation)
 
 ---
 
