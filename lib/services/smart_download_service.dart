@@ -17,6 +17,7 @@ import '../services/spotify_service.dart';
 import '../services/flac_downloader_service.dart';
 import '../ui/components/smart_art.dart';
 import '../models/download_progress.dart';
+import 'debug_log_service.dart'; // Import DebugLogService
 
 class SmartDownloadService {
   final YoutubeDownloaderService _ytDlpService = YoutubeDownloaderService();
@@ -260,12 +261,13 @@ class SmartDownloadService {
     required String filePath,
     required SongMetadata metadata,
   }) async {
+    final logger = DebugLogService();
     try {
       if (!await File(filePath).exists()) {
-        print("⚠️ TAGGING: File does not exist at $filePath");
+        logger.warning("Tagging Skipped: File does not exist at $filePath");
         return;
       }
-      print("🏷️ TAGGING: Starting tag process for $filePath");
+      logger.info("Starting tag process for $filePath");
 
       Uint8List? imageBytes;
       String mimeType = 'image/jpeg'; // Default
@@ -452,8 +454,14 @@ class SmartDownloadService {
 
     String? targetUrl = youtubeUrl;
 
-    // 1. Search (ONLY IF URL IS MISSING OR EMPTY)
-    if (targetUrl == null || targetUrl.isEmpty) {
+    // 1. Search (ONLY IF URL IS MISSING, EMPTY, OR IS A QUERY PLACEHOLDER)
+    // Cloud songs use "query: Artist - Title" format which is NOT a real URL
+    if (targetUrl == null ||
+        targetUrl.isEmpty ||
+        targetUrl.startsWith('query:')) {
+      if (targetUrl != null && targetUrl.startsWith('query:')) {
+        print("Preload: Detected query placeholder, searching YouTube...");
+      }
       final debugResult = await searchYouTubeForMatch(metadata);
       if (debugResult == null || debugResult.youtubeMatches.isEmpty) {
         print("Preload Error: No match found for ${metadata.title}");
@@ -518,6 +526,9 @@ class SmartDownloadService {
     debugPrint(
         '🎵 Starting FLAC ${isStreaming ? "stream" : "download"} for: ${metadata.title}');
 
+    final logger = DebugLogService();
+    logger.info("SMA: Starting FLAC download/stream for ${metadata.title}");
+
     // Get output path - cache for streaming, downloads for permanent
     final filename = await generateFilename(metadata);
     final outputPath = isStreaming
@@ -541,6 +552,9 @@ class SmartDownloadService {
       albumName: metadata.album,
       onProgress: onProgress,
     );
+
+    logger.info(
+        "SMA: Download result success=${result.success} error=${result.error}");
 
     if (result.success && result.file != null) {
       debugPrint('✓ FLAC Download Success via ${result.service}');

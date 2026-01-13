@@ -5,538 +5,862 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Music Remote</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
-    <!-- Using Google Material Symbols for sharper icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0"
-        rel="stylesheet" />
-
+    <title>Cloud Party Remote</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PocketBase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.min.js"></script>
     <style>
-        :root {
-            --primary: #6C5CE7;
-            --bg: #0F0F0F;
-            --surface: #1E1E1E;
-            --text: #FFFFFF;
-            --text-sec: #AAAAAA;
-        }
-
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            background-color: #0f0f13;
+            color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
         }
 
-        .ambient-bg {
-            position: absolute;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            filter: blur(80px) brightness(0.4);
-            z-index: -1;
-            transition: background-image 1s ease;
+        .tab-btn.active {
+            border-bottom: 2px solid #a855f7;
+            color: #a855f7;
         }
 
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 24px;
-            padding-top: env(safe-area-inset-top, 24px);
-            padding-bottom: env(safe-area-inset-bottom, 32px);
-            justify-content: space-evenly;
-            align-items: center;
-            max-width: 500px;
-            margin: 0 auto;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Responsive Artwork */
-        .art-container {
-            width: 100%;
-            aspect-ratio: 1/1;
-            max-width: 320px;
-            max-height: 40vh;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            background: var(--surface);
-            position: relative;
-            margin: 16px 0;
-        }
-
-        .art-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-            opacity: 0;
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-
-        .art-img.loaded {
-            opacity: 1;
-        }
-
-        .playing .art-img {
-            transform: scale(1.05);
-        }
-
-        /* Default Art Placeholder */
-        .art-placeholder {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(45deg, #1e1e1e, #2a2a2a);
-        }
-
-        .art-placeholder span {
-            font-size: 64px;
-            color: rgba(255, 255, 255, 0.1);
-        }
-
-        .meta {
-            text-align: center;
-            width: 100%;
-            padding: 0 16px;
-            margin-bottom: 24px;
-        }
-
-        .title {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .artist {
-            font-size: 16px;
-            color: var(--text-sec);
-            font-weight: 500;
-        }
-
-        .controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 350px;
-            margin-bottom: 24px;
-        }
-
-        .btn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn:active {
-            transform: scale(0.9);
-            opacity: 0.8;
-        }
-
-        /* Glassy buttons for Next/Prev */
-        .btn-side {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+        .glass {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(5px);
-        }
-
-        .btn-large {
-            width: 80px;
-            height: 80px;
-            background: white;
-            color: black;
-            border-radius: 50%;
-            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
-        }
-
-        .volume-container {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            gap: 16px;
-            padding: 0 12px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 30px;
-            height: 50px;
-        }
-
-        /* Modern Slider */
-        .slider {
-            flex: 1;
-            -webkit-appearance: none;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            outline: none;
-        }
-
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            transition: transform 0.1s;
-        }
-
-        .slider::-webkit-slider-thumb:active {
-            transform: scale(1.2);
-        }
-
-        .status-pill {
-            margin-bottom: 16px;
-            padding: 6px 12px;
-            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .dot {
-            width: 6px;
-            height: 6px;
-            background: #E74C3C;
-            border-radius: 50%;
-        }
-
-        .connected .dot {
-            background: #2ECC71;
-        }
-
-        /* Icon Styling */
-        .material-symbols-rounded {
-            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;
-        }
-
-        #toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #E74C3C;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-            z-index: 200;
-        }
-
-        #toast.show {
-            opacity: 1;
-        }
-
-        #loader {
-            position: fixed;
-            inset: 0;
-            background: var(--bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            font-size: 18px;
-            font-weight: 500;
+        /* Disable pull-to-refresh on mobile */
+        body {
+            overscroll-behavior-y: none;
         }
     </style>
 </head>
 
-<body>
+<body class="h-screen flex flex-col overflow-hidden">
 
-    <div id="loader"> Connecting... </div>
-    <div id="toast">Error</div>
+    <!-- CONNECTION SETUP (Overlay) -->
+    <div id="setup-screen"
+        class="fixed inset-0 z-50 bg-[#0f0f13] flex flex-col items-center justify-center p-6 space-y-4">
+        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">Cloud
+            Party</h1>
+        <p class="text-gray-400 text-center text-sm">Scan the QR code on the Desktop App or enter details manually.</p>
 
-    <div class="ambient-bg" id="ambientBg"></div>
+        <input id="pb-url" type="text" placeholder="PocketBase URL (https://...)"
+            class="w-full max-w-xs p-3 rounded bg-[#1c1c21] border border-gray-700 text-white focus:border-purple-500 outline-none"
+            value="https://pocketbase.io">
+        <input id="session-id" type="text" placeholder="Session/User ID"
+            class="w-full max-w-xs p-3 rounded bg-[#1c1c21] border border-gray-700 text-white focus:border-purple-500 outline-none">
 
-    <div class="container">
-        <div class="status-pill" id="statusPill">
-            <div class="dot"></div> <span id="statusText">Disconnected</span>
-        </div>
-
-        <div class="art-container" id="artContainer">
-            <div class="art-placeholder">
-                <span class="material-symbols-rounded">music_note</span>
-            </div>
-            <img src="" alt="Art" class="art-img" id="artImg" onload="this.classList.add('loaded')">
-        </div>
-
-        <div class="meta">
-            <div class="title" id="title">Not Playing</div>
-            <div class="artist" id="artist">--</div>
-        </div>
-
-        <div class="controls">
-            <button class="btn btn-side" onclick="sendCommand('previous')">
-                <span class="material-symbols-rounded" style="font-size: 32px">skip_previous</span>
-            </button>
-            <button class="btn btn-large" id="playBtn" onclick="togglePlay()">
-                <span class="material-symbols-rounded" style="font-size: 40px" id="playIcon">play_arrow</span>
-            </button>
-            <button class="btn btn-side" onclick="sendCommand('next')">
-                <span class="material-symbols-rounded" style="font-size: 32px">skip_next</span>
-            </button>
-        </div>
-
-        <div class="volume-container">
-            <span class="material-symbols-rounded"
-                style="font-size: 20px; color: #aaa; margin-left: 4px;">volume_mute</span>
-            <input type="range" class="slider" id="volumeSlider" min="0" max="1" step="0.05"
-                onchange="sendVolume(this.value)">
-            <span class="material-symbols-rounded"
-                style="font-size: 20px; color: #aaa; margin-right: 4px;">volume_up</span>
-        </div>
+        <button id="connect-btn"
+            class="w-full max-w-xs p-3 rounded bg-purple-600 hover:bg-purple-700 font-bold transition">Connect</button>
+        <p id="status-msg" class="text-red-400 text-xs hidden"></p>
     </div>
 
-    <!-- Load Config (Gitignored) -->
-    <script src="config.js"></script>
+    <!-- MAIN INTERFACE -->
+    <div id="main-ui" class="hidden flex-col h-full">
+
+        <!-- HEADER -->
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#1c1c21]">
+            <h2 class="font-bold text-lg">🎵 Party Remote</h2>
+            <div id="status-dot" class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+        </div>
+
+        <!-- TABS -->
+        <div class="flex border-b border-gray-800">
+            <button onclick="switchTab('remote')" id="tab-remote"
+                class="tab-btn active flex-1 p-3 text-center text-sm font-medium text-gray-400 hover:text-white transition">Remote</button>
+            <button onclick="switchTab('search')" id="tab-search"
+                class="tab-btn flex-1 p-3 text-center text-sm font-medium text-gray-400 hover:text-white transition">Search
+                & Add</button>
+        </div>
+
+        <!-- CONTENT: REMOTE -->
+        <div id="view-remote" class="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
+            <img id="album-art" src="" class="w-64 h-64 rounded-xl shadow-2xl bg-gray-800 object-cover" alt="Album Art">
+
+            <div class="text-center space-y-1 w-full">
+                <h3 id="track-title" class="text-2xl font-bold truncate">Not Playing</h3>
+                <p id="track-artist" class="text-gray-400 truncate">Waiting for host...</p>
+            </div>
+
+            <!-- Volume Slider -->
+            <div class="w-full max-w-xs flex items-center space-x-2">
+                <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+                </svg>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.05"
+                    class="flex-1 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                </svg>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center space-x-6 sm:space-x-8">
+                <!-- Shuffle -->
+                <button id="btn-shuffle" onclick="toggleShuffle()" class="text-gray-500 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+
+                <button onclick="sendCommand('previous')" class="text-gray-400 hover:text-white"><svg class="w-10 h-10"
+                        fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                    </svg></button>
+                <button id="play-pause-btn" onclick="togglePlay()"
+                    class="h-20 w-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition shadow-lg">
+                    <svg id="icon-play" class="w-10 h-10 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <svg id="icon-pause" class="w-10 h-10 hidden" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                    </svg>
+                </button>
+                <button onclick="sendCommand('next')" class="text-gray-400 hover:text-white"><svg class="w-10 h-10"
+                        fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+                    </svg></button>
+
+                <!-- Repeat -->
+                <button id="btn-repeat" onclick="toggleRepeat()"
+                    class="text-gray-500 hover:text-white transition relative">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                        </path>
+                    </svg>
+                    <div id="repeat-dot" class="absolute top-0 right-0 h-2 w-2 bg-purple-500 rounded-full hidden"></div>
+                </button>
+            </div>
+
+            <!-- Secondary Controls Row (Queue) -->
+            <div class="mt-6">
+                <button onclick="toggleQueue()"
+                    class="flex items-center space-x-2 text-gray-500 hover:text-white transition bg-gray-800/50 px-4 py-2 rounded-full border border-gray-700/50 text-sm font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <span>View Queue</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Queue Drawer -->
+        <div id="queue-drawer"
+            class="fixed inset-0 z-50 transform translate-y-full transition-transform duration-300 ease-in-out">
+            <!-- Backdrop (Click to close) -->
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="toggleQueue()"></div>
+
+            <!-- Drawer Content -->
+            <div
+                class="absolute bottom-0 left-0 right-0 bg-[#1e1e24] rounded-t-3xl border-t border-gray-700 h-[70vh] flex flex-col shadow-2xl">
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                    <h3 class="text-white font-bold text-lg flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3">
+                            </path>
+                        </svg>
+                        Next Up
+                    </h3>
+                    <button onclick="toggleQueue()"
+                        class="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Queue List -->
+                <div id="queue-list" class="flex-1 overflow-y-auto p-4 space-y-2">
+                    <!-- Javascript will populate this -->
+                    <div class="text-gray-500 text-center mt-10">Queue is empty</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Album Detail Drawer -->
+        <div id="album-drawer"
+            class="fixed inset-0 z-50 transform translate-y-full transition-transform duration-300 ease-in-out">
+            <!-- Backdrop -->
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeAlbumDrawer()"></div>
+
+            <!-- Drawer Content -->
+            <div
+                class="absolute bottom-0 left-0 right-0 bg-[#1e1e24] rounded-t-3xl border-t border-gray-700 h-[80vh] flex flex-col shadow-2xl">
+                <!-- Header -->
+                <div class="p-6 border-b border-gray-700 flex items-start space-x-4">
+                    <img id="album-drawer-art" src="" class="w-24 h-24 rounded-lg shadow-lg bg-gray-800 object-cover" />
+                    <div class="flex-1 min-w-0">
+                        <h3 id="album-drawer-title" class="text-white font-bold text-lg truncate mb-1">Album Title</h3>
+                        <p id="album-drawer-artist" class="text-gray-400 text-sm truncate">Artist Name</p>
+                    </div>
+                    <button onclick="closeAlbumDrawer()"
+                        class="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-full shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Track List -->
+                <div id="album-track-list" class="flex-1 overflow-y-auto p-4 space-y-2">
+                    <div class="text-gray-500 text-center mt-10">Loading tracks...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENT: SEARCH -->
+        <div id="view-search" class="hidden flex-1 flex flex-col p-4 space-y-4 overflow-hidden">
+            <div class="flex space-x-2">
+                <input id="search-input" type="text" placeholder="Search songs..."
+                    class="flex-1 p-3 rounded-lg bg-[#27272a] border border-gray-700 text-white focus:border-purple-500 outline-none">
+                <button onclick="doSearch()" class="p-3 bg-purple-600 rounded-lg text-white font-bold">Search</button>
+            </div>
+
+            <div id="search-results" class="flex-1 overflow-y-auto space-y-2 pb-20">
+                <!-- Results injected here -->
+                <div class="text-center text-gray-500 mt-10">Type to search the Host's library</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Optional: Load Config if present -->
+    <script src="config.js" onerror="console.log('No config.js found, using manual input')"></script>
+
     <script>
-        if (!window.POCKETBASE_CONFIG || !window.POCKETBASE_CONFIG.url) {
-            // No config.js found - display error instead of exposing endpoint
-            console.error("FATAL: config.js is missing or invalid. Cannot connect to server.");
-            document.getElementById('loader').innerText = "Configuration Error: Missing config.js";
-            // Prevent further execution by setting a flag
-            window.POCKETBASE_CONFIG = { url: null, error: true };
-        }
-    </script>
-
-    <!-- PocketBase SDK -->
-    <script type="module">
-        import PocketBase from 'https://unpkg.com/pocketbase/dist/pocketbase.es.mjs';
-
-        const pb = new PocketBase(window.POCKETBASE_CONFIG.url);
-        pb.autoCancellation(false);
-
-        const urlParams = new URLSearchParams(window.location.search);
-        // Support both old (uid) and new (sid) URL formats
-        const targetSessionId = urlParams.get('sid'); // New: direct session record ID
-        const legacyUid = urlParams.get('uid'); // Old: user_id (deprecated)
-
-        const els = {
-            title: document.getElementById('title'),
-            artist: document.getElementById('artist'),
-            artImg: document.getElementById('artImg'),
-            ambient: document.getElementById('ambientBg'),
-            playIcon: document.getElementById('playIcon'),
-            statusText: document.getElementById('statusText'),
-            statusPill: document.getElementById('statusPill'),
-            loader: document.getElementById('loader'),
-            slider: document.getElementById('volumeSlider'),
-            toast: document.getElementById('toast'),
-            artContainer: document.getElementById('artContainer')
-        };
-
+        // CONFIG
+        let pb = null;
+        let sessionId = null;
         let isPlaying = false;
-        let sessionRecordId = null;
-        let lastInteractionTime = 0; // Timestamp of last user action
+        let isShuffle = false;
+        let loopMode = 0;
+        let lastInteractionTime = 0;
 
-        function showToast(msg) {
-            els.toast.innerText = msg;
-            els.toast.classList.add('show');
-            setTimeout(() => els.toast.classList.remove('show'), 3000);
+        // Track previous state for change detection
+        let prevShuffle = false;
+        let prevLoopMode = 0;
+
+        // UI ELEMENTS
+        const setupScreen = document.getElementById('setup-screen');
+        const mainUi = document.getElementById('main-ui');
+        const statusMsg = document.getElementById('status-msg');
+
+        // SETUP FROM URL PARAMS OR CONFIG
+        const urlParams = new URLSearchParams(window.location.search);
+
+        let initialHost = urlParams.get('host') || "https://pocketbase.io";
+        let initialId = urlParams.get('id') || urlParams.get('sid') || urlParams.get('uid');
+
+        // Try global config if available
+        if (window.POCKETBASE_CONFIG && window.POCKETBASE_CONFIG.url) {
+            initialHost = window.POCKETBASE_CONFIG.url;
+            console.log("Loaded host from config.js");
         }
 
-        async function init() {
-            // Check for configuration error first
-            if (window.POCKETBASE_CONFIG.error) {
-                return; // Error already displayed by config check
-            }
+        document.getElementById('pb-url').value = initialHost;
+        if (initialId) document.getElementById('session-id').value = initialId;
 
-            // New secure method: use session record ID directly
-            if (targetSessionId) {
-                sessionRecordId = targetSessionId;
-            } else if (legacyUid) {
-                // Legacy fallback: try to find by user_id (may fail if List is locked)
-                els.loader.innerText = "Connecting (legacy mode)...";
-                try {
-                    const record = await pb.collection('sessions').getFirstListItem(`user_id="${legacyUid}"`);
-                    sessionRecordId = record.id;
-                } catch (e) {
-                    els.loader.innerText = "Error: Legacy mode not supported. Please regenerate QR code.";
-                    return;
-                }
-            } else {
-                els.loader.innerText = "Error: Invalid Link (No Session ID)";
+        // Auto-connect if ID is present
+        if (initialId) {
+            connect();
+        }
+
+        document.getElementById('connect-btn').addEventListener('click', connect);
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') doSearch();
+        });
+
+        // Volume Slider Debounce
+        document.getElementById('volume-slider').addEventListener('change', (e) => {
+            sendCommand('volume', parseFloat(e.target.value));
+        });
+
+        async function connect() {
+            const url = document.getElementById('pb-url').value;
+            const id = document.getElementById('session-id').value;
+
+            if (!url || !id) {
+                showError("Please enter URL and Session ID");
                 return;
             }
 
             try {
-                els.loader.innerText = "Connecting...";
+                pb = new PocketBase(url);
+                pb.autoCancellation(false);
 
-                // Get session directly by record ID (only needs View permission)
-                const record = await pb.collection('sessions').getOne(sessionRecordId);
-
-                // Load initial state
-                updateUI(record);
-
-                // Subscribe
-                startListening();
-
-                els.loader.style.display = 'none';
-                setStatus(true);
-
-            } catch (e) {
-                console.error(e);
-                els.loader.innerText = "Connection Failed: " + (e.message || e);
-                showToast("Connection Failed");
-            }
-        }
-
-        function setStatus(connected) {
-            if (connected) {
-                els.statusPill.classList.add('connected');
-                els.statusText.innerText = "Connected";
-            } else {
-                els.statusPill.classList.remove('connected');
-                els.statusText.innerText = "Disconnected";
-            }
-        }
-
-        function updateUI(data) {
-            if (!data) return;
-
-            // IGNORE UPDATE if user just interacted (prevent flickering)
-            if (Date.now() - lastInteractionTime < 2500) {
-                return;
-            }
-
-            els.title.innerText = data.current_title || "Not Playing";
-            // Note: 'artist' field might need to be added to PB schema if not present,
-            // or we might need to parse 'current_song' JSON if we stored it that way.
-            // For now assuming we just show title.
-            els.artist.innerText = data.current_artist || "";
-
-            // Art is tricky. If we stored art URL in session, great.
-            // If not, we might need to fetch it.
-            // Let's assume 'album_art_url' is in the session record for now, or fallback.
-            if (data.album_art_url) {
-                els.artImg.src = data.album_art_url;
-                els.ambient.style.backgroundImage = `url(${data.album_art_url})`;
-                els.artImg.classList.add('loaded');
-            } else {
-                els.ambient.style.backgroundImage = 'none';
-                els.artImg.src = '';
-                els.artImg.classList.remove('loaded');
-            }
-
-            isPlaying = data.is_playing;
-            els.playIcon.innerText = isPlaying ? "pause" : "play_arrow";
-            els.artContainer.className = isPlaying ? "art-container playing" : "art-container";
-
-            if (document.activeElement !== els.slider) {
-                els.slider.value = data.volume !== undefined ? data.volume : 1.0;
-            }
-        }
-
-        function startListening() {
-            if (!sessionRecordId) return;
-
-            // 1. Realtime (Best Effort)
-            pb.collection('sessions').subscribe(sessionRecordId, function (e) {
-                if (e.action === 'update') {
-                    updateUI(e.record);
-                } else if (e.action === 'delete') {
-                    setStatus(false);
-                    showToast("Device Disconnected");
-                }
-            }).catch(err => {
-                console.error("Subscribe error:", err);
-                // Don't show toast for subscribe error if polling works
-            });
-
-            // 2. Polling Fallback (Reliability)
-            // Poll every 1 second to get the latest state (Play/Pause, Song Title, etc.)
-            setInterval(async () => {
+                // Try to get record (verifies connection)
+                // We try 'sessions' collection. If id is old user_id, we might need lookup.
+                let record;
                 try {
-                    const record = await pb.collection('sessions').getOne(sessionRecordId, { requestKey: null }); // disable auto cancel
-                    updateUI(record);
-                    setStatus(true);
+                    record = await pb.collection('sessions').getOne(id);
+                    sessionId = id;
                 } catch (e) {
-                    // console.error("Polling error", e);
-                    // Only show status disconnected if polling fails consistently?
-                    // For now, let's just log it. 
-                }
-            }, 1000);
-        }
-
-        window.togglePlay = function () {
-            // Calculate action based on CURRENT state
-            const action = isPlaying ? 'pause' : 'play';
-
-            // OPTIMISTIC UPDATE: Update UI immediately
-            lastInteractionTime = Date.now(); // SET INTERACTION TIMESTAMP
-            isPlaying = !isPlaying;
-            els.playIcon.innerText = isPlaying ? "pause" : "play_arrow";
-            els.artContainer.className = isPlaying ? "art-container playing" : "art-container";
-
-            // Send command
-            sendCommand(action);
-        }
-
-        window.sendCommand = async function (action, value = null) {
-            if (!sessionRecordId) return;
-            try {
-                // We update 'last_command' with a unique ID to ensure the PC sees it as a new change
-                // Format: "command|timestamp"
-                const uniqueCmd = `${action}|${Date.now()}`;
-
-                const data = {
-                    last_command: uniqueCmd
-                };
-                if (value !== null) {
-                    // If we need to send volume, we might need a separate field or parse it.
-                    // The Dart code 'RemoteControlService.dart' reads 'volume' directly if we update it.
-                    // Let's update 'volume' field if action is volume.
-                    if (action === 'volume') {
-                        data.volume = value;
+                    // Fallback: Try to find by user_id if id is not a record id
+                    try {
+                        record = await pb.collection('sessions').getFirstListItem(`user_id="${id}"`);
+                        sessionId = record.id;
+                    } catch (e2) {
+                        throw new Error("Session not found. Please check ID.");
                     }
                 }
 
-                await pb.collection('sessions').update(sessionRecordId, data);
+                // Subscribe
+                pb.collection('sessions').subscribe(sessionId, function (e) {
+                    handleUpdate(e.record);
+                });
+
+                // Success
+                setupScreen.classList.add('hidden');
+                mainUi.classList.remove('hidden');
+                mainUi.classList.add('flex');
+                updateUI(record);
+
+                // Polling Fallback (Every 2s)
+                setInterval(async () => {
+                    try {
+                        const rec = await pb.collection('sessions').getOne(sessionId);
+                        updateUI(rec);
+                    } catch (e) { }
+                }, 2000);
 
             } catch (e) {
-                console.error("Send failed", e);
-                showToast("Command Failed");
+                console.error(e);
+                showError("Connection failed: " + e.message);
+                // If auto-connect failed, show screen
+                setupScreen.classList.remove('hidden');
             }
         }
 
-        window.sendVolume = function (val) {
-            sendCommand('volume', parseFloat(val));
+        function showError(msg) {
+            statusMsg.textContent = msg;
+            statusMsg.classList.remove('hidden');
         }
 
-        init();
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+
+            document.getElementById('view-remote').classList.add('hidden');
+            document.getElementById('view-search').classList.add('hidden');
+            document.getElementById('view-' + tab).classList.remove('hidden');
+
+            if (tab === 'search') document.getElementById('view-search').classList.add('flex');
+        }
+
+        // --- COMMANDS ---
+
+        async function sendCommand(action, value = null) {
+            if (!pb || !sessionId) return;
+
+            // Format: "action|timestamp"
+            // OR "action|PAYLOAD|timestamp"
+            let finalCmd = `${action}|${Date.now()}`;
+
+            if (value !== null && action !== 'volume') {
+                // Pack payload into string
+                let cleanVal = "";
+                if (typeof value === 'object') {
+                    // Safety: JSON.stringify usually works fine.
+                    // If backend parses with split('|'), pipes in JSON stringify might be an issue?
+                    // But Dart code uses: sublist(1, parts.length - 1).join('|')
+                    // This handles INTERNAL pipes correctly.
+                    cleanVal = JSON.stringify(value);
+                } else {
+                    cleanVal = String(value);
+                }
+                finalCmd = `${action}|${cleanVal}|${Date.now()}`;
+            }
+
+            const updateData = {
+                'last_command': finalCmd,
+            };
+
+            // Special handling for legacy volume (RemoteControlService checks data['volume'])
+            if (action === 'volume') {
+                updateData['volume'] = value;
+            }
+
+            await pb.collection('sessions').update(sessionId, updateData);
+        }
+
+        async function doSearch() {
+            const query = document.getElementById('search-input').value;
+            if (!query) return;
+
+            const btn = document.querySelector('#view-search button');
+            const originalText = btn.innerText;
+            btn.innerText = "Searching...";
+
+            await sendCommand('search', query);
+
+            setTimeout(() => btn.innerText = originalText, 1000);
+        }
+
+        async function addToQueue(song) {
+            // Map SongMetadata (from search) to SongModel (expected by Desktop)
+            const songPayload = {
+                title: song.title,
+                artist: song.artist,
+                album: song.album,
+                onlineArtUrl: song.albumArtUrl, // Map to correct field
+                isrc: song.isrc,
+                spotifyId: song.spotifyId,
+                spotifyArtistId: song.spotifyArtistId,
+                duration: song.durationSeconds,
+                year: song.year,
+                genre: song.genre,
+                trackNumber: song.trackNumber,
+                discNumber: song.discNumber,
+                // Defaults for file-based fields
+                filePath: "cloud_stream",
+                fileExtension: "stream"
+            };
+
+            await sendCommand('add_queue', songPayload);
+        }
+
+        function handleUpdate(data) {
+            // IGNORE UPDATE if user just interacted (prevent volume slider jumping)
+            if (Date.now() - lastInteractionTime < 2500) {
+                // return; // We might want to still update title/art
+            }
+
+            updateUI(data);
+        }
+
+        function updateUI(data) {
+            console.log("Packet received:", data); // DEBUG
+            if (!data) return;
+
+            // Cooldown check - protects is_playing AND metadata during interactions
+            const cooldownActive = Date.now() - lastInteractionTime < 2000;
+
+            // METADATA (PROTECTED: skip if cooldown active to prevent flicker)
+            if (!cooldownActive) {
+                if (data.current_title) document.getElementById('track-title').innerText = data.current_title;
+                if (data.current_artist) document.getElementById('track-artist').innerText = data.current_artist;
+
+                // Art - supports online URLs, base64 data URIs, or shows placeholder
+                const artUrl = data.album_art_url || data.current_art_url;
+                const albumArtEl = document.getElementById('album-art');
+                if (artUrl && artUrl.length > 0) {
+                    albumArtEl.src = artUrl;
+                    albumArtEl.onerror = function () {
+                        // Fallback to placeholder on error
+                        this.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect fill="#1a1a2e" width="256" height="256"/><text x="128" y="140" text-anchor="middle" fill="#6366f1" font-size="80">♪</text></svg>');
+                    };
+                } else {
+                    // Use SVG placeholder for missing art
+                    albumArtEl.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect fill="#1a1a2e" width="256" height="256"/><text x="128" y="140" text-anchor="middle" fill="#6366f1" font-size="80">♪</text></svg>');
+                }
+            }
+
+            // Play State (PROTECTED: skip if user just interacted)
+            if (data.is_playing !== undefined && !cooldownActive) {
+                isPlaying = data.is_playing;
+                updatePlayButton(isPlaying);
+            }
+
+            // Volume
+            if (document.activeElement !== document.getElementById('volume-slider')) {
+                if (data.volume !== undefined) document.getElementById('volume-slider').value = data.volume;
+            }
+
+            // Shuffle State (with change detection for cooldown)
+            if (data.is_shuffle !== undefined) {
+                // Detect state change and trigger cooldown
+                if (data.is_shuffle !== prevShuffle) {
+                    lastInteractionTime = Date.now(); // Extend cooldown
+                    console.log("🔀 Shuffle changed - cooldown active");
+                }
+                prevShuffle = data.is_shuffle;
+                isShuffle = data.is_shuffle;
+                const btn = document.getElementById('btn-shuffle');
+                if (isShuffle) {
+                    btn.classList.add('text-purple-500', 'hover:text-purple-400');
+                    btn.classList.remove('text-gray-500', 'hover:text-white');
+                } else {
+                    btn.classList.remove('text-purple-500', 'hover:text-purple-400');
+                    btn.classList.add('text-gray-500', 'hover:text-white');
+                }
+            }
+
+            // Loop State (0: off, 1: all, 2: one) (with change detection)
+            if (data.loop_mode !== undefined) {
+                // Detect state change and trigger cooldown
+                if (data.loop_mode !== prevLoopMode) {
+                    lastInteractionTime = Date.now(); // Extend cooldown
+                    console.log("🔁 Loop changed - cooldown active");
+                }
+                prevLoopMode = data.loop_mode;
+                loopMode = data.loop_mode;
+                const btn = document.getElementById('btn-repeat');
+                const dot = document.getElementById('repeat-dot');
+
+                // Color Active
+                if (loopMode > 0) {
+                    btn.classList.add('text-purple-500', 'hover:text-purple-400');
+                    btn.classList.remove('text-gray-500', 'hover:text-white');
+                } else {
+                    btn.classList.remove('text-purple-500', 'hover:text-purple-400');
+                    btn.classList.add('text-gray-500', 'hover:text-white');
+                }
+
+                // Dot for "One"
+                if (loopMode === 2) {
+                    dot.classList.remove('hidden');
+                } else {
+                    dot.classList.add('hidden');
+                }
+            }
+
+            // Search Results Update
+            if (data.search_results) {
+                renderSearchResults(data.search_results);
+            }
+
+            // Queue Update
+            if (data.queue) {
+                renderQueue(data.queue);
+            }
+
+            // Album Details Update
+            if (data.active_album_details) {
+                renderAlbumDetails(data.active_album_details);
+            }
+        }
+
+        function updatePlayButton(playing) {
+            if (playing) {
+                document.getElementById('icon-play').classList.add('hidden');
+                document.getElementById('icon-pause').classList.remove('hidden');
+            } else {
+                document.getElementById('icon-play').classList.remove('hidden');
+                document.getElementById('icon-pause').classList.add('hidden');
+            }
+        }
+
+        function togglePlay() {
+            lastInteractionTime = Date.now();
+            const action = isPlaying ? 'pause' : 'play';
+            // Optimistic Update
+            isPlaying = !isPlaying;
+            updatePlayButton(isPlaying);
+            sendCommand(action);
+        }
+
+        async function toggleShuffle() {
+            lastInteractionTime = Date.now(); // Cooldown protection
+            // State Convergence: Update the FIELD directly
+            const newStatus = !isShuffle;
+            isShuffle = newStatus; // Optimistic
+
+            // UI Update
+            const btn = document.getElementById('btn-shuffle');
+            if (newStatus) {
+                btn.classList.add('text-purple-500');
+                btn.classList.remove('text-gray-500');
+                showToast("Shuffle ON");
+            } else {
+                btn.classList.remove('text-purple-500');
+                btn.classList.add('text-gray-500');
+                showToast("Shuffle OFF");
+            }
+
+            // Direct DB Update (Don't include is_playing - Android is source of truth)
+            await pb.collection('sessions').update(sessionId, {
+                'is_shuffle': newStatus,
+                'last_active': new Date().toISOString()
+            });
+        }
+
+        async function toggleRepeat() {
+            lastInteractionTime = Date.now(); // Cooldown protection
+            // Optimistic Cycle: 0 (Off) -> 1 (All) -> 2 (One) -> 0
+            let nextMode = 0;
+            if (loopMode === 0) nextMode = 1;
+            else if (loopMode === 1) nextMode = 2;
+            else nextMode = 0;
+
+            loopMode = nextMode;
+
+            let msg = "Repeat OFF";
+            if (nextMode === 1) msg = "Repeat ALL";
+            if (nextMode === 2) msg = "Repeat ONE";
+            showToast(msg);
+
+            // Direct DB Update (Don't include is_playing - Android is source of truth)
+            await pb.collection('sessions').update(sessionId, {
+                'loop_mode': nextMode,
+                'last_active': new Date().toISOString()
+            });
+        }
+
+        function toggleQueue() {
+            const drawer = document.getElementById('queue-drawer');
+            if (drawer.classList.contains('translate-y-full')) {
+                drawer.classList.remove('translate-y-full'); // Open
+            } else {
+                drawer.classList.add('translate-y-full'); // Close
+            }
+        }
+
+        function renderQueue(queue) {
+            const container = document.getElementById('queue-list');
+            container.innerHTML = '';
+
+            if (!queue || queue.length === 0) {
+                container.innerHTML = '<div class="text-gray-500 text-center mt-10">End of Queue</div>';
+                return;
+            }
+
+            queue.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center p-3 rounded-lg hover:bg-white/5 transition border-b border-gray-800/50";
+
+                // Number
+                const number = document.createElement('div');
+                number.className = "text-gray-500 font-bold text-sm w-6 text-center shrink-0 mr-2";
+                number.innerText = index + 1;
+                div.appendChild(number);
+
+                // Art
+                const art = document.createElement('img');
+                art.className = "w-12 h-12 rounded bg-gray-800 object-cover";
+                art.src = item.albumArt || 'https://via.placeholder.com/150';
+                art.onerror = function () { this.src = 'https://via.placeholder.com/150'; };
+                div.appendChild(art);
+
+                // Info
+                const info = document.createElement('div');
+                info.className = "ml-3 flex-1 overflow-hidden";
+
+                const titleRow = document.createElement('div');
+                titleRow.className = "flex items-center space-x-2";
+
+                const title = document.createElement('div');
+                title.className = "text-white font-medium truncate text-sm";
+                title.innerText = item.title || "Unknown Title";
+                titleRow.appendChild(title);
+
+                // Badge for "Play Next" (User Queue)
+                if (item.isCustom) {
+                    const badge = document.createElement('span');
+                    badge.className = "bg-purple-500/20 text-purple-300 text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider font-bold";
+                    badge.innerText = "Next Up";
+                    titleRow.appendChild(badge);
+                }
+
+                info.appendChild(titleRow);
+
+                const artist = document.createElement('div');
+                artist.className = "text-gray-400 text-xs truncate";
+                artist.innerText = item.artist || "Unknown Artist";
+                info.appendChild(artist);
+
+                div.appendChild(info);
+                container.appendChild(div);
+            });
+        }
+
+        function renderSearchResults(results) {
+            const container = document.getElementById('search-results');
+            container.innerHTML = '';
+
+            if (!results) {
+                container.innerHTML = '<div class="text-center text-gray-500 mt-10">No results found</div>';
+                return;
+            }
+
+            // Handle Legacy Array (Fallback)
+            if (Array.isArray(results)) {
+                if (results.length === 0) {
+                    container.innerHTML = '<div class="text-center text-gray-500 mt-10">No results found</div>';
+                    return;
+                }
+                renderSection(container, 'Songs', results, 'song');
+                return;
+            }
+
+            // Handle Grouped Object {songs: [], albums: [], artists: []}
+            let hasResults = false;
+
+            if (results.songs && results.songs.length > 0) {
+                renderSection(container, 'Songs', results.songs, 'song');
+                hasResults = true;
+            }
+            if (results.albums && results.albums.length > 0) {
+                renderSection(container, 'Albums', results.albums, 'album');
+                hasResults = true;
+            }
+            if (results.artists && results.artists.length > 0) {
+                renderSection(container, 'Artists', results.artists, 'artist');
+                hasResults = true;
+            }
+
+            if (!hasResults) {
+                container.innerHTML = '<div class="text-center text-gray-500 mt-10">No results found</div>';
+            }
+        }
+
+        function openAlbumDetail(id, title, artist, art) {
+            // Updated Header
+            document.getElementById('album-drawer-title').textContent = title;
+            document.getElementById('album-drawer-artist').textContent = artist;
+            document.getElementById('album-drawer-art').src = art || 'https://via.placeholder.com/150';
+
+            // Clear List & Show Loading
+            document.getElementById('album-track-list').innerHTML = '<div class="text-gray-500 text-center mt-10">Loading tracks...</div>';
+
+            // Open Drawer
+            const drawer = document.getElementById('album-drawer');
+            drawer.classList.remove('translate-y-full');
+
+            // Send Command
+            sendCommand('get_album_details', { id: id });
+        }
+
+        function closeAlbumDrawer() {
+            document.getElementById('album-drawer').classList.add('translate-y-full');
+        }
+
+        function renderAlbumDetails(data) {
+            const container = document.getElementById('album-track-list');
+            container.innerHTML = '';
+
+            if (!data.tracks || data.tracks.length === 0) {
+                container.innerHTML = '<div class="text-gray-500 text-center mt-10">No tracks found.</div>';
+                return;
+            }
+
+            data.tracks.forEach((track, index) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center p-3 rounded-lg hover:bg-white/5 transition border-b border-gray-800/50";
+
+                // Number
+                const num = document.createElement('span');
+                num.className = "text-gray-500 font-mono text-sm mr-4 w-6 text-center shrink-0";
+                num.innerText = index + 1;
+                div.appendChild(num);
+
+                // Art (Small)
+                const art = document.createElement('img');
+                art.className = "w-10 h-10 rounded bg-gray-900 object-cover mr-3 opacity-50"; // Dimmed as it is repetitive
+                art.src = track.albumArtUrl || document.getElementById('album-drawer-art').src;
+                div.appendChild(art);
+
+                // Title
+                const info = document.createElement('div');
+                info.className = "flex-1 min-w-0";
+                const t = document.createElement('div');
+                t.className = "text-white font-medium truncate";
+                t.innerText = track.title;
+                info.appendChild(t);
+                div.appendChild(info);
+
+                // Add Button
+                const btn = document.createElement('button');
+                btn.className = "p-2 bg-purple-600 rounded-full text-white hover:bg-purple-500 shadow-lg ml-2 active:scale-95 transition";
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>`;
+                btn.onclick = () => {
+                    // Send entire track object to add_queue
+                    sendCommand('add_queue', track);
+                    showToast("Added to Queue");
+                };
+                div.appendChild(btn);
+
+                container.appendChild(div);
+            });
+        }
+
+        function renderSection(container, title, items, type) {
+            const header = document.createElement('h3');
+            header.className = "text-purple-400 font-bold text-xs uppercase tracking-wider mt-6 mb-2 sticky top-0 bg-[#0f0f13]/95 backdrop-blur p-2 z-10 border-b border-gray-800/50";
+            header.innerText = title;
+            container.appendChild(header);
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "flex items-center p-3 rounded-lg hover:bg-white/5 transition group";
+
+                // Fields vary slightly by model
+                const title = item.title || item.name;
+                const subtitle = item.artist || item.releaseDate?.split('-')[0] || "Artist"; // Fallbacks
+                const img = item.image_url || item.albumArtUrl || item.imageUrl || 'https://via.placeholder.com/40';
+
+                div.innerHTML = `
+                    <img src="${img}" class="w-12 h-12 rounded bg-black object-cover mr-4 shadow-sm">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-white truncate text-sm">${title}</div>
+                        <div class="text-xs text-gray-400 truncate">${subtitle}</div>
+                    </div>
+                `;
+
+                // Only add "Add" button for Songs
+                if (type === 'song') {
+                    const btnHtml = `
+                    <button class="bg-white/10 hover:bg-purple-600 text-white rounded-full p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition add-btn shadow-lg backdrop-blur-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    </button>`;
+                    div.insertAdjacentHTML('beforeend', btnHtml);
+
+                    const btn = div.querySelector('.add-btn');
+                    btn.onclick = function (e) {
+                        e.stopPropagation(); // Stop row click
+                        sendCommand('add_queue', item);
+                        showToast(`Added "${title}"`);
+                    };
+                } else if (type === 'album') {
+                    // Make whole row clickable for Albums
+                    div.style.cursor = 'pointer';
+                    div.onclick = () => {
+                        // Safely extract art
+                        const art = item.imageUrl || item.image_url || item.images?.[0]?.url || 'https://via.placeholder.com/150';
+                        openAlbumDetail(item.id, item.title || item.name, item.artist || item.artists?.[0]?.name, art);
+                    };
+                }
+
+                container.appendChild(div);
+            });
+        }
+
+    </script>
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast"
+        class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 border border-gray-700 text-white px-6 py-3 rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-10 flex items-center space-x-3 pointer-events-none z-50">
+        <div id="toast-icon" class="text-green-500"></div>
+        <span id="toast-msg" class="font-medium text-sm"></span>
+    </div>
+
+    <script>
+        // ... (Existing Scripts) ...
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.textContent = msg;
+            if (type === 'success') toastIcon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+
+            toast.classList.remove('opacity-0', 'translate-y-10');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-10');
+            }, 3000);
+        }
+
+        // ... (Inside renderSearchResults) ...
     </script>
 </body>
 

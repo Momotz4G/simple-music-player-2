@@ -17,8 +17,6 @@ import 'core/theme/app_theme.dart';
 import 'ui/screens/main_shell.dart';
 import 'services/metrics_service.dart';
 import 'services/db_service.dart';
-import 'services/audio_handler.dart';
-import 'services/native_music_service.dart';
 
 // late final Future<void> dotEnvFuture;
 
@@ -42,6 +40,8 @@ Future<void> main() async {
   } catch (e) {
     debugPrint("⚠️ Critical Metrics Init Error: $e");
   }
+
+  debugPrint("🚀 [Main] Metrics Init Done");
 
   // SYNC LOCAL STATS (Non-blocking for faster startup)
   // 🚀 Run in background without awaiting to prevent startup delay
@@ -75,20 +75,9 @@ Future<void> main() async {
   if (Platform.isWindows) {
     try {
       await SMTCWindows.initialize();
+      debugPrint("🚀 [Main] SMTC Initialized");
     } catch (e) {
       print("Failed to initialize SMTC: $e");
-    }
-  }
-
-  // Initialize Audio Service for Android/iOS/macOS notification/lock screen controls
-  if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
-    try {
-      final musicService = NativeMusicService();
-      audioHandler = await initAudioService(musicService.player);
-      debugPrint(
-          "✅ AudioService initialized for ${Platform.isIOS ? 'iOS' : Platform.isMacOS ? 'macOS' : 'Android'}");
-    } catch (e) {
-      debugPrint("⚠️ Failed to initialize AudioService: $e");
     }
   }
 
@@ -98,6 +87,7 @@ Future<void> main() async {
   //       "Warning: .env file not found or failed to load. Using fallback values.");
   // });
 
+  debugPrint("🚀 [Main] FLUTTER RUNAPP STARTING");
   runApp(
     ProviderScope(
       overrides: [
@@ -116,7 +106,9 @@ Future<void> main() async {
       appWindow.size = initialSize;
       appWindow.alignment = Alignment.center;
       appWindow.title = "Simple Music Player";
+      appWindow.title = "Simple Music Player";
       appWindow.show();
+      debugPrint("🚀 [Main] BitsDojo Window Shown");
     });
   }
 }

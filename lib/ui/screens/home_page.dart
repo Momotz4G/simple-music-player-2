@@ -14,6 +14,7 @@ import '../../providers/playlist_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../providers/library_presentation_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/daily_mix_provider.dart';
 import '../../data/schemas.dart';
 
 // --- SERVICES ---
@@ -25,6 +26,7 @@ import '../components/horizontal_playlist_section.dart';
 import '../components/rediscover_feed.dart';
 import '../components/auto_scroll_section.dart';
 import '../components/hero_banner.dart';
+import '../components/daily_mix_section.dart';
 
 // --- MODELS ---
 import '../../models/song_model.dart';
@@ -54,6 +56,35 @@ class _HomePageState extends ConsumerState<HomePage> {
     // 🚀 FIX: Pass the current market from settings
     final market = ref.read(settingsProvider).spotifyMarket;
     _loadNewReleases(market);
+
+    // 🎵 Load Daily Mix after a delay to allow stats to load
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _tryLoadDailyMix();
+      }
+    });
+  }
+
+  // Track if we've already loaded the daily mix
+  bool _dailyMixLoaded = false;
+
+  void _tryLoadDailyMix() {
+    if (_dailyMixLoaded) return;
+
+    final stats = ref.read(statsProvider).entries;
+    print("🎵 Trying to load Daily Mix - stats count: ${stats.length}");
+
+    if (stats.isNotEmpty) {
+      _dailyMixLoaded = true;
+      ref.read(dailyMixProvider.notifier).loadMixes();
+    } else {
+      // Retry after a short delay
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted && !_dailyMixLoaded) {
+          _tryLoadDailyMix();
+        }
+      });
+    }
   }
 
   // 🚀 UPDATED: Accepts market parameter
@@ -319,6 +350,54 @@ class _HomePageState extends ConsumerState<HomePage> {
                 songs: topPlayedSongs,
                 onScrollFocus: _setScrollLock,
               ),
+            // 🎵 YOU MAY LIKE + DAILY MIXES
+            Builder(
+              builder: (context) {
+                final dailyMixState = ref.watch(dailyMixProvider);
+                final mixes = dailyMixState.mixes;
+
+                // DEBUG
+                print(
+                    "🏠 HomePage: Daily Mixes - loading: ${dailyMixState.isLoading}, count: ${mixes.length}");
+
+                if (mixes.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                // First mix also used for "You May Like" horizontal song scroll
+                final firstMix = mixes.first;
+                final mixSongs = firstMix.songs
+                    .map((meta) => SongModel(
+                          title: meta.title,
+                          artist: meta.artist,
+                          album: meta.album,
+                          filePath: '',
+                          duration: meta.durationSeconds.toDouble(),
+                          fileExtension: '.mp3',
+                          onlineArtUrl: meta.albumArtUrl,
+                          spotifyId: meta.spotifyId,
+                          isrc: meta.isrc,
+                        ))
+                    .toList();
+
+                return Column(
+                  children: [
+                    // You May Like - horizontal song scroll
+                    AutoScrollSection(
+                      title: "You May Like",
+                      subtitle: firstMix.description,
+                      songs: mixSongs,
+                      onScrollFocus: _setScrollLock,
+                    ),
+                    // ALL Daily Mixes as playlist cards (Daily Mix 1, 2, 3)
+                    DailyMixSection(
+                      mixes: mixes, // Show ALL mixes
+                      onScrollFocus: _setScrollLock,
+                    ),
+                  ],
+                );
+              },
+            ),
             if (_cachedDeepCuts.isNotEmpty)
               RediscoverFeed(
                 initialPool: _cachedDeepCuts,

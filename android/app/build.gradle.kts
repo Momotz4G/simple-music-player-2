@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.momotz4g.simplemusicplayer2"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -25,8 +25,8 @@ android {
         applicationId = "com.momotz4g.simplemusicplayer2"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 24
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         
@@ -55,6 +55,11 @@ android {
             keepDebugSymbols.add("**/libyoutubedl_android.so")
             keepDebugSymbols.add("**/libmetadata_god.so")
         }
+    }
+    // 🚀 Disable Lint to avoid File Locking errors
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 }
 

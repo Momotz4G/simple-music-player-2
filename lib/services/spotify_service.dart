@@ -903,6 +903,271 @@ class SpotifyService {
     return null;
   }
 
+  // --- 13. GET RECOMMENDATIONS (Endless Queue) ---
+  /// Fetches recommended tracks from Spotify API based on seed tracks, artists, or genres
+  /// Used for the Endless Queue feature to auto-add similar songs
+  static Future<List<SongMetadata>> getRecommendations({
+    List<String>? seedTracks,
+    List<String>? seedArtists,
+    List<String>? seedGenres,
+    int limit = 20,
+  }) async {
+    final token = await _getAccessToken();
+    if (token == null) {
+      print("⚠️ getRecommendations: No access token");
+      return [];
+    }
+
+    try {
+      // Build query params - Spotify requires at least 1 seed and max 5 total seeds
+      final params = <String, String>{
+        'limit': limit.toString(),
+        'market': 'US',
+      };
+
+      int seedCount = 0;
+
+      if (seedTracks != null && seedTracks.isNotEmpty) {
+        // Take up to 5 seed tracks (max combined seeds is 5)
+        final tracks = seedTracks.take(5 - seedCount).toList();
+        params['seed_tracks'] = tracks.join(',');
+        seedCount += tracks.length;
+        print("🌱 getRecommendations: Using seed_tracks: ${tracks.join(',')}");
+      }
+
+      if (seedArtists != null && seedArtists.isNotEmpty && seedCount < 5) {
+        final artists = seedArtists.take(5 - seedCount).toList();
+        params['seed_artists'] = artists.join(',');
+        seedCount += artists.length;
+        print(
+            "🌱 getRecommendations: Using seed_artists: ${artists.join(',')}");
+      }
+
+      if (seedGenres != null && seedGenres.isNotEmpty && seedCount < 5) {
+        final genres = seedGenres.take(5 - seedCount).toList();
+        params['seed_genres'] = genres.join(',');
+        print("🌱 getRecommendations: Using seed_genres: ${genres.join(',')}");
+      }
+
+      // Must have at least 1 seed
+      if (seedCount == 0 && (seedGenres == null || seedGenres.isEmpty)) {
+        print("⚠️ getRecommendations: No seeds provided");
+        return [];
+      }
+
+      final uri = Uri.https('api.spotify.com', '/v1/recommendations', params);
+      print("🔗 getRecommendations: Calling URL: $uri");
+
+      final response =
+          await http.get(uri, headers: {"Authorization": "Bearer $token"});
+
+      print("📡 getRecommendations: Response status: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final tracks = data['tracks'] as List;
+
+        print("✅ Fetched ${tracks.length} recommendations");
+
+        return tracks.map((track) {
+          final album = track['album'];
+          final images = album['images'] as List;
+          final imageUrl = images.isNotEmpty ? images[0]['url'] : "";
+
+          final artists = track['artists'] as List;
+          final artistName =
+              artists.isNotEmpty ? artists[0]['name'] : "Unknown";
+          final artistId = artists.isNotEmpty ? artists[0]['id'] : null;
+
+          return SongMetadata(
+            title: track['name'],
+            artist: artistName,
+            album: album['name'],
+            albumArtUrl: imageUrl,
+            year: (album['release_date'] as String?)?.split('-').first,
+            durationSeconds: (track['duration_ms'] as int) ~/ 1000,
+            genre: "Pop", // Default, would need extra API call for genre
+            spotifyId: track['id'],
+            isrc: track['external_ids']?['isrc'],
+            spotifyArtistId: artistId,
+          );
+        }).toList();
+      } else {
+        print("❌ Recommendations API Error: ${response.statusCode}");
+        print("   Response body: ${response.body}");
+
+        // If 404, maybe the recommendations endpoint isn't available
+        // Let's try a fallback to search-based similar tracks
+        if (response.statusCode == 404 &&
+            seedTracks != null &&
+            seedTracks.isNotEmpty) {
+          print("🔄 Trying fallback: search for related tracks...");
+          return await _getRecommendationsFallback(seedTracks.first, limit);
+        }
+      }
+    } catch (e, stack) {
+      print("❌ Recommendations Error: $e");
+      print("   Stack: $stack");
+    }
+    return [];
+  }
+
+  /// Fallback method using search to find similar tracks
+  static Future<List<SongMetadata>> _getRecommendationsFallback(
+      String seedTrackId, int limit) async {
+    final token = await _getAccessToken();
+    if (token == null) return [];
+
+    try {
+      // First, get the seed track info
+      final trackUri = Uri.https('api.spotify.com', '/v1/tracks/$seedTrackId');
+      final trackResponse = await http.get(
+        trackUri,
+        headers: {"Authorization": "Bearer $token"},
+      );
+
+      if (trackResponse.statusCode != 200) {
+        print("❌ Fallback: Could not get track info");
+        return [];
+      }
+
+      final trackData = jsonDecode(trackResponse.body);
+      final artistId = trackData['artists'][0]['id'];
+      final artistName = trackData['artists'][0]['name'];
+
+      print("🔄 Fallback: Searching for more tracks by $artistName");
+
+      // Search for more tracks by this artist
+      final searchUri = Uri.https('api.spotify.com', '/v1/search', {
+        'q': 'artist:$artistName',
+        'type': 'track',
+        'limit': limit.toString(),
+        'market': 'US',
+      });
+
+      final searchResponse = await http.get(
+        searchUri,
+        headers: {"Authorization": "Bearer $token"},
+      );
+
+      if (searchResponse.statusCode == 200) {
+        final searchData = jsonDecode(searchResponse.body);
+        final tracks = searchData['tracks']['items'] as List;
+
+        print("✅ Fallback: Found ${tracks.length} tracks by $artistName");
+
+        return tracks.map((track) {
+          final album = track['album'];
+          final images = album['images'] as List;
+          final imageUrl = images.isNotEmpty ? images[0]['url'] : "";
+
+          final artists = track['artists'] as List;
+          final trackArtistName =
+              artists.isNotEmpty ? artists[0]['name'] : "Unknown";
+          final trackArtistId = artists.isNotEmpty ? artists[0]['id'] : null;
+
+          return SongMetadata(
+            title: track['name'],
+            artist: trackArtistName,
+            album: album['name'],
+            albumArtUrl: imageUrl,
+            year: (album['release_date'] as String?)?.split('-').first,
+            durationSeconds: (track['duration_ms'] as int) ~/ 1000,
+            genre: "Pop",
+            spotifyId: track['id'],
+            isrc: track['external_ids']?['isrc'],
+            spotifyArtistId: trackArtistId,
+          );
+        }).toList();
+      }
+    } catch (e) {
+      print("❌ Fallback error: $e");
+    }
+    return [];
+  }
+
+  /// Get track ID from title and artist for use as seed
+  static Future<String?> getTrackId(String title, String artist) async {
+    final token = await _getAccessToken();
+    if (token == null) {
+      print("⚠️ getTrackId: No access token");
+      return null;
+    }
+
+    try {
+      // Try 1: Exact field search
+      final cleanTitle = _cleanTerm(title);
+      final cleanArtist = _cleanTerm(artist);
+      var query = "track:$cleanTitle artist:$cleanArtist";
+
+      print("🔍 getTrackId: Trying exact search: $query");
+
+      var uri = Uri.https('api.spotify.com', '/v1/search', {
+        'q': query,
+        'type': 'track',
+        'limit': '1',
+      });
+
+      var response =
+          await http.get(uri, headers: {"Authorization": "Bearer $token"});
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final items = data['tracks']['items'] as List;
+        if (items.isNotEmpty) {
+          final id = items[0]['id'];
+          print("✅ getTrackId: Found with exact search: $id");
+          return id;
+        }
+      }
+
+      // Try 2: Simple search (more lenient)
+      query = "$cleanTitle $cleanArtist";
+      print("🔍 getTrackId: Trying simple search: $query");
+
+      uri = Uri.https('api.spotify.com', '/v1/search', {
+        'q': query,
+        'type': 'track',
+        'limit': '5',
+      });
+
+      response =
+          await http.get(uri, headers: {"Authorization": "Bearer $token"});
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final items = data['tracks']['items'] as List;
+        if (items.isNotEmpty) {
+          // Find best match
+          for (final track in items) {
+            final trackName = (track['name'] as String).toLowerCase();
+            final trackArtists = (track['artists'] as List)
+                .map((a) => (a['name'] as String).toLowerCase())
+                .toList();
+
+            if (trackName.contains(cleanTitle.toLowerCase()) &&
+                trackArtists
+                    .any((a) => a.contains(cleanArtist.toLowerCase()))) {
+              final id = track['id'];
+              print(
+                  "✅ getTrackId: Found with simple search: $id (${track['name']} by ${track['artists'][0]['name']})");
+              return id;
+            }
+          }
+          // If no exact match, return first result
+          final id = items[0]['id'];
+          print("✅ getTrackId: Using first result: $id");
+          return id;
+        }
+      }
+
+      print("⚠️ getTrackId: No results found for '$title' by '$artist'");
+    } catch (e) {
+      print("❌ getTrackId error: $e");
+    }
+    return null;
+  }
+
   // --- PRIVATE HELPERS ---
 
   static Future<String?> _findArtistIdByTrack(

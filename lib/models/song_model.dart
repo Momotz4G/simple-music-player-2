@@ -21,6 +21,10 @@ class SongModel {
   final String? year;
   final String? genre;
 
+  // SPOTIFY IDS FOR ENDLESS QUEUE
+  final String? spotifyId; // Spotify track ID for recommendations
+  final String? spotifyArtistId; // Spotify artist ID for recommendations
+
   SongModel({
     required this.title,
     required this.artist,
@@ -36,6 +40,8 @@ class SongModel {
     this.discNumber,
     this.year,
     this.genre,
+    this.spotifyId,
+    this.spotifyArtistId,
   });
 
   // Factory constructor for creating from file scan
@@ -85,6 +91,8 @@ class SongModel {
     int? discNumber,
     String? year,
     String? genre,
+    String? spotifyId,
+    String? spotifyArtistId,
   }) {
     return SongModel(
       title: title ?? this.title,
@@ -101,6 +109,8 @@ class SongModel {
       discNumber: discNumber ?? this.discNumber,
       year: year ?? this.year,
       genre: genre ?? this.genre,
+      spotifyId: spotifyId ?? this.spotifyId,
+      spotifyArtistId: spotifyArtistId ?? this.spotifyArtistId,
     );
   }
 
@@ -120,27 +130,60 @@ class SongModel {
       'discNumber': discNumber,
       'year': year,
       'genre': genre,
+      'spotifyId': spotifyId,
+      'spotifyArtistId': spotifyArtistId,
       // Note: We don't save albumArtBytes to JSON as it's too heavy.
       // We rely on reloading it from file or URL.
     };
   }
 
   factory SongModel.fromJson(Map<String, dynamic> json) {
+    // Handle duration: convert 'durationSeconds' (int) or 'duration' (num) to double
+    double parsedDuration = 0.0;
+    if (json['duration'] != null) {
+      parsedDuration = (json['duration'] as num).toDouble();
+    } else if (json['durationSeconds'] != null) {
+      parsedDuration = (json['durationSeconds'] as num).toDouble();
+    }
+
     return SongModel(
       title: json['title'] ?? "Unknown Title",
       artist: json['artist'] ?? "Unknown Artist",
       album: json['album'] ?? "Unknown Album",
-      filePath: json['filePath'] ?? "",
-      fileExtension: json['fileExtension'] ?? "",
-      duration: (json['duration'] as num?)?.toDouble() ?? 0.0,
+      filePath: json['filePath'] ??
+          "cloud_stream", // Default to cloud_stream if missing (for remote adds)
+      fileExtension: json['fileExtension'] ?? "mp3",
+      duration: parsedDuration,
       sourceUrl: json['sourceUrl'],
-      onlineArtUrl: json['onlineArtUrl'],
+      onlineArtUrl: json['onlineArtUrl'] ??
+          json['albumArtUrl'], // Fallback for SongMetadata
       albumArtBytes: null, // Will be loaded lazily if needed
       isrc: json['isrc'],
       trackNumber: json['trackNumber'],
       discNumber: json['discNumber'],
       year: json['year'],
       genre: json['genre'],
+      spotifyId: json['spotifyId'],
+      spotifyArtistId: json['spotifyArtistId'],
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is SongModel &&
+        other.title == title &&
+        other.artist == artist &&
+        other.album == album &&
+        other.filePath == filePath;
+  }
+
+  @override
+  int get hashCode {
+    return title.hashCode ^
+        artist.hashCode ^
+        album.hashCode ^
+        filePath.hashCode;
   }
 }

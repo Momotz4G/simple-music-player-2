@@ -612,9 +612,55 @@ class DiscographySection extends StatefulWidget {
 class _DiscographySectionState extends State<DiscographySection> {
   final ScrollController _scrollController = ScrollController();
   bool _showAll = false;
+  bool _canScrollLeft = false;
+  bool _canScrollRight = true; // Initially assume we can scroll right
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_updateScrollButtons);
+    // Initial check after build
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollButtons());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_updateScrollButtons);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _updateScrollButtons() {
+    if (!_scrollController.hasClients) return;
+
+    final position = _scrollController.position;
+    final canLeft = position.pixels > 0;
+    final canRight = position.pixels < position.maxScrollExtent;
+
+    if (canLeft != _canScrollLeft || canRight != _canScrollRight) {
+      if (mounted) {
+        setState(() {
+          _canScrollLeft = canLeft;
+          _canScrollRight = canRight;
+        });
+      }
+    }
+  }
+
+  void _scroll(double offset) {
+    if (!_scrollController.hasClients) return;
+    final target = _scrollController.offset + offset;
+    _scrollController.animateTo(
+      target.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop =
+        MediaQuery.of(context).size.width > 800; // 🚀 Define Desktop
     final limit = 10;
     final showExpandButton = !_showAll && widget.albums.length > limit;
     final itemCount = _showAll
@@ -624,75 +670,142 @@ class _DiscographySectionState extends State<DiscographySection> {
     return MouseRegion(
       onEnter: (_) => widget.onScrollFocus(true),
       onExit: (_) => widget.onScrollFocus(false),
-      child: Listener(
-        onPointerSignal: (pointerSignal) {
-          if (pointerSignal is PointerScrollEvent) {
-            final offset = pointerSignal.scrollDelta.dy;
-            final targetOffset = _scrollController.offset + offset;
-            if (_scrollController.hasClients) {
-              _scrollController.jumpTo(
-                targetOffset.clamp(
-                    0.0, _scrollController.position.maxScrollExtent),
-              );
-            }
-          }
-        },
-        child: ListView.builder(
-          controller: _scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          scrollDirection: Axis.horizontal,
-          itemCount: itemCount,
-          itemBuilder: (context, index) {
-            // EXPAND BUTTON
-            if (showExpandButton && index == limit) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: SizedBox(
-                  width: 160,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border:
-                              Border.all(color: Colors.grey.withOpacity(0.5)),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_forward, size: 30),
-                          onPressed: () => setState(() => _showAll = true),
-                        ),
+      child: Stack(
+        children: [
+          Listener(
+            onPointerSignal: (pointerSignal) {
+              if (pointerSignal is PointerScrollEvent) {
+                final offset = pointerSignal.scrollDelta.dy;
+                final targetOffset = _scrollController.offset + offset;
+                if (_scrollController.hasClients) {
+                  _scrollController.jumpTo(
+                    targetOffset.clamp(
+                        0.0, _scrollController.position.maxScrollExtent),
+                  );
+                }
+              }
+            },
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal,
+              itemCount: itemCount,
+              itemBuilder: (context, index) {
+                // EXPAND BUTTON
+                if (showExpandButton && index == limit) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: SizedBox(
+                      width: 160,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: Colors.grey.withOpacity(0.5)),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.arrow_forward, size: 30),
+                              onPressed: () {
+                                setState(() {
+                                  _showAll = true;
+                                });
+                                // Re-check buttons after layout update
+                                WidgetsBinding.instance.addPostFrameCallback(
+                                    (_) => _updateScrollButtons());
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text("See All",
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      const Text("See All",
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                    ],
+                    ),
+                  );
+                }
+
+                final album = widget.albums[index];
+                final year = album.releaseDate.split('-').first;
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: SizedBox(
+                    width: 160, // Approx width for scrolling calc
+                    child: AlbumCard(
+                      albumName: album.title,
+                      artistName: album.artist,
+                      songs: const [],
+                      imageUrl: album.imageUrl,
+                      year: year,
+                      onTap: () => widget.onAlbumTap(album),
+                    ),
                   ),
-                ),
-              );
-            }
+                );
+              },
+            ),
+          ),
 
-            final album = widget.albums[index];
-            final year = album.releaseDate.split('-').first;
-
-            return Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: SizedBox(
-                width: 160,
-                child: AlbumCard(
-                  albumName: album.title,
-                  artistName: album.artist,
-                  songs: const [],
-                  imageUrl: album.imageUrl,
-                  year: year,
-                  onTap: () => widget.onAlbumTap(album),
+          // --- LEFT SCROLL BUTTON (Desktop Only) ---
+          if (isDesktop && _canScrollLeft)
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: _buildScrollButton(Icons.chevron_left, () {
+                    _scroll(-176); // Scroll left by approx one item width
+                  }),
                 ),
               ),
-            );
-          },
-        ),
+            ),
+
+          // --- RIGHT SCROLL BUTTON (Desktop Only) ---
+          if (isDesktop && _canScrollRight)
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _buildScrollButton(Icons.chevron_right, () {
+                    _scroll(176); // Scroll right by approx one item width
+                  }),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScrollButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color:
+            const Color(0xFF282828).withOpacity(0.9), // Dark semi-transparent
+        shape: BoxShape.circle,
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white, size: 24),
+        onPressed: onPressed,
+        padding: EdgeInsets.zero,
       ),
     );
   }

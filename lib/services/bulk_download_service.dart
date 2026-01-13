@@ -31,6 +31,26 @@ class BulkDownloadService {
   final ValueNotifier<String?> errorNotifier = ValueNotifier(null);
 
   bool _isDownloading = false;
+  bool _isCancelled = false; // 🚀 ADDED
+
+  void cancelDownload() {
+    if (_isDownloading) {
+      _isCancelled = true;
+      print("⚠️ Bulk download cancel requested.");
+
+      // 🚀 IMMEDIATE UI FEEDBACK
+      if (progressNotifier.value != null) {
+        final current = progressNotifier.value!;
+        progressNotifier.value = DownloadProgress(
+          receivedMB: current.receivedMB,
+          totalMB: current.totalMB,
+          progress: current.progress,
+          status: "Cancelling...",
+          details: current.details,
+        );
+      }
+    }
+  }
 
   Future<void> downloadAlbum(String albumTitle, List<SongModel> songs,
       {String? coverUrl}) async {
@@ -71,6 +91,15 @@ class BulkDownloadService {
           body: "Starting download...");
 
       for (var i = 0; i < songs.length; i++) {
+        // 🛑 CHECK CANCELLATION
+        if (_isCancelled) {
+          print("⛔ Bulk download cancelled by user.");
+          _updateProgress(completed, total, "Cancelled");
+          errorNotifier.value = "Download cancelled by user.";
+          notif.cancel(notifId);
+          break;
+        }
+
         final song = songs[i];
 
         // 🛑 CHECK BAN STATUS FIRST
@@ -235,14 +264,16 @@ class BulkDownloadService {
         _updateProgress(completed, total, "Downloading...");
       }
 
-      int remaining = await MetricsService().getRemainingQuota();
-      _updateProgress(total, total, "Completed ($remaining left)");
+      if (!_isCancelled) {
+        int remaining = await MetricsService().getRemainingQuota();
+        _updateProgress(total, total, "Completed ($remaining left)");
 
-      // 🚀 DONE
-      await notif.showComplete(
-          id: notifId,
-          title: "Download Complete",
-          body: "$albumTitle downloaded successfully.");
+        // 🚀 DONE
+        await notif.showComplete(
+            id: notifId,
+            title: "Download Complete",
+            body: "$albumTitle downloaded successfully.");
+      }
 
       // Clear after a delay
       await Future.delayed(const Duration(seconds: 3));
@@ -252,6 +283,7 @@ class BulkDownloadService {
       progressNotifier.value = null;
     } finally {
       _isDownloading = false;
+      _isCancelled = false; // Reset flag
     }
   }
 

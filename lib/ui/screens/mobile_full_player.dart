@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:video_player/video_player.dart';
+import 'package:qr_flutter/qr_flutter.dart'; // 🚀 QR Code
 
 import '../../providers/player_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -11,6 +12,8 @@ import '../../providers/timer_provider.dart';
 import '../../providers/lyrics_provider.dart'; // 🚀 For mini lyrics preview
 import '../../services/canvas_service.dart';
 import '../../services/spotify_service.dart';
+import '../../services/pocketbase_service.dart'; // 🚀 Session ID
+import '../../env/env.dart'; // 🚀 URLs
 import '../../models/song_model.dart';
 import '../components/smart_art.dart';
 
@@ -360,6 +363,24 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                           const SizedBox(width: 12),
                           const Text(
                             "Download Song",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Listening Party
+                    const PopupMenuItem(
+                      value: 'listening_party',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.qr_code_2_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            "Listening Party",
                             style: TextStyle(color: Colors.white),
                           ),
                         ],
@@ -957,6 +978,9 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
           song,
         );
         break;
+      case 'listening_party':
+        _showListeningPartyDialog();
+        break;
     }
   }
 
@@ -966,6 +990,67 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       isScrollControlled: true, // Required for DraggableScrollableSheet
       backgroundColor: Colors.transparent,
       builder: (context) => const QueueSheet(),
+    );
+  }
+
+  // 🚀 LISTENING PARTY DIALOG
+  void _showListeningPartyDialog() async {
+    final sessionId = await PocketBaseService().getUniqueSessionId();
+    if (sessionId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error: Could not create session.")),
+        );
+      }
+      return;
+    }
+
+    final url = "${Env.remoteControlUrl}/?sid=$sessionId";
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text("Listening Party",
+            style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: SizedBox(
+                width: 200,
+                height: 200,
+                child: QrImageView(
+                  data: url,
+                  version: QrVersions.auto,
+                  size: 200.0,
+                  backgroundColor: Colors.white,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Scan with another phone to control playback.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close"),
+          ),
+        ],
+      ),
     );
   }
 

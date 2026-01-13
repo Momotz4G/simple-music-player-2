@@ -10,6 +10,7 @@ class SongMetadata {
   final String albumArtUrl;
   final String? isrc; // International Standard Recording Code
   final String? spotifyId; // Spotify track ID for FLAC matching
+  final String? spotifyArtistId; // Spotify artist ID for recommendations
 
   SongMetadata({
     required this.title,
@@ -23,6 +24,7 @@ class SongMetadata {
     required this.albumArtUrl,
     this.isrc,
     this.spotifyId,
+    this.spotifyArtistId,
   });
 
   SongMetadata copyWith({
@@ -37,6 +39,7 @@ class SongMetadata {
     String? albumArtUrl,
     String? isrc,
     String? spotifyId,
+    String? spotifyArtistId,
   }) {
     return SongMetadata(
       title: title ?? this.title,
@@ -50,6 +53,23 @@ class SongMetadata {
       albumArtUrl: albumArtUrl ?? this.albumArtUrl,
       isrc: isrc ?? this.isrc,
       spotifyId: spotifyId ?? this.spotifyId,
+      spotifyArtistId: spotifyArtistId ?? this.spotifyArtistId,
     );
+  }
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'artist': artist,
+      'album': album,
+      'year': year,
+      'genre': genre,
+      'trackNumber': trackNumber,
+      'discNumber': discNumber,
+      'durationSeconds': durationSeconds,
+      'albumArtUrl': albumArtUrl,
+      'isrc': isrc,
+      'spotifyId': spotifyId,
+      'spotifyArtistId': spotifyArtistId,
+    };
   }
 }

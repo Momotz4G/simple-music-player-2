@@ -18,6 +18,7 @@ import '../services/spotify_service.dart';
 import '../services/youtube_downloader_service.dart';
 import '../services/smart_download_service.dart';
 import '../services/windows_taskbar_service.dart';
+import '../services/debug_log_service.dart'; // 🚀 IMPORT
 import '../models/song_metadata.dart';
 import 'stats_provider.dart';
 import 'history_provider.dart';
@@ -25,7 +26,8 @@ import 'settings_provider.dart';
 
 import '../services/db_service.dart';
 import '../services/remote_control_service.dart';
-import '../services/audio_handler.dart';
+
+import '../services/auto_queue_service.dart';
 
 // --- STATE CLASS ---
 class PlayerState {
@@ -38,6 +40,8 @@ class PlayerState {
   final List<SongModel> userQueue; // Priority Queue (Play Next / Add to Queue)
   final List<SongModel> playlist; // Current Context (Album/Playlist/Folder)
   final List<SongModel> originalPlaylist; // Unshuffled / Original order
+  final List<SongModel>
+      recommendationQueue; // Auto-recommendations from Endless Queue
 
   final double volume;
   final double unmutedVolume;
@@ -48,6 +52,9 @@ class PlayerState {
   // Visuals
   final Color? dominantColor;
 
+  // Endless Queue
+  final bool endlessQueueEnabled;
+
   PlayerState({
     this.isPlaying = false,
     this.currentSong,
@@ -56,12 +63,14 @@ class PlayerState {
     this.userQueue = const [],
     this.playlist = const [],
     this.originalPlaylist = const [],
+    this.recommendationQueue = const [],
     this.volume = 0.5,
     this.unmutedVolume = 0.5,
     this.isShuffle = false,
     this.loopMode = ja.LoopMode.off,
     this.isLyricsVisible = false,
     this.dominantColor,
+    this.endlessQueueEnabled = true, // Enabled by default
   });
 
   PlayerState copyWith({
@@ -72,12 +81,14 @@ class PlayerState {
     List<SongModel>? userQueue,
     List<SongModel>? playlist,
     List<SongModel>? originalPlaylist,
+    List<SongModel>? recommendationQueue,
     double? volume,
     double? unmutedVolume,
     bool? isShuffle,
     ja.LoopMode? loopMode,
     bool? isLyricsVisible,
     Color? dominantColor,
+    bool? endlessQueueEnabled,
   }) {
     return PlayerState(
       isPlaying: isPlaying ?? this.isPlaying,
@@ -87,12 +98,14 @@ class PlayerState {
       userQueue: userQueue ?? this.userQueue,
       playlist: playlist ?? this.playlist,
       originalPlaylist: originalPlaylist ?? this.originalPlaylist,
+      recommendationQueue: recommendationQueue ?? this.recommendationQueue,
       volume: volume ?? this.volume,
       unmutedVolume: unmutedVolume ?? this.unmutedVolume,
       isShuffle: isShuffle ?? this.isShuffle,
       loopMode: loopMode ?? this.loopMode,
       isLyricsVisible: isLyricsVisible ?? this.isLyricsVisible,
       dominantColor: dominantColor ?? this.dominantColor,
+      endlessQueueEnabled: endlessQueueEnabled ?? this.endlessQueueEnabled,
     );
   }
 }
@@ -108,6 +121,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   final WindowsTaskbarService _taskbarService = WindowsTaskbarService();
   final RemoteControlService _remoteService =
       RemoteControlService(); // Remote Control Service
+  late final AutoQueueService _autoQueueService; // Endless Queue Service
   final Ref ref;
 
   Stream<Duration> get positionStream => _musicService.player.positionStream;
@@ -116,16 +130,23 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   int? get audioSessionId => _musicService.player.androidAudioSessionId;
 
   int _playlistIndex = 0;
-  bool _isSwitchingSong = false;
+  // _isSwitchingSong removed
   bool _isLooping = false;
   bool _isHandlingCompletion = false;
   final Set<int> _preloadCheckpoints = {}; // 🚀 Track preload at 0%, 30%, 70%
   String? _preloadingTitle; // 🚀 Guard: currently preloading song title
+  int _consecutiveSkipCount = 0; // 🚀 Prevent infinite skip loops
+  static const int _maxConsecutiveSkips = 3; // Max before stopping
+
+  // 🚀 ANDROID FIX: Static guard to prevent re-initialization on lifecycle events
+  // This prevents stale saved songs from overwriting the current audio source
+  static bool _globalInitialized = false;
 
   // Stats config
   bool _isThresholdMet = false;
   bool _isSessionLogged = false;
   double _lastLogPosition = 0.0;
+  double _lastSavedPosition = 0.0; // 💾 For periodic saving
   double _cumulativeSecondsListened = 0.0;
   static const double _playCountThreshold = 0.60;
   DateTime _lastSongChangeTime = DateTime.now();
@@ -134,23 +155,48 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   String? _cachedDiscordImage;
   String? _lastProcessedSongPath;
 
+  // 🚀 Track last notified song to auto-sync notification (by key, not reference)
+
+  // 🚀 COOLDOWN: Prevent race condition when toggling from app
+  DateTime? _lastLocalShuffleTap;
+  DateTime? _lastLocalLoopTap;
+  static const int _syncCooldownMs = 1000; // 1 second cooldown
+
   PlayerNotifier(this._musicService, this.ref) : super(PlayerState()) {
-    _init();
+    _autoQueueService = AutoQueueService();
+    debugPrint("🚀 [Player] Notifier Constructed. Calling Init...");
+    try {
+      _init();
+    } catch (e) {
+      debugPrint("❌ [Player] CRITICAL INIT ERROR: $e");
+    }
   }
 
   void _init() async {
+    // 🚀 ANDROID FIX: Prevent re-initialization from overwriting current audio
+    if (_globalInitialized) {
+      DebugLogService().info("[Init] SKIPPED - already initialized globally");
+      return;
+    }
+    _globalInitialized = true;
+    DebugLogService().info("[Init] Running FIRST time initialization");
+
     // Restore Settings
     final prefs = await SharedPreferences.getInstance();
     final volume = prefs.getDouble('volume') ?? 0.5;
     final shuffle = prefs.getBool('shuffle') ?? false;
     final loopIndex = prefs.getInt('loopMode') ?? 0;
+    // Restore Last Position
+    final lastPosition = prefs.getDouble('last_position') ?? 0.0;
 
     // RESTORE LAST PLAYED SONG
     SongModel? lastSong;
     final lastSongJson = prefs.getString('last_played_song');
     if (lastSongJson != null) {
       try {
+        DebugLogService().info("[Init] Parsing last song JSON...");
         lastSong = SongModel.fromJson(jsonDecode(lastSongJson));
+        DebugLogService().info("[Init] Last song parsed: ${lastSong.title}");
       } catch (e) {
         print("Error restoring last song: $e");
       }
@@ -163,18 +209,49 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       loopMode: ja.LoopMode.values[loopIndex],
       currentSong: lastSong, // Set the restored song
     );
+    DebugLogService()
+        .info("[Init] Player State updated with last song (UI should update)");
 
     // Apply settings to service
     await _musicService.setVolume(volume);
-    _musicService.setLoopMode(ja.LoopMode.values[loopIndex]);
+    // ALWAYS set service to off so we can handle looping manually (queue/playlist)
+    _musicService.setLoopMode(ja.LoopMode.off);
 
     if (lastSong != null) {
+      DebugLogService()
+          .info("[Init] Triggering native load for: ${lastSong.title}");
       try {
+        final start = DateTime.now();
         // Load the source into audio player without playing
         await _musicService.load(lastSong);
+        final elapsed = DateTime.now().difference(start).inMilliseconds;
+        DebugLogService().info("[Init] Native load completed in ${elapsed}ms");
+
+        // Seek to saved position if valid
+        if (lastPosition > 0) {
+          await _musicService.seek(lastPosition);
+        }
+
+        // 🚀 RESTORE THRESHOLD STATE (Fixes stats not logging after app restart)
+        final savedThresholdPath = prefs.getString('threshold_song_path');
+        if (savedThresholdPath == lastSong.filePath) {
+          _isThresholdMet = prefs.getBool('threshold_met') ?? false;
+          _cumulativeSecondsListened =
+              prefs.getDouble('cumulative_seconds') ?? 0.0;
+          _lastLogPosition = lastPosition; // Prevent double-counting on resume
+          DebugLogService().info(
+              "[Init] Restored threshold state: met=$_isThresholdMet, cumulative=${_cumulativeSecondsListened.toStringAsFixed(1)}s");
+        } else {
+          // Different song - reset threshold state
+          _startNewSession(resetTime: false);
+          DebugLogService()
+              .info("[Init] Different song - threshold state reset");
+        }
       } catch (e) {
-        print("Error loading restored song: $e");
+        DebugLogService().info("[Init] Error loading saved song: $e");
       }
+    } else {
+      DebugLogService().info("[Init] No saved song to load");
     }
 
     // RESTORE QUEUE STATE
@@ -202,9 +279,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _broadcastRemoteState(); // Sync Initial State
       });
 
-      // Connect AudioHandler for Android/iOS/macOS notification controls
-      if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
-        _connectAudioHandler();
+      // Connect Notification Controls (Mobile)
+      if (Platform.isAndroid || Platform.isIOS) {
+        _musicService.setNotificationCallbacks(
+          onNext: () => playNext(),
+          onPrev: () => playPrevious(),
+        );
       }
     });
 
@@ -247,6 +327,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
       }
 
+      // 💾 Periodic Save (Every 10 seconds)
+      // This ensures we save position even if app is killed while playing
+      if ((currentSecs - _lastSavedPosition).abs() > 10) {
+        _saveSettings();
+        _lastSavedPosition = currentSecs;
+      }
+
       // 🚀 MULTI-CHECKPOINT PRELOAD: Trigger at 0%, 30%, 70%
       if (duration > 0) {
         final progressPercent = currentSecs / duration;
@@ -281,6 +368,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         if (_cumulativeSecondsListened >=
             (state.totalDuration * _playCountThreshold)) {
           _isThresholdMet = true;
+          DebugLogService().info(
+              "🎯 PLAYER: 60% threshold met for ${state.currentSong?.title}! Stats will log on finalize.");
         }
       }
     });
@@ -306,16 +395,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _isHandlingCompletion = false;
       }
 
-      if (_isSwitchingSong) {
-        if (isPlaying && processingState == ja.ProcessingState.ready) {
-          _isSwitchingSong = false;
-        } else {
-          if (!state.isPlaying) state = state.copyWith(isPlaying: true);
-          return;
-        }
-      }
+      // REMOVED _isSwitchingSong logic that caused stuck UI
+      // Trust the player state directly
 
       if (state.isPlaying != isPlaying) {
+        DebugLogService().info(
+            "🎮 PLAYER: isPlaying changed: ${state.isPlaying} -> $isPlaying");
         state = state.copyWith(isPlaying: isPlaying);
         _updateDiscord();
         _updateTaskbar(); // UPDATE TASKBAR STATUS
@@ -362,6 +447,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     state = state.copyWith(userQueue: newQueue);
     _saveQueueState(); // SAVE STATE
+  }
+
+  void removeUserQueueItem(int index) {
+    if (index < 0 || index >= state.userQueue.length) return;
+    final newQueue = List<SongModel>.from(state.userQueue);
+    newQueue.removeAt(index);
+    state = state.copyWith(userQueue: newQueue);
+    _saveQueueState();
   }
 
   void reorderMainPlaylist(int oldIndex, int newIndex) {
@@ -420,10 +513,29 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
   }
 
-  void addToQueue(SongModel song) {
+  void addToQueue(SongModel song) async {
+    DebugLogService().info("➕ Added to Queue: ${song.title}");
     final newQueue = List<SongModel>.from(state.userQueue)..add(song);
     state = state.copyWith(userQueue: newQueue);
     _saveQueueState(); // SAVE STATE
+    _broadcastRemoteState(); // 📢 UPDATE REMOTE CLIENT
+
+    // 🚀 TRIGGER PRELOAD
+    if (!await File(song.filePath).exists()) {
+      DebugLogService().info("🚀 QUEUE ADD: Preloading ${song.title}...");
+      final meta = SongMetadata(
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        albumArtUrl: song.onlineArtUrl ?? "",
+        durationSeconds: song.duration.toInt(),
+        year: "",
+        genre: "",
+        isrc: song.isrc,
+        spotifyId: song.spotifyId,
+      );
+      _smartService.cacheSong(meta, youtubeUrl: song.sourceUrl);
+    }
   }
 
   Future<void> playPrioritySong(SongModel song) async {
@@ -437,6 +549,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _saveQueueState(); // SAVE STATE
 
     // Save to history
+    DebugLogService()
+        .info("🎵 PLAYER: Calling addToHistory for: ${song.title}");
     ref.read(historyProvider.notifier).addToHistory(
           song: song,
           youtubeUrl: song.sourceUrl,
@@ -445,10 +559,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     _extractPalette(song);
 
-    _isSwitchingSong = true;
-    state = state.copyWith(currentSong: song, isPlaying: true);
+    // _isSwitchingSong = true;
 
-    await _musicService.play(song);
+    // JIT / REBUFFER CHECK (Fixes "Cloud Stream Error" and Missing Files)
+    final readySong = await _ensureFileExists(song);
+
+    state = state.copyWith(currentSong: readySong, isPlaying: true);
+
+    await _musicService.play(readySong);
     _updateDiscord();
     _broadcastRemoteState(); // Sync Song Change
   }
@@ -542,11 +660,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         ? ja.LoopMode.values[savedLoopIndex]
         : ja.LoopMode.off;
 
-    if (savedLoopMode == ja.LoopMode.one) {
-      await _musicService.setLoopMode(ja.LoopMode.off);
-    } else {
-      await _musicService.setLoopMode(savedLoopMode);
-    }
+    // Always force service to OFF so we handle loops manually
+    await _musicService.setLoopMode(ja.LoopMode.off);
 
     state = state.copyWith(
       volume: savedVolume,
@@ -584,22 +699,77 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     List<SongModel> originalPlaylist = [];
     List<SongModel> userQueue = [];
 
-    if (playlistJson != null) {
-      playlist = (jsonDecode(playlistJson) as List)
-          .map((e) => SongModel.fromJson(e))
-          .toList();
-    }
+    try {
+      if (playlistJson != null) {
+        playlist = (jsonDecode(playlistJson) as List)
+            .map((e) {
+              try {
+                return SongModel.fromJson(e);
+              } catch (e) {
+                print("⚠️ Error restoring playlist item: $e");
+                return null;
+              }
+            })
+            .whereType<SongModel>()
+            .toList();
+      }
 
-    if (originalPlaylistJson != null) {
-      originalPlaylist = (jsonDecode(originalPlaylistJson) as List)
-          .map((e) => SongModel.fromJson(e))
-          .toList();
-    }
+      if (originalPlaylistJson != null) {
+        originalPlaylist = (jsonDecode(originalPlaylistJson) as List)
+            .map((e) {
+              try {
+                return SongModel.fromJson(e);
+              } catch (e) {
+                print("⚠️ Error restoring original playlist item: $e");
+                return null;
+              }
+            })
+            .whereType<SongModel>()
+            .toList();
+      }
 
-    if (userQueueJson != null) {
-      userQueue = (jsonDecode(userQueueJson) as List)
-          .map((e) => SongModel.fromJson(e))
-          .toList();
+      if (userQueueJson != null) {
+        final rawQueue = (jsonDecode(userQueueJson) as List)
+            .map((e) {
+              try {
+                return SongModel.fromJson(e);
+              } catch (e) {
+                print("⚠️ Error restoring queue item: $e");
+                return null;
+              }
+            })
+            .whereType<SongModel>()
+            .toList();
+
+        // Deduplicate on Restore (Fixes double entries bug)
+        final seen = <String>{};
+        userQueue = [];
+        print("📥 Restore Queue: Processing ${rawQueue.length} items...");
+
+        for (var song in rawQueue) {
+          // AGGRESSIVE NORMALIZATION
+          // Remove everything except letters and numbers.
+          // This handles extra spaces, punctuation ("G-Friend" vs "GFriend"), and invisible chars.
+          final rawKey = "${song.artist}|${song.title}".toLowerCase();
+          final key = rawKey.replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+          if (!seen.contains(key)) {
+            seen.add(key);
+            userQueue.add(song);
+            print("   ✅ Kept: ${song.title} (Key: $key)");
+          } else {
+            print("   🚫 Duplicate removed: ${song.title} (Key: $key)");
+          }
+        }
+        print("📥 Restore Queue: Final count ${userQueue.length}");
+      }
+    } catch (e, stack) {
+      print("🚨 CRITICAL ERROR RESTORING QUEUE: $e");
+      print(stack);
+      // Fallback: Clear corrupted queue to allow app to start
+      playlist = [];
+      originalPlaylist = [];
+      userQueue = [];
     }
 
     state = state.copyWith(
@@ -640,8 +810,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   }
 
   void _finalizePlaySession() {
-    if (_isSessionLogged) return;
+    if (_isSessionLogged) {
+      DebugLogService()
+          .info("📊 PLAYER: _finalizePlaySession skipped - already logged");
+      return;
+    }
     if (_isThresholdMet && state.currentSong != null) {
+      DebugLogService().info(
+          "📊 PLAYER: _finalizePlaySession - threshold met, logging play for ${state.currentSong!.title}");
       ref.read(statsProvider.notifier).logPlay(state.currentSong!);
 
       // TRACK PLAYS IN DB & CLOUD
@@ -651,6 +827,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       DBService().updateSongPlayCountByPath(state.currentSong!.filePath);
 
       _isSessionLogged = true;
+    } else {
+      DebugLogService().info(
+          "📊 PLAYER: _finalizePlaySession - threshold NOT met (threshold=$_isThresholdMet, song=${state.currentSong?.title})");
     }
   }
 
@@ -667,6 +846,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
   // JIT CACHE HELPER
   Future<SongModel> _ensureFileExists(SongModel song) async {
+    if (song.filePath == "cloud_stream") return song; // ☁️ Bypass check
     if (await File(song.filePath).exists()) return song;
 
     print("⚠️ File missing: ${song.filePath}. Triggering JIT Cache...");
@@ -709,7 +889,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   Future<void> _preloadNextSong() async {
     SongModel? nextSong;
 
-    // 1. Check User Queue
+    // 1. Check User Queue (Priority)
     if (state.userQueue.isNotEmpty) {
       nextSong = state.userQueue.first;
     }
@@ -721,6 +901,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       } else if (state.loopMode == ja.LoopMode.all) {
         nextSong = state.playlist.first;
       }
+    }
+    // 3. Check Recommendation Queue (Endless Queue)
+    if (nextSong == null && state.recommendationQueue.isNotEmpty) {
+      nextSong = state.recommendationQueue.first;
+      print("🔮 PRELOAD: Next song from recommendations: ${nextSong.title}");
     }
 
     if (nextSong != null) {
@@ -792,7 +977,17 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _startNewSession(resetTime: true);
     _isLooping = false;
 
+    // CLEAR RECOMMENDATIONS only when user switches to a NEW playlist/album context
+    // Don't clear when just playing a single song (streaming)
+    if (newQueue != null) {
+      print("🔄 Clearing recommendation queue for new playlist context...");
+      state = state.copyWith(recommendationQueue: []);
+      _autoQueueService.resetCache();
+    }
+
     // Save to history
+    DebugLogService()
+        .info("🎵 PLAYER: playSong calling addToHistory for: ${song.title}");
     ref.read(historyProvider.notifier).addToHistory(
           song: song,
           youtubeUrl: song.sourceUrl,
@@ -825,11 +1020,25 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
       }
     } else {
-      // Use indexOf first
+      // Single song play (no newQueue provided)
+      // Check if song is in current playlist
       _playlistIndex = state.playlist.indexOf(song);
       if (_playlistIndex == -1) {
         _playlistIndex =
             state.playlist.indexWhere((s) => s.filePath == song.filePath);
+      }
+
+      // If song NOT in current playlist, this is a NEW context (standalone play)
+      // Clear the playlist so playback uses recommendations instead
+      if (_playlistIndex == -1) {
+        print("🆕 Single song play detected. Clearing previous playlist.");
+        state = state.copyWith(
+          playlist: [],
+          originalPlaylist: [],
+          recommendationQueue: [], // Reset recommendations for fresh context
+        );
+        _autoQueueService.resetCache();
+        _playlistIndex = 0;
       }
     }
 
@@ -883,20 +1092,22 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       await _musicService.seek(0);
       if (!state.isPlaying) await _musicService.resume();
     } else {
-      _isSwitchingSong = true;
       state = state.copyWith(currentSong: song, isPlaying: true);
-      _musicService.play(song);
+
+      await _musicService.play(song);
     }
     _updateDiscord();
     _saveSettings(); // SAVE STATE
     _saveQueueState(); // SAVE QUEUE
-    _updateNotificationMetadata(song); // UPDATE NOTIFICATION MEDIA CONTROLS
 
     _broadcastRemoteState(); // Sync Song Change
 
     // TRIGGER PRELOAD (Next + Previous)
     _preloadNextSong();
     _preloadPreviousSong();
+
+    // ENDLESS QUEUE: Check immediately when playing
+    _checkEndlessQueue();
   }
 
   Future<void> playNext({bool autoPlay = false}) async {
@@ -908,6 +1119,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (state.userQueue.isNotEmpty) {
       var nextSong = state.userQueue.first;
       // Save to history
+      DebugLogService().info(
+          "🎵 PLAYER: playNext (UserQueue) calling addToHistory for: ${nextSong.title}");
       ref.read(historyProvider.notifier).addToHistory(
             song: nextSong,
             youtubeUrl: nextSong.sourceUrl,
@@ -917,11 +1130,56 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       state = state.copyWith(userQueue: state.userQueue.sublist(1));
       _saveQueueState(); // SAVE QUEUE
 
-      _isSwitchingSong = true;
+      // _isSwitchingSong = true;
       state = state.copyWith(currentSong: nextSong, isPlaying: true);
 
       // EXTRACT COLOR
       _extractPalette(nextSong);
+
+      // 🚀 CHECK FOR PRELOADED/CACHED FILE FIRST
+      if (nextSong.filePath == "cloud_stream") {
+        final meta = SongMetadata(
+          title: nextSong.title,
+          artist: nextSong.artist,
+          album: nextSong.album,
+          albumArtUrl: nextSong.onlineArtUrl ?? "",
+          durationSeconds: nextSong.duration.toInt(),
+          year: "",
+          genre: "",
+        );
+        final cachedPath = await _smartService.getPredictedCachePath(meta);
+        print("🔍 Checking cache path: $cachedPath");
+        if (await File(cachedPath).exists()) {
+          print("✅ Found preloaded cache! Using: $cachedPath");
+          nextSong = nextSong.copyWith(filePath: cachedPath);
+          // Update currentSong state with resolved path
+          state = state.copyWith(currentSong: nextSong);
+        } else {
+          print("❌ Cache file NOT found at: $cachedPath");
+        }
+      }
+
+      // ☁️ GUARD: Bypass File Checks for Cloud Streams (if still cloud_stream)
+      if (nextSong.filePath == "cloud_stream") {
+        final success = await _musicService.play(nextSong);
+        if (!success) {
+          _consecutiveSkipCount++;
+          print("❌ Play Next (Cloud) Failed. Skip #$_consecutiveSkipCount...");
+          if (_consecutiveSkipCount >= _maxConsecutiveSkips) {
+            print("🛑 Max skips reached. Stopping playback.");
+            _consecutiveSkipCount = 0;
+            state = state.copyWith(isPlaying: false);
+            return;
+          }
+          playNext(autoPlay: true);
+          return;
+        }
+        _consecutiveSkipCount = 0; // Reset on success
+        _updateDiscord();
+        _broadcastRemoteState();
+        _preloadNextSong(); // ✅ Enable Preload for Queue
+        return;
+      }
 
       // JIT CACHING CHECK
       if (!await File(nextSong.filePath).exists()) {
@@ -955,7 +1213,20 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         return;
       }
 
-      _musicService.play(nextSong);
+      final success = await _musicService.play(nextSong);
+      if (!success) {
+        _consecutiveSkipCount++;
+        print("❌ Play Next (File) Failed. Skip #$_consecutiveSkipCount...");
+        if (_consecutiveSkipCount >= _maxConsecutiveSkips) {
+          print("🛑 Max skips reached. Stopping playback.");
+          _consecutiveSkipCount = 0;
+          state = state.copyWith(isPlaying: false);
+          return;
+        }
+        playNext(autoPlay: true);
+        return;
+      }
+      _consecutiveSkipCount = 0; // Reset on success
       _updateDiscord();
       _broadcastRemoteState(); // Sync Next Song Change
 
@@ -965,63 +1236,304 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
 
     // 2. Check Playlist
-    if (state.playlist.isEmpty) return;
+    if (state.playlist.isNotEmpty) {
+      int nextIndex = _playlistIndex + 1;
+      if (nextIndex < state.playlist.length) {
+        // Still have songs in playlist
+        _playlistIndex = nextIndex;
+        var nextSong = state.playlist[nextIndex];
+        // Save to history
+        ref.read(historyProvider.notifier).addToHistory(
+              song: nextSong,
+              youtubeUrl: nextSong.sourceUrl,
+              artUrl: nextSong.onlineArtUrl,
+            );
 
-    int nextIndex = _playlistIndex + 1;
-    if (nextIndex >= state.playlist.length) {
-      if (state.loopMode == ja.LoopMode.all) {
-        nextIndex = 0;
-      } else {
-        // PAUSE AT END OF QUEUE
-        state = state.copyWith(isPlaying: false);
-        await _musicService.pause();
+        // _isSwitchingSong = true;
+        state = state.copyWith(currentSong: nextSong, isPlaying: true);
+
+        // EXTRACT COLOR
+        _extractPalette(nextSong);
+
+        // 🚀 CHECK FOR PRELOADED/CACHED FILE FIRST
+        if (nextSong.filePath == "cloud_stream") {
+          final meta = SongMetadata(
+            title: nextSong.title,
+            artist: nextSong.artist,
+            album: nextSong.album,
+            albumArtUrl: nextSong.onlineArtUrl ?? "",
+            durationSeconds: nextSong.duration.toInt(),
+            year: "",
+            genre: "",
+          );
+          final cachedPath = await _smartService.getPredictedCachePath(meta);
+          if (await File(cachedPath).exists()) {
+            print("✅ Found preloaded cache! Using: $cachedPath");
+            nextSong = nextSong.copyWith(filePath: cachedPath);
+            state = state.copyWith(currentSong: nextSong);
+          }
+        }
+
+        // ☁️ GUARD: Bypass File Checks for Cloud Streams (if still cloud_stream)
+        if (nextSong.filePath == "cloud_stream") {
+          final success = await _musicService.play(nextSong);
+          if (!success) {
+            print("❌ Play Playlist (Cloud) Failed. Skipping...");
+            playNext(autoPlay: true);
+            return;
+          }
+          _updateDiscord();
+          _preloadNextSong();
+          _checkEndlessQueue();
+          return;
+        }
+
+        // JIT CACHING CHECK
+        if (!await File(nextSong.filePath).exists()) {
+          print(
+              "⚠️ Play Next: File not found at ${nextSong.filePath}. Attempting JIT Cache...");
+          final meta = SongMetadata(
+            title: nextSong.title,
+            artist: nextSong.artist,
+            album: nextSong.album,
+            albumArtUrl: nextSong.onlineArtUrl ?? "",
+            durationSeconds: nextSong.duration.toInt(),
+            year: "",
+            genre: "",
+          );
+          await _smartService.cacheSong(meta);
+
+          // CHECK IF CACHED FILE EXISTS
+          final cachedPath = await _smartService.getPredictedCachePath(meta);
+          if (await File(cachedPath).exists()) {
+            print("✅ JIT Cache Successful! Switching path to: $cachedPath");
+            nextSong = nextSong.copyWith(filePath: cachedPath);
+          }
+        }
+
+        final success = await _musicService.play(nextSong);
+        if (!success) {
+          print("❌ Play Playlist (File) Failed. Skipping...");
+          playNext(autoPlay: true);
+          return;
+        }
+        _updateDiscord();
+
+        // TRIGGER PRELOAD
+        _preloadNextSong();
+
+        // ENDLESS QUEUE CHECK
+        _checkEndlessQueue();
+        return;
+      } else if (state.loopMode == ja.LoopMode.all) {
+        // Loop back to beginning
+        _playlistIndex = 0;
+        var nextSong = state.playlist[0];
+        ref.read(historyProvider.notifier).addToHistory(
+              song: nextSong,
+              youtubeUrl: nextSong.sourceUrl,
+              artUrl: nextSong.onlineArtUrl,
+            );
+
+        // _isSwitchingSong = true;
+        state = state.copyWith(currentSong: nextSong, isPlaying: true);
+        _extractPalette(nextSong);
+
+        if (!await File(nextSong.filePath).exists()) {
+          final meta = SongMetadata(
+            title: nextSong.title,
+            artist: nextSong.artist,
+            album: nextSong.album,
+            albumArtUrl: nextSong.onlineArtUrl ?? "",
+            durationSeconds: nextSong.duration.toInt(),
+            year: "",
+            genre: "",
+          );
+          await _smartService.cacheSong(meta);
+          final cachedPath = await _smartService.getPredictedCachePath(meta);
+          if (await File(cachedPath).exists()) {
+            nextSong = nextSong.copyWith(filePath: cachedPath);
+          }
+        }
+
+        final success = await _musicService.play(nextSong);
+        if (!success) {
+          print("❌ Play Loop (File) Failed. Skipping...");
+          playNext(autoPlay: true);
+          return;
+        }
+        _updateDiscord();
+        _preloadNextSong();
+        _checkEndlessQueue();
         return;
       }
+      // Playlist exhausted, fall through to check recommendationQueue
     }
 
-    _playlistIndex = nextIndex;
-    var nextSong = state.playlist[nextIndex];
-    // Save to history
-    ref.read(historyProvider.notifier).addToHistory(
-          song: nextSong,
-          youtubeUrl: nextSong.sourceUrl,
-          artUrl: nextSong.onlineArtUrl,
-        );
+    // 3. Check Recommendation Queue (Endless Queue)
+    if (state.recommendationQueue.isNotEmpty) {
+      print("🎵 Playing from recommendation queue...");
+      var nextSong = state.recommendationQueue.first;
 
-    _isSwitchingSong = true;
-    state = state.copyWith(currentSong: nextSong, isPlaying: true);
+      // Save to history
+      ref.read(historyProvider.notifier).addToHistory(
+            song: nextSong,
+            youtubeUrl: nextSong.sourceUrl,
+            artUrl: nextSong.onlineArtUrl,
+          );
 
-    // EXTRACT COLOR
-    _extractPalette(nextSong);
-
-    // JIT CACHING CHECK
-    if (!await File(nextSong.filePath).exists()) {
-      print(
-          "⚠️ Play Next: File not found at ${nextSong.filePath}. Attempting JIT Cache...");
-      final meta = SongMetadata(
-        title: nextSong.title,
-        artist: nextSong.artist,
-        album: nextSong.album,
-        albumArtUrl: nextSong.onlineArtUrl ?? "",
-        durationSeconds: nextSong.duration.toInt(),
-        year: "",
-        genre: "",
+      // Remove from recommendation queue
+      state = state.copyWith(
+        recommendationQueue: state.recommendationQueue.sublist(1),
       );
-      await _smartService.cacheSong(meta);
+      _saveQueueState();
 
-      // CHECK IF CACHED FILE EXISTS
-      final cachedPath = await _smartService.getPredictedCachePath(meta);
-      if (await File(cachedPath).exists()) {
-        print("✅ JIT Cache Successful! Switching path to: $cachedPath");
-        nextSong = nextSong.copyWith(filePath: cachedPath);
+      // _isSwitchingSong = true;
+      state = state.copyWith(currentSong: nextSong, isPlaying: true);
+
+      // EXTRACT COLOR
+      _extractPalette(nextSong);
+
+      // JIT CACHING CHECK
+      if (!await File(nextSong.filePath).exists()) {
+        print(
+            "⚠️ Recommendation song: File not found. Attempting JIT Cache...");
+        final meta = SongMetadata(
+          title: nextSong.title,
+          artist: nextSong.artist,
+          album: nextSong.album,
+          albumArtUrl: nextSong.onlineArtUrl ?? "",
+          durationSeconds: nextSong.duration.toInt(),
+          year: "",
+          genre: "",
+        );
+        await _smartService.cacheSong(meta, youtubeUrl: nextSong.sourceUrl);
+
+        final cachedPath = await _smartService.getPredictedCachePath(meta);
+        if (await File(cachedPath).exists()) {
+          print("✅ JIT Cache Successful! Switching path to: $cachedPath");
+          nextSong = nextSong.copyWith(filePath: cachedPath);
+        }
       }
+
+      // VERIFY FILE EXISTS
+      if (!await File(nextSong.filePath).exists()) {
+        print("❌ Recommendation song Error: File missing. Skipping.");
+        playNext(autoPlay: true);
+        return;
+      }
+
+      _musicService.play(nextSong);
+      _updateDiscord();
+      _broadcastRemoteState();
+
+      // TRIGGER PRELOAD
+      _preloadNextSong();
+
+      // CHECK FOR MORE RECOMMENDATIONS
+      _checkEndlessQueue();
+      return;
     }
 
-    _musicService.play(nextSong);
-    _updateDiscord();
+    // 4. No more songs - pause
+    state = state.copyWith(isPlaying: false);
+    await _musicService.pause();
+    return;
+  }
 
-    // TRIGGER PRELOAD
-    _preloadNextSong();
+  // --- ENDLESS QUEUE ---
+
+  /// Toggle endless queue on/off
+  void toggleEndlessQueue() {
+    state = state.copyWith(endlessQueueEnabled: !state.endlessQueueEnabled);
+    _saveSettings();
+    print(state.endlessQueueEnabled
+        ? "🔄 Endless Queue: ENABLED"
+        : "⏹️ Endless Queue: DISABLED");
+  }
+
+  /// Play a song from the recommendation queue by index
+  Future<void> playRecommendationSong(int index) async {
+    if (index < 0 || index >= state.recommendationQueue.length) return;
+
+    final song = state.recommendationQueue[index];
+
+    // Remove this song and all before it from recommendation queue
+    final newRecQueue = state.recommendationQueue.sublist(index + 1);
+    state = state.copyWith(recommendationQueue: newRecQueue);
+    _saveQueueState();
+
+    // Play the song (will clear and fetch new recommendations)
+    await playSong(song, skipFinalize: true);
+  }
+
+  /// Check if we need to fetch more songs for endless queue
+  Future<void> _checkEndlessQueue() async {
+    print("🔍 Endless Queue: Checking...");
+    print("   - Enabled: ${state.endlessQueueEnabled}");
+    print("   - Current Song: ${state.currentSong?.title}");
+
+    if (!state.endlessQueueEnabled) {
+      print("⏹️ Endless Queue: DISABLED - skipping");
+      return;
+    }
+    if (state.currentSong == null) {
+      print("⚠️ Endless Queue: No current song - skipping");
+      return;
+    }
+
+    // Calculate remaining songs in queue
+    // Priority: userQueue -> playlist -> recommendationQueue
+    final remainingInPlaylist = state.playlist.length - _playlistIndex - 1;
+    final remainingInUserQueue = state.userQueue.length;
+    final remainingInRecommendations = state.recommendationQueue.length;
+
+    print("   - Remaining in userQueue (Play Next): $remainingInUserQueue");
+    print("   - Remaining in playlist (Library): $remainingInPlaylist");
+    print("   - Remaining in recommendationQueue: $remainingInRecommendations");
+
+    // Always fetch if recommendation queue is low (regardless of library size)
+    // This ensures recommendations show in queue even when playing from album
+    if (remainingInRecommendations >= 20) {
+      print(
+          "✅ Endless Queue: Enough recommendations ($remainingInRecommendations >= 20), skipping");
+      return;
+    }
+
+    print(
+        "🔄 Endless Queue: Only $remainingInRecommendations recommendations, fetching more...");
+
+    try {
+      final recommendations = await _autoQueueService.getRecommendedSongs(
+        state.currentSong!,
+      );
+
+      print("📥 Endless Queue: Got ${recommendations.length} recommendations");
+
+      if (recommendations.isEmpty) {
+        print("⚠️ Endless Queue: No recommendations available");
+        return;
+      }
+
+      // Add recommendations to RECOMMENDATION queue (separate from user's Play Next)
+      final newRecQueue = List<SongModel>.from(state.recommendationQueue);
+      newRecQueue.addAll(recommendations);
+      state = state.copyWith(recommendationQueue: newRecQueue);
+      _saveQueueState();
+
+      print(
+          "✅ Endless Queue: Added ${recommendations.length} songs to recommendation queue");
+      print(
+          "   - New recommendation queue size: ${state.recommendationQueue.length}");
+
+      // Pre-cache only the next song
+      if (recommendations.isNotEmpty) {
+        _preloadNextSong();
+      }
+    } catch (e, stack) {
+      print("❌ Endless Queue Error: $e");
+      print("   Stack: $stack");
+    }
   }
 
   Future<void> playPrevious() async {
@@ -1055,7 +1567,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           artUrl: prevSong.onlineArtUrl,
         );
 
-    _isSwitchingSong = true;
+    // _isSwitchingSong = true;
     state = state.copyWith(currentSong: prevSong, isPlaying: true);
 
     // JIT CACHE CHECK FOR PREVIOUS
@@ -1142,6 +1654,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   }
 
   void toggleShuffle() {
+    _lastLocalShuffleTap = DateTime.now(); // 🚀 COOLDOWN: Mark local tap
     final newShuffle = !state.isShuffle;
     final baseList = state.originalPlaylist.isNotEmpty
         ? state.originalPlaylist
@@ -1164,9 +1677,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       }
     }
     _saveSettings();
+    DebugLogService().info("🚀 BROADCASTING SHUFFLE: ${state.isShuffle}");
+    _broadcastRemoteState(); // 🚀 SYNC: Broadcast Shuffle Change
   }
 
   void cycleLoopMode() {
+    _lastLocalLoopTap = DateTime.now(); // 🚀 COOLDOWN: Mark local tap
     final current = state.loopMode;
     ja.LoopMode nextMode;
     switch (current) {
@@ -1181,9 +1697,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         break;
     }
 
-    _musicService.setLoopMode(nextMode);
+    // Always keep service loop mode OFF
+    _musicService.setLoopMode(ja.LoopMode.off);
     state = state.copyWith(loopMode: nextMode);
     _saveSettings();
+    DebugLogService().info("🚀 BROADCASTING LOOP: ${state.loopMode}");
+    _broadcastRemoteState(); // 🚀 SYNC: Broadcast Loop Change
   }
 
   Future<void> _updateDiscord() async {
@@ -1252,11 +1771,19 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     await prefs.setDouble('volume', state.volume);
     await prefs.setBool('shuffle', state.isShuffle);
     await prefs.setInt('loopMode', state.loopMode.index);
+    // Save Current Position
+    await prefs.setDouble('last_position', state.currentPosition);
 
     // SAVE LAST PLAYED SONG
     if (state.currentSong != null) {
       final songJson = jsonEncode(state.currentSong!.toJson());
       await prefs.setString('last_played_song', songJson);
+
+      // 🚀 SAVE THRESHOLD STATE (Fixes stats not logging after app restart)
+      // Save the threshold state keyed to the current song so it can be restored
+      await prefs.setString('threshold_song_path', state.currentSong!.filePath);
+      await prefs.setBool('threshold_met', _isThresholdMet);
+      await prefs.setDouble('cumulative_seconds', _cumulativeSecondsListened);
     }
   }
 
@@ -1280,14 +1807,25 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   }
 
   // Handle Remote Commands
-  void _handleRemoteCommand(String action, dynamic value) {
-    print("🎮 PlayerProvider processing command: $action ($value)");
+  Future<void> _handleRemoteCommand(String action, dynamic value) async {
+    // print(" [Remote] Received Command: $action Payload: $value"); // DEBUG LOG
+    DebugLogService().info("[Remote] Cmd: $action, Val: $value");
+    DebugLogService().info(
+        "[Remote] State: Playing=${state.isPlaying}, Song=${state.currentSong?.title}"); // DEBUG LOG
+
     switch (action) {
       case 'play':
-        _musicService.resume();
+        // Direct resume without force-reload logic
+        if (!state.isPlaying) {
+          DebugLogService().info("[Remote] Executing RESUME");
+          await _musicService.resume();
+        }
         break;
       case 'pause':
-        _musicService.pause();
+        if (state.isPlaying) {
+          DebugLogService().info("[Remote] Executing PAUSE");
+          await _musicService.pause();
+        }
         break;
       case 'next':
         playNext();
@@ -1300,54 +1838,320 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           setVolume(value.toDouble());
         }
         break;
+      case 'shuffle':
+        toggleShuffle();
+        break;
+      case 'repeat':
+        cycleLoopMode();
+        break;
+      // 🚀 SAFE STATE SYNC (Shuffle/Loop Only)
+      case 'sync_state':
+        if (value is Map<String, dynamic>) {
+          final now = DateTime.now();
+
+          // Shuffle Sync (with Cooldown)
+          if (value.containsKey('is_shuffle')) {
+            // Skip if local toggle happened within cooldown period
+            final shuffleCooldown = _lastLocalShuffleTap != null &&
+                now.difference(_lastLocalShuffleTap!).inMilliseconds <
+                    _syncCooldownMs;
+            if (shuffleCooldown) {
+              DebugLogService()
+                  .info("🔄 [Sync] Shuffle SKIPPED (cooldown active)");
+            } else {
+              final target = value['is_shuffle'] as bool;
+              if (state.isShuffle != target) {
+                DebugLogService()
+                    .info("🔄 Remote Sync: Set Shuffle to $target");
+                toggleShuffle();
+              }
+            }
+          }
+
+          // Loop Sync (with Cooldown)
+          if (value.containsKey('loop_mode')) {
+            // Skip if local toggle happened within cooldown period
+            final loopCooldown = _lastLocalLoopTap != null &&
+                now.difference(_lastLocalLoopTap!).inMilliseconds <
+                    _syncCooldownMs;
+            if (loopCooldown) {
+              DebugLogService()
+                  .info("🔄 [Sync] Loop SKIPPED (cooldown active)");
+            } else {
+              final targetVal = value['loop_mode'] as int;
+              ja.LoopMode targetMode;
+              if (targetVal == 1)
+                targetMode = ja.LoopMode.all;
+              else if (targetVal == 2)
+                targetMode = ja.LoopMode.one;
+              else
+                targetMode = ja.LoopMode.off;
+
+              if (state.loopMode != targetMode) {
+                DebugLogService()
+                    .info("🔄 Remote Sync: Set Loop to $targetMode");
+                _musicService.setLoopMode(targetMode);
+                state = state.copyWith(loopMode: targetMode);
+                _saveSettings();
+                _broadcastRemoteState();
+              }
+            }
+          }
+        }
+        break;
+      case 'search':
+        // Defensive check: If payload is missing, it might come as double (volume)
+        if (value is! String) {
+          break;
+        }
+        final query = value;
+        if (query.isNotEmpty) {
+          try {
+            // New Grouped Search
+            final results = await SpotifyService.searchAll(query);
+
+            // Serialize each list within the map
+            final serialized = {
+              'songs':
+                  (results['songs'] as List).map((e) => e.toJson()).toList(),
+              'albums':
+                  (results['albums'] as List).map((e) => e.toJson()).toList(),
+              'artists':
+                  (results['artists'] as List).map((e) => e.toJson()).toList(),
+            };
+
+            print(
+                "DEBUG: SearchAll Results: ${serialized['songs']?.length} songs, ${serialized['albums']?.length} albums");
+            _remoteService.updateSearchResults(serialized);
+          } catch (e) {
+            print("❌ SearchAll Error: $e");
+          }
+        }
+        break;
+      case 'add_queue':
+        try {
+          final songJson = value;
+          if (songJson is Map<String, dynamic>) {
+            final song = SongModel.fromJson(songJson);
+            addToQueue(song);
+          } else if (songJson is String) {
+            final song = SongModel.fromJson(jsonDecode(songJson));
+            addToQueue(song);
+          }
+        } catch (e) {
+          print("☁️ Party Mode Error: Invalid song data - $e");
+        }
+        break;
+      case 'get_album_details':
+        print("📥 Received 'get_album_details' command with value: $value");
+        Map<String, dynamic>? payload;
+
+        if (value is Map<String, dynamic>) {
+          payload = value;
+        } else if (value is String) {
+          try {
+            payload = jsonDecode(value);
+          } catch (e) {
+            print("❌ Error decoding payload: $e");
+          }
+        }
+
+        if (payload != null) {
+          final albumId = payload['id'];
+          if (albumId != null) {
+            try {
+              print("💿 Fetching tracks for Album ID: $albumId");
+              final tracks = await SpotifyService.getAlbumTracks(albumId);
+              print("✅ Fetched ${tracks.length} tracks from Spotify.");
+
+              // Convert to JSON
+              final tracksJson = tracks
+                  .map((t) => {
+                        'title': t.title,
+                        'artist': t.artist,
+                        'album': t.album,
+                        'albumArtUrl': t.albumArtUrl,
+                        'duration': t.durationSeconds,
+                        'fileExtension': 'mp3',
+                        'filePath': 'cloud_stream',
+                        'sourceUrl': 'query: ${t.artist} - ${t.title}',
+                        'onlineArtUrl': t.albumArtUrl,
+                      })
+                  .toList();
+
+              print("📤 Broadcasting active_album_details...");
+              _remoteService.broadcastState(albumDetails: {
+                'id': albumId,
+                'tracks': tracksJson,
+              });
+            } catch (e) {
+              print("❌ Album Details Error: $e");
+            }
+          } else {
+            print("⚠️ Album ID is null in payload.");
+          }
+        } else {
+          print("⚠️ Payload could not be parsed.");
+        }
+        break;
+    }
+  }
+
+  // 🚀 CACHE FOR ALBUM ART URLs (from Spotify lookup)
+  // Key: "artist|title", Value: Spotify image URL or empty string if not found
+  final Map<String, String> _artUrlCache = {};
+
+  /// Get cached Spotify art URL if available
+  String? _getCachedArtUrl(String artist, String title) {
+    final key = "$artist|$title".toLowerCase();
+    if (_artUrlCache.containsKey(key)) {
+      final url = _artUrlCache[key];
+      return url != null && url.isNotEmpty ? url : null;
+    }
+    return null; // Not cached yet
+  }
+
+  /// Fetch album art from Spotify API and cache it
+  Future<void> _fetchAndCacheArtFromSpotify(String artist, String title) async {
+    final key = "$artist|$title".toLowerCase();
+
+    // Already processing or cached
+    if (_artUrlCache.containsKey(key)) return;
+
+    // Mark as processing (empty string means "checked but no art")
+    _artUrlCache[key] = '';
+
+    try {
+      DebugLogService().info("🎨 Fetching Spotify art for: $title - $artist");
+      final artUrl = await SpotifyService.getTrackImage(title, artist);
+
+      if (artUrl != null && artUrl.isNotEmpty) {
+        _artUrlCache[key] = artUrl;
+        DebugLogService().info("🎨 Got Spotify art: $artUrl");
+        // Trigger a re-broadcast to send the now-cached art
+        _broadcastRemoteState();
+      } else {
+        DebugLogService().info("🎨 No Spotify art found for: $title - $artist");
+      }
+    } catch (e) {
+      DebugLogService().info("⚠️ Failed to fetch Spotify art: $e");
     }
   }
 
   void _broadcastRemoteState() {
+    // Construct "Next Up" Queue (Limit 20)
+    List<Map<String, dynamic>> queueData = [];
+    int limit = 20;
+
+    // 1. Priority: User Queue (Play Next)
+    for (var song in state.userQueue) {
+      if (queueData.length >= limit) break;
+      queueData.add({
+        'title': song.title,
+        'artist': song.artist,
+        'albumArt': song.onlineArtUrl, // Simplified key for web
+        'isCustom': true, // Flag to show "Queued" badge
+      });
+    }
+
+    // 2. Remaining Playlist
+    final currentIndex = state.currentSong != null
+        ? state.playlist.indexOf(state.currentSong!)
+        : -1;
+
+    if (queueData.length < limit &&
+        currentIndex >= 0 &&
+        currentIndex < state.playlist.length) {
+      // Start from next song
+      for (int i = currentIndex + 1; i < state.playlist.length; i++) {
+        if (queueData.length >= limit) break;
+        final song = state.playlist[i];
+        queueData.add({
+          'title': song.title,
+          'artist': song.artist,
+          'albumArt': song.onlineArtUrl,
+          'isCustom': false,
+        });
+      }
+    }
+
+    DebugLogService().info(
+        "📢 Broadcasting Queue: ${queueData.length} items (User: ${state.userQueue.length}, Playlist: ${state.playlist.length})");
+
+    DebugLogService().info(
+        "📢 Broadcasting State: Shuffle=${state.isShuffle}, Loop=${state.loopMode.name} (Index: ${state.loopMode.index})");
+
+    // 🚀 SYNC FIX: Ensure we send actual player status, not potentially stale state
+    final actualPlaying = _musicService.player.playing;
+    if (state.isPlaying != actualPlaying) {
+      DebugLogService().info(
+          "⚠️ SCARY DESYNC: State=${state.isPlaying} but Player=$actualPlaying");
+    }
+
+    // 🚀 LOCAL SONG METADATA SUPPORT
+    // For local songs without online art URL, fetch from Spotify API
+    String? artUrlToSend = state.currentSong?.onlineArtUrl;
+
+    if ((artUrlToSend == null || artUrlToSend.isEmpty) &&
+        state.currentSong != null &&
+        state.currentSong!.filePath != "cloud_stream") {
+      final artist = state.currentSong!.artist;
+      final title = state.currentSong!.title;
+
+      // Only try Spotify lookup if we have valid metadata
+      if (artist.isNotEmpty &&
+          artist != "Unknown Artist" &&
+          title.isNotEmpty &&
+          title != "Unknown Title") {
+        // Check cache first
+        final cachedArt = _getCachedArtUrl(artist, title);
+        if (cachedArt != null) {
+          artUrlToSend = cachedArt;
+        } else {
+          // Trigger async Spotify lookup for next broadcast
+          _fetchAndCacheArtFromSpotify(artist, title);
+        }
+      }
+    }
+
+    // Fallback display values for local songs with missing metadata
+    String? displayTitle = state.currentSong?.title;
+    String? displayArtist = state.currentSong?.artist;
+    if (displayTitle == null ||
+        displayTitle.isEmpty ||
+        displayTitle == "Unknown Title") {
+      // Extract filename as fallback
+      if (state.currentSong?.filePath != null &&
+          state.currentSong!.filePath != "cloud_stream") {
+        displayTitle =
+            state.currentSong!.filePath.split('/').last.split('\\').last;
+        final dotIndex = displayTitle.lastIndexOf('.');
+        if (dotIndex > 0) displayTitle = displayTitle.substring(0, dotIndex);
+      }
+    }
+    if (displayArtist == null ||
+        displayArtist.isEmpty ||
+        displayArtist == "Unknown Artist") {
+      displayArtist = "Unknown Artist";
+    }
+
     _remoteService.broadcastState(
-      title: state.currentSong?.title,
-      artist: state.currentSong?.artist,
-      isPlaying: state.isPlaying,
+      title: displayTitle,
+      artist: displayArtist,
+      isPlaying: actualPlaying, // 🚀 TRUTH FROM METAL
       volume: state.volume,
+      isShuffle: state.isShuffle,
+      loopMode: state.loopMode == ja.LoopMode.off
+          ? 0
+          : (state.loopMode == ja.LoopMode.all
+              ? 1
+              : 2), // 0: off, 1: all, 2: one (Explicit mapping for Web App)
       positionSeconds: state.currentPosition.toInt(),
       durationSeconds: state.totalDuration.toInt(),
-      artUrl: state.currentSong?.onlineArtUrl,
+      artUrl: artUrlToSend,
       filePath: state.currentSong?.filePath,
+      queue: queueData,
     );
-  }
-
-  // --- ANDROID NOTIFICATION MEDIA CONTROLS ---
-  void _connectAudioHandler() {
-    try {
-      // Hook up notification button callbacks to our methods
-      audioHandler.onPlay = () => _musicService.resume();
-      audioHandler.onPause = () => _musicService.pause();
-      audioHandler.onSkipToNext = () => playNext();
-      audioHandler.onSkipToPrevious = () => playPrevious();
-      audioHandler.onSeek = (position) => seek(position.inSeconds.toDouble());
-      debugPrint("✅ AudioHandler connected to PlayerNotifier");
-    } catch (e) {
-      debugPrint("⚠️ Failed to connect AudioHandler: $e");
-    }
-  }
-
-  Future<void> _updateNotificationMetadata(SongModel song) async {
-    if (!Platform.isAndroid && !Platform.isIOS && !Platform.isMacOS) return;
-
-    try {
-      // Update the notification with current song info
-      await audioHandler.setCurrentSong(
-        title: song.title,
-        artist: song.artist,
-        album: song.album,
-        duration: Duration(seconds: song.duration.toInt()),
-        artUri: song.onlineArtUrl != null && song.onlineArtUrl!.isNotEmpty
-            ? Uri.parse(song.onlineArtUrl!)
-            : null,
-      );
-    } catch (e) {
-      debugPrint("⚠️ Failed to update notification metadata: $e");
-    }
   }
 }
 

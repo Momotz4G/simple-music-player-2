@@ -522,7 +522,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                   Icon(Icons.qr_code_2_rounded,
                                       color: primaryColor, size: 20),
                                   const SizedBox(width: 12),
-                                  Text("Connect to Control",
+                                  Text("Listening Party",
                                       style: TextStyle(color: primaryColor)),
                                 ],
                               ),
@@ -893,7 +893,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Remote Control"),
+        title: const Text("Listening Party"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

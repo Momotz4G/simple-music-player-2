@@ -154,6 +154,8 @@ class QueueDrawer extends ConsumerWidget {
                               onTap: () => notifier.playPrioritySong(song),
                               isDraggable: true,
                               indexForDrag: index,
+                              onDismiss: () =>
+                                  notifier.removeUserQueueItem(index),
                             );
                           },
                         ),
@@ -198,7 +200,47 @@ class QueueDrawer extends ConsumerWidget {
                             );
                           },
                         ),
-                      ] else if (userQueue.isEmpty && currentSong == null) ...[
+                      ],
+
+                      // 4. RECOMMENDATIONS (Endless Queue)
+                      if (playerState.recommendationQueue.isNotEmpty) ...[
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: _buildSectionHeader(
+                                "RECOMMENDATIONS (${playerState.recommendationQueue.length})",
+                                Colors.purple[300],
+                                context),
+                          ),
+                        ),
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final song =
+                                  playerState.recommendationQueue[index];
+                              return _buildQueueTile(
+                                context,
+                                song,
+                                key: ValueKey(
+                                    'rec_${song.spotifyId ?? song.title}_$index'),
+                                number: index + 1,
+                                textColor: textColor,
+                                subTextColor: subTextColor!,
+                                accentColor: Colors.purple[300]!,
+                                onTap: () =>
+                                    notifier.playRecommendationSong(index),
+                                isDraggable: false,
+                              );
+                            },
+                            childCount: playerState.recommendationQueue.length,
+                          ),
+                        ),
+                      ],
+
+                      if (userQueue.isEmpty &&
+                          upNextFromLibrary.isEmpty &&
+                          playerState.recommendationQueue.isEmpty &&
+                          currentSong == null) ...[
                         const SliverToBoxAdapter(
                           child: Padding(
                             padding: EdgeInsets.all(40.0),
@@ -247,12 +289,14 @@ class QueueDrawer extends ConsumerWidget {
     VoidCallback? onTap,
     bool isDraggable = false,
     int? indexForDrag,
+    VoidCallback? onDismiss, // NEW
   }) {
     final bool isClickable = onTap != null;
 
     final tileContent = Container(
       height: 56, // Fixed Height for Optimization
       padding: const EdgeInsets.symmetric(horizontal: 20),
+      // ... (Keep existing BoxDecoration logic)
       decoration: isNowPlaying
           ? BoxDecoration(
               color: accentColor.withOpacity(0.1),
@@ -350,8 +394,9 @@ class QueueDrawer extends ConsumerWidget {
       ),
     );
 
-    return MouseRegion(
-      key: key,
+    final interactiveTile = MouseRegion(
+      key:
+          key, // Ensure key is on the top-level widget returned if not Dismissible
       cursor: isClickable ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: Material(
         color: Colors.transparent,
@@ -361,6 +406,23 @@ class QueueDrawer extends ConsumerWidget {
         ),
       ),
     );
+
+    if (onDismiss != null) {
+      return Dismissible(
+        key: key!, // Key is required for Dismissible
+        direction: DismissDirection.endToStart,
+        onDismissed: (_) => onDismiss(),
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
+          color: Colors.red.withOpacity(0.8),
+          child: const Icon(Icons.delete, color: Colors.white),
+        ),
+        child: interactiveTile,
+      );
+    }
+
+    return interactiveTile;
   }
 
   String _formatDuration(double seconds) {

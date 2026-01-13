@@ -5,6 +5,7 @@ import 'package:isar/isar.dart';
 import '../models/stat_model.dart';
 import '../models/song_model.dart';
 import '../data/schemas.dart';
+import '../services/debug_log_service.dart';
 import 'db_provider.dart';
 import 'settings_provider.dart';
 import '../services/metrics_service.dart';
@@ -23,6 +24,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
   }
 
   Future<void> _loadStats() async {
+    DebugLogService().info("📈 STATS: Loading stats from Isar...");
     final dbService = ref.read(dbServiceProvider);
     final isar = await dbService.db;
 
@@ -49,6 +51,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
     }
 
     state = StatsState(entries: loaded);
+    DebugLogService().info("📈 STATS: Loaded ${loaded.length} stat entries");
   }
 
   Future<void> _migrateFromPrefs(SharedPreferences prefs, Isar isar) async {
@@ -97,6 +100,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
 
   // --- LOGIC: ADD PLAY COUNT ---
   Future<void> logPlay(SongModel song) async {
+    DebugLogService().info("📈 STATS: logPlay called for: ${song.title}");
     final id = StatEntry.generateId(
         song.title.trim(), song.artist.trim(), song.album.trim());
 
@@ -170,6 +174,8 @@ class StatsNotifier extends StateNotifier<StatsState> {
   // --- LOGIC: ADD LISTENING TIME ---
   Future<void> logTime(SongModel song, int seconds) async {
     if (seconds <= 0) return;
+    /* DebugLogService()
+        .info("📈 STATS: logTime called - ${song.title}: +${seconds}s"); */
 
     final id = StatEntry.generateId(
         song.title.trim(), song.artist.trim(), song.album.trim());

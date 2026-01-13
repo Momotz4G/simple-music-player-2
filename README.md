@@ -27,6 +27,7 @@
 - **Audio Visualizer**: Watch your music come to life with real-time audio waveform visualization
 - **Sleep Timer**: Fall asleep to your favorite tunes with a customizable timer (hours, minutes, or songs)
 - **Playback Queue**: Persistent queue that remembers your playlist between sessions
+- **Remove Song in Queue**: Swipe left from a song in queue to remove it
 - **Multiple Audio Versions**: Choose between different versions of a song (original, acoustic, live, etc.)
 
 ### 🎤 **Lyrics & Metadata**
@@ -57,6 +58,7 @@
 - **Search**: Powerful search across your entire library
 - **Folder Import**: Import music from any folder on your computer
 - **Album/Artist Pages**: Detailed pages with all tracks, info, and actions
+- **Daily Mixes**: Auto-generated based on your listening and recommendations systems. You can add them to a playlist too.
 
 ### 🛠️ **Power User Tools**
 - **Discord Rich Presence**: Show what you're listening to on your Discord profile
@@ -64,7 +66,7 @@
 - **Taskbar Integration**: Control playback from Windows taskbar thumb buttons (SMTC)
 - **Mini Player**: Compact, always-on-top window for minimal distraction
 - **Full-Screen Mode**: Immersive full-screen player with Canvas video support
-- **Remote Control**: Control the player from your phone via QR code pairing (web-based)
+- **Listening Party**: Merged Connect to Control as Listening Party. Forget about passing your phone to others song requests. You can now share the QR code and let others search and add songs to your queue. You will be a party host!
 - **Admin Dashboard**: Hidden admin panel for managing users and viewing metrics
 
 ### ☁️ **Cloud Features**
@@ -109,6 +111,10 @@ Go to the [Releases](https://github.com/Momotz4G/simple-music-player-2/releases)
 ---
 
 ### 🤖 Android
+
+> **Minimum Requirement:** Android 7.0 (API Level 24) or higher.  
+> **Recommended:** Android 14 (API Level 34).
+
 1. Download the `.apk` file
 2. Enable "Install from unknown sources" in Settings
 3. Tap the APK to install

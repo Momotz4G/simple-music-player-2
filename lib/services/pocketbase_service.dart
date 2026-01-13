@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../env/env.dart';
+import 'debug_log_service.dart';
 
 class PocketBaseService {
   static final PocketBaseService _instance = PocketBaseService._internal();
@@ -335,9 +336,13 @@ class PocketBaseService {
     if (recordId == null) return;
 
     try {
+      DebugLogService().info(
+          "📡 PB: Updating Session $recordId with keys: ${data.keys.toList()}");
       await pb.collection('sessions').update(recordId, body: data);
+      DebugLogService().info("✅ PB: Update Success");
     } catch (e) {
-      debugPrint("⚠️ Session Update Error: $e");
+      DebugLogService().error("⚠️ PB: Update FAILED: $e");
+      // debugPrint("⚠️ Session Update Error: $e");
     }
   }
 
@@ -370,7 +375,7 @@ class PocketBaseService {
           final data = e.record?.data ?? {};
           // Ensure 'updated' is available
           data['updated'] = e.record?.updated;
-          debugPrint("📡 Pushing update to listener: $data");
+          // Data received, push to listener
           onUpdate(data);
         } else {
           debugPrint("📡 Event ignored (not update): ${e.action}");

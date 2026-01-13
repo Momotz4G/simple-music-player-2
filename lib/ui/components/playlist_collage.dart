@@ -101,7 +101,16 @@ class PlaylistCollage extends StatelessWidget {
   }
 
   Widget _buildTile(String path, String? url) {
+    // If no path but has URL, use network image directly
     if (path.isEmpty) {
+      if (url != null && url.isNotEmpty) {
+        return Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) =>
+              Container(color: const Color(0xFF1C1C1C)),
+        );
+      }
       return Container(color: const Color(0xFF1C1C1C));
     }
     // SmartArt handles the loading, caching, and display

@@ -96,6 +96,8 @@ class NotificationService {
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       playSound: true,
+      showProgress: false, // Explicitly disable progress
+      onlyAlertOnce: false, // Allow alert for completion
     );
 
     final NotificationDetails platformChannelSpecifics =
@@ -110,6 +112,14 @@ class NotificationService {
   }
 
   Future<void> cancel(int id) async {
-    await flutterLocalNotificationsPlugin.cancel(id);
+    if (Platform.isWindows || Platform.isLinux) return;
+    // Don't init here, just return if not initialized
+    if (!_isInitialized) return;
+
+    try {
+      await flutterLocalNotificationsPlugin.cancel(id);
+    } catch (e) {
+      print("Warning: Failed to cancel notification $id: $e");
+    }
   }
 }

@@ -13,7 +13,8 @@ enum NavigationType {
   artist,
   album,
   playlist,
-  track, // 🚀 ADDED TRACK
+  track,
+  dailyMix, // 🎵 Daily Mix detail page
 }
 
 class NavigationItem {

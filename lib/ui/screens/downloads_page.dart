@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:metadata_god/metadata_god.dart';
+import 'package:open_filex/open_filex.dart';
 
 import '../../models/song_model.dart';
 import '../../providers/player_provider.dart';
@@ -122,6 +123,42 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
     } else if (Platform.isLinux) {
       // Linux: Opens the directory
       await Process.run('xdg-open', [file.parent.path]);
+    } else if (Platform.isAndroid) {
+      // 🚀 Android: Open the parent folder using open_filex
+      try {
+        // open_filex can open directories on Android
+        final result = await _openFolderOnAndroid(file.parent.path);
+        if (!result && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Downloaded to: ${file.parent.path}"),
+              action: SnackBarAction(
+                label: "OK",
+                onPressed: () {},
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        print("Error opening folder on Android: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Folder: ${file.parent.path}")),
+          );
+        }
+      }
+    }
+  }
+
+  /// Opens a folder on Android using open_filex
+  Future<bool> _openFolderOnAndroid(String folderPath) async {
+    try {
+      final result = await OpenFilex.open(folderPath);
+      print("OpenFilex folder result: ${result.type} - ${result.message}");
+      return result.type == ResultType.done;
+    } catch (e) {
+      print("open_filex error: $e");
+      return false;
     }
   }
 

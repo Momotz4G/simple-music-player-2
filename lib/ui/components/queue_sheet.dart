@@ -19,6 +19,10 @@ class QueueSheet extends ConsumerWidget {
     final userQueue = playerState.userQueue;
     final playlist = playerState.playlist;
 
+    // DEBUG: Log recommendation queue status
+    print(
+        "🎨 QueueSheet build: recommendationQueue.length = ${playerState.recommendationQueue.length}");
+
     // FULL LIST GENERATION (Lazy Loaded via Slivers)
     List<SongModel> upNextFromLibrary = [];
 
@@ -160,17 +164,37 @@ class QueueSheet extends ConsumerWidget {
                         onReorder: notifier.reorderUserQueue,
                         itemBuilder: (context, index) {
                           final song = userQueue[index];
-                          return _buildQueueTile(
-                            context,
-                            song,
-                            key: ValueKey("queue_${song.filePath}_$index"),
-                            number: index + 1,
-                            textColor: textColor,
-                            subTextColor: subTextColor,
-                            accentColor: accentColor,
-                            onTap: () => notifier.playPrioritySong(song),
-                            isDraggable: true,
-                            indexForDrag: index,
+                          final uniqueKey =
+                              ValueKey("queue_${song.filePath}_$index");
+
+                          return Dismissible(
+                            key: uniqueKey,
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              color: Colors.redAccent,
+                              padding: const EdgeInsets.only(right: 20),
+                              child: const Icon(Icons.delete_outline,
+                                  color: Colors.white, size: 28),
+                            ),
+                            onDismissed: (_) {
+                              // Remove from queue
+                              notifier.removeUserQueueItem(index);
+                            },
+                            child: _buildQueueTile(
+                              context,
+                              song,
+                              // Key is now on Dismissible, but we pass it down if needed
+                              // (though mostly needed by the ReorderableList parent)
+                              // key: uniqueKey,
+                              number: index + 1,
+                              textColor: textColor,
+                              subTextColor: subTextColor,
+                              accentColor: accentColor,
+                              onTap: () => notifier.playPrioritySong(song),
+                              isDraggable: true,
+                              indexForDrag: index,
+                            ),
                           );
                         },
                       ),
@@ -213,7 +237,46 @@ class QueueSheet extends ConsumerWidget {
                           );
                         },
                       ),
-                    ] else if (userQueue.isEmpty && currentSong == null) ...[
+                    ],
+
+                    // 4. RECOMMENDATIONS (Endless Queue)
+                    if (playerState.recommendationQueue.isNotEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: _buildSectionHeader(
+                              "RECOMMENDATIONS (${playerState.recommendationQueue.length})",
+                              Colors.purple[300],
+                              context),
+                        ),
+                      ),
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final song = playerState.recommendationQueue[index];
+                            return _buildQueueTile(
+                              context,
+                              song,
+                              key: ValueKey(
+                                  'rec_${song.spotifyId ?? song.title}_$index'),
+                              number: index + 1,
+                              textColor: textColor,
+                              subTextColor: subTextColor,
+                              accentColor: Colors.purple[300]!,
+                              onTap: () =>
+                                  notifier.playRecommendationSong(index),
+                              isDraggable: false,
+                            );
+                          },
+                          childCount: playerState.recommendationQueue.length,
+                        ),
+                      ),
+                    ],
+
+                    if (userQueue.isEmpty &&
+                        upNextFromLibrary.isEmpty &&
+                        playerState.recommendationQueue.isEmpty &&
+                        currentSong == null) ...[
                       const SliverToBoxAdapter(
                         child: Padding(
                           padding: EdgeInsets.all(40.0),

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -120,6 +121,7 @@ class _SimpleSongTile extends ConsumerStatefulWidget {
 
 class _SimpleSongTileState extends ConsumerState<_SimpleSongTile> {
   bool _isHovering = false;
+  bool _isPressed = false; // For Long Press Highlight
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +129,9 @@ class _SimpleSongTileState extends ConsumerState<_SimpleSongTile> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleColor = isDark ? Colors.white : Colors.black;
     final subTitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
+    // Mobile check
+    final isMobile = Platform.isAndroid || Platform.isIOS;
 
     return SongContextMenuRegion(
       song: widget.song,
@@ -136,6 +141,7 @@ class _SimpleSongTileState extends ConsumerState<_SimpleSongTile> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ARTWORK AREA
             MouseRegion(
               cursor: SystemMouseCursors.click,
               onEnter: (_) => setState(() => _isHovering = true),
@@ -144,10 +150,25 @@ class _SimpleSongTileState extends ConsumerState<_SimpleSongTile> {
                 onTap: () {
                   notifier.playSong(widget.song, newQueue: widget.queue);
                 },
+                // LONG PRESS HIGHLIGHT LOGIC
+                onTapDown: (_) => setState(() => _isPressed = true),
+                onTapUp: (_) => setState(() => _isPressed = false),
+                onTapCancel: () => setState(() => _isPressed = false),
+                onLongPressStart: (details) {
+                  setState(() => _isPressed = true);
+                  if (isMobile) {
+                    SongContextMenuRegion.showSongMenu(
+                        context, details.globalPosition, ref, widget.song);
+                  }
+                },
+                onLongPressEnd: (_) => setState(() => _isPressed = false),
                 child: AnimatedScale(
-                  duration: const Duration(milliseconds: 200),
-                  scale: _isHovering ? 1.05 : 1.0,
-                  child: Container(
+                  duration: const Duration(milliseconds: 100),
+                  scale: _isPressed
+                      ? 0.95
+                      : (_isHovering ? 1.05 : 1.0), // Shrink on press
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: _isHovering
@@ -159,37 +180,84 @@ class _SimpleSongTileState extends ConsumerState<_SimpleSongTile> {
                               )
                             ]
                           : [],
+                      // Highlight Overlay Effect via ColorFilter/Decoration?
+                      // Instead we use a Stack with overlay container
                     ),
-                    child: SmartArt(
-                      path: widget.song.filePath,
-                      size: 160,
-                      borderRadius: 12,
-                      onlineArtUrl: widget.song.onlineArtUrl,
+                    child: Stack(
+                      children: [
+                        SmartArt(
+                          path: widget.song.filePath,
+                          size: 160,
+                          borderRadius: 12,
+                          onlineArtUrl: widget.song.onlineArtUrl,
+                        ),
+                        // PRESSED STATE OVERLAY
+                        if (_isPressed)
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              widget.song.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: titleColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              widget.song.artist,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: subTitleColor,
-                fontSize: 12,
-              ),
+
+            // TEXT AREA
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.song.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: titleColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.song.artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: subTitleColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // 3-DOTS BUTTON (Mobile Only)
+                if (isMobile)
+                  GestureDetector(
+                    onTapDown: (details) {
+                      SongContextMenuRegion.showSongMenu(
+                          context, details.globalPosition, ref, widget.song);
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 4.0),
+                      child: Icon(
+                        Icons.more_vert_rounded, // Use rounded for aesthetics
+                        size: 20,
+                        color: subTitleColor,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

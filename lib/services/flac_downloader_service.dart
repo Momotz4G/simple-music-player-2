@@ -5,7 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../env/env.dart';
-// import 'package:flutter_ffmpeg/flutter_ffmpeg.dart'; // 🚀 Mobile FFmpeg (Incompatible with AGP 8)
+import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
+import 'debug_log_service.dart';
 
 /// Service for downloading lossless FLAC audio from various streaming platforms.
 /// Based on SpotiFLAC implementation (https://github.com/afkarxyz/SpotiFLAC).
@@ -167,10 +169,14 @@ class FlacDownloaderService {
       const apiBase = 'https://api.deezmate.com/dl/';
       final url = '$apiBase$trackId';
 
+      final logger = DebugLogService();
+      logger.info('DEEZER: Requesting DeezMate API for $trackId');
+
       final response = await _client.get(Uri.parse(url));
 
       if (response.statusCode != 200) {
         debugPrint('❌ DeezMate API error: ${response.statusCode}');
+        logger.warning('DEEZER: API Error ${response.statusCode}');
         return null;
       }
 
@@ -205,6 +211,9 @@ class FlacDownloaderService {
       return null;
     }
 
+    final logger = DebugLogService();
+    logger.info("DEEZER: Getting info for track $trackId");
+
     // Get track info
     final track = await getDeezerTrack(trackId);
     if (track == null) {
@@ -216,8 +225,10 @@ class FlacDownloaderService {
     final flacUrl = await getDeezerFlacUrl(trackId);
     if (flacUrl == null) {
       debugPrint('❌ Could not get FLAC URL');
+      logger.warning("DEEZER: Could not get FLAC URL for $trackId");
       return null;
     }
+    logger.info("DEEZER: Got FLAC URL, starting download...");
 
     // Download the file
     final file = await _downloadFile(
@@ -249,21 +260,45 @@ class FlacDownloaderService {
     return null;
   }
 
-  /// Get available Tidal API servers from SpotiFLAC repo
   Future<List<String>> _getTidalApiServers() async {
+    final logger = DebugLogService();
+    // Hardcoded fallback servers (Decoded from SpotiFLAC Go source)
+    final fallbackServers = [
+      'https://vogel.qqdl.site',
+      'https://maus.qqdl.site',
+      'https://hund.qqdl.site',
+      'https://katze.qqdl.site',
+      'https://wolf.qqdl.site',
+      'https://tidal.kinoplus.online',
+      'https://tidal-api.binimum.org',
+      'https://triton.squid.wtf',
+    ];
+
     try {
-      // This fetches the list of available API endpoints
+      // 🚀 FIX: Try 'master' branch instead of 'main'
       final url =
-          'https://raw.githubusercontent.com/afkarxyz/SpotiFLAC/refs/heads/main/tidal.json';
+          'https://raw.githubusercontent.com/afkarxyz/SpotiFLAC/master/tidal.json';
+      logger.info('TIDAL: Fetching servers from GitHub (master)...');
       final response = await _client.get(Uri.parse(url));
 
-      if (response.statusCode != 200) return [];
+      if (response.statusCode != 200) {
+        logger.warning(
+            'TIDAL: GitHub returned ${response.statusCode}. Using fallbacks.');
+        return fallbackServers;
+      }
 
       final List<dynamic> servers = json.decode(response.body);
-      return servers.map((s) => 'https://$s').toList().cast<String>();
+      logger.info('TIDAL: Parsed ${servers.length} servers from GitHub');
+      // combine with fallbacks just in case
+      final allServers = <String>{
+        ...servers.map((s) => 'https://$s'),
+        ...fallbackServers
+      }.toList();
+      return allServers;
     } catch (e) {
       debugPrint('❌ Error getting Tidal API servers: $e');
-      return [];
+      logger.error('TIDAL: Error fetching servers: $e. Using fallbacks.');
+      return fallbackServers;
     }
   }
 
@@ -398,19 +433,26 @@ class FlacDownloaderService {
     String? albumName,
     Function(double)? onProgress,
   }) async {
+    final logger = DebugLogService();
+    logger.info("FLAC: downloadFlac called for $trackName");
+
     debugPrint('🎵 Starting FLAC download for Spotify ID: $spotifyTrackId');
 
     // Get streaming URLs from song.link
     final urls = await getStreamingUrls(spotifyTrackId);
     if (urls == null) {
+      logger.warning("FLAC: No streaming URLs found");
       return FlacDownloadResult.failed('Could not find track on any platform');
     }
+    logger.info(
+        "FLAC: URLs found - Tidal: ${urls.tidalUrl != null}, Deezer: ${urls.deezerUrl != null}");
 
     File? file;
 
     // === STEP 1: Try Tidal HI_RES_LOSSLESS ===
     if (urls.tidalUrl != null) {
       debugPrint('🎧 Step 1: Trying Tidal HI_RES_LOSSLESS...');
+      logger.info('FLAC: Step 1 - Trying Tidal HI_RES_LOSSLESS...');
       file = await _downloadFromTidalWithQuality(
         tidalUrl: urls.tidalUrl!,
         outputPath: outputPath,
@@ -418,13 +460,16 @@ class FlacDownloaderService {
         onProgress: onProgress,
       );
       if (file != null) {
+        logger.success('FLAC: Tidal Hi-Res success');
         return FlacDownloadResult.success(file, 'tidal-hires');
       }
+      logger.warning('FLAC: Tidal Hi-Res failed');
     }
 
     // === STEP 2: Try Deezer (has own quality handling) ===
     if (urls.deezerUrl != null) {
       debugPrint('🎧 Step 2: Trying Deezer FLAC...');
+      logger.info('FLAC: Step 2 - Trying Deezer FLAC...');
       file = await downloadFromDeezer(
         deezerUrl: urls.deezerUrl!,
         outputPath: outputPath,
@@ -434,8 +479,10 @@ class FlacDownloaderService {
         onProgress: onProgress,
       );
       if (file != null) {
+        logger.success('FLAC: Deezer download success');
         return FlacDownloadResult.success(file, 'deezer');
       }
+      logger.warning('FLAC: Deezer failed');
     }
 
     // === STEP 3: Try Tidal LOSSLESS (CD quality fallback) ===
@@ -474,17 +521,27 @@ class FlacDownloaderService {
     final trackId = _extractTidalTrackId(tidalUrl);
     if (trackId == null) return null;
 
+    final logger = DebugLogService();
     final servers = await _getTidalApiServers();
-    if (servers.isEmpty) return null;
+    if (servers.isEmpty) {
+      logger.error("TIDAL: No API servers available");
+      return null;
+    }
+    logger.info("TIDAL: Found ${servers.length} servers for $quality");
 
     for (final server in servers) {
       try {
         final apiUrl = '$server/track?id=$trackId&quality=$quality';
+        logger.info("TIDAL: Requesting $apiUrl");
         final response = await _client
             .get(Uri.parse(apiUrl))
-            .timeout(const Duration(seconds: 30));
+            .timeout(const Duration(seconds: 10)); // Reduced timeout
 
-        if (response.statusCode != 200) continue;
+        if (response.statusCode != 200) {
+          logger
+              .warning("TIDAL: Server $server returned ${response.statusCode}");
+          continue;
+        }
 
         final body = response.body.trim();
 
@@ -562,15 +619,33 @@ class FlacDownloaderService {
         if (downloadUrl == null) continue;
 
         debugPrint('📥 Downloading from Tidal at $quality...');
-        final file = await _downloadFile(
+
+        // Download to temp file first, then convert to ensure proper FLAC
+        final tempPath = outputPath.replaceAll('.flac', '_temp_direct.m4a');
+        final tempFile = await _downloadFile(
           url: downloadUrl,
-          outputPath: outputPath,
+          outputPath: tempPath,
           onProgress: onProgress,
         );
 
-        if (file != null) {
-          debugPrint('✓ Downloaded from Tidal ($quality): ${file.path}');
-          return file;
+        if (tempFile != null) {
+          debugPrint('📥 Direct download complete, converting to FLAC...');
+          // Apply same FFmpeg conversion as DASH downloads
+          final convertedFile = await _convertToFlac(
+            inputPath: tempPath,
+            outputPath: outputPath,
+          );
+
+          // Cleanup temp file
+          try {
+            await tempFile.delete();
+          } catch (_) {}
+
+          if (convertedFile != null) {
+            debugPrint(
+                '✓ Downloaded and converted from Tidal ($quality): ${convertedFile.path}');
+            return convertedFile;
+          }
         }
       } catch (e) {
         debugPrint('⚠️ Tidal $server ($quality) failed: $e');
@@ -740,6 +815,10 @@ class FlacDownloaderService {
       await sink.flush();
       await sink.close();
 
+      final logger = DebugLogService(); // Re-get logger
+      logger.info(
+          "DASH: Segments downloaded. Size: ${await tempFile.length()} bytes");
+
       final tempSize = await tempFile.length();
       debugPrint(
           '📁 Temp Hi-Res: ${(tempSize / 1024 / 1024).toStringAsFixed(2)} MB');
@@ -748,13 +827,70 @@ class FlacDownloaderService {
       debugPrint('🔄 Converting to FLAC container with FFmpeg...');
 
       // 🚀 Platform-aware FFmpeg conversion
+      // 🚀 Platform-aware FFmpeg conversion
       bool conversionSuccess = false;
 
       if (Platform.isAndroid || Platform.isIOS) {
-        // Mobile FFmpeg disabled - both packages incompatible
-        // flutter_ffmpeg: requires AGP namespace (package too old)
-        // ffmpeg_kit: Maven dependency issues (package discontinued)
-        debugPrint('📱 Mobile FFmpeg unavailable - using raw segments');
+        debugPrint('📱 Mobile FFmpeg - processing...');
+        logger.info(
+            'Starting Mobile FFmpeg conversion: $tempPath -> $outputPath');
+
+        // Execute FFmpeg command using ffmpeg_kit_flutter_new_audio
+        // -y : Overwrite output files without asking
+        // -i : Input file
+        // -c:a copy : Copy audio stream (fastest), fallback to re-encode if fails
+
+        final start = DateTime.now();
+        try {
+          logger.info('Executing FFmpeg command (copy)...');
+          final session = await FFmpegKit.execute(
+              '-y -i "$tempPath" -c:a copy "$outputPath"');
+          final returnCode = await session.getReturnCode();
+          final logs = await session.getAllLogsAsString();
+          final duration = DateTime.now().difference(start).inMilliseconds;
+
+          logger.info('FFmpeg finished in ${duration}ms');
+          logger.info('Return Code: $returnCode');
+
+          if (logs != null && logs.isNotEmpty) {
+            // Log last 500 chars
+            logger.info(
+                'FFmpeg Logs: ${logs.length > 500 ? logs.substring(logs.length - 500) : logs}');
+          }
+
+          if (ReturnCode.isSuccess(returnCode)) {
+            conversionSuccess = true;
+            debugPrint('✓ Mobile FFmpeg conversion successful');
+            logger.success('FFmpeg conversion successful');
+          } else {
+            debugPrint('⚠️ Mobile FFmpeg failed: $logs');
+            logger.warning('FFmpeg copy failed, retrying with re-encode...');
+
+            // Fallback: Try re-encoding if copy failed (sometimes containers disagree)
+            debugPrint('🔄 Retrying with re-encode...');
+            final retryStart = DateTime.now();
+            final retrySession =
+                await FFmpegKit.execute('-y -i "$tempPath" "$outputPath"');
+            final retryCode = await retrySession.getReturnCode();
+            final retryLogs = await retrySession.getAllLogsAsString();
+            final retryDuration =
+                DateTime.now().difference(retryStart).inMilliseconds;
+
+            logger.info('Retry finished in ${retryDuration}ms');
+
+            if (ReturnCode.isSuccess(retryCode)) {
+              conversionSuccess = true;
+              debugPrint('✓ Mobile FFmpeg re-encode successful');
+              logger.success('FFmpeg re-encode successful');
+            } else {
+              debugPrint('❌ Mobile FFmpeg re-encode failed: $retryLogs');
+              logger.error('FFmpeg re-encode failed: $retryLogs');
+            }
+          }
+        } catch (e) {
+          logger.error('FFmpeg Exception: $e');
+          debugPrint('❌ FFmpeg Exception: $e');
+        }
       } else {
         // Use system FFmpeg for desktop
         debugPrint('🖥️ Using system FFmpeg for desktop conversion...');
@@ -842,6 +978,73 @@ class FlacDownloaderService {
       debugPrint('⚠️ Could not find FFmpeg: $e');
       return null;
     }
+  }
+
+  /// Convert audio file to FLAC using FFmpeg (mobile or desktop)
+  Future<File?> _convertToFlac({
+    required String inputPath,
+    required String outputPath,
+  }) async {
+    final logger = DebugLogService();
+    bool conversionSuccess = false;
+
+    if (Platform.isAndroid || Platform.isIOS) {
+      // Mobile FFmpeg
+      logger.info('Converting to FLAC: $inputPath -> $outputPath');
+      try {
+        // Try copy first (fastest)
+        var session = await FFmpegKit.execute(
+            '-y -i "$inputPath" -c:a copy "$outputPath"');
+        var returnCode = await session.getReturnCode();
+
+        if (ReturnCode.isSuccess(returnCode)) {
+          conversionSuccess = true;
+          logger.success('FFmpeg copy conversion successful');
+        } else {
+          // Fallback to re-encode
+          logger.warning('FFmpeg copy failed, trying re-encode...');
+          session = await FFmpegKit.execute(
+              '-y -i "$inputPath" -c:a flac "$outputPath"');
+          returnCode = await session.getReturnCode();
+
+          if (ReturnCode.isSuccess(returnCode)) {
+            conversionSuccess = true;
+            logger.success('FFmpeg re-encode successful');
+          } else {
+            final logs = await session.getAllLogsAsString();
+            logger.error('FFmpeg re-encode failed: $logs');
+          }
+        }
+      } catch (e) {
+        logger.error('FFmpeg Exception: $e');
+      }
+    } else {
+      // Desktop FFmpeg
+      final ffmpegPath = await _getFFmpegPath();
+      if (ffmpegPath != null) {
+        try {
+          final result = await Process.run(
+            ffmpegPath,
+            ['-y', '-i', inputPath, '-c:a', 'copy', outputPath],
+            runInShell: true,
+          );
+
+          if (result.exitCode == 0 && await File(outputPath).exists()) {
+            conversionSuccess = true;
+            debugPrint('✓ Desktop FFmpeg conversion successful');
+          } else {
+            debugPrint('⚠️ Desktop FFmpeg conversion failed: ${result.stderr}');
+          }
+        } catch (e) {
+          debugPrint('⚠️ Desktop FFmpeg error: $e');
+        }
+      }
+    }
+
+    if (conversionSuccess && await File(outputPath).exists()) {
+      return File(outputPath);
+    }
+    return null;
   }
 
   /// Low-level file download with progress

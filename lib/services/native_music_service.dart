@@ -1,21 +1,241 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:just_audio/just_audio.dart';
+import 'package:audio_session/audio_session.dart'; // 🚀 IMPORT
 import 'package:flutter/foundation.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'debug_log_service.dart';
+import 'dart:isolate'; // 🚀 IMPORT ISOLATE
+import 'dart:ui'; // 🚀 IMPORT UI for IsolateNameServer
+import 'package:flutter/widgets.dart'; // 🚀 For WidgetsBinding
+
+import 'package:audio_service/audio_service.dart'; // 🚀 IMPORT
+import 'audio_handler.dart'; // 🚀 IMPORT
+import 'package:metadata_god/metadata_god.dart';
 import '../models/song_model.dart';
+// Env not needed locally
 
 class NativeMusicService {
   // Singleton pattern - ensures same player instance everywhere
   static final NativeMusicService _instance = NativeMusicService._internal();
   factory NativeMusicService() => _instance;
-  NativeMusicService._internal();
+  static int _instanceCount = 0;
+  bool _isZombie = true; // Default to Zombie until we are RESUMED
+  final ReceivePort _mutexPort = ReceivePort();
+  final String _mutexName = 'simple_music_player_audio_mutex';
+  bool _hasClaimedMutex = false;
+
+  NativeMusicService._internal() {
+    _instanceCount++;
+    DebugLogService().info(
+        "NativeMusicService Created. Count=$_instanceCount Hash=${hashCode} PID=${pid} Isolate=${Isolate.current.debugName} InitialState=ZOMBIE");
+
+    // 🚀 INITIALIZE AUDIO HANDLER (Mobile Only)
+    if (Platform.isAndroid || Platform.isIOS) {
+      _initAudioHandler();
+    }
+
+    // 🚀 LIFECYCLE MUTEX: Only claim the throne when we are VISIBLE (Resumed)
+    // This prevents background ghosts from stealing the audio focus.
+
+    // 1. Register Observer
+    final observer = _NativeLifecycleObserver(this);
+    WidgetsBinding.instance.addObserver(observer);
+
+    // 2. Check initial state (in case we are already resumed)
+    if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+      _tryClaimMutex();
+    }
+  }
+
+  void _tryClaimMutex() {
+    if (_hasClaimedMutex) return; // Already King
+
+    DebugLogService().info(
+        "NativeMusicService: App RESUMED. Claiming Mutex/Audio Throne...");
+
+    // Kill existing holder
+    final existingPort = IsolateNameServer.lookupPortByName(_mutexName);
+    if (existingPort != null) {
+      DebugLogService().info(
+          "NativeMusicService: Found existing instance. Sending DIE command.");
+      existingPort.send('DIE');
+      IsolateNameServer.removePortNameMapping(_mutexName);
+    }
+
+    // Register my port
+    IsolateNameServer.registerPortWithName(_mutexPort.sendPort, _mutexName);
+
+    // Enable Audio
+    _isZombie = false;
+    _hasClaimedMutex = true;
+    DebugLogService()
+        .info("NativeMusicService: Mutex Claimed. I am the AUDIO MASTER.");
+
+    // Listen for usurpation
+    _mutexPort.listen((message) {
+      if (message == 'DIE') {
+        DebugLogService().error(
+            "NativeMusicService: Received DIE command! I have been replaced.");
+        _becomeZombie();
+      }
+    });
+
+    _initSession();
+  }
+
+  void _becomeZombie() {
+    _isZombie = true;
+    _hasClaimedMutex = false;
+    _player.stop();
+    DebugLogService().info("NativeMusicService: Downgraded to ZOMBIE.");
+  }
+
+  Future<void> _initSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.music());
+    // Ensure proper Android attributes
+    await _player.setAndroidAudioAttributes(const AndroidAudioAttributes(
+      contentType: AndroidAudioContentType.music,
+      usage: AndroidAudioUsage.media,
+    ));
+  }
+
+  // Side-Car Handler
+  MusicHandler? _audioHandler;
+  MusicHandler? get audioHandler => _audioHandler;
+  final Completer<void> _audioHandlerReady = Completer<void>();
+
+  Future<void> _initAudioHandler() async {
+    try {
+      _audioHandler = await AudioService.init(
+        builder: () => MusicHandler(_player),
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'com.simplemusicplayer.channel.audio',
+          androidNotificationChannelName: 'Music Playback',
+          androidNotificationOngoing: false,
+          androidStopForegroundOnPause: true,
+        ),
+      );
+      // Register pending callbacks if any
+      if (_onNext != null) _audioHandler!.onSkipNext = _onNext;
+      if (_onPrev != null) _audioHandler!.onSkipPrevious = _onPrev;
+
+      DebugLogService().info("NativeMusicService: AudioHandler Initialized");
+      _audioHandlerReady.complete();
+    } catch (e) {
+      DebugLogService()
+          .error("NativeMusicService: Failed to init AudioHandler: $e");
+      _audioHandlerReady.complete(); // Complete anyway to unblock waiters
+    }
+  }
+
+  // Callbacks
+  VoidCallback? _onNext;
+  VoidCallback? _onPrev;
+
+  void setNotificationCallbacks({VoidCallback? onNext, VoidCallback? onPrev}) {
+    _onNext = onNext;
+    _onPrev = onPrev;
+    if (_audioHandler != null) {
+      _audioHandler!.onSkipNext = onNext;
+      _audioHandler!.onSkipPrevious = onPrev;
+    }
+  }
+
+// ... (skipping unchanged parts)
+
+  Future<void> resume() async {
+    if (_isZombie) return;
+    final positionBefore = _player.position;
+    // final sourceBefore = _player.sequenceState?.currentSource?.tag;
+    DebugLogService().info(
+        "[Native] resume() called. ServiceHash=${this.hashCode}, PlayerHash=${_player.hashCode}, Pos=${positionBefore.inSeconds}s");
+
+    // 3. PLAY.
+    // This eliminates the "Zombie Buffer" issue where Android plays from 0:00 briefly.
+    if (Platform.isAndroid) {
+      await _player.stop();
+      await _player.seek(positionBefore);
+    }
+
+    // 🚀 NON-BLOCKING: Do not await play()!
+    // If we await, it waits for the song to FINISH before returning.
+    _player.play();
+    final positionAfter = _player.position;
+    DebugLogService()
+        .info("[Native] resume() DONE. Pos=${positionAfter.inSeconds}s");
+  }
 
   final AudioPlayer _player = AudioPlayer();
   AudioPlayer get player => _player;
 
   Future<void> load(SongModel song) async {
+    // 🚀 ALLOW LOAD IN ZOMBIE STATE
+    // We must allow the player to prepare the source even if we aren't the primary audio focus yet.
+    // This allows the UI to show the correct duration and be ready to play on user input.
+    /*
+    if (_isZombie) {
+      DebugLogService().info("[Native] load() BLOCKED (Zombie)");
+      return;
+    }
+    */
     try {
+      // 🚀 UPDATE METADATA (Mobile Only) - CALL BEFORE LOADING
+      // This ensures title/artist updates BEFORE the player fires 'buffering' events.
+      if (Platform.isAndroid || Platform.isIOS) {
+        await _updateAudioServiceMetadata(song);
+      }
+      DebugLogService().info(
+          "[Native] load() called. ServiceHash=${this.hashCode}, PlayerHash=${_player.hashCode}");
+      DebugLogService().info("[Native] load() called for: ${song.title}");
       debugPrint("🎵 Service Pre-Loading: ${song.title}");
       debugPrint("🎵 File Path: ${song.filePath}");
+
+      // 🚀 RELOAD GUARD: Prevent re-initializing the same song (Fixes 0:00 reset and potentially ghost audio)
+      final currentSource = _player.sequenceState?.currentSource;
+      if (currentSource != null) {
+        final currentTag = currentSource.tag as SongModel?;
+        if (currentTag == song) {
+          DebugLogService().info(
+              "[Native] load() SKIPPED - Song already loaded: ${song.title}");
+          return;
+        }
+      }
+      if (song.filePath == "cloud_stream") {
+        debugPrint(
+            "☁️ Pre-Resolving Cloud Stream: ${song.title} - ${song.artist}");
+
+        try {
+          final yt = YoutubeExplode();
+          final query = "${song.title} ${song.artist} audio";
+          final search = await yt.search.search(query);
+
+          if (search.isNotEmpty) {
+            final video = search.first;
+            debugPrint("✅ Found Video (Load): ${video.title} (${video.id})");
+
+            final manifest =
+                await yt.videos.streamsClient.getManifest(video.id);
+            final audioInfo = manifest.audioOnly.withHighestBitrate();
+
+            await _player.stop();
+            await _player.setAudioSource(
+              AudioSource.uri(
+                audioInfo.url,
+                tag: song,
+              ),
+            );
+            debugPrint("🎵 Pre-Load Cloud Stream Success");
+            yt.close();
+            return;
+          }
+          yt.close();
+        } catch (e) {
+          debugPrint("❌ Cloud Stream Pre-Load Error: $e");
+        }
+        return;
+      }
 
       // Check if file exists
       final file = File(song.filePath);
@@ -44,12 +264,236 @@ class NativeMusicService {
     }
   }
 
-  Future<void> play(SongModel song) async {
+  // Cache for extracted album art to avoid re-extracting every time
+  final Map<String, Uri> _cachedArtUris = {};
+
+  Future<void> _updateAudioServiceMetadata(SongModel song) async {
+    // Wait for AudioHandler to be ready before setting metadata
+    await _audioHandlerReady.future;
+
+    if (_audioHandler == null) return;
+
+    // === FALLBACK METADATA ===
+    // Ensure notification always shows something meaningful
+    final displayTitle =
+        (song.title.isNotEmpty && song.title != "Unknown Title")
+            ? song.title
+            : _extractFilename(song.filePath);
+    final displayArtist =
+        (song.artist.isNotEmpty && song.artist != "Unknown Artist")
+            ? song.artist
+            : "Unknown Artist";
+    final displayAlbum =
+        (song.album.isNotEmpty && song.album != "Unknown Album")
+            ? song.album
+            : "Unknown Album";
+
+    // === ARTWORK RESOLUTION ===
+    Uri? artUri;
+
+    // Priority 1: Online art URL (from Spotify/streaming sources)
+    if (song.onlineArtUrl != null && song.onlineArtUrl!.isNotEmpty) {
+      artUri = Uri.parse(song.onlineArtUrl!);
+      debugPrint(
+          "🎵 [Notification] Using online art URL: ${song.onlineArtUrl}");
+    }
+    // Priority 2: Embedded album art bytes already in memory
+    else if (song.albumArtBytes != null && song.albumArtBytes!.isNotEmpty) {
+      artUri = await _getOrCacheEmbeddedArt(song);
+    }
+    // Priority 3: Extract embedded art from audio file (for library/downloaded songs)
+    else if (song.filePath != "cloud_stream") {
+      artUri = await _extractArtFromFile(song.filePath);
+    }
+    // Priority 4: No art - Android will use app icon as fallback
+
+    final item = MediaItem(
+      id: song.filePath,
+      album: displayAlbum,
+      title: displayTitle,
+      artist: displayArtist,
+      duration: Duration(seconds: song.duration.toInt()),
+      artUri: artUri,
+    );
+
+    _audioHandler!.mediaItem.add(item);
+    debugPrint(
+        "🎵 [Notification] Metadata updated: $displayTitle - $displayArtist (Art: ${artUri != null ? 'Yes' : 'App Icon'})");
+  }
+
+  /// Extract filename from path as fallback title
+  String _extractFilename(String filePath) {
+    if (filePath == "cloud_stream") return "Streaming...";
     try {
+      final file = File(filePath);
+      final name = file.uri.pathSegments.last;
+      // Remove extension
+      final dotIndex = name.lastIndexOf('.');
+      return dotIndex > 0 ? name.substring(0, dotIndex) : name;
+    } catch (e) {
+      return "Unknown Title";
+    }
+  }
+
+  /// Get cached art URI or extract embedded art to temp file
+  Future<Uri?> _getOrCacheEmbeddedArt(SongModel song) async {
+    // Use filePath as cache key
+    final cacheKey = song.filePath;
+
+    // Return cached URI if available
+    if (_cachedArtUris.containsKey(cacheKey)) {
+      final cachedUri = _cachedArtUris[cacheKey]!;
+      // Verify file still exists
+      if (await File(cachedUri.toFilePath()).exists()) {
+        debugPrint("🎵 [Notification] Using cached embedded art");
+        return cachedUri;
+      } else {
+        _cachedArtUris.remove(cacheKey);
+      }
+    }
+
+    // Extract and save to temp file
+    try {
+      final tempDir = Directory.systemTemp;
+      final artFileName = 'album_art_${song.filePath.hashCode}.jpg';
+      final artFile = File('${tempDir.path}/$artFileName');
+
+      await artFile.writeAsBytes(song.albumArtBytes!);
+      final artUri = artFile.uri;
+
+      // Cache for future use
+      _cachedArtUris[cacheKey] = artUri;
+
+      debugPrint(
+          "🎵 [Notification] Extracted embedded art to: ${artFile.path}");
+      return artUri;
+    } catch (e) {
+      debugPrint("⚠️ [Notification] Failed to extract embedded art: $e");
+      return null;
+    }
+  }
+
+  /// Extract album art directly from audio file (for library songs without preloaded bytes)
+  Future<Uri?> _extractArtFromFile(String filePath) async {
+    // Check cache first
+    if (_cachedArtUris.containsKey(filePath)) {
+      final cachedUri = _cachedArtUris[filePath]!;
+      if (await File(cachedUri.toFilePath()).exists()) {
+        debugPrint("🎵 [Notification] Using cached file art");
+        return cachedUri;
+      } else {
+        _cachedArtUris.remove(filePath);
+      }
+    }
+
+    // Try to extract from file
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        debugPrint("⚠️ [Notification] File doesn't exist: $filePath");
+        return null;
+      }
+
+      final metadata = await MetadataGod.readMetadata(file: filePath);
+      final artBytes = metadata.picture?.data;
+
+      if (artBytes == null || artBytes.isEmpty) {
+        debugPrint("🎵 [Notification] No embedded art in file: $filePath");
+        return null;
+      }
+
+      // Save to temp file
+      final tempDir = Directory.systemTemp;
+      final artFileName = 'album_art_${filePath.hashCode}.jpg';
+      final artFile = File('${tempDir.path}/$artFileName');
+
+      await artFile.writeAsBytes(artBytes);
+      final artUri = artFile.uri;
+
+      // Cache for future use
+      _cachedArtUris[filePath] = artUri;
+
+      debugPrint(
+          "🎵 [Notification] Extracted art from file to: ${artFile.path}");
+      return artUri;
+    } catch (e) {
+      debugPrint("⚠️ [Notification] Failed to extract art from file: $e");
+      return null;
+    }
+  }
+
+  Future<bool> play(SongModel song) async {
+    if (_isZombie) {
+      DebugLogService().info("[Native] play() BLOCKED (Zombie)");
+      return false;
+    }
+    try {
+      DebugLogService().info(
+          "[Native] play() called. ServiceHash=${this.hashCode}, PlayerHash=${_player.hashCode}");
+      DebugLogService().info("[Native] play() called for: ${song.title}");
       debugPrint("🎵 Service Loading: ${song.title}");
       debugPrint("🎵 File Path: ${song.filePath}");
 
+      // 🚀 UPDATE METADATA (Mobile Only) - Also update on play(), not just load()
+      if (Platform.isAndroid || Platform.isIOS) {
+        await _updateAudioServiceMetadata(song);
+      }
+
+      // STOP previous playback immediately (Fixes Ghost Song)
+      await _player.stop();
+
       // 1. Check if file exists first
+      // 1. CLOUD STREAM HANDLING (Party Mode)
+      if (song.filePath == "cloud_stream") {
+        debugPrint("☁️ Resolving Cloud Stream: ${song.title} - ${song.artist}");
+
+        try {
+          final yt = YoutubeExplode();
+          // Sanitize query to remove newlines or weird chars
+          final cleanTitle = song.title.replaceAll(RegExp(r'[\n\r]'), ' ');
+          final cleanArtist = song.artist.replaceAll(RegExp(r'[\n\r]'), ' ');
+          final query = "$cleanTitle $cleanArtist audio";
+
+          final search = await yt.search.search(query);
+
+          if (search.isNotEmpty) {
+            final video = search.first;
+            debugPrint("✅ Found Video: ${video.title} (${video.id})");
+
+            final manifest =
+                await yt.videos.streamsClient.getManifest(video.id);
+            final audioInfo = manifest.audioOnly.withHighestBitrate();
+
+            debugPrint("🎵 Stream URL: ${audioInfo.url}");
+
+            await _player.stop();
+            await _player.setAudioSource(
+              AudioSource.uri(
+                audioInfo.url,
+                tag: song,
+              ),
+            );
+            // 🚀 NON-BLOCKING
+            _player.play();
+            yt.close();
+            return true; // EXIT after starting stream
+          } else {
+            debugPrint("❌ No video found for cloud stream");
+          }
+          yt.close();
+        } catch (e) {
+          debugPrint("❌ Cloud Stream Error: $e");
+          // Clear source so we don't hold onto the previous song
+          try {
+            await _player
+                .setAudioSource(ConcatenatingAudioSource(children: []));
+          } catch (_) {}
+          return false;
+        }
+        return false; // Abort if cloud stream fails
+      }
+
+      // 2. FILE HANDLING (Original)
       final file = File(song.filePath);
       final exists = await file.exists();
       debugPrint("🎵 File exists: $exists");
@@ -70,7 +514,7 @@ class NativeMusicService {
         } catch (e) {
           debugPrint("❌ Error listing parent: $e");
         }
-        return;
+        return false;
       }
 
       final fileSize = await file.length();
@@ -91,20 +535,30 @@ class NativeMusicService {
       );
       debugPrint("🎵 Audio source set successfully");
 
-      // 4. Force Play
-      await _player.play();
+      // 4. Force Play (Non-Blocking)
+      _player.play();
       debugPrint("🎵 Play command sent");
+      return true;
     } catch (e, stackTrace) {
       debugPrint("❌ Service Error: $e");
       debugPrint("❌ Stack trace: $stackTrace");
+      return false;
     }
   }
 
-  Future<void> pause() async => await _player.pause();
-  Future<void> resume() async => await _player.play();
+  Future<void> pause() async {
+    await _player.pause();
+  }
 
-  Future<void> seek(double seconds) async =>
-      await _player.seek(Duration(seconds: seconds.toInt()));
+  Future<void> stop() async {
+    DebugLogService().info("[Native] stop() called");
+    await _player.stop();
+  }
+
+  Future<void> seek(double position) async {
+    // 🚀 ALLOW SEEK (Initial position restore)
+    await _player.seek(Duration(seconds: position.round()));
+  }
 
   Future<void> setVolume(double volume) async {
     await _player.setVolume(volume);
@@ -116,5 +570,23 @@ class NativeMusicService {
 
   void dispose() {
     _player.dispose();
+  }
+}
+
+class _NativeLifecycleObserver extends WidgetsBindingObserver {
+  final NativeMusicService _service;
+  _NativeLifecycleObserver(this._service);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _service._tryClaimMutex();
+    } else if (state == AppLifecycleState.detached) {
+      // App is being killed - full cleanup
+      debugPrint("🎵 Lifecycle: App DETACHED - Full Cleanup");
+      _service._player.stop();
+      _service._player.dispose();
+      _service._audioHandler?.stop();
+    }
   }
 }

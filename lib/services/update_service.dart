@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:open_filex/open_filex.dart';
 import '../models/download_progress.dart';
 
 class UpdateService {
@@ -173,6 +175,11 @@ class UpdateService {
         final totalBytes = response.contentLength ?? 0;
         int receivedBytes = 0;
 
+        // 🚀 SPEED CALCULATION
+        DateTime lastSpeedUpdate = DateTime.now();
+        int lastReceivedBytes = 0;
+        double currentSpeedMBps = 0;
+
         final sink = file.openWrite();
         bool isFinished = false;
 
@@ -188,6 +195,18 @@ class UpdateService {
               final receivedMB = receivedBytes / (1024 * 1024);
               final totalMB = totalBytes / (1024 * 1024);
 
+              // 🚀 Calculate speed every 500ms to smooth out fluctuations
+              final now = DateTime.now();
+              final elapsed = now.difference(lastSpeedUpdate).inMilliseconds;
+              if (elapsed >= 500) {
+                final bytesInPeriod = receivedBytes - lastReceivedBytes;
+                final secondsElapsed = elapsed / 1000.0;
+                currentSpeedMBps =
+                    (bytesInPeriod / (1024 * 1024)) / secondsElapsed;
+                lastSpeedUpdate = now;
+                lastReceivedBytes = receivedBytes;
+              }
+
               // If finished, show Installing immediately
               final status =
                   progress >= 1.0 ? "Installing..." : "Downloading Update...";
@@ -197,6 +216,7 @@ class UpdateService {
                 totalMB: totalMB,
                 progress: progress,
                 status: status,
+                speedMBps: currentSpeedMBps,
               );
 
               // Manual check for completion
@@ -245,9 +265,7 @@ class UpdateService {
     await Future.delayed(const Duration(milliseconds: 500));
 
     if (Platform.isAndroid) {
-      // Android: Open APK with package installer
-      // Note: This requires REQUEST_INSTALL_PACKAGES permission in manifest
-      // For now, we'll open the file which triggers the system installer
+      // Android: Open APK with package installer using open_filex
       progressNotifier.value = DownloadProgress(
         receivedMB: 0,
         totalMB: 0,
@@ -255,18 +273,35 @@ class UpdateService {
         status: "Opening installer...",
       );
 
-      // Use Android's ACTION_VIEW intent to install APK
-      // This needs to be handled via a platform channel or url_launcher
-      // For now, just notify user the APK is downloaded
-      print("APK downloaded to: $filePath");
-      print(
-          "Android APK installation requires user to manually install from Downloads");
+      try {
+        // Import open_filex dynamically to avoid issues on other platforms
+        final result = await _openApkForInstall(filePath);
 
-      // Reset progress after a delay
-      await Future.delayed(const Duration(seconds: 2));
-      progressNotifier.value = null;
+        if (result) {
+          print("APK installer opened successfully");
 
-      // Don't exit app on Android - user needs to manually install
+          // Mark this file for cleanup after restart
+          await _markFileForCleanup(filePath);
+
+          // Reset progress after a delay
+          await Future.delayed(const Duration(seconds: 1));
+          progressNotifier.value = null;
+        } else {
+          print("Failed to open APK installer");
+          progressNotifier.value = DownloadProgress(
+            receivedMB: 0,
+            totalMB: 0,
+            progress: 1.0,
+            status: "Failed to open installer. Check Downloads.",
+          );
+          await Future.delayed(const Duration(seconds: 3));
+          progressNotifier.value = null;
+        }
+      } catch (e) {
+        print("Error opening APK: $e");
+        progressNotifier.value = null;
+      }
+
       return;
     } else if (Platform.isWindows) {
       // Inno Setup flags:
@@ -318,6 +353,55 @@ class UpdateService {
     // Exit the app so the installer can replace files (desktop only)
     if (!Platform.isAndroid && !Platform.isIOS) {
       exit(0);
+    }
+  }
+
+  /// Opens the APK file with the system package installer
+  Future<bool> _openApkForInstall(String filePath) async {
+    if (!Platform.isAndroid) return false;
+
+    try {
+      // Use open_filex to open the APK
+      // This triggers the Android package installer dialog
+      final result = await OpenFilex.open(filePath);
+      print("OpenFilex result: ${result.type} - ${result.message}");
+      return result.type == ResultType.done;
+    } catch (e) {
+      print("Error opening APK: $e");
+      return false;
+    }
+  }
+
+  /// Marks a file path for cleanup after the app restarts
+  Future<void> _markFileForCleanup(String filePath) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('pending_cleanup_file', filePath);
+      print("Marked for cleanup: $filePath");
+    } catch (e) {
+      print("Error marking for cleanup: $e");
+    }
+  }
+
+  /// Call this on app startup to clean up old update files
+  /// This frees up space after a successful update
+  static Future<void> cleanupOldUpdates() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final pendingFile = prefs.getString('pending_cleanup_file');
+
+      if (pendingFile != null && pendingFile.isNotEmpty) {
+        final file = File(pendingFile);
+        if (await file.exists()) {
+          await file.delete();
+          print("🗑️ Cleaned up old update file: $pendingFile");
+        }
+
+        // Clear the marker
+        await prefs.remove('pending_cleanup_file');
+      }
+    } catch (e) {
+      print("Error cleaning up old updates: $e");
     }
   }
 }

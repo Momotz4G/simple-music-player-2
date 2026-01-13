@@ -3,10 +3,12 @@ import '../../models/download_progress.dart';
 
 class DownloadProgressWidget extends StatelessWidget {
   final DownloadProgress progress;
+  final VoidCallback? onCancel;
 
   const DownloadProgressWidget({
     super.key,
     required this.progress,
+    this.onCancel,
   });
 
   @override
@@ -33,14 +35,32 @@ class DownloadProgressWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                progress.status,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
+              Expanded(
+                child: Text(
+                  progress.status,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
+              if (onCancel != null) ...[
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    iconSize: 16,
+                    icon: Icon(Icons.close, color: textColor),
+                    onPressed: onCancel,
+                    tooltip: "Cancel Download",
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               Text(
                 "${(progress.progress * 100).toInt()}%",
                 style: TextStyle(
@@ -60,13 +80,28 @@ class DownloadProgressWidget extends StatelessWidget {
             minHeight: 4,
           ),
           const SizedBox(height: 6),
-          Text(
-            progress.details ??
-                "${progress.receivedMB.toStringAsFixed(1)} MB / ${progress.totalMB.toStringAsFixed(1)} MB",
-            style: TextStyle(
-              fontSize: 11,
-              color: textColor?.withOpacity(0.7),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                progress.details ??
+                    "${progress.receivedMB.toStringAsFixed(1)} MB / ${progress.totalMB.toStringAsFixed(1)} MB",
+                style: TextStyle(
+                  fontSize: 11,
+                  color: textColor?.withOpacity(0.7),
+                ),
+              ),
+              // 🚀 Speed display
+              if (progress.speedMBps != null && progress.speedMBps! > 0)
+                Text(
+                  "${progress.speedMBps!.toStringAsFixed(1)} MB/s",
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.green,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+            ],
           ),
         ],
       ),

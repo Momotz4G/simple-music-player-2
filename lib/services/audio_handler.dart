@@ -1,74 +1,39 @@
-import 'dart:async';
 import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart';
 
-/// Global audio handler instance - set during app initialization
-late MyAudioHandler audioHandler;
-
-/// Custom AudioHandler that integrates just_audio with Android MediaSession
-class MyAudioHandler extends BaseAudioHandler with SeekHandler {
+/// The "Side-Car" that talks to the Android Notification System
+class MusicHandler extends BaseAudioHandler {
   final AudioPlayer _player;
 
-  // Callbacks to communicate with PlayerNotifier
-  Function()? onPlay;
-  Function()? onPause;
-  Function()? onSkipToNext;
-  Function()? onSkipToPrevious;
-  Function(Duration)? onSeek;
+  // Callbacks for queue navigation (since NativeMusicService doesn't know about Queue)
+  VoidCallback? onSkipNext;
+  VoidCallback? onSkipPrevious;
 
-  MyAudioHandler(this._player) {
-    // Listen to player state changes and update media session
+  MusicHandler(this._player) {
+    // 1. Listen to playback events (Play/Pause/Buffering)
     _player.playbackEventStream.listen(_broadcastState);
-    _player.playerStateStream.listen((state) {
-      _broadcastState(_player.playbackEvent);
-    });
+
+    // 2. Listen to position actions (Seekbar)
+    // Note: just_audio broadcasts position in playbackEventStream mostly, but specific position stream helps
   }
 
-  /// Update the currently playing media item (call this when song changes)
-  Future<void> setCurrentSong({
-    required String title,
-    required String artist,
-    String? album,
-    Uri? artUri,
-    Duration? duration,
-  }) async {
-    final item = MediaItem(
-      id: title,
-      title: title,
-      artist: artist,
-      album: album ?? '',
-      artUri: artUri,
-      duration: duration ?? Duration.zero,
-    );
-    mediaItem.add(item);
-    // Broadcast current state to trigger notification update
-    _broadcastState(_player.playbackEvent);
-  }
+  /// Broadcasts the current state of the player to the OS
+  Future<void> _broadcastState(PlaybackEvent event) async {
+    final playing = _player.playing;
+    final processingState = const {
+      ProcessingState.idle: AudioProcessingState.idle,
+      ProcessingState.loading: AudioProcessingState.loading,
+      ProcessingState.buffering: AudioProcessingState.buffering,
+      ProcessingState.ready: AudioProcessingState.ready,
+      ProcessingState.completed: AudioProcessingState.completed,
+    }[_player.processingState]!;
 
-  /// Update artwork from file path
-  Future<void> updateArtworkFromFile(String? filePath) async {
-    if (filePath == null || filePath.isEmpty) return;
-
-    try {
-      final file = File(filePath);
-      if (await file.exists()) {
-        final currentItem = mediaItem.value;
-        if (currentItem != null) {
-          mediaItem.add(currentItem.copyWith(artUri: Uri.file(filePath)));
-        }
-      }
-    } catch (e) {
-      debugPrint('Error updating artwork: $e');
-    }
-  }
-
-  void _broadcastState(PlaybackEvent event) {
     playbackState.add(playbackState.value.copyWith(
       controls: [
         MediaControl.skipToPrevious,
-        _player.playing ? MediaControl.pause : MediaControl.play,
+        if (playing) MediaControl.pause else MediaControl.play,
         MediaControl.skipToNext,
       ],
       systemActions: const {
@@ -76,66 +41,57 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
         MediaAction.seekForward,
         MediaAction.seekBackward,
       },
-      androidCompactActionIndices: const [0, 1, 2],
-      processingState: const {
-        ProcessingState.idle: AudioProcessingState.idle,
-        ProcessingState.loading: AudioProcessingState.loading,
-        ProcessingState.buffering: AudioProcessingState.buffering,
-        ProcessingState.ready: AudioProcessingState.ready,
-        ProcessingState.completed: AudioProcessingState.completed,
-      }[_player.processingState]!,
-      playing: _player.playing,
+      androidCompactActionIndices: const [0, 1, 2], // Prev, Play/Pause, Next
+      playing: playing,
+      processingState: processingState,
       updatePosition: _player.position,
       bufferedPosition: _player.bufferedPosition,
       speed: _player.speed,
+      queueIndex: event.currentIndex,
     ));
   }
 
-  @override
-  Future<void> play() async {
-    await _player.play(); // Actually start playback - triggers notification
-    onPlay?.call();
-  }
+  // --- OS COMMANDS (The "Police" telling us what to do) ---
 
   @override
-  Future<void> pause() async {
-    await _player.pause(); // Actually pause playback
-    onPause?.call();
-  }
+  Future<void> play() => _player.play();
+
+  @override
+  Future<void> pause() => _player.pause();
+
+  @override
+  Future<void> seek(Duration position) => _player.seek(position);
 
   @override
   Future<void> skipToNext() async {
-    onSkipToNext?.call();
+    debugPrint("🎵 Notification: User pressed Next");
+    onSkipNext?.call();
   }
 
   @override
-  Future<void> skipToPrevious() async {
-    onSkipToPrevious?.call();
-  }
-
-  @override
-  Future<void> seek(Duration position) async {
-    onSeek?.call(position);
-    await _player.seek(position);
+  Future<void> onTaskRemoved() async {
+    debugPrint("🎵 Notification: Task Removed (App Swiped Away)");
+    await stop();
+    await _player.dispose();
+    // Force exit the Dart process to fully stop the notification
+    exit(0);
   }
 
   @override
   Future<void> stop() async {
+    // 1. Stop the player
     await _player.stop();
-    return super.stop();
+    // 2. Broadcast stopped state to AudioService so notification disappears
+    playbackState.add(playbackState.value.copyWith(
+      processingState: AudioProcessingState.idle,
+      playing: false,
+    ));
+    await super.stop();
   }
-}
 
-/// Initialize audio service - call this in main() before runApp()
-Future<MyAudioHandler> initAudioService(AudioPlayer player) async {
-  return await AudioService.init(
-    builder: () => MyAudioHandler(player),
-    config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.momotz4g.simplemusicplayer2.audio',
-      androidNotificationChannelName: 'Music Playback',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-      androidShowNotificationBadge: true,
-    ),
-  );
+  @override
+  Future<void> skipToPrevious() async {
+    debugPrint("🎵 Notification: User pressed Prev");
+    onSkipPrevious?.call();
+  }
 }

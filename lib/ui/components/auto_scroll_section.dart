@@ -15,12 +15,14 @@ import 'song_context_menu.dart';
 
 class AutoScrollSection extends ConsumerStatefulWidget {
   final String title;
+  final String? subtitle;
   final List<SongModel> songs;
   final Function(bool)? onScrollFocus;
 
   const AutoScrollSection({
     super.key,
     required this.title,
+    this.subtitle,
     required this.songs,
     this.onScrollFocus,
   });
@@ -175,13 +177,28 @@ class _AutoScrollSectionState extends ConsumerState<AutoScrollSection> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
-          child: Text(
-            widget.title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              if (widget.subtitle != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  widget.subtitle!,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         SizedBox(
@@ -222,72 +239,175 @@ class _AutoScrollSectionState extends ConsumerState<AutoScrollSection> {
   Widget _buildSongCard(SongModel song) {
     // Use Network if file is missing AND we have a URL
 
-    return SongContextMenuRegion(
-      song: song,
-      currentQueue: widget.songs,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: () => _handleSongTap(song),
-          child: SizedBox(
-            width: _itemWidth,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ARTWORK
-                AspectRatio(
-                  aspectRatio: 1.0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.grey[900],
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: SmartArt(
-                        path: song.filePath,
-                        size: _itemWidth,
-                        borderRadius: 12,
-                        onlineArtUrl: song.onlineArtUrl,
+    // Mobile Check
+    final isMobile = Platform.isAndroid || Platform.isIOS;
+
+    return _SongCardItem(
+        song: song,
+        width: _itemWidth,
+        isMobile: isMobile,
+        queue: widget.songs,
+        onTap: () => _handleSongTap(song));
+  }
+}
+
+class _SongCardItem extends StatefulWidget {
+  final SongModel song;
+  final double width;
+  final bool isMobile;
+  final List<SongModel> queue;
+  final VoidCallback onTap;
+
+  const _SongCardItem({
+    required this.song,
+    required this.width,
+    required this.isMobile,
+    required this.queue,
+    required this.onTap,
+  });
+
+  @override
+  State<_SongCardItem> createState() => _SongCardItemState();
+}
+
+class _SongCardItemState extends State<_SongCardItem> {
+  bool _isHovering = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // We need ConsumerRef to show menu?
+    // Wait, SongContextMenuRegion.showSongMenu needs ref.
+    // So this widget needs to be a ConsumerStatefulWidget or pass ref.
+    // Easier to make it ConsumerStatefulWidget.
+
+    return Consumer(builder: (context, ref, _) {
+      return SongContextMenuRegion(
+        song: widget.song,
+        currentQueue: widget.queue,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _isHovering = true),
+          onExit: (_) => setState(() => _isHovering = false),
+          child: GestureDetector(
+            onTap: widget.onTap,
+            // LONG PRESS HIGHLIGHT LOGIC
+            onTapDown: (_) => setState(() => _isPressed = true),
+            onTapUp: (_) => setState(() => _isPressed = false),
+            onTapCancel: () => setState(() => _isPressed = false),
+            onLongPressStart: (details) {
+              setState(() => _isPressed = true);
+              if (widget.isMobile) {
+                SongContextMenuRegion.showSongMenu(
+                    context, details.globalPosition, ref, widget.song);
+              }
+            },
+            onLongPressEnd: (_) => setState(() => _isPressed = false),
+            child: SizedBox(
+              width: widget.width,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ARTWORK
+                  AspectRatio(
+                    aspectRatio: 1.0,
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 100),
+                      scale: _isPressed ? 0.95 : (_isHovering ? 1.05 : 1.0),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey[900],
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: SmartArt(
+                                path: widget.song.filePath,
+                                size: widget.width,
+                                borderRadius: 12,
+                                onlineArtUrl: widget.song.onlineArtUrl,
+                              ),
+                            ),
+                            // PRESSED STATE OVERLAY
+                            if (_isPressed)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // TITLE
-                Text(
-                  song.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                  // TEXT
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.song.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              widget.song.artist,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (widget.isMobile)
+                        GestureDetector(
+                          onTapDown: (details) {
+                            SongContextMenuRegion.showSongMenu(context,
+                                details.globalPosition, ref, widget.song);
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 4.0),
+                            child: Icon(
+                              Icons.more_vert_rounded,
+                              size: 20,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-
-                // ARTIST
-                Text(
-                  song.artist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

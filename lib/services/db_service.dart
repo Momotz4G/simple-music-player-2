@@ -18,7 +18,15 @@ class DBService {
   }
 
   // 1. Initialize the Database - Only opens once
+  static Future<Isar>? _initFuture;
+
   Future<Isar> openDB() async {
+    if (_db != null) return _db!;
+    _initFuture ??= _performOpenDB();
+    return _initFuture!;
+  }
+
+  Future<Isar> _performOpenDB() async {
     if (_db != null) return _db!;
 
     if (Isar.instanceNames.isEmpty) {
@@ -147,5 +155,25 @@ class DBService {
   Future<int> getTotalStatsPlays() async {
     final isar = await db;
     return await isar.savedStats.where().playCountProperty().sum();
+  }
+
+  // 💥 EMERGENCY RECOVERY
+  Future<void> recoverFromCorruption() async {
+    try {
+      if (_db != null && _db!.isOpen) {
+        await _db!.close();
+      }
+      _db = null;
+      _initFuture = null;
+
+      final docDir = await getApplicationDocumentsDirectory();
+      final dirProp = Directory('${docDir.path}/SimpleMusicDB');
+      if (await dirProp.exists()) {
+        await dirProp.delete(recursive: true);
+        print("💥 DBService: Database deleted/reset due to corruption.");
+      }
+    } catch (e) {
+      print("💥 DBService: Failed to reset database: $e");
+    }
   }
 }

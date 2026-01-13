@@ -21,4 +21,11 @@ class ArtistModel {
       imageUrl: image,
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'imageUrl': imageUrl,
+    };
+  }
 }

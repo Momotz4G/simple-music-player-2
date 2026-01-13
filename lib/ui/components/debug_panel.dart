@@ -76,33 +76,48 @@ class _DebugPanelState extends State<DebugPanel> {
   final DebugLogService _debugService = DebugLogService();
   final ScrollController _scrollController = ScrollController();
   bool _autoScroll = true;
+  bool _showScrollToBottom = false;
 
   @override
   void initState() {
     super.initState();
     _debugService.addListener(_onLogUpdate);
+    _scrollController.addListener(_onScrollChanged);
   }
 
   @override
   void dispose() {
     _debugService.removeListener(_onLogUpdate);
+    _scrollController.removeListener(_onScrollChanged);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScrollChanged() {
+    if (!_scrollController.hasClients) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    // Show button if we are not at the bottom (with some threshold)
+    setState(() {
+      _showScrollToBottom = (maxScroll - currentScroll) > 50;
+    });
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void _onLogUpdate() {
     if (mounted) {
       setState(() {});
       if (_autoScroll) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients) {
-            _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-            );
-          }
-        });
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
     }
   }
@@ -209,7 +224,7 @@ class _DebugPanelState extends State<DebugPanel> {
                 IconButton(
                   icon: const Icon(Icons.copy, color: Colors.white70, size: 18),
                   onPressed: _copyLogsToClipboard,
-                  tooltip: 'Copy logs',
+                  tooltip: 'Copy all logs',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -248,46 +263,34 @@ class _DebugPanelState extends State<DebugPanel> {
                       style: TextStyle(color: Colors.white54, fontSize: 12),
                     ),
                   )
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(8),
-                    itemCount: logs.length,
-                    itemBuilder: (context, index) {
-                      final log = logs[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              log.formattedTime,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.4),
-                                fontSize: 10,
-                                fontFamily: 'monospace',
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Icon(
-                              _getLogIcon(log.level),
-                              size: 12,
-                              color: _getLogColor(log.level),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                log.message,
-                                style: TextStyle(
-                                  color: _getLogColor(log.level),
-                                  fontSize: 11,
-                                  fontFamily: 'monospace',
-                                ),
-                              ),
-                            ),
-                          ],
+                : Stack(
+                    children: [
+                      ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(8),
+                        itemCount: logs.length,
+                        itemBuilder: (context, index) {
+                          final log = logs[index];
+                          return _LogItem(
+                            log: log,
+                            logColor: _getLogColor(log.level),
+                            logIcon: _getLogIcon(log.level),
+                          );
+                        },
+                      ),
+                      // Jump to bottom button
+                      if (_showScrollToBottom)
+                        Positioned(
+                          right: 16,
+                          bottom: 16,
+                          child: FloatingActionButton.small(
+                            backgroundColor: Colors.orange.withOpacity(0.9),
+                            onPressed: _scrollToBottom,
+                            child: const Icon(Icons.arrow_downward,
+                                color: Colors.white, size: 16),
+                          ),
                         ),
-                      );
-                    },
+                    ],
                   ),
           ),
 
@@ -318,6 +321,124 @@ class _DebugPanelState extends State<DebugPanel> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LogItem extends StatefulWidget {
+  final DebugLogEntry log;
+  final Color logColor;
+  final IconData logIcon;
+
+  const _LogItem({
+    required this.log,
+    required this.logColor,
+    required this.logIcon,
+  });
+
+  @override
+  State<_LogItem> createState() => _LogItemState();
+}
+
+class _LogItemState extends State<_LogItem> {
+  bool _isExpanded = false;
+  static const int _truncateLength = 150;
+
+  void _toggleExpand() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
+  }
+
+  void _copyToClipboard() {
+    Clipboard.setData(ClipboardData(
+        text:
+            '[${widget.log.formattedTime}] [${widget.log.level.name.toUpperCase()}] ${widget.log.message}'));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Log entry copied'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isLong = widget.log.message.length > _truncateLength;
+    final String displayMessage = (!isLong || _isExpanded)
+        ? widget.log.message
+        : '${widget.log.message.substring(0, _truncateLength)}...';
+
+    return InkWell(
+      onTap: isLong ? _toggleExpand : null,
+      onLongPress: _copyToClipboard,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        decoration: BoxDecoration(
+          color: _isExpanded
+              ? Colors.white.withOpacity(0.05)
+              : null, // Highlight if expanded
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Time
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                widget.log.formattedTime,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.4),
+                  fontSize: 10,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Icon
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Icon(
+                widget.logIcon,
+                size: 12,
+                color: widget.logColor,
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Message
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayMessage,
+                    style: TextStyle(
+                      color: widget.logColor,
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  // Show expand/collapse hint if long
+                  if (isLong)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        _isExpanded ? 'Tap to collapse' : 'Tap to expand',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.3),
+                          fontSize: 9,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

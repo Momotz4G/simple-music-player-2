@@ -10,6 +10,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/stats_provider.dart';
+import '../../providers/player_provider.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../services/metrics_service.dart';
 import 'admin_stats_page.dart';
@@ -712,6 +713,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
               ),
             ),
+
+          const SizedBox(height: 30),
+
+          // PLAYBACK
+          Text("PLAYBACK",
+              style:
+                  TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
+          Consumer(
+            builder: (context, ref, _) {
+              final playerState = ref.watch(playerProvider);
+              final playerNotifier = ref.read(playerProvider.notifier);
+              return SwitchListTile(
+                title:
+                    Text("Endless Queue", style: TextStyle(color: textColor)),
+                subtitle: Text(
+                    "Auto-add similar songs when queue is nearly empty",
+                    style: TextStyle(color: subtitleColor)),
+                value: playerState.endlessQueueEnabled,
+                activeColor: accentColor,
+                onChanged: (_) => playerNotifier.toggleEndlessQueue(),
+              );
+            },
+          ),
 
           const SizedBox(height: 30),
 

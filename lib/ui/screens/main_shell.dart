@@ -40,7 +40,9 @@ import 'album_detail_page.dart';
 import 'playlist_detail_page.dart';
 import 'artist_detail_page.dart';
 import 'track_detail_page.dart'; // 🚀 IMPORTED
+import 'daily_mix_detail_page.dart'; // 🎵 Daily Mix
 import '../../models/song_metadata.dart'; // 🚀 IMPORTED
+import '../../models/daily_mix_model.dart'; // 🎵 Daily Mix model
 import '../../services/update_service.dart';
 import '../../services/bulk_download_service.dart';
 import '../../services/smart_download_service.dart';
@@ -76,6 +78,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       _checkForUpdates();
       _checkWhatsNew();
       _startConnectivityMonitor(); // 🚀 Start monitoring
+
+      // 🚀 CLEANUP OLD UPDATE APKs (Free ~300MB after successful update)
+      UpdateService.cleanupOldUpdates();
     });
 
     // 🚀 LISTEN FOR BULK DOWNLOAD ERRORS (Ban/Limit)
@@ -300,11 +305,20 @@ class _MainShellState extends ConsumerState<MainShell> {
       final downloadUrl = asset['downloadUrl']!;
       final fileName = asset['fileName']!;
 
-      // 🚀 Remove SnackBar, just start download.
-      // The sidebar widget will appear automatically because it listens to the notifier.
+      // 🚀 Show download progress dialog ONLY on Android
+      // On desktop (Windows/Mac/Linux), sidebar widget shows progress
+      if (Platform.isAndroid) {
+        _showDownloadProgressDialog();
+      }
+
       try {
         await _updateService.downloadAndInstall(downloadUrl, fileName);
+        // Dialog will close automatically when progress reaches 100%
       } catch (e) {
+        // Close dialog on error (Android only)
+        if (Platform.isAndroid && mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -320,6 +334,99 @@ class _MainShellState extends ConsumerState<MainShell> {
                 "No ${_updateService.platformName} installer found in release.")),
       );
     }
+  }
+
+  // 🚀 Track if download has started (to avoid closing dialog immediately)
+  bool _downloadHasStarted = false;
+
+  void _showDownloadProgressDialog() {
+    _downloadHasStarted = false; // Reset flag
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => ValueListenableBuilder<DownloadProgress?>(
+        valueListenable: _updateService.progressNotifier,
+        builder: (context, progress, child) {
+          // Track when download actually starts
+          if (progress != null) {
+            _downloadHasStarted = true;
+          }
+
+          // Only close dialog when download has STARTED and then becomes null (finished)
+          if (_downloadHasStarted && progress == null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (Navigator.canPop(dialogContext)) {
+                Navigator.pop(dialogContext);
+              }
+            });
+          }
+
+          final percentage = ((progress?.progress ?? 0) * 100).toInt();
+          final receivedMB = progress?.receivedMB.toStringAsFixed(1) ?? '0';
+          final totalMB = progress?.totalMB.toStringAsFixed(1) ?? '0';
+          final status = progress?.status ?? 'Preparing download...';
+
+          return AlertDialog(
+            backgroundColor: Theme.of(context).cardColor,
+            title: Row(
+              children: [
+                const Icon(Icons.download_rounded, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text("Downloading Update"),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(status),
+                const SizedBox(height: 16),
+                // Progress bar
+                LinearProgressIndicator(
+                  value: progress?.progress,
+                  backgroundColor: Theme.of(context).dividerColor,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "$receivedMB MB / $totalMB MB",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    ),
+                    // 🚀 Speed display
+                    if (progress?.speedMBps != null && progress!.speedMBps! > 0)
+                      Text(
+                        "${progress.speedMBps!.toStringAsFixed(1)} MB/s",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    Text(
+                      "$percentage%",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   // ROUTER
@@ -369,6 +476,8 @@ class _MainShellState extends ConsumerState<MainShell> {
           return PlaylistDetailPage(playlistId: item.data as String);
         case NavigationType.track:
           return TrackDetailPage(songMetadata: item.data as SongMetadata);
+        case NavigationType.dailyMix:
+          return DailyMixDetailPage(mix: item.data as DailyMix);
         default:
           return _getCurrentPage(currentView);
       }
@@ -727,7 +836,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                   if (progress == null) return const SizedBox.shrink();
                   return Padding(
                     padding: const EdgeInsets.only(top: 16),
-                    child: DownloadProgressWidget(progress: progress),
+                    child: DownloadProgressWidget(
+                      progress: progress,
+                      onCancel: () {
+                        BulkDownloadService().cancelDownload();
+                      },
+                    ),
                   );
                 },
               ),
@@ -953,7 +1067,10 @@ class _MainShellState extends ConsumerState<MainShell> {
                 return Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: DownloadProgressWidget(progress: progress),
+                  child: DownloadProgressWidget(
+                    progress: progress,
+                    onCancel: () => BulkDownloadService().cancelDownload(),
+                  ),
                 );
               },
             ),
@@ -1059,7 +1176,7 @@ class WindowButtons extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              "© 2025 Stephanus Alexander Momot. All Rights Reserved.",
+              "© 2026 Stephanus Alexander Momot. All Rights Reserved.",
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -1070,7 +1187,7 @@ class WindowButtons extends StatelessWidget {
               context: context,
               applicationName: "Simple Music Player",
               applicationVersion: version,
-              applicationLegalese: "© 2025 Stephanus Alexander Momot",
+              applicationLegalese: "© 2026 Stephanus Alexander Momot",
             ),
             child: const Text("Open Source Licenses"),
           ),

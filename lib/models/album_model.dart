@@ -31,4 +31,13 @@ class AlbumModel {
       releaseDate: json['release_date'] ?? "",
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'artist': artist,
+      'imageUrl': imageUrl,
+      'releaseDate': releaseDate,
+    };
+  }
 }
