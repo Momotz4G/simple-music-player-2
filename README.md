@@ -81,6 +81,15 @@
 
 ---
 
+## 🎥 Feature Demos
+
+| Listening Party | Import Spotify Playlist |
+|:---:|:---:|
+| <video src="https://github.com/user-attachments/assets/47c5b2e5-3f87-4fa5-a3c7-ecfea22d44e5" width="100%" controls muted autoplay></video> | <video src="https://github.com/user-attachments/assets/42732b6c-7600-4bef-94c9-de98a3031ada" width="100%" controls muted autoplay></video> |
+| **Host a party and let friends queue songs** | **Import entire playlists instantly** |
+
+---
+
 ## 🚀 Installation
 
 ### 📦 Download
