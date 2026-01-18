@@ -206,9 +206,9 @@ flutter run              # Android (with device connected)
 
 ### 📱 Mobile
 
-| Home | Player | Stats |
-|------|--------|-------|
-| ![Home](assets/screenshots/mobile_home.png) | ![Player](https://github.com/user-attachments/assets/a68dcf3f-ae01-4eff-867c-bde48a40bccb) | *Coming soon* |
+| Home | Player (Video) | Stats |
+|------|----------------|-------|
+| <img src="assets/screenshots/mobile_home.png" height="500"> | <video src="https://github.com/user-attachments/assets/a68dcf3f-ae01-4eff-867c-bde48a40bccb" controls muted autoplay height="500"></video> | *Coming soon* |
 
 ### 🎥 Feature Demos
 
