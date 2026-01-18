@@ -3,7 +3,7 @@
 ![Simple Music Player Home](assets/screenshots/home_preview.png)
 
 <div align="center">
-  <video src="https://github.com/Momotz4G/simple-music-player-2/raw/main/assets/Trailer.mp4" width="100%"></video>
+  <video src="https://github.com/Momotz4G/simple-music-player-2/raw/main/assets/Trailer.mp4" width="100%" controls muted autoplay></video>
 </div>
 
 > A stunning, modern, and feature-rich music player built with Flutter. Experience your music with a beautiful Glassmorphism UI and powerful tools. Available on Windows, macOS, Android, and iOS.
