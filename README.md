@@ -94,9 +94,9 @@ Go to the [Releases](https://github.com/Momotz4G/simple-music-player-2/releases)
 
 | Platform | Download |
 |:--------:|:--------:|
-| **Windows** | [![Windows](assets/badges/windows.png)](https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/Simple.Music.Player.New.Gen.exe) |
-| **macOS** | [![macOS](assets/badges/macos.png)](https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/SimpleMusicPlayer_macOS.zip) |
-| **Android** | [![Android](assets/badges/android.png)](https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/Simple.Music.Player.apk) |
+| **Windows** | <a href="https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/Simple.Music.Player.New.Gen.exe"><img src="assets/badges/windows.png" height="50"></a> |
+| **macOS** | <a href="https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/SimpleMusicPlayer_macOS.zip"><img src="assets/badges/macos.png" height="50"></a> |
+| **Android** | <a href="https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/Simple.Music.Player.apk"><img src="assets/badges/android.png" height="50"></a> |
 | **iOS** | [![iOS](https://img.shields.io/badge/iOS-Download_IPA-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/Simple.Music.Player.ipa) |
 
 ---
