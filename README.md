@@ -208,7 +208,7 @@ flutter run              # Android (with device connected)
 
 | Home | Player | Stats |
 |------|--------|-------|
-| *Coming soon* | *Coming soon* | *Coming soon* |
+| ![Home](assets/screenshots/mobile_home.png) | ![Player](https://github.com/user-attachments/assets/a68dcf3f-ae01-4eff-867c-bde48a40bccb) | *Coming soon* |
 
 ### 🎥 Feature Demos
 
