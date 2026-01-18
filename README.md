@@ -196,11 +196,19 @@ flutter run              # Android (with device connected)
 
 ---
 
-## 📸 Screenshots & Feature Demos
+## 📸 Screenshots
+
+### 🖥️ Desktop
 
 | Home | Full Screen | Stats |
 |------|-------------|-------|
 | ![Home](assets/screenshots/home_preview.png) | *Coming soon* | *Coming soon* |
+
+### 📱 Mobile
+
+| Home | Player | Stats |
+|------|--------|-------|
+| *Coming soon* | *Coming soon* | *Coming soon* |
 
 ### 🎥 Feature Demos
 
