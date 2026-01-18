@@ -90,69 +90,45 @@ Go to the [Releases](https://github.com/Momotz4G/simple-music-player-2/releases)
 | **Android** | `.apk` | Enable unknown sources, tap to install |
 | **iOS** | `.ipa` | Sideload (see below) |
 
----
+**OR**
 
-### 🪟 Windows
-1. Download the `.exe` installer
-2. Run the installer
-3. Done! Launch from Start menu
-
----
-
-### 🍎 macOS
-1. Download and extract the `.zip` file
-2. **Double-click** `SimpleMusicPlayer_Setup.command`
-3. Done! The app will launch automatically
-
-> 💡 **First stream:** macOS may ask to allow binaries (yt-dlp, ffmpeg). Go to **System Preferences → Privacy & Security** and click "Allow Anyway"
-
-> 📖 See `README.txt` in the ZIP for detailed instructions
+| Platform | Download |
+|:--------:|:--------:|
+| **Windows** | [![Windows](assets/badges/windows.png)](https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/Simple.Music.Player.New.Gen.exe) |
+| **macOS** | [![macOS](assets/badges/macos.png)](https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/SimpleMusicPlayer_macOS.zip) |
+| **Android** | [![Android](assets/badges/android.png)](https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/Simple.Music.Player.apk) |
+| **iOS** | [![iOS](https://img.shields.io/badge/iOS-Download_IPA-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Momotz4G/simple-music-player-2/releases/latest/download/Simple.Music.Player.ipa) |
 
 ---
 
-### 🤖 Android
+### 📖 Installation Guide
 
-> **Minimum Requirement:** Android 7.0 (API Level 24) or higher.  
-> **Recommended:** Android 14 (API Level 34).
+#### 🪟 Windows
+Download the `.exe` installer  
+Run the installer  
+Done! Launch from Start menu
 
-1. Download the `.apk` file
-2. Enable "Install from unknown sources" in Settings
-3. Tap the APK to install
-4. Done!
+#### 🍎 macOS
+Download and extract the `.zip` file  
+Double-click `SimpleMusicPlayer_Setup.command`  
+Done! The app will launch automatically  
+💡 **First stream:** macOS may ask to allow binaries (yt-dlp, ffmpeg). Go to **System Preferences → Privacy & Security** and click "Allow Anyway"
 
----
+📖 See `README.txt` in the ZIP for detailed instructions
 
-### 📱 iOS (Sideloading Required)
+#### 🤖 Android
+**Minimum Requirement:** Android 7.0 (API Level 24) or higher.  
+**Recommended:** Android 14 (API Level 34).
 
-> ⚠️ **Note:** iOS requires sideloading because this app is not on the App Store. Apps sideloaded with a free Apple ID expire every **7 days** and must be re-installed.
+Download the `.apk` file  
+Enable "Install from unknown sources" in Settings  
+Tap the APK to install  
+Done!
 
-> 📖 **Full Guide:** See [IOS_SIDELOAD_GUIDE.md](IOS_SIDELOAD_GUIDE.md) for detailed instructions, troubleshooting, and all installation methods.
+#### 📱 iOS (Sideloading Required)
+⚠️ **Note:** iOS requires sideloading because this app is not on the App Store. Apps sideloaded with a free Apple ID expire every **7 days** and must be re-installed.
 
-#### Quick Install Options
-
-**Method 1: AltStore** (iOS 12.2+) - Most Compatible
-- Install AltStore on your computer
-- Connect iPhone via USB
-- Add the IPA through AltStore app
-- Re-sign every 7 days
-
-**Method 2: Sideloadly** - Simplest
-- Download [Sideloadly](https://sideloadly.io)
-- Connect iPhone, drag IPA, enter Apple ID
-- Re-sign every 7 days
-
-**Method 3: TrollStore** (iOS 14-16.6.1 only) - **PERMANENT!** ⭐
-- No re-signing needed
-- One-time installation
-- Not compatible with iOS 17+
-- See guide for installation steps
-
-#### What Works on iOS?
-✅ Dynamic Island media controls (iPhone 14 Pro+)  
-✅ Lock screen controls  
-✅ Background playback  
-✅ All music player features  
-❌ Push notifications (sideloading limitation)
+📖 **Full Guide:** See [IOS_SIDELOAD_GUIDE.md](IOS_SIDELOAD_GUIDE.md) for detailed instructions, troubleshooting, and all installation methods.
 
 ---
 
