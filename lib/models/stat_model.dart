@@ -13,6 +13,8 @@ class StatEntry {
   final String lastKnownPath;
   final String? onlineArtUrl;
   final String? youtubeUrl;
+  final String? spotifyId;
+  final String? deezerId;
 
   StatEntry({
     required this.id,
@@ -24,6 +26,8 @@ class StatEntry {
     required this.lastKnownPath,
     this.onlineArtUrl,
     this.youtubeUrl,
+    this.spotifyId,
+    this.deezerId,
   });
 
   // Generate a unique ID based on metadata, not file path
@@ -44,6 +48,8 @@ class StatEntry {
       'lastKnownPath': lastKnownPath,
       'onlineArtUrl': onlineArtUrl,
       'youtubeUrl': youtubeUrl,
+      'spotifyId': spotifyId,
+      'deezerId': deezerId,
     };
   }
 
@@ -58,6 +64,8 @@ class StatEntry {
       lastKnownPath: json['lastKnownPath'] ?? '',
       onlineArtUrl: json['onlineArtUrl'],
       youtubeUrl: json['youtubeUrl'],
+      spotifyId: json['spotifyId'],
+      deezerId: json['deezerId'],
     );
   }
 

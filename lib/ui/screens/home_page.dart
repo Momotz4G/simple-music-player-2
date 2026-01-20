@@ -18,7 +18,8 @@ import '../../providers/daily_mix_provider.dart';
 import '../../data/schemas.dart';
 
 // --- SERVICES ---
-import '../../services/spotify_service.dart';
+// Keep for some stats/legacy if needed, or remove?
+import '../../services/hybrid_service.dart';
 
 // --- COMPONENTS ---
 import '../components/horizontal_section.dart';
@@ -89,7 +90,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   // 🚀 UPDATED: Accepts market parameter
   Future<void> _loadNewReleases(String market) async {
-    final releases = await SpotifyService.getNewReleases(market: market);
+    final releases = await HybridService.getNewReleases(market: market);
     if (mounted) {
       setState(() {
         _newReleases = releases;
@@ -102,24 +103,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     final query = "${item['artist']} ${item['title']}";
 
     // 2. Fetch full metadata (to get Duration, Album Name, etc.)
-    final results = await SpotifyService.searchMetadata(query);
+    final results = await HybridService.searchSongs(query);
 
     SongMetadata meta;
 
     if (results.isNotEmpty) {
       // ✅ Found track details! Use real duration.
       final best = results.first;
-      meta = SongMetadata(
-        title: best['title'],
-        artist: best['artist'],
-        album: best['album'],
-        year: best['year'],
-        genre: "",
-        durationSeconds: (best['duration_ms'] as int) ~/ 1000, // Real Duration
-        albumArtUrl: best['image_url'] ?? item['image_url'],
-        trackNumber: best['track_number'],
-        discNumber: best['disc_number'],
-      );
+      meta = best; // HybridService already returns SongMetadata!
     } else {
       // Fallback (just in case search fails)
       meta = SongMetadata(
@@ -169,6 +160,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         fileExtension: '.mp3',
         sourceUrl: entry.youtubeUrl,
         onlineArtUrl: entry.albumArtUrl,
+        spotifyId: entry.spotifyId,
+        deezerId: entry.deezerId,
       ));
     }
     return result;
@@ -273,6 +266,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           fileExtension: path_lib.extension(stat.lastKnownPath),
           onlineArtUrl: stat.onlineArtUrl,
           sourceUrl: stat.youtubeUrl,
+          spotifyId: stat.spotifyId,
+          deezerId: stat.deezerId,
         ));
       }
     }
@@ -293,7 +288,10 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
+            // 🚀 FIX: Align with Floating Menu Button (Status Bar + ~12px padding)
+            // Button in MainShell is at: padding.top + 16
+            // We give slightly less top padding here so the localized text centers vertically with the button icon.
+            SizedBox(height: MediaQuery.of(context).padding.top + 12),
             Padding(
               padding: EdgeInsets.only(
                   left: (Platform.isAndroid || Platform.isIOS) ? 72.0 : 32.0,
@@ -377,6 +375,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           onlineArtUrl: meta.albumArtUrl,
                           spotifyId: meta.spotifyId,
                           isrc: meta.isrc,
+                          deezerId: meta.deezerId,
                         ))
                     .toList();
 
@@ -445,15 +444,14 @@ class _HomePageState extends ConsumerState<HomePage> {
           // 1. Fetch Art
           String? artUrl = song.onlineArtUrl;
           if (artUrl == null || artUrl.isEmpty) {
-            artUrl =
-                await SpotifyService.getTrackImage(song.title, song.artist);
+            artUrl = await HybridService.getTrackImage(song.title, song.artist);
           }
 
           // 2. Fetch URL (Spotify Link as placeholder/source)
           String? youtubeUrl = song.sourceUrl;
           if (youtubeUrl == null || youtubeUrl.isEmpty) {
             youtubeUrl =
-                await SpotifyService.getTrackLink(song.title, song.artist);
+                await HybridService.getTrackLink(song.title, song.artist);
           }
 
           if (artUrl != null || youtubeUrl != null) {

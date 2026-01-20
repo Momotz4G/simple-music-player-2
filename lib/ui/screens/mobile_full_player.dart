@@ -23,6 +23,8 @@ import '../components/version_selection_dialog.dart';
 import '../components/song_context_menu.dart';
 import 'lyrics_panel.dart';
 import '../components/queue_sheet.dart'; // 🚀 IMPORT
+import '../components/song_info_dialog.dart'; // 🚀 IMPORT
+import '../../services/audio_info_service.dart'; // 🚀 Audio Quality Info
 
 /// Mobile-optimized full player page with Canvas video support
 /// Opens when user taps the mini player bar on mobile
@@ -44,6 +46,10 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
   double _scrollOffset = 0.0; // 🚀 Track scroll for lyrics visibility
   AnimationController? _dragAnimationController; // 🚀 For interactive drag
 
+  // 🚀 AUDIO QUALITY INFO STATE
+  AudioInfo? _audioInfo;
+  bool _isLoadingInfo = false;
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +65,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
               song.artist,
               song.duration,
             );
+        // 🚀 Fetch Audio Quality
+        _fetchAudioInfo(song.filePath);
       }
     });
   }
@@ -164,6 +172,24 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     }
   }
 
+  // 🚀 FETCH AUDIO INFO
+  Future<void> _fetchAudioInfo(String filePath) async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingInfo = true;
+      _audioInfo = null;
+    });
+
+    final info = await AudioInfoService().getAudioInfo(filePath);
+
+    if (mounted) {
+      setState(() {
+        _audioInfo = info;
+        _isLoadingInfo = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final playerState = ref.watch(playerProvider);
@@ -179,6 +205,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       if (previous?.currentSong?.filePath != next.currentSong?.filePath) {
         if (next.currentSong != null) {
           _autoLoadCanvas(next.currentSong!.title, next.currentSong!.artist);
+          _fetchAudioInfo(next.currentSong!.filePath); // 🚀 Update Info
         }
       }
     });
@@ -295,6 +322,22 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                           ),
                           SizedBox(width: 12),
                           Text("Equalizer",
+                              style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    // Song Info
+                    const PopupMenuItem(
+                      value: 'song_info',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          SizedBox(width: 12),
+                          Text("Song Information",
                               style: TextStyle(color: Colors.white)),
                         ],
                       ),
@@ -661,6 +704,103 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                           ),
                                         ),
                                         const SizedBox(height: 16),
+                                        // 🚀 AUDIO QUALITY INFO BAR
+                                        if (_audioInfo != null ||
+                                            _isLoadingInfo)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 16),
+                                            child: _isLoadingInfo
+                                                ? const SizedBox(
+                                                    height: 14,
+                                                    width: 14,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                            color:
+                                                                Colors.white24))
+                                                : Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      // Format (FLAC/MP3)
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                horizontal: 6,
+                                                                vertical: 2),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white
+                                                              .withOpacity(0.1),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(4),
+                                                          border: Border.all(
+                                                              color: Colors
+                                                                  .white12),
+                                                        ),
+                                                        child: Text(
+                                                          _audioInfo?.format ??
+                                                              "UNK",
+                                                          style: TextStyle(
+                                                            color: settings
+                                                                .accentColor,
+                                                            fontSize: 10,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            letterSpacing: 0.5,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      // Sample Rate
+                                                      Text(
+                                                        _audioInfo
+                                                                ?.sampleRateDisplay ??
+                                                            "",
+                                                        style: const TextStyle(
+                                                            color:
+                                                                Colors.white70,
+                                                            fontSize: 11),
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      const Text("•",
+                                                          style: TextStyle(
+                                                              color: Colors
+                                                                  .white24)),
+                                                      const SizedBox(width: 6),
+                                                      // Bit Depth
+                                                      Text(
+                                                        _audioInfo
+                                                                ?.bitDepthDisplay ??
+                                                            "",
+                                                        style: const TextStyle(
+                                                            color:
+                                                                Colors.white70,
+                                                            fontSize: 11),
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      const Text("•",
+                                                          style: TextStyle(
+                                                              color: Colors
+                                                                  .white24)),
+                                                      const SizedBox(width: 6),
+                                                      // Bitrate
+                                                      Text(
+                                                        _audioInfo
+                                                                ?.bitrateDisplay ??
+                                                            "",
+                                                        style: const TextStyle(
+                                                            color:
+                                                                Colors.white70,
+                                                            fontSize: 11),
+                                                      ),
+                                                    ],
+                                                  ),
+                                          ),
                                         // Controls row
                                         Row(
                                           mainAxisAlignment:
@@ -949,6 +1089,12 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
           builder: (context) => const EqualizerSheet(),
+        );
+        break;
+      case 'song_info':
+        showDialog(
+          context: context,
+          builder: (context) => SongInfoDialog(song: song as SongModel),
         );
         break;
       case 'version':

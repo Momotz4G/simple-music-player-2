@@ -180,34 +180,41 @@ void showCenterNotification(
   Color? backgroundColor,
   IconData? icon,
 }) {
-  final overlayState = Overlay.of(context);
-  late OverlayEntry overlayEntry;
+  // 🚀 SAFETY: Check if context is valid before using it
+  if (!context.mounted) return;
 
-  overlayEntry = OverlayEntry(
-    builder: (context) {
-      return _NotificationAnimator(
-        onDismiss: () {
-          if (overlayEntry.mounted) {
-            overlayEntry.remove();
-          }
-        },
-        child: Align(
-          alignment: Alignment.center,
-          child: MusicNotification(
-            label: label,
-            title: title,
-            subtitle: subtitle,
-            artPath: artPath,
-            onlineArtUrl: onlineArtUrl,
-            backgroundColor: backgroundColor,
-            icon: icon,
+  try {
+    final overlayState = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return _NotificationAnimator(
+          onDismiss: () {
+            if (overlayEntry.mounted) {
+              overlayEntry.remove();
+            }
+          },
+          child: Align(
+            alignment: Alignment.center,
+            child: MusicNotification(
+              label: label,
+              title: title,
+              subtitle: subtitle,
+              artPath: artPath,
+              onlineArtUrl: onlineArtUrl,
+              backgroundColor: backgroundColor,
+              icon: icon,
+            ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
 
-  overlayState.insert(overlayEntry);
+    overlayState.insert(overlayEntry);
+  } catch (e) {
+    debugPrint("⚠️ Notification Error: $e");
+  }
 }
 
 // 🎬 INTERNAL ANIMATION HANDLER

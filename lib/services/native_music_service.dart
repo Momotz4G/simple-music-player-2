@@ -25,6 +25,10 @@ class NativeMusicService {
   final String _mutexName = 'simple_music_player_audio_mutex';
   bool _hasClaimedMutex = false;
 
+  // 🚀 Loading guard to prevent race conditions
+  bool _isLoading = false;
+  Completer<void>? _loadingCompleter;
+
   NativeMusicService._internal() {
     _instanceCount++;
     DebugLogService().info(
@@ -170,7 +174,8 @@ class NativeMusicService {
   final AudioPlayer _player = AudioPlayer();
   AudioPlayer get player => _player;
 
-  Future<void> load(SongModel song) async {
+  Future<void> load(SongModel song,
+      {Duration? initialPosition, bool lazyLoad = false}) async {
     // 🚀 ALLOW LOAD IN ZOMBIE STATE
     // We must allow the player to prepare the source even if we aren't the primary audio focus yet.
     // This allows the UI to show the correct duration and be ready to play on user input.
@@ -208,25 +213,62 @@ class NativeMusicService {
 
         try {
           final yt = YoutubeExplode();
-          final query = "${song.title} ${song.artist} audio";
-          final search = await yt.search.search(query);
+          String? targetId;
 
-          if (search.isNotEmpty) {
-            final video = search.first;
-            debugPrint("✅ Found Video (Load): ${video.title} (${video.id})");
+          // 🚀 PRIORITY: Use valid sourceUrl if available (passed from JIT fallback)
+          if (song.sourceUrl != null &&
+              song.sourceUrl!.isNotEmpty &&
+              !song.sourceUrl!.startsWith('query:')) {
+            final videoId = VideoId.parseVideoId(song.sourceUrl!);
+            if (videoId != null) {
+              targetId = videoId;
+              debugPrint("✅ Using Source URL (Load): $targetId");
+            }
+          }
 
+          if (targetId == null) {
+            // Fallback to Search
+            final query = "${song.title} ${song.artist} audio";
+            final search = await yt.search.search(query);
+            if (search.isNotEmpty) {
+              targetId = search.first.id.value;
+              debugPrint(
+                  "✅ Found Video via Search (Load): ${search.first.title} ($targetId)");
+            }
+          }
+
+          if (targetId != null) {
             final manifest =
-                await yt.videos.streamsClient.getManifest(video.id);
+                await yt.videos.streamsClient.getManifest(targetId);
             final audioInfo = manifest.audioOnly.withHighestBitrate();
 
-            await _player.stop();
-            await _player.setAudioSource(
-              AudioSource.uri(
-                audioInfo.url,
-                tag: song,
-              ),
-            );
-            debugPrint("🎵 Pre-Load Cloud Stream Success");
+            // 🚀 REMOVED explicit _player.stop() to prevent "Loading interrupted" race conditions.
+            // setAudioSource already handles stopping the previous source.
+
+            try {
+              await _player.setAudioSource(
+                AudioSource.uri(
+                  audioInfo.url,
+                  tag: song,
+                ),
+                initialPosition: initialPosition,
+              );
+              debugPrint("🎵 Pre-Load Cloud Stream Success");
+            } catch (e) {
+              debugPrint("⚠️ Pre-Load Interrupted/Failed: $e");
+              debugPrint("🚀 Retrying with preload=false (Lazy Load)...");
+              // Fallback: Lazy load. Sets the source but postpones buffering until play() is called.
+              // This ensures the player is NOT empty/stuck.
+              await _player.setAudioSource(
+                AudioSource.uri(
+                  audioInfo.url,
+                  tag: song,
+                ),
+                initialPosition: initialPosition,
+                preload: false,
+              );
+              debugPrint("✅ Lazy Load Source Set.");
+            }
             yt.close();
             return;
           }
@@ -256,6 +298,9 @@ class NativeMusicService {
           uri,
           tag: song,
         ),
+        initialPosition: initialPosition,
+        preload:
+            !lazyLoad, // 🚀 LAZY LOAD: If true, don't buffer until play() is called
       );
       debugPrint("🎵 Pre-Load Success");
     } catch (e, stackTrace) {
@@ -424,9 +469,30 @@ class NativeMusicService {
 
   Future<bool> play(SongModel song) async {
     if (_isZombie) {
-      DebugLogService().info("[Native] play() BLOCKED (Zombie)");
-      return false;
+      DebugLogService().info(
+          "[Native] play() called in Zombie state. Attempting to claim Mutex...");
+      _tryClaimMutex();
+      if (_isZombie) {
+        DebugLogService()
+            .info("[Native] play() BLOCKED (Zombie) - Claim failed");
+        return false;
+      }
     }
+
+    // 🚀 Loading Guard: Wait for any pending load to finish, then cancel it
+    if (_isLoading && _loadingCompleter != null) {
+      DebugLogService()
+          .info("[Native] play() Waiting for previous load to finish...");
+      // Stop previous load by stopping player
+      await _player.stop();
+      _isLoading = false;
+      _loadingCompleter?.complete();
+    }
+
+    // Mark as loading
+    _isLoading = true;
+    _loadingCompleter = Completer<void>();
+
     try {
       DebugLogService().info(
           "[Native] play() called. ServiceHash=${this.hashCode}, PlayerHash=${_player.hashCode}");
@@ -543,6 +609,11 @@ class NativeMusicService {
       debugPrint("❌ Service Error: $e");
       debugPrint("❌ Stack trace: $stackTrace");
       return false;
+    } finally {
+      // 🚀 Reset loading guard
+      _isLoading = false;
+      _loadingCompleter?.complete();
+      _loadingCompleter = null;
     }
   }
 

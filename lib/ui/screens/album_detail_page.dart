@@ -7,7 +7,7 @@ import 'package:metadata_god/metadata_god.dart';
 import '../../models/album_model.dart';
 
 import '../../models/song_model.dart';
-import '../../services/spotify_service.dart';
+import '../../services/hybrid_service.dart';
 import '../../services/smart_download_service.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../services/bulk_download_service.dart';
@@ -94,7 +94,9 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
 
     // CASE 2: Spotify Album
     try {
-      final tracks = await SpotifyService.getAlbumTracks(widget.album.id);
+      // Use Hybrid Safe method which can fall back to Deezer search if ID fails
+      final tracks = await HybridService.getAlbumTracksSafe(
+          widget.album.id, widget.album.title, widget.album.artist);
 
       // Convert to SongModel with predicted paths
       final songModels = await Future.wait(tracks.map((t) async {
@@ -158,7 +160,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
     // 2. Try Spotify Fallback
     try {
       final query = "${widget.album.title} ${widget.album.artist}";
-      final albums = await SpotifyService.searchAlbums(query);
+      final albums = await HybridService.searchAlbums(query);
       if (albums.isNotEmpty && albums.first.imageUrl.isNotEmpty) {
         if (mounted) {
           setState(() {
@@ -205,9 +207,10 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
   }
 
   Future<void> _fetchArtistImage() async {
-    final url = await SpotifyService.getArtistImagetoAlbum(widget.album.artist);
-    if (mounted && url != null) {
-      setState(() => _artistImageUrl = url);
+    final artist = await HybridService.getArtist("unknown",
+        artistName: widget.album.artist);
+    if (mounted && artist != null) {
+      setState(() => _artistImageUrl = artist.imageUrl);
     }
   }
 

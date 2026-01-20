@@ -21,6 +21,7 @@ class SettingsState {
   final String spotifyMarket;
   final String streamingQuality; // standard, high, lossless
   final bool showDebugButton;
+  final bool ignoreSubfolders; // NEW: Default true
 
   SettingsState({
     this.isDarkMode = true,
@@ -35,6 +36,7 @@ class SettingsState {
     this.spotifyMarket = 'KR',
     this.streamingQuality = 'high', // Default to high (M4A)
     this.showDebugButton = false,
+    this.ignoreSubfolders = true,
   });
 
   SettingsState copyWith({
@@ -50,6 +52,7 @@ class SettingsState {
     String? spotifyMarket,
     String? streamingQuality,
     bool? showDebugButton,
+    bool? ignoreSubfolders,
   }) {
     return SettingsState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -65,6 +68,7 @@ class SettingsState {
       spotifyMarket: spotifyMarket ?? this.spotifyMarket,
       streamingQuality: streamingQuality ?? this.streamingQuality,
       showDebugButton: showDebugButton ?? this.showDebugButton,
+      ignoreSubfolders: ignoreSubfolders ?? this.ignoreSubfolders,
     );
   }
 }
@@ -95,6 +99,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final market = _prefs.getString('spotifyMarket') ?? 'KR';
     final streaming = _prefs.getString('streamingQuality') ?? 'high';
     final showDebug = _prefs.getBool('showDebugButton') ?? false;
+    final ignoreSub = _prefs.getBool('ignoreSubfolders') ?? true;
 
     state = SettingsState(
       isDarkMode: isDark,
@@ -109,6 +114,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       spotifyMarket: market,
       streamingQuality: streaming,
       showDebugButton: showDebug,
+      ignoreSubfolders: ignoreSub,
     );
   }
 
@@ -174,6 +180,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> toggleShowDebugButton(bool enabled) async {
     await _prefs.setBool('showDebugButton', enabled);
     state = state.copyWith(showDebugButton: enabled);
+  }
+
+  Future<void> toggleIgnoreSubfolders(bool enabled) async {
+    await _prefs.setBool('ignoreSubfolders', enabled);
+    state = state.copyWith(ignoreSubfolders: enabled);
   }
 }
 

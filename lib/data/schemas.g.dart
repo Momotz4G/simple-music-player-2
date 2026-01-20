@@ -2214,33 +2214,43 @@ const HistoryEntrySchema = CollectionSchema(
       name: r'artist',
       type: IsarType.string,
     ),
-    r'duration': PropertySchema(
+    r'deezerId': PropertySchema(
       id: 3,
+      name: r'deezerId',
+      type: IsarType.string,
+    ),
+    r'duration': PropertySchema(
+      id: 4,
       name: r'duration',
       type: IsarType.double,
     ),
     r'isStream': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'isStream',
       type: IsarType.bool,
     ),
     r'lastPlayed': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'lastPlayed',
       type: IsarType.dateTime,
     ),
     r'originalFilePath': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'originalFilePath',
       type: IsarType.string,
     ),
+    r'spotifyId': PropertySchema(
+      id: 8,
+      name: r'spotifyId',
+      type: IsarType.string,
+    ),
     r'title': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'title',
       type: IsarType.string,
     ),
     r'youtubeUrl': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'youtubeUrl',
       type: IsarType.string,
     )
@@ -2282,7 +2292,19 @@ int _historyEntryEstimateSize(
   bytesCount += 3 + object.album.length * 3;
   bytesCount += 3 + object.albumArtUrl.length * 3;
   bytesCount += 3 + object.artist.length * 3;
+  {
+    final value = object.deezerId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.originalFilePath.length * 3;
+  {
+    final value = object.spotifyId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.title.length * 3;
   bytesCount += 3 + object.youtubeUrl.length * 3;
   return bytesCount;
@@ -2297,12 +2319,14 @@ void _historyEntrySerialize(
   writer.writeString(offsets[0], object.album);
   writer.writeString(offsets[1], object.albumArtUrl);
   writer.writeString(offsets[2], object.artist);
-  writer.writeDouble(offsets[3], object.duration);
-  writer.writeBool(offsets[4], object.isStream);
-  writer.writeDateTime(offsets[5], object.lastPlayed);
-  writer.writeString(offsets[6], object.originalFilePath);
-  writer.writeString(offsets[7], object.title);
-  writer.writeString(offsets[8], object.youtubeUrl);
+  writer.writeString(offsets[3], object.deezerId);
+  writer.writeDouble(offsets[4], object.duration);
+  writer.writeBool(offsets[5], object.isStream);
+  writer.writeDateTime(offsets[6], object.lastPlayed);
+  writer.writeString(offsets[7], object.originalFilePath);
+  writer.writeString(offsets[8], object.spotifyId);
+  writer.writeString(offsets[9], object.title);
+  writer.writeString(offsets[10], object.youtubeUrl);
 }
 
 HistoryEntry _historyEntryDeserialize(
@@ -2315,13 +2339,15 @@ HistoryEntry _historyEntryDeserialize(
   object.album = reader.readString(offsets[0]);
   object.albumArtUrl = reader.readString(offsets[1]);
   object.artist = reader.readString(offsets[2]);
-  object.duration = reader.readDouble(offsets[3]);
+  object.deezerId = reader.readStringOrNull(offsets[3]);
+  object.duration = reader.readDouble(offsets[4]);
   object.id = id;
-  object.isStream = reader.readBool(offsets[4]);
-  object.lastPlayed = reader.readDateTime(offsets[5]);
-  object.originalFilePath = reader.readString(offsets[6]);
-  object.title = reader.readString(offsets[7]);
-  object.youtubeUrl = reader.readString(offsets[8]);
+  object.isStream = reader.readBool(offsets[5]);
+  object.lastPlayed = reader.readDateTime(offsets[6]);
+  object.originalFilePath = reader.readString(offsets[7]);
+  object.spotifyId = reader.readStringOrNull(offsets[8]);
+  object.title = reader.readString(offsets[9]);
+  object.youtubeUrl = reader.readString(offsets[10]);
   return object;
 }
 
@@ -2339,16 +2365,20 @@ P _historyEntryDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 5:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
+      return (reader.readStringOrNull(offset)) as P;
+    case 9:
+      return (reader.readString(offset)) as P;
+    case 10:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2955,6 +2985,160 @@ extension HistoryEntryQueryFilter
   }
 
   QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'deezerId',
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'deezerId',
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'deezerId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'deezerId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'deezerId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      deezerIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'deezerId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
       durationEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -3270,6 +3454,160 @@ extension HistoryEntryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'originalFilePath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'spotifyId',
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'spotifyId',
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'spotifyId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'spotifyId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'spotifyId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterFilterCondition>
+      spotifyIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'spotifyId',
         value: '',
       ));
     });
@@ -3591,6 +3929,18 @@ extension HistoryEntryQuerySortBy
     });
   }
 
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> sortByDeezerId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deezerId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> sortByDeezerIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deezerId', Sort.desc);
+    });
+  }
+
   QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> sortByDuration() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'duration', Sort.asc);
@@ -3639,6 +3989,18 @@ extension HistoryEntryQuerySortBy
       sortByOriginalFilePathDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'originalFilePath', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> sortBySpotifyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'spotifyId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> sortBySpotifyIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'spotifyId', Sort.desc);
     });
   }
 
@@ -3707,6 +4069,18 @@ extension HistoryEntryQuerySortThenBy
     });
   }
 
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> thenByDeezerId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deezerId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> thenByDeezerIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deezerId', Sort.desc);
+    });
+  }
+
   QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> thenByDuration() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'duration', Sort.asc);
@@ -3770,6 +4144,18 @@ extension HistoryEntryQuerySortThenBy
     });
   }
 
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> thenBySpotifyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'spotifyId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> thenBySpotifyIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'spotifyId', Sort.desc);
+    });
+  }
+
   QueryBuilder<HistoryEntry, HistoryEntry, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -3819,6 +4205,13 @@ extension HistoryEntryQueryWhereDistinct
     });
   }
 
+  QueryBuilder<HistoryEntry, HistoryEntry, QDistinct> distinctByDeezerId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deezerId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<HistoryEntry, HistoryEntry, QDistinct> distinctByDuration() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'duration');
@@ -3842,6 +4235,13 @@ extension HistoryEntryQueryWhereDistinct
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'originalFilePath',
           caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<HistoryEntry, HistoryEntry, QDistinct> distinctBySpotifyId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'spotifyId', caseSensitive: caseSensitive);
     });
   }
 
@@ -3886,6 +4286,12 @@ extension HistoryEntryQueryProperty
     });
   }
 
+  QueryBuilder<HistoryEntry, String?, QQueryOperations> deezerIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deezerId');
+    });
+  }
+
   QueryBuilder<HistoryEntry, double, QQueryOperations> durationProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'duration');
@@ -3908,6 +4314,12 @@ extension HistoryEntryQueryProperty
       originalFilePathProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'originalFilePath');
+    });
+  }
+
+  QueryBuilder<HistoryEntry, String?, QQueryOperations> spotifyIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'spotifyId');
     });
   }
 
@@ -3945,38 +4357,48 @@ const SavedStatSchema = CollectionSchema(
       name: r'artist',
       type: IsarType.string,
     ),
-    r'lastKnownPath': PropertySchema(
+    r'deezerId': PropertySchema(
       id: 2,
+      name: r'deezerId',
+      type: IsarType.string,
+    ),
+    r'lastKnownPath': PropertySchema(
+      id: 3,
       name: r'lastKnownPath',
       type: IsarType.string,
     ),
     r'onlineArtUrl': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'onlineArtUrl',
       type: IsarType.string,
     ),
     r'playCount': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'playCount',
       type: IsarType.long,
     ),
+    r'spotifyId': PropertySchema(
+      id: 6,
+      name: r'spotifyId',
+      type: IsarType.string,
+    ),
     r'statId': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'statId',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'title',
       type: IsarType.string,
     ),
     r'totalSeconds': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'totalSeconds',
       type: IsarType.long,
     ),
     r'youtubeUrl': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'youtubeUrl',
       type: IsarType.string,
     )
@@ -4017,9 +4439,21 @@ int _savedStatEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.album.length * 3;
   bytesCount += 3 + object.artist.length * 3;
+  {
+    final value = object.deezerId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.lastKnownPath.length * 3;
   {
     final value = object.onlineArtUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.spotifyId;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
@@ -4043,13 +4477,15 @@ void _savedStatSerialize(
 ) {
   writer.writeString(offsets[0], object.album);
   writer.writeString(offsets[1], object.artist);
-  writer.writeString(offsets[2], object.lastKnownPath);
-  writer.writeString(offsets[3], object.onlineArtUrl);
-  writer.writeLong(offsets[4], object.playCount);
-  writer.writeString(offsets[5], object.statId);
-  writer.writeString(offsets[6], object.title);
-  writer.writeLong(offsets[7], object.totalSeconds);
-  writer.writeString(offsets[8], object.youtubeUrl);
+  writer.writeString(offsets[2], object.deezerId);
+  writer.writeString(offsets[3], object.lastKnownPath);
+  writer.writeString(offsets[4], object.onlineArtUrl);
+  writer.writeLong(offsets[5], object.playCount);
+  writer.writeString(offsets[6], object.spotifyId);
+  writer.writeString(offsets[7], object.statId);
+  writer.writeString(offsets[8], object.title);
+  writer.writeLong(offsets[9], object.totalSeconds);
+  writer.writeString(offsets[10], object.youtubeUrl);
 }
 
 SavedStat _savedStatDeserialize(
@@ -4061,14 +4497,16 @@ SavedStat _savedStatDeserialize(
   final object = SavedStat();
   object.album = reader.readString(offsets[0]);
   object.artist = reader.readString(offsets[1]);
+  object.deezerId = reader.readStringOrNull(offsets[2]);
   object.id = id;
-  object.lastKnownPath = reader.readString(offsets[2]);
-  object.onlineArtUrl = reader.readStringOrNull(offsets[3]);
-  object.playCount = reader.readLong(offsets[4]);
-  object.statId = reader.readString(offsets[5]);
-  object.title = reader.readString(offsets[6]);
-  object.totalSeconds = reader.readLong(offsets[7]);
-  object.youtubeUrl = reader.readStringOrNull(offsets[8]);
+  object.lastKnownPath = reader.readString(offsets[3]);
+  object.onlineArtUrl = reader.readStringOrNull(offsets[4]);
+  object.playCount = reader.readLong(offsets[5]);
+  object.spotifyId = reader.readStringOrNull(offsets[6]);
+  object.statId = reader.readString(offsets[7]);
+  object.title = reader.readString(offsets[8]);
+  object.totalSeconds = reader.readLong(offsets[9]);
+  object.youtubeUrl = reader.readStringOrNull(offsets[10]);
   return object;
 }
 
@@ -4084,18 +4522,22 @@ P _savedStatDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
-    case 3:
       return (reader.readStringOrNull(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
-    case 6:
-      return (reader.readString(offset)) as P;
-    case 7:
       return (reader.readLong(offset)) as P;
+    case 6:
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
     case 8:
+      return (reader.readString(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -4553,6 +4995,154 @@ extension SavedStatQueryFilter
     });
   }
 
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'deezerId',
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition>
+      deezerIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'deezerId',
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'deezerId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'deezerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'deezerId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> deezerIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'deezerId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition>
+      deezerIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'deezerId',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -4945,6 +5535,155 @@ extension SavedStatQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> spotifyIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'spotifyId',
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition>
+      spotifyIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'spotifyId',
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> spotifyIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition>
+      spotifyIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> spotifyIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> spotifyIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'spotifyId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> spotifyIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> spotifyIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> spotifyIdContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'spotifyId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> spotifyIdMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'spotifyId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition> spotifyIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'spotifyId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterFilterCondition>
+      spotifyIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'spotifyId',
+        value: '',
       ));
     });
   }
@@ -5447,6 +6186,18 @@ extension SavedStatQuerySortBy on QueryBuilder<SavedStat, SavedStat, QSortBy> {
     });
   }
 
+  QueryBuilder<SavedStat, SavedStat, QAfterSortBy> sortByDeezerId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deezerId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterSortBy> sortByDeezerIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deezerId', Sort.desc);
+    });
+  }
+
   QueryBuilder<SavedStat, SavedStat, QAfterSortBy> sortByLastKnownPath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastKnownPath', Sort.asc);
@@ -5480,6 +6231,18 @@ extension SavedStatQuerySortBy on QueryBuilder<SavedStat, SavedStat, QSortBy> {
   QueryBuilder<SavedStat, SavedStat, QAfterSortBy> sortByPlayCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'playCount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterSortBy> sortBySpotifyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'spotifyId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterSortBy> sortBySpotifyIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'spotifyId', Sort.desc);
     });
   }
 
@@ -5558,6 +6321,18 @@ extension SavedStatQuerySortThenBy
     });
   }
 
+  QueryBuilder<SavedStat, SavedStat, QAfterSortBy> thenByDeezerId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deezerId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterSortBy> thenByDeezerIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deezerId', Sort.desc);
+    });
+  }
+
   QueryBuilder<SavedStat, SavedStat, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -5603,6 +6378,18 @@ extension SavedStatQuerySortThenBy
   QueryBuilder<SavedStat, SavedStat, QAfterSortBy> thenByPlayCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'playCount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterSortBy> thenBySpotifyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'spotifyId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QAfterSortBy> thenBySpotifyIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'spotifyId', Sort.desc);
     });
   }
 
@@ -5671,6 +6458,13 @@ extension SavedStatQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SavedStat, SavedStat, QDistinct> distinctByDeezerId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deezerId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SavedStat, SavedStat, QDistinct> distinctByLastKnownPath(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -5689,6 +6483,13 @@ extension SavedStatQueryWhereDistinct
   QueryBuilder<SavedStat, SavedStat, QDistinct> distinctByPlayCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'playCount');
+    });
+  }
+
+  QueryBuilder<SavedStat, SavedStat, QDistinct> distinctBySpotifyId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'spotifyId', caseSensitive: caseSensitive);
     });
   }
 
@@ -5740,6 +6541,12 @@ extension SavedStatQueryProperty
     });
   }
 
+  QueryBuilder<SavedStat, String?, QQueryOperations> deezerIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deezerId');
+    });
+  }
+
   QueryBuilder<SavedStat, String, QQueryOperations> lastKnownPathProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastKnownPath');
@@ -5755,6 +6562,12 @@ extension SavedStatQueryProperty
   QueryBuilder<SavedStat, int, QQueryOperations> playCountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'playCount');
+    });
+  }
+
+  QueryBuilder<SavedStat, String?, QQueryOperations> spotifyIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'spotifyId');
     });
   }
 

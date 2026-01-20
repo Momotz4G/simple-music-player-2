@@ -2,7 +2,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/song_metadata.dart';
-import '../services/spotify_service.dart';
+import '../services/hybrid_service.dart';
 
 // State for the search results panel
 class DownloadSearchNotifier extends StateNotifier<List<SongMetadata>> {
@@ -14,8 +14,8 @@ class DownloadSearchNotifier extends StateNotifier<List<SongMetadata>> {
       return;
     }
 
-    // THIS NOW CALLS THE NEW METHOD ADDED TO SpotifyService
-    final results = await SpotifyService.searchTracks(query);
+    // Use HybridService to support fallback and prevent crashes
+    final results = await HybridService.searchSongs(query);
 
     state = results;
   }

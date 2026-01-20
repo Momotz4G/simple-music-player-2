@@ -44,7 +44,12 @@ class _VersionSelectionDialogState
     });
 
     try {
+      // Ensure downloader is initialized before searching
+      print("🎵 VersionSelect: Initializing downloader...");
+      await _downloader.initialize();
+      print("🎵 VersionSelect: Searching for '$query'...");
       final results = await _downloader.searchVideo(query);
+      print("🎵 VersionSelect: Got ${results.length} results");
       if (mounted) {
         setState(() {
           _results = results;
@@ -52,6 +57,7 @@ class _VersionSelectionDialogState
         });
       }
     } catch (e) {
+      print("🎵 VersionSelect: Error - $e");
       if (mounted) {
         setState(() {
           _error = "Search failed: $e";

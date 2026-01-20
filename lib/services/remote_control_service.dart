@@ -35,6 +35,15 @@ class RemoteControlService {
     _userId = id;
   }
 
+  /// Set initial state for loop breaker pattern.
+  /// Call this BEFORE startListening to prevent stale server data from overwriting local settings.
+  void setInitialState({bool? shuffle, int? loopMode}) {
+    if (shuffle != null) _lastShuffle = shuffle;
+    if (loopMode != null) _lastLoop = loopMode;
+    debugPrint(
+        "📡 RemoteControl: Initial state set - Shuffle=$shuffle, Loop=$loopMode");
+  }
+
   String? _lastCommandTime; // Track updates by timestamp
 
   Timer? _pollingTimer;
@@ -48,9 +57,9 @@ class RemoteControlService {
     });
 
     // 2. Setup Polling Fallback (Reliability)
-    // Run every 1 second to catch missed events if Realtime fails
+    // Run every 5 seconds to catch missed events if Realtime fails
     _pollingTimer?.cancel();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       if (_userId == null) return;
       final sessionData = await PocketBaseService().getSessionData();
       if (sessionData != null) {
@@ -61,9 +70,24 @@ class RemoteControlService {
 
   final DateTime _serviceStartTime = DateTime.now();
 
+  DateTime? _lastBroadcastTime; // 🚀 Track last broadcast to ignore echoes
+
   void _checkAndProcessCommand(
       Map<String, dynamic> data, Function(String, dynamic) onCommand) {
     debugPrint("📡 [Remote] Raw Data: $data");
+
+    final now = DateTime.now();
+
+    // 1. STARTUP COOLDOWN: Ignore sync events for 5 seconds after service start
+    final msSinceStart = now.difference(_serviceStartTime).inMilliseconds;
+    final isStartupPeriod = msSinceStart < 5000;
+
+    // 2. BROADCAST COOLDOWN: Ignore sync for 3 seconds after we sent an update
+    // This prevents the "Echo Effect" where the server sends back old data before processing our update
+    final msSinceBroadcast = _lastBroadcastTime != null
+        ? now.difference(_lastBroadcastTime!).inMilliseconds
+        : 999999;
+    final isBroadcastCooldown = msSinceBroadcast < 3000;
 
     // 🚀 SAFE SYNC (Loop Breaker Pattern for Shuffle/Loop)
     // Only dispatch if state DIFFERS from what we last sent (ignores echoes).
@@ -71,13 +95,22 @@ class RemoteControlService {
     final newLoop = data['loop_mode'] as int?;
 
     bool hasNewState = false;
-    if (newShuffle != null && newShuffle != _lastShuffle) {
-      _lastShuffle = newShuffle;
-      hasNewState = true;
-    }
-    if (newLoop != null && newLoop != _lastLoop) {
-      _lastLoop = newLoop;
-      hasNewState = true;
+    bool shuffleChanged = newShuffle != null && newShuffle != _lastShuffle;
+    bool loopChanged = newLoop != null && newLoop != _lastLoop;
+
+    if (shuffleChanged || loopChanged) {
+      if (isStartupPeriod) {
+        debugPrint(
+            "📡 [Remote] Sync IGNORED (startup cooldown): Shuffle=$newShuffle, Loop=$newLoop");
+      } else if (isBroadcastCooldown) {
+        debugPrint(
+            "📡 [Remote] Sync IGNORED (broadcast cooldown): Shuffle=$newShuffle, Loop=$newLoop");
+      } else {
+        // After startup and cooldown, accept server sync commands
+        if (shuffleChanged) _lastShuffle = newShuffle;
+        if (loopChanged) _lastLoop = newLoop;
+        hasNewState = true;
+      }
     }
 
     if (hasNewState) {
@@ -147,6 +180,8 @@ class RemoteControlService {
     Map<String, dynamic>? albumDetails,
   }) {
     if (_userId == null) return;
+
+    _lastBroadcastTime = DateTime.now(); // 🚀 Record Broadcast Time
 
     final data = <String, dynamic>{};
     if (title != null) data['current_title'] = title;

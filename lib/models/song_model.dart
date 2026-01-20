@@ -24,6 +24,7 @@ class SongModel {
   // SPOTIFY IDS FOR ENDLESS QUEUE
   final String? spotifyId; // Spotify track ID for recommendations
   final String? spotifyArtistId; // Spotify artist ID for recommendations
+  final String? deezerId; // 🚀 Deezer track ID for direct FLAC match
 
   SongModel({
     required this.title,
@@ -42,6 +43,7 @@ class SongModel {
     this.genre,
     this.spotifyId,
     this.spotifyArtistId,
+    this.deezerId,
   });
 
   // Factory constructor for creating from file scan
@@ -73,6 +75,7 @@ class SongModel {
       discNumber: discNumber,
       year: year,
       genre: genre,
+      // deezerId is naturally null for local files
     );
   }
 
@@ -93,6 +96,7 @@ class SongModel {
     String? genre,
     String? spotifyId,
     String? spotifyArtistId,
+    String? deezerId,
   }) {
     return SongModel(
       title: title ?? this.title,
@@ -111,6 +115,7 @@ class SongModel {
       genre: genre ?? this.genre,
       spotifyId: spotifyId ?? this.spotifyId,
       spotifyArtistId: spotifyArtistId ?? this.spotifyArtistId,
+      deezerId: deezerId ?? this.deezerId,
     );
   }
 
@@ -132,6 +137,7 @@ class SongModel {
       'genre': genre,
       'spotifyId': spotifyId,
       'spotifyArtistId': spotifyArtistId,
+      'deezerId': deezerId,
       // Note: We don't save albumArtBytes to JSON as it's too heavy.
       // We rely on reloading it from file or URL.
     };
@@ -165,6 +171,7 @@ class SongModel {
       genre: json['genre'],
       spotifyId: json['spotifyId'],
       spotifyArtistId: json['spotifyArtistId'],
+      deezerId: json['deezerId'],
     );
   }
 

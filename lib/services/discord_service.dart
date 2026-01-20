@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_discord_rpc/flutter_discord_rpc.dart' as rpc;
 import '../models/song_model.dart';
 import '../env/env.dart';
+import 'debug_log_service.dart';
 
 class DiscordService {
   static final DiscordService _instance = DiscordService._internal();
@@ -34,6 +35,7 @@ class DiscordService {
 
   /// Entry point: Called once when app starts
   void init() {
+    DebugLogService().info("[Discord] init() called - starting monitor");
     // Start the infinite monitoring loop
     _startMonitor();
   }
@@ -66,9 +68,8 @@ class DiscordService {
       final isRunning = await _isDiscordProcessRunning();
 
       if (isRunning) {
-        if (kDebugMode) {
-          print("Found Discord process. Attempting connection...");
-        }
+        DebugLogService()
+            .info("[Discord] Found Discord process. Attempting connection...");
         await _tryConnect();
       }
     });
@@ -80,9 +81,11 @@ class DiscordService {
     try {
       // 1. Initialize Library (ONLY ONCE PER APP LIFETIME)
       if (!_isLibraryInitialized) {
+        DebugLogService()
+            .info("[Discord] Initializing with App ID: $_applicationId");
         await rpc.FlutterDiscordRPC.initialize(_applicationId);
         _isLibraryInitialized = true;
-        if (kDebugMode) print("✅ Discord RPC Library Initialized");
+        DebugLogService().info("[Discord] ✅ RPC Library Initialized");
       }
 
       // 2. Wait a moment for Discord's IPC pipe to be ready (prevents native crash)
@@ -93,18 +96,22 @@ class DiscordService {
       rpc.FlutterDiscordRPC.instance.connect();
 
       _isConnected = true;
-      if (kDebugMode) print("✅ Discord Connected Successfully");
+      DebugLogService().info("[Discord] ✅ Connected Successfully");
 
       // 4. Sync immediately if music is playing
+      DebugLogService().info(
+          "[Discord] Checking lastSong after connect: ${_lastSong?.title ?? 'null'}");
       if (_lastSong != null) {
         await Future.delayed(const Duration(milliseconds: 500));
+        DebugLogService()
+            .info("[Discord] Calling _performUpdate for: ${_lastSong!.title}");
         _performUpdate();
       }
     } catch (e) {
       _isConnected = false;
       // It's okay if this fails (e.g. pipe not ready yet).
       // The timer will try again in 5 seconds.
-      if (kDebugMode) print("⚠️ Connect attempt failed: $e");
+      DebugLogService().info("[Discord] ⚠️ Connect attempt failed: $e");
     } finally {
       _isConnecting = false;
     }
@@ -134,9 +141,14 @@ class DiscordService {
     _lastTotal = total;
     _lastImageUrl = imageUrl;
 
+    DebugLogService().info(
+        "[Discord] updatePresence: ${song.title} | connected=$_isConnected | enabled=$_isEnabled");
+
     // Only send if actually connected
     if (_isConnected) {
       _performUpdate();
+    } else {
+      DebugLogService().info("[Discord] Skipping update - not connected yet");
     }
   }
 
@@ -169,9 +181,8 @@ class DiscordService {
         ),
       );
     } catch (e) {
-      if (kDebugMode) {
-        print("⚠️ Discord Connection Lost. Restarting monitor...");
-      }
+      DebugLogService()
+          .info("[Discord] ⚠️ Connection Lost: $e. Restarting monitor...");
       _isConnected = false;
       // If the update fails, we assume connection lost. The timer loop will pick it up again.
     }

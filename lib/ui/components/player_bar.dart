@@ -21,6 +21,9 @@ import 'audio_wave_visualizer.dart';
 import 'equalizer_sheet.dart';
 import 'version_selection_dialog.dart';
 import 'song_context_menu.dart';
+import 'song_info_dialog.dart';
+import '../../services/audio_info_service.dart';
+import 'marquee_text.dart';
 
 enum TimeUnit { hour, minute, second }
 
@@ -34,6 +37,73 @@ class PlayerBar extends ConsumerStatefulWidget {
 class _PlayerBarState extends ConsumerState<PlayerBar> {
   bool _isArtistHovered = false;
   bool _isTitleHovered = false;
+
+  // Audio Quality Badge
+  AudioInfo? _audioInfo;
+  String? _lastFilePath;
+
+  Future<void> _fetchAudioInfo(String? filePath) async {
+    if (filePath == null) {
+      if (mounted) setState(() => _audioInfo = null);
+      return;
+    }
+
+    // Don't re-fetch if file path hasn't changed (handled by check below, but double check)
+    // Note: This method is called when file path actually changes
+
+    try {
+      final info = await AudioInfoService().getAudioInfo(filePath);
+      if (mounted) {
+        setState(() => _audioInfo = info);
+      }
+    } catch (e) {
+      // Fail silently
+    }
+  }
+
+  Widget _buildQualityBadgeWidget(bool isDark) {
+    if (_audioInfo == null) return const SizedBox.shrink();
+
+    final label = _audioInfo!.qualityLabel;
+    final isHiRes = label.contains('Hi-Res');
+    final isCdQuality = label.contains('CD');
+    final isLossless = _audioInfo!.isLossless;
+
+    String text;
+    Color color;
+
+    if (isHiRes) {
+      text = "HI-RES";
+      color = Colors.amber;
+    } else if (isCdQuality || isLossless) {
+      text = "LOSSLESS";
+      color = isCdQuality ? Colors.cyan : Colors.blue;
+    } else if (label == 'High Quality') {
+      text = "HQ";
+      color = Colors.green;
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        border: Border.all(color: color.withOpacity(0.5), width: 1),
+        borderRadius: BorderRadius.circular(4),
+        color: color.withOpacity(0.05),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
 
   String _formatTime(double seconds) {
     if (seconds.isNaN || seconds.isInfinite) return "0:00";
@@ -51,6 +121,35 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
 
     final song = playerState.currentSong;
     final hasSong = song != null;
+
+    // 1. Handle Song Changes and Initial Load
+    // Use explicit check because ref.listen might not fire for initial state on app launch
+    if (song?.filePath != _lastFilePath) {
+      // Update tracker immediately to prevent loop
+      _lastFilePath = song?.filePath;
+
+      // Reset info and fetch new
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _audioInfo = null);
+        _fetchAudioInfo(song?.filePath);
+      });
+    }
+
+    // 2. Listen for buffering completion (when file is fully downloaded/ready)
+    // This allows updating the badge from "Unknown" (or nothing) to actual quality once file exists
+    ref.listen(playerProvider.select((s) => s.isBuffering), (prev, next) {
+      if (prev == true && next == false) {
+        // Buffering finished, force re-fetch properly
+        _fetchAudioInfo(song?.filePath);
+      }
+    });
+
+    // Initial fetch if needed (e.g. on first load)
+    if (hasSong && _lastFilePath != song.filePath) {
+      _lastFilePath = song.filePath;
+      // Use microtask to avoid setState during build
+      Future.microtask(() => _fetchAudioInfo(song.filePath));
+    }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? Colors.white : Colors.black;
@@ -170,18 +269,31 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                     ? (details) => _showTitleContextMenu(
                                         context, details.globalPosition, song)
                                     : null,
-                                child: Text(
-                                  hasSong ? song.title : "No Song Playing",
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: hasSong ? primaryColor : Colors.grey,
-                                    decoration: (_isTitleHovered && hasSong)
-                                        ? TextDecoration.underline
-                                        : null,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Flexible(
+                                      child: MarqueeText(
+                                        text: hasSong
+                                            ? song.title
+                                            : "No Song Playing",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          color: hasSong
+                                              ? primaryColor
+                                              : Colors.grey,
+                                          decoration:
+                                              (_isTitleHovered && hasSong)
+                                                  ? TextDecoration.underline
+                                                  : null,
+                                        ),
+                                        velocity: 30,
+                                        blankSpace: 40,
+                                      ),
+                                    ),
+                                    _buildQualityBadgeWidget(isDark),
+                                  ],
                                 ),
                               ),
                             ),
@@ -338,32 +450,57 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                 fontSize: 11, color: Colors.grey),
                           ),
                           Expanded(
-                            child: SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                trackHeight: 2,
-                                thumbShape: const RoundSliderThumbShape(
-                                    enabledThumbRadius: 4),
-                                overlayShape: const RoundSliderOverlayShape(
-                                    overlayRadius: 10),
-                                activeTrackColor: hasSong
-                                    ? (isDark ? Colors.white : Colors.black)
-                                    : disabledColor,
-                                inactiveTrackColor:
-                                    Colors.grey.withValues(alpha: 0.3),
-                                thumbColor: hasSong
-                                    ? (isDark ? Colors.white : Colors.black)
-                                    : disabledColor,
-                                disabledActiveTrackColor: disabledColor,
-                                disabledThumbColor: disabledColor,
-                              ),
-                              child: Slider(
-                                value: hasSong ? sliderValue : 0.0,
-                                min: 0.0,
-                                max: sliderMax,
-                                onChanged: hasSong
-                                    ? (val) => notifier.seek(val)
-                                    : null,
-                              ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // 🚀 BUFFERING ANIMATION - Thin animated line on track
+                                if (playerState.isBuffering)
+                                  Positioned(
+                                    left: 12,
+                                    right: 12,
+                                    child: SizedBox(
+                                      height: 2,
+                                      child: LinearProgressIndicator(
+                                        backgroundColor:
+                                            Colors.grey.withValues(alpha: 0.3),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          settings.accentColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                // Normal Slider
+                                SliderTheme(
+                                  data: SliderTheme.of(context).copyWith(
+                                    trackHeight: 2,
+                                    thumbShape: const RoundSliderThumbShape(
+                                        enabledThumbRadius: 4),
+                                    overlayShape: const RoundSliderOverlayShape(
+                                        overlayRadius: 10),
+                                    activeTrackColor: hasSong
+                                        ? (isDark ? Colors.white : Colors.black)
+                                        : disabledColor,
+                                    inactiveTrackColor: playerState.isBuffering
+                                        ? Colors
+                                            .transparent // Hide track when buffering
+                                        : Colors.grey.withValues(alpha: 0.3),
+                                    thumbColor: hasSong
+                                        ? (isDark ? Colors.white : Colors.black)
+                                        : disabledColor,
+                                    disabledActiveTrackColor: disabledColor,
+                                    disabledThumbColor: disabledColor,
+                                  ),
+                                  child: Slider(
+                                    value: hasSong ? sliderValue : 0.0,
+                                    min: 0.0,
+                                    max: sliderMax,
+                                    onChanged: hasSong
+                                        ? (val) => notifier.seek(val)
+                                        : null,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           Text(
@@ -438,7 +575,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                           } else if (value == 'version') {
                             // SELECT VERSION
                             if (hasSong) {
-                              _showVersionSelector(context, ref, song!);
+                              _showVersionSelector(context, ref, song);
                             }
                           } else if (value == 'remote') {
                             _showRemotePairingDialog();
@@ -446,6 +583,11 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                             ref
                                 .read(interfaceProvider.notifier)
                                 .enterMiniPlayer();
+                          } else if (value == 'song_info') {
+                            // SHOW SONG INFORMATION DIALOG
+                            if (hasSong) {
+                              SongInfoDialog.show(context, song);
+                            }
                           }
                         },
                         itemBuilder: (context) {
@@ -527,6 +669,21 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                 ],
                               ),
                             ),
+
+                            // 6. SONG INFORMATION OPTION
+                            if (hasSong)
+                              PopupMenuItem(
+                                value: 'song_info',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.info_outline_rounded,
+                                        color: primaryColor, size: 20),
+                                    const SizedBox(width: 12),
+                                    Text("Song Information",
+                                        style: TextStyle(color: primaryColor)),
+                                  ],
+                                ),
+                              ),
                           ];
                         },
                       ),
@@ -1101,21 +1258,29 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          hasSong
-                                              ? song!.title
-                                              : "No Song Playing",
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13,
-                                            color: hasSong
-                                                ? (isDark
-                                                    ? Colors.white
-                                                    : Colors.black)
-                                                : Colors.grey,
-                                          ),
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: MarqueeText(
+                                                  text: hasSong
+                                                      ? song!.title
+                                                      : "No Song Playing",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 13,
+                                                    color: hasSong
+                                                        ? (isDark
+                                                            ? Colors.white
+                                                            : Colors.black)
+                                                        : Colors.grey,
+                                                  ),
+                                                  velocity:
+                                                      25, // Slower on mobile
+                                                  blankSpace: 30),
+                                            ),
+                                            if (hasSong)
+                                              _buildQualityBadgeWidget(isDark),
+                                          ],
                                         ),
                                         Text(
                                           hasSong
@@ -1167,14 +1332,26 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                           // Progress indicator at BOTTOM
                           SizedBox(
                             height: 3,
-                            child: LinearProgressIndicator(
-                              value: progress,
-                              backgroundColor:
-                                  isDark ? Colors.white12 : Colors.black12,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                settings.accentColor,
-                              ),
-                            ),
+                            child: playerState.isBuffering
+                                // Buffering: Show animated indeterminate progress
+                                ? LinearProgressIndicator(
+                                    backgroundColor: isDark
+                                        ? Colors.white12
+                                        : Colors.black12,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      settings.accentColor,
+                                    ),
+                                  )
+                                // Normal: Show fixed progress value
+                                : LinearProgressIndicator(
+                                    value: progress,
+                                    backgroundColor: isDark
+                                        ? Colors.white12
+                                        : Colors.black12,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      settings.accentColor,
+                                    ),
+                                  ),
                           ),
                         ],
                       ),

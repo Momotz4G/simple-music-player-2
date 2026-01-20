@@ -6,32 +6,80 @@ import '../models/album_model.dart';
 import '../models/artist_model.dart';
 
 class SpotifyService {
-  static String get _clientId => Env.spotifyClientId;
-  static String get _clientSecret => Env.spotifyClientSecret;
+  // Primary credentials (reserved for Canvas, Recommendations, Playlist Import)
+  static String get _clientIdPrimary => Env.spotifyClientId;
+  static String get _clientSecretPrimary => Env.spotifyClientSecret;
 
-  static String? _accessToken;
-  static DateTime? _tokenExpiry;
+  // Secondary credentials (for high-volume search operations)
+  static String get _clientIdSecondary => Env.spotifyClientId2;
+  static String get _clientSecretSecondary => Env.spotifyClientSecret2;
+
+  // Dual token pools
+  static String? _accessTokenPrimary;
+  static DateTime? _tokenExpiryPrimary;
+  static String? _accessTokenSecondary;
+  static DateTime? _tokenExpirySecondary;
 
   // --- 1. AUTHENTICATION ---
-  static Future<String?> _getAccessToken() async {
-    print(
-        "DEBUG: _getAccessToken called. ID len: ${_clientId.length}, Secret len: ${_clientSecret.length}");
-    if (_clientId.isEmpty || _clientSecret.isEmpty) {
-      print("DEBUG: Credentials empty!");
+
+  /// Get token for PRIMARY key (Canvas, Recommendations, Playlist Import)
+  static Future<String?> _getAccessTokenPrimary() async {
+    return _getAccessTokenInternal(
+      clientId: _clientIdPrimary,
+      clientSecret: _clientSecretPrimary,
+      tokenRef: () => _accessTokenPrimary,
+      expiryRef: () => _tokenExpiryPrimary,
+      setToken: (t) => _accessTokenPrimary = t,
+      setExpiry: (e) => _tokenExpiryPrimary = e,
+      keyName: 'PRIMARY',
+    );
+  }
+
+  /// Get token for SECONDARY key (Search, general operations)
+  static Future<String?> _getAccessTokenSecondary() async {
+    // If secondary credentials not configured, fall back to primary
+    if (_clientIdSecondary.isEmpty || _clientSecretSecondary.isEmpty) {
+      print("⚠️ Secondary Spotify credentials not configured, using primary");
+      return _getAccessTokenPrimary();
+    }
+    return _getAccessTokenInternal(
+      clientId: _clientIdSecondary,
+      clientSecret: _clientSecretSecondary,
+      tokenRef: () => _accessTokenSecondary,
+      expiryRef: () => _tokenExpirySecondary,
+      setToken: (t) => _accessTokenSecondary = t,
+      setExpiry: (e) => _tokenExpirySecondary = e,
+      keyName: 'SECONDARY',
+    );
+  }
+
+  /// Internal token fetcher
+  static Future<String?> _getAccessTokenInternal({
+    required String clientId,
+    required String clientSecret,
+    required String? Function() tokenRef,
+    required DateTime? Function() expiryRef,
+    required void Function(String?) setToken,
+    required void Function(DateTime?) setExpiry,
+    required String keyName,
+  }) async {
+    if (clientId.isEmpty || clientSecret.isEmpty) {
+      print("DEBUG: $keyName credentials empty!");
       return null;
     }
 
-    if (_accessToken != null &&
-        _tokenExpiry != null &&
-        DateTime.now().isBefore(_tokenExpiry!)) {
-      return _accessToken;
+    // Check cached token
+    final token = tokenRef();
+    final expiry = expiryRef();
+    if (token != null && expiry != null && DateTime.now().isBefore(expiry)) {
+      return token;
     }
 
     try {
-      final bytes = utf8.encode("$_clientId:$_clientSecret");
+      final bytes = utf8.encode("$clientId:$clientSecret");
       final base64Str = base64.encode(bytes);
 
-      print("DEBUG: Sending Auth Request...");
+      print("🔑 Spotify Auth [$keyName]: Requesting new token...");
       final response = await http.post(
         Uri.parse("https://accounts.spotify.com/api/token"),
         headers: {
@@ -40,22 +88,57 @@ class SpotifyService {
         },
         body: {"grant_type": "client_credentials"},
       );
-      print("DEBUG: Auth Response received: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        _accessToken = data['access_token'];
-        _tokenExpiry =
-            DateTime.now().add(Duration(seconds: data['expires_in']));
-        return _accessToken;
+        setToken(data['access_token']);
+        setExpiry(DateTime.now().add(Duration(seconds: data['expires_in'])));
+        print("✅ Spotify Auth [$keyName]: Token acquired");
+        return data['access_token'];
+      } else if (response.statusCode == 429) {
+        print("❌ Spotify Auth [$keyName]: Rate Limit Exceeded");
+        throw Exception("rate_limit_429");
       } else {
-        print("❌ Auth Failed. Status: ${response.statusCode}");
-        print("Body: ${response.body}");
+        print(
+            "❌ Spotify Auth [$keyName]: Failed. Status: ${response.statusCode}");
       }
     } catch (e) {
-      print("❌ Spotify Auth Error: $e");
+      print("❌ Spotify Auth [$keyName] Error: $e");
+      if (e.toString().contains("rate_limit_429")) rethrow;
     }
     return null;
+  }
+
+  /// Legacy compatibility - uses PRIMARY (CLIENT_ID_1) for general search operations
+  static Future<String?> _getAccessToken() async {
+    return _getAccessTokenPrimary();
+  }
+
+  /// Get token with fallback: tries preferred, falls back to other on 429
+  static Future<String?> _getTokenWithFallback(
+      {bool preferPrimary = false}) async {
+    try {
+      if (preferPrimary) {
+        return await _getAccessTokenPrimary();
+      } else {
+        return await _getAccessTokenSecondary();
+      }
+    } catch (e) {
+      if (e.toString().contains("rate_limit_429")) {
+        print("🔄 Spotify: Rate limited, trying fallback key...");
+        try {
+          if (preferPrimary) {
+            return await _getAccessTokenSecondary();
+          } else {
+            return await _getAccessTokenPrimary();
+          }
+        } catch (e2) {
+          print("❌ Spotify: Both keys rate limited!");
+          rethrow;
+        }
+      }
+      rethrow;
+    }
   }
 
   // --- 2. GET ARTIST GENRES ---
@@ -92,7 +175,8 @@ class SpotifyService {
 
   // --- 3. SEARCH METADATA (Rich Data for Editor) ---
   static Future<List<Map<String, dynamic>>> searchMetadata(String query) async {
-    final token = await _getAccessToken();
+    // 🚀 UPDATED: Use SECONDARY key first for metadata, fallback to primary
+    final token = await _getTokenWithFallback(preferPrimary: false);
     if (token == null) return [];
 
     try {
@@ -104,6 +188,8 @@ class SpotifyService {
 
       final response =
           await http.get(uri, headers: {"Authorization": "Bearer $token"});
+
+      if (response.statusCode == 429) throw Exception("rate_limit_429");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -141,6 +227,7 @@ class SpotifyService {
       }
     } catch (e) {
       print("Metadata Search Error: $e");
+      if (e.toString().contains("rate_limit_429")) rethrow;
     }
     return [];
   }
@@ -382,8 +469,10 @@ class SpotifyService {
 
   // --- 8. GET TRACK IMAGE & LINK ---
 
+  // 🔑 CRITICAL: Uses SECONDARY key (CLIENT_ID_2) first for Canvas, falls back to PRIMARY
   static Future<String?> getTrackLink(String title, String artist) async {
-    final token = await _getAccessToken();
+    // Try SECONDARY (CLIENT_ID_2) first for critical features, fall back to PRIMARY if rate-limited
+    final token = await _getTokenWithFallback(preferPrimary: false);
     if (token == null) return null;
 
     try {
@@ -406,13 +495,20 @@ class SpotifyService {
         if (items.isNotEmpty) {
           return items[0]['external_urls']['spotify'];
         }
+      } else if (response.statusCode == 429) {
+        print(
+            "⚠️ getTrackLink: API returned 429, token might have been from cached pool");
+        throw Exception("rate_limit_429");
       }
-    } catch (e) {/* Ignore */}
+    } catch (e) {
+      if (e.toString().contains("rate_limit_429")) rethrow;
+    }
     return null;
   }
 
   static Future<String?> getTrackImage(String title, String artist) async {
-    final token = await _getAccessToken();
+    // 🚀 UPDATED: Use SECONDARY key first for images
+    final token = await _getTokenWithFallback(preferPrimary: false);
     if (token == null) return null;
 
     try {
@@ -437,8 +533,12 @@ class SpotifyService {
           final images = track['album']['images'] as List;
           if (images.isNotEmpty) return images[0]['url'];
         }
+      } else if (response.statusCode == 429) {
+        throw Exception("rate_limit_429");
       }
-    } catch (e) {/* Ignore */}
+    } catch (e) {
+      if (e.toString().contains("rate_limit_429")) rethrow;
+    }
     return null;
   }
 
@@ -478,9 +578,12 @@ class SpotifyService {
             'type': 'album',
           };
         }).toList();
+      } else if (response.statusCode == 429) {
+        throw Exception("rate_limit_429");
       }
     } catch (e) {
       print("New Releases Error: $e");
+      if (e.toString().contains("rate_limit_429")) rethrow;
     }
     return [];
   }
@@ -509,7 +612,11 @@ class SpotifyService {
 
   static Future<Map<String, dynamic>> searchAll(String query,
       {int limit = 5}) async {
-    final token = await _getAccessToken();
+    // Uses SECONDARY (CLIENT_ID_2) first for remote search, falls back to PRIMARY on 429
+    final token = await _getTokenWithFallback(preferPrimary: false);
+    if (token == null) {
+      return {'songs': [], 'albums': [], 'artists': []};
+    }
 
     // Correct URL for searching (uses $query)
     final url = Uri.parse(
@@ -569,6 +676,8 @@ class SpotifyService {
         'albums': albums,
         'artists': artists,
       };
+    } else if (response.statusCode == 429) {
+      throw Exception("rate_limit_429");
     } else {
       return {'songs': [], 'albums': [], 'artists': []};
     }
@@ -586,6 +695,8 @@ class SpotifyService {
       url,
       headers: {'Authorization': 'Bearer $token'},
     );
+
+    if (response.statusCode == 429) throw Exception("rate_limit_429");
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -612,6 +723,8 @@ class SpotifyService {
         fullTracksUrl,
         headers: {'Authorization': 'Bearer $token'},
       );
+
+      if (fullResponse.statusCode == 429) throw Exception("rate_limit_429");
 
       if (fullResponse.statusCode == 200) {
         final fullData = jsonDecode(fullResponse.body);
@@ -712,6 +825,7 @@ class SpotifyService {
       }
     } catch (e) {
       print("Top Tracks Error: $e");
+      if (e.toString().contains("rate_limit_429")) rethrow;
     }
     return [];
   }
@@ -758,6 +872,7 @@ class SpotifyService {
       }
     } catch (e) {
       print("Artist Albums Error: $e");
+      if (e.toString().contains("rate_limit_429")) rethrow;
     }
     return [];
   }
@@ -765,9 +880,10 @@ class SpotifyService {
   // --- 12. GET SPOTIFY PLAYLIST TRACKS ---
   /// Fetches all tracks from a Spotify playlist, with pagination support for large playlists
   /// Returns a tuple of (playlist name, cover image, tracks)
+  // 🔑 CRITICAL: Uses SECONDARY key (CLIENT_ID_2) for Playlist Import
   static Future<Map<String, dynamic>?> getPlaylistInfo(
       String playlistId) async {
-    final token = await _getAccessToken();
+    final token = await _getAccessTokenSecondary();
     if (token == null) return null;
 
     try {
@@ -795,8 +911,9 @@ class SpotifyService {
   }
 
   /// Fetches all tracks from a Spotify playlist (handles pagination for 100+ tracks)
+  // 🔑 CRITICAL: Uses SECONDARY key (CLIENT_ID_2) for Playlist Import
   static Future<List<SongMetadata>> getPlaylistTracks(String playlistId) async {
-    final token = await _getAccessToken();
+    final token = await _getAccessTokenSecondary();
     if (token == null) return [];
 
     List<SongMetadata> allTracks = [];
@@ -906,13 +1023,14 @@ class SpotifyService {
   // --- 13. GET RECOMMENDATIONS (Endless Queue) ---
   /// Fetches recommended tracks from Spotify API based on seed tracks, artists, or genres
   /// Used for the Endless Queue feature to auto-add similar songs
+  // 🔑 CRITICAL: Uses SECONDARY key (CLIENT_ID_2) for Recommendations/Endless Queue
   static Future<List<SongMetadata>> getRecommendations({
     List<String>? seedTracks,
     List<String>? seedArtists,
     List<String>? seedGenres,
     int limit = 20,
   }) async {
-    final token = await _getAccessToken();
+    final token = await _getAccessTokenSecondary();
     if (token == null) {
       print("⚠️ getRecommendations: No access token");
       return [];

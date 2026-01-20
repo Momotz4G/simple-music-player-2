@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
+            VALUE "CompanyName", "Simple Music Player New Gen" "\0"
             VALUE "FileDescription", "simple_music_player_2" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "simple_music_player_2" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Simple Music Player New Gen. All rights reserved." "\0"
             VALUE "OriginalFilename", "simple_music_player_2.exe" "\0"
             VALUE "ProductName", "simple_music_player_2" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

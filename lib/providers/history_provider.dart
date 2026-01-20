@@ -88,7 +88,9 @@ class HistoryNotifier extends StateNotifier<List<HistoryEntry>> {
           ..youtubeUrl = youtubeUrl ?? "" // Important for re-streaming
           ..albumArtUrl = artUrl ?? "" // Important for UI
           ..isStream = youtubeUrl != null && youtubeUrl.isNotEmpty
-          ..lastPlayed = DateTime.now();
+          ..lastPlayed = DateTime.now()
+          ..spotifyId = song.spotifyId // 🚀 EXTENDED METADATA
+          ..deezerId = song.deezerId; // 🚀 EXTENDED METADATA
 
         await isar.historyEntrys.put(entry);
         DebugLogService().info("📚 HISTORY: Saved entry with ID: ${entry.id}");

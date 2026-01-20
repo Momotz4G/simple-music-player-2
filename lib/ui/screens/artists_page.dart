@@ -4,6 +4,7 @@ import '../../providers/library_presentation_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../services/spotify_service.dart';
+import '../../services/deezer_service.dart';
 
 class ArtistsPage extends ConsumerWidget {
   const ArtistsPage({super.key});
@@ -161,31 +162,45 @@ class _ArtistAvatarState extends State<ArtistAvatar> {
     }
 
     // RATE LIMIT FIX:
-    // Add a tiny random delay (0-500ms) before requesting.
-    // This prevents firing 50 requests at the exact same millisecond when the page opens.
+    // Add a randomized delay (0-3000ms) to spread out requests over a longer window.
     await Future.delayed(
-        Duration(milliseconds: (widget.artistName.hashCode % 500)));
+        Duration(milliseconds: (widget.artistName.hashCode % 3000)));
 
-    // 2. Fetch from Spotify API (Deep Search)
+    String? url;
     try {
-      final url = await SpotifyService.getArtistImage(
+      // 2. Fetch from Spotify API (Deep Search)
+      url = await SpotifyService.getArtistImage(
         artistName: widget.artistName,
         trackTitle: widget.sampleTrack, // DEEP SEARCH ENABLED
       );
-
-      // Update Cache
-      _urlCache[widget.artistName] = url;
-
-      if (mounted) {
-        setState(() {
-          _imageUrl = url;
-          _isLoading = false;
-        });
-      }
     } catch (e) {
-      // On error, cache null so we don't retry endlessly
-      _urlCache[widget.artistName] = null;
-      if (mounted) setState(() => _isLoading = false);
+      print("⚠️ Spotify Artist Image error: $e");
+    }
+
+    // 3. Fallback to Deezer if Spotify returned null or threw error
+    if (url == null) {
+      print(
+          "⚠️ Spotify Image null/failed for ${widget.artistName}, trying Deezer...");
+      try {
+        final deezerArtist = await DeezerService.getArtist(widget.artistName);
+        if (deezerArtist != null && deezerArtist.imageUrl.isNotEmpty) {
+          url = deezerArtist.imageUrl;
+        }
+      } catch (e2) {
+        print("⚠️ Deezer Artist Image failed: $e2");
+      }
+    }
+
+    // Update Cache & State
+    if (url != null) {
+      _urlCache[widget.artistName] = url;
+    }
+
+    if (mounted) {
+      setState(() {
+        _imageUrl = url;
+        _isLoading = false;
+      });
     }
   }
 

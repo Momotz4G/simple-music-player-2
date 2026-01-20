@@ -418,6 +418,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 onPressed: library.pickFolder,
                 child: Text("Change", style: TextStyle(color: accentColor))),
           ),
+          SwitchListTile(
+            title: Text("Ignore Subfolder Scan",
+                style: TextStyle(color: textColor)),
+            subtitle: Text("Only scan selected folder (Default: On)",
+                style: TextStyle(color: subtitleColor)),
+            value: settings.ignoreSubfolders,
+            activeColor: accentColor,
+            onChanged: (val) => settingsNotifier.toggleIgnoreSubfolders(val),
+          ),
           const SizedBox(height: 30),
 
           // DOWNLOADS

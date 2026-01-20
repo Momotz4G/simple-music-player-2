@@ -133,7 +133,7 @@ class YoutubeDownloaderService {
   }
 
   // --- Cache Path ---
-  Future<String?> getCachePath(String fileName) async {
+  Future<String?> getCachePath(String fileName, {String? ext}) async {
     try {
       final tempDir = await getTemporaryDirectory();
       final cacheDir = Directory('${tempDir.path}/SimpleMusicCache');
@@ -146,10 +146,11 @@ class YoutubeDownloaderService {
       final truncatedName =
           safeName.length > 50 ? safeName.substring(0, 50) : safeName;
 
-      // 🚀 FIX: Mobile downloads M4A/AAC audio (no ffmpeg conversion)
-      // Desktop uses MP3 (converted by ffmpeg via yt-dlp)
-      final ext = (Platform.isAndroid || Platform.isIOS) ? 'm4a' : 'mp3';
-      return '${cacheDir.path}/$truncatedName.$ext';
+      // Use provided ext, or fall back to platform defaults
+      // Mobile downloads M4A/AAC (no ffmpeg), Desktop can use MP3 or M4A
+      final audioExt =
+          ext ?? ((Platform.isAndroid || Platform.isIOS) ? 'm4a' : 'mp3');
+      return '${cacheDir.path}/$truncatedName.$audioExt';
     } catch (e) {
       if (kDebugMode) print("Error getting cache path: $e");
       return null;
@@ -270,7 +271,8 @@ class YoutubeDownloaderService {
     ];
 
     try {
-      final result = await Process.run(_ytDlpPath, args, runInShell: true);
+      // 🚀 Fix: runInShell: false to handle spaces in path (e.g. "Simple Music Player")
+      final result = await Process.run(_ytDlpPath, args, runInShell: false);
 
       if (result.exitCode != 0) {
         if (kDebugMode) print("Search Error: ${result.stderr}");
@@ -346,7 +348,14 @@ class YoutubeDownloaderService {
     }
 
     // 2. DESKTOP (Win/Mac/Linux): yt-dlp + ffmpeg
+    // 🚀 AUTO-INITIALIZE if not ready (fixes JIT cache during startup)
     if (!_isInitialized) {
+      print("⚠️ YT-DLP: Auto-initializing before download...");
+      await initialize();
+    }
+
+    if (!_isInitialized) {
+      print("❌ YT-DLP: Initialization failed, cannot download.");
       onComplete(false);
       return;
     }
@@ -634,7 +643,8 @@ class YoutubeDownloaderService {
     ];
 
     try {
-      final process = await Process.start(_ytDlpPath, args, runInShell: true);
+      // 🚀 Fix: runInShell: false to handle spaces in path (e.g. "Simple Music Player")
+      final process = await Process.start(_ytDlpPath, args, runInShell: false);
 
       // Handle Stdout (Progress) safely
       process.stdout.transform(utf8.decoder).listen(

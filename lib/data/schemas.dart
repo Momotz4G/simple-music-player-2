@@ -63,6 +63,10 @@ class HistoryEntry {
   late String originalFilePath; // Where it WAS stored
   late String youtubeUrl; // How to get it back
   late bool isStream; // Was it a stream or a local file?
+
+  // Extended Metadata
+  late String? spotifyId;
+  late String? deezerId;
 }
 
 @collection
@@ -84,4 +88,6 @@ class SavedStat {
   // METADATA PERSISTENCE
   late String? onlineArtUrl;
   late String? youtubeUrl;
+  late String? spotifyId;
+  late String? deezerId;
 }

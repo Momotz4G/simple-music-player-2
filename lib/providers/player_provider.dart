@@ -5,7 +5,7 @@ import 'dart:convert'; // REQUIRED for JSON
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Just ensuring
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:palette_generator/palette_generator.dart';
 import 'package:flutter/foundation.dart';
@@ -55,6 +55,9 @@ class PlayerState {
   // Endless Queue
   final bool endlessQueueEnabled;
 
+  // Buffering indicator
+  final bool isBuffering;
+
   PlayerState({
     this.isPlaying = false,
     this.currentSong,
@@ -71,6 +74,7 @@ class PlayerState {
     this.isLyricsVisible = false,
     this.dominantColor,
     this.endlessQueueEnabled = true, // Enabled by default
+    this.isBuffering = false,
   });
 
   PlayerState copyWith({
@@ -89,6 +93,7 @@ class PlayerState {
     bool? isLyricsVisible,
     Color? dominantColor,
     bool? endlessQueueEnabled,
+    bool? isBuffering,
   }) {
     return PlayerState(
       isPlaying: isPlaying ?? this.isPlaying,
@@ -106,6 +111,7 @@ class PlayerState {
       isLyricsVisible: isLyricsVisible ?? this.isLyricsVisible,
       dominantColor: dominantColor ?? this.dominantColor,
       endlessQueueEnabled: endlessQueueEnabled ?? this.endlessQueueEnabled,
+      isBuffering: isBuffering ?? this.isBuffering,
     );
   }
 }
@@ -196,21 +202,46 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       try {
         DebugLogService().info("[Init] Parsing last song JSON...");
         lastSong = SongModel.fromJson(jsonDecode(lastSongJson));
+
         DebugLogService().info("[Init] Last song parsed: ${lastSong.title}");
+
+        // 🚀 SET SONG IN STATE IMMEDIATELY (so UI shows song info while rebuffering)
+        // Check if file needs rebuffering
+        final needsRebuffering = lastSong.filePath == "cloud_stream" ||
+            !await File(lastSong.filePath).exists();
+
+        state = state.copyWith(
+          volume: volume,
+          unmutedVolume: volume > 0 ? volume : 0.5,
+          isShuffle: shuffle,
+          loopMode: ja.LoopMode.values[loopIndex],
+          currentSong: lastSong, // Show song info immediately!
+          isBuffering: needsRebuffering, // Show buffering animation if needed
+        );
+        DebugLogService().info(
+            "[Init] Player State updated with last song (isBuffering=$needsRebuffering)");
+
+        // 🚀 CRITICAL: Validate file existence.
+        // If cache was cleared, this will trigger JIT caching (re-download)
+        // so the player doesn't get stuck on a missing file.
+        lastSong = await _ensureFileExists(lastSong);
+
+        // Update state again with validated path and clear buffering
+        state = state.copyWith(currentSong: lastSong, isBuffering: false);
+        DebugLogService()
+            .info("[Init] Song file validated: ${lastSong.filePath}");
       } catch (e) {
         print("Error restoring last song: $e");
       }
+    } else {
+      // No song to restore, just set settings
+      state = state.copyWith(
+        volume: volume,
+        unmutedVolume: volume > 0 ? volume : 0.5,
+        isShuffle: shuffle,
+        loopMode: ja.LoopMode.values[loopIndex],
+      );
     }
-
-    state = state.copyWith(
-      volume: volume,
-      unmutedVolume: volume > 0 ? volume : 0.5,
-      isShuffle: shuffle,
-      loopMode: ja.LoopMode.values[loopIndex],
-      currentSong: lastSong, // Set the restored song
-    );
-    DebugLogService()
-        .info("[Init] Player State updated with last song (UI should update)");
 
     // Apply settings to service
     await _musicService.setVolume(volume);
@@ -222,15 +253,35 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           .info("[Init] Triggering native load for: ${lastSong.title}");
       try {
         final start = DateTime.now();
-        // Load the source into audio player without playing
-        await _musicService.load(lastSong);
+
+        // 🚀 USE DIFFERENT FLOW BASED ON FILE AVAILABILITY
+        if (lastSong.filePath != "cloud_stream" &&
+            await File(lastSong.filePath).exists()) {
+          // File exists locally - use simple load with initial position
+          // 🚀 STARTUP OPTIMIZATION: Non-blocking Eager Load
+          // We do NOT await this. This allows UI to render instantly while player buffers in background.
+          _musicService.load(
+            lastSong,
+            initialPosition: lastPosition > 0
+                ? Duration(seconds: lastPosition.round())
+                : null,
+            lazyLoad: false, // 🚀 Eager load so it's ready in 2-3s
+          );
+        } else {
+          // File missing or cloud stream - use playSong (full JIT rebuffering)
+          // This triggers the same flow as clicking a song from home page
+          DebugLogService().info(
+              "[Init] File missing/cloud - triggering playSong for rebuffering...");
+          await playSong(lastSong, skipFinalize: true);
+          // Pause immediately since we only want to prepare, not auto-play
+          await _musicService.pause();
+          state = state.copyWith(isPlaying: false);
+        }
+
         final elapsed = DateTime.now().difference(start).inMilliseconds;
         DebugLogService().info("[Init] Native load completed in ${elapsed}ms");
 
-        // Seek to saved position if valid
-        if (lastPosition > 0) {
-          await _musicService.seek(lastPosition);
-        }
+        // Seek removed (Handled by load initialPosition)
 
         // 🚀 RESTORE THRESHOLD STATE (Fixes stats not logging after app restart)
         final savedThresholdPath = prefs.getString('threshold_song_path');
@@ -265,6 +316,16 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       final settings = ref.read(settingsProvider);
       _discordService.setEnabled(settings.enableDiscordRpc);
 
+      // 🚀 Sync Discord presence after Discord connects (~6 seconds to be safe)
+      // This ensures the current song is sent to Discord even on app restart
+      Future.delayed(const Duration(seconds: 6), () {
+        if (state.currentSong != null) {
+          DebugLogService().info(
+              "[Discord] Delayed sync for restored song: ${state.currentSong!.title}");
+          _updateDiscord();
+        }
+      });
+
       // Initialize Taskbar Service
       _taskbarService.initialize(
         onPlay: () => _musicService.resume(),
@@ -275,8 +336,17 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
       // Initialize Remote Control
       _remoteService.init().then((_) {
+        // 🚀 Set initial state BEFORE listening to prevent stale server data from overwriting local settings
+        final loopModeInt = state.loopMode == ja.LoopMode.off
+            ? 0
+            : (state.loopMode == ja.LoopMode.all ? 1 : 2);
+        _remoteService.setInitialState(
+          shuffle: state.isShuffle,
+          loopMode: loopModeInt,
+        );
+
         _remoteService.startListening(onCommand: _handleRemoteCommand);
-        _broadcastRemoteState(); // Sync Initial State
+        _broadcastRemoteState(); // Sync Initial State to server
       });
 
       // Connect Notification Controls (Mobile)
@@ -508,6 +578,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         durationSeconds: song.duration.toInt(),
         year: "",
         genre: "",
+        spotifyId: song.spotifyId,
+        spotifyArtistId: song.spotifyArtistId,
+        deezerId: song.deezerId,
       );
       _smartService.cacheSong(meta, youtubeUrl: song.sourceUrl);
     }
@@ -533,6 +606,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         genre: "",
         isrc: song.isrc,
         spotifyId: song.spotifyId,
+        spotifyArtistId: song.spotifyArtistId,
+        deezerId: song.deezerId,
       );
       _smartService.cacheSong(meta, youtubeUrl: song.sourceUrl);
     }
@@ -846,10 +921,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
   // JIT CACHE HELPER
   Future<SongModel> _ensureFileExists(SongModel song) async {
-    if (song.filePath == "cloud_stream") return song; // ☁️ Bypass check
-    if (await File(song.filePath).exists()) return song;
+    // 🚀 ONLY skip if we have a VALID local file
+    if (song.filePath != "cloud_stream" && await File(song.filePath).exists()) {
+      return song;
+    }
 
-    print("⚠️ File missing: ${song.filePath}. Triggering JIT Cache...");
+    // File is missing OR was a cloud stream - attempt to cache it
+    print(
+        "⚠️ File missing or cloud_stream: ${song.filePath}. Triggering JIT Cache...");
     final meta = SongMetadata(
       title: song.title,
       artist: song.artist,
@@ -859,9 +938,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       year: "",
       genre: "",
       isrc: song.isrc,
+      spotifyId: song.spotifyId,
+      spotifyArtistId: song.spotifyArtistId,
+      deezerId: song.deezerId,
     );
 
-    // Attempt Cache
+    // Attempt Cache (this will search YouTube if sourceUrl is missing/stale)
     await _smartService.cacheSong(meta, youtubeUrl: song.sourceUrl);
 
     final cachedPath = await _smartService.getPredictedCachePath(meta);
@@ -870,7 +952,30 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       return song.copyWith(filePath: cachedPath);
     }
 
-    return song;
+    // 🚀 FINAL FALLBACK: If caching failed, switch to direct cloud streaming.
+    print("❌ JIT Failed. Attempting to resolve URL for Cloud Stream...");
+
+    // Try to find a valid URL to pass to NativeMusicService
+    if (song.sourceUrl == null ||
+        song.sourceUrl!.isEmpty ||
+        song.sourceUrl!.startsWith('query:')) {
+      final debugResult = await _smartService.searchYouTubeForMatch(meta);
+      if (debugResult != null && debugResult.youtubeMatches.isNotEmpty) {
+        var bestMatch = debugResult.youtubeMatches.firstWhere(
+          (match) {
+            final ytSeconds =
+                _smartService.parseDurationToSeconds(match.duration) ?? 0;
+            return (meta.durationSeconds - ytSeconds).abs() <= 1;
+          },
+          orElse: () => debugResult.youtubeMatches.first,
+        );
+        print("✅ Cloud Stream URL Resolved: ${bestMatch.url}");
+        song = song.copyWith(sourceUrl: bestMatch.url);
+      }
+    }
+
+    print("⚠️ Switching to Cloud Stream: ${song.title}");
+    return song.copyWith(filePath: "cloud_stream");
   }
 
   Future<void> playRandom(List<SongModel> newQueue) async {
@@ -1045,9 +1150,24 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (_playlistIndex == -1) _playlistIndex = 0;
 
     // JIT CACHING CHECK
-    if (!await File(song.filePath).exists()) {
+    // 🚀 QUALITY UPGRADE CHECK
+    final prefs = await SharedPreferences.getInstance();
+    final quality = prefs.getString('streamingQuality') ?? 'high';
+    DebugLogService().info(
+        "🔍 UPGRADE DEBUG: Quality=$quality | Extension=${song.filePath.split('.').last}");
+    bool needsUpgrade = false;
+    if (quality == 'lossless' &&
+        !song.filePath.endsWith('.flac') &&
+        song.filePath != "cloud_stream") {
+      needsUpgrade = true;
+      print(
+          "🎧 Quality Upgrade: Song is M4A/MP3 but quality is 'lossless'. Triggering JIT.");
+    }
+
+    if (!await File(song.filePath).exists() || needsUpgrade) {
       print(
           "⚠️ Play Error: File not found at ${song.filePath}. Attempting JIT Cache...");
+      state = state.copyWith(isBuffering: true); // 🚀 BUFFER START
       final meta = SongMetadata(
         title: song.title,
         artist: song.artist,
@@ -1057,12 +1177,16 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         year: "",
         genre: "",
         isrc: song.isrc,
+        spotifyId: song.spotifyId,
+        spotifyArtistId: song.spotifyArtistId,
+        deezerId: song.deezerId,
       );
       print("🚀 JIT Cache Triggered for: ${song.title}");
       if (song.isrc != null) print("   ✅ Using ISRC: ${song.isrc}");
 
       // We use cacheSong but we need to wait for it!
       await _smartService.cacheSong(meta, youtubeUrl: song.sourceUrl);
+      state = state.copyWith(isBuffering: false); // 🚀 BUFFER END
 
       // CHECK IF CACHED FILE EXISTS (Path might differ from song.filePath)
       final cachedPath = await _smartService.getPredictedCachePath(meta);
@@ -1146,6 +1270,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           durationSeconds: nextSong.duration.toInt(),
           year: "",
           genre: "",
+          spotifyId: nextSong.spotifyId,
+          spotifyArtistId: nextSong.spotifyArtistId,
+          deezerId: nextSong.deezerId,
         );
         final cachedPath = await _smartService.getPredictedCachePath(meta);
         print("🔍 Checking cache path: $cachedPath");
@@ -1182,7 +1309,20 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       }
 
       // JIT CACHING CHECK
-      if (!await File(nextSong.filePath).exists()) {
+      // 🚀 QUALITY UPGRADE CHECK (User Queue)
+      final prefs = await SharedPreferences.getInstance();
+      final quality = prefs.getString('streamingQuality') ?? 'high';
+      bool needsUpgrade = false;
+      if (quality == 'lossless' &&
+          !nextSong.filePath.endsWith('.flac') &&
+          nextSong.filePath != "cloud_stream") {
+        needsUpgrade = true;
+        print(
+            "🎧 Quality Upgrade (Queue): Song is M4A/MP3 but quality is 'lossless'. Triggering JIT.");
+      }
+
+      if (!await File(nextSong.filePath).exists() || needsUpgrade) {
+        state = state.copyWith(isBuffering: true); // 🚀 BUFFER START
         print(
             "⚠️ Play Next: File not found at ${nextSong.filePath}. Attempting JIT Cache...");
         final meta = SongMetadata(
@@ -1193,8 +1333,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           durationSeconds: nextSong.duration.toInt(),
           year: "",
           genre: "",
+          spotifyId: nextSong.spotifyId,
+          spotifyArtistId: nextSong.spotifyArtistId,
+          deezerId: nextSong.deezerId,
         );
         await _smartService.cacheSong(meta, youtubeUrl: nextSong.sourceUrl);
+        state = state.copyWith(isBuffering: false); // 🚀 BUFFER END
 
         // CHECK IF CACHED FILE EXISTS (Path might differ from nextSong.filePath)
         final cachedPath = await _smartService.getPredictedCachePath(meta);
@@ -1265,6 +1409,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             durationSeconds: nextSong.duration.toInt(),
             year: "",
             genre: "",
+            spotifyId: nextSong.spotifyId,
+            spotifyArtistId: nextSong.spotifyArtistId,
+            deezerId: nextSong.deezerId,
           );
           final cachedPath = await _smartService.getPredictedCachePath(meta);
           if (await File(cachedPath).exists()) {
@@ -1289,7 +1436,19 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
 
         // JIT CACHING CHECK
-        if (!await File(nextSong.filePath).exists()) {
+        // 🚀 QUALITY UPGRADE CHECK (Playlist)
+        final prefs = await SharedPreferences.getInstance();
+        final quality = prefs.getString('streamingQuality') ?? 'high';
+        bool needsUpgrade = false;
+        if (quality == 'lossless' &&
+            !nextSong.filePath.endsWith('.flac') &&
+            nextSong.filePath != "cloud_stream") {
+          needsUpgrade = true;
+          print(
+              "🎧 Quality Upgrade (Playlist): Song is M4A/MP3 but quality is 'lossless'. Triggering JIT.");
+        }
+
+        if (!await File(nextSong.filePath).exists() || needsUpgrade) {
           print(
               "⚠️ Play Next: File not found at ${nextSong.filePath}. Attempting JIT Cache...");
           final meta = SongMetadata(
@@ -1300,8 +1459,17 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             durationSeconds: nextSong.duration.toInt(),
             year: "",
             genre: "",
+            spotifyId: nextSong.spotifyId,
+            spotifyArtistId: nextSong.spotifyArtistId,
+            deezerId: nextSong.deezerId,
           );
+          // JIT CACHING CHECK
+          state = state.copyWith(isBuffering: true); // 🚀 BUFFER START
+          DebugLogService()
+              .info("🔄 PLAYER: JIT Buffering Started for ${nextSong.title}");
           await _smartService.cacheSong(meta);
+          state = state.copyWith(isBuffering: false); // 🚀 BUFFER END
+          DebugLogService().info("✅ PLAYER: JIT Buffering Finished");
 
           // CHECK IF CACHED FILE EXISTS
           final cachedPath = await _smartService.getPredictedCachePath(meta);
@@ -1540,6 +1708,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     final pos = await _musicService.player.position;
     if (pos.inSeconds > 3) {
       await _musicService.seek(0);
+      // 🚀 Update Discord to reset timelapse when restarting song
+      _updateDiscord();
       return;
     }
 
@@ -1556,6 +1726,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       } else {
         // Otherwise just restart the current song
         await _musicService.seek(0);
+        // 🚀 Update Discord to reset timelapse when restarting song
+        _updateDiscord();
         return;
       }
     }
@@ -1713,14 +1885,23 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _lastProcessedSongPath = song.filePath;
         _cachedDiscordImage = null;
 
+        // 🚀 Use existing onlineArtUrl if available (faster than Spotify fetch)
+        final initialArt = song.onlineArtUrl;
+
         _discordService.updatePresence(
           song,
           state.isPlaying,
           Duration(seconds: state.currentPosition.toInt()),
           Duration(seconds: state.totalDuration.toInt()),
-          imageUrl: null,
+          imageUrl: initialArt, // Use existing art immediately if available
         );
 
+        // Cache the initial art if available
+        if (initialArt != null && initialArt.isNotEmpty) {
+          _cachedDiscordImage = initialArt;
+        }
+
+        // Fetch higher quality art from Spotify (async update)
         SpotifyService.getTrackImage(song.title, song.artist).then((artUrl) {
           if (artUrl != null) {
             _cachedDiscordImage = artUrl;

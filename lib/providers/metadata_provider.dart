@@ -136,7 +136,15 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
         FilePickerResult? result = await FilePicker.platform.pickFiles(
           allowMultiple: true,
           type: FileType.custom,
-          allowedExtensions: ['mp3', 'flac', 'm4a', 'wav', 'ogg', 'aac'],
+          allowedExtensions: [
+            'mp3',
+            'flac',
+            'm4a',
+            'wav',
+            'ogg',
+            'aac',
+            'opus'
+          ],
         );
         if (result != null) {
           filesToProcess = result.paths
@@ -152,8 +160,8 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
       for (var file in filesToProcess) {
         try {
           final ext = p.extension(file.path).toLowerCase();
-          if (!['.mp3', '.flac', '.m4a', '.wav', '.ogg', '.aac'].contains(ext))
-            continue;
+          if (!['.mp3', '.flac', '.m4a', '.wav', '.ogg', '.aac', '.opus']
+              .contains(ext)) continue;
 
           final metadata = await MetadataGod.readMetadata(file: file.path);
           final song = SongModel.fromFile(

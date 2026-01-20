@@ -12,6 +12,10 @@ import '../components/song_card_overlay.dart';
 import '../components/playlist_collage.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../services/bulk_download_service.dart';
+import '../../services/smart_download_service.dart'; // 🚀 IMPORT
+import '../../models/song_metadata.dart'; // 🚀 IMPORT
+import 'dart:io'; // 🚀 IMPORT
+import 'dart:async'; // 🚀 IMPORT
 
 class PlaylistDetailPage extends ConsumerStatefulWidget {
   final String playlistId;
@@ -24,6 +28,142 @@ class PlaylistDetailPage extends ConsumerStatefulWidget {
 
 class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
   String? _loadingSongTitle;
+  Map<String, bool> _downloadStatus = {}; // 🚀 Track local status
+  bool _isCheckingDownloads = false;
+
+  StreamSubscription? _completionSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    // 🚀 Check status on load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkDownloadStatus();
+    });
+
+    // 🚀 LISTEN FOR UPDATES
+    _completionSubscription =
+        BulkDownloadService().songCompleteStream.listen((path) {
+      if (mounted) {
+        setState(() {
+          _downloadStatus[path] = true;
+        });
+      }
+    });
+
+    // Listen to current download to show spinner
+    BulkDownloadService().currentSongNotifier.addListener(_onDownloadChange);
+  }
+
+  @override
+  void dispose() {
+    _completionSubscription?.cancel();
+    BulkDownloadService().currentSongNotifier.removeListener(_onDownloadChange);
+    super.dispose();
+  }
+
+  void _onDownloadChange() {
+    if (mounted) setState(() {});
+  }
+
+  // 🚀 Logic to check if files exist locally
+  Future<void> _checkDownloadStatus() async {
+    if (_isCheckingDownloads) return;
+    setState(() => _isCheckingDownloads = true);
+
+    final playlists = ref.read(playlistProvider);
+    final playlistIndex =
+        playlists.indexWhere((p) => p.id == widget.playlistId);
+    if (playlistIndex == -1) {
+      setState(() => _isCheckingDownloads = false);
+      return;
+    }
+    final playlist = playlists[playlistIndex];
+
+    // Determine Base Dir
+    final baseDir =
+        await BulkDownloadService().getAlbumDownloadDirectory(playlist.name);
+    if (baseDir == null) {
+      setState(() => _isCheckingDownloads = false);
+      return;
+    }
+
+    final newStatus = <String, bool>{};
+    final smartService = SmartDownloadService();
+
+    // Loop through entries
+    for (var i = 0; i < playlist.entries.length; i++) {
+      final entry = playlist.entries[i];
+      // 🚀 STRICT CHECK: Ignore library path, only check playlist folder
+
+      // 2. Predict Filename for Playlist Download
+      final meta = SongMetadata(
+        title: entry.title ?? "Unknown Title",
+        artist: entry.artist ?? "Unknown Artist",
+        album: entry.album ?? "Unknown Album",
+        albumArtUrl: entry.artUrl ?? "",
+        durationSeconds: (entry.duration ?? 0).toInt(),
+      );
+
+      // We need to match the index used in BulkDownloadService (1-based)
+      final filename = await smartService.generateFilename(meta,
+          patternKey: 'playlist_filename_pattern', playlistIndex: i + 1);
+
+      final predictedPath = "${baseDir.path}/$filename.m4a";
+      if (await File(predictedPath).exists()) {
+        newStatus[entry.path] = true;
+      } else {
+        newStatus[entry.path] = false;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _downloadStatus = newStatus;
+        _isCheckingDownloads = false;
+      });
+    }
+  }
+
+  // 🚀 Resolve Queue to use Local Files
+  Future<List<SongModel>> _resolveLocalFiles(
+      List<SongModel> songs, String playlistName) async {
+    final baseDir =
+        await BulkDownloadService().getAlbumDownloadDirectory(playlistName);
+    if (baseDir == null) return songs;
+
+    final smartService = SmartDownloadService();
+    final List<SongModel> resolvedSongs = [];
+
+    for (var i = 0; i < songs.length; i++) {
+      var song = songs[i];
+      // 🚀 PRIORITY: Check Playlist Folder FIRST
+      // If it exists there, we use it. If not, we use the original (stream/local).
+
+      // Predict Path
+      final meta = SongMetadata(
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        albumArtUrl: song.onlineArtUrl ?? "",
+        durationSeconds: song.duration.toInt(),
+      );
+
+      final filename = await smartService.generateFilename(meta,
+          patternKey: 'playlist_filename_pattern', playlistIndex: i + 1);
+
+      final predictedPath = "${baseDir.path}/$filename.m4a";
+
+      if (await File(predictedPath).exists()) {
+        //    print("✅ Resolved local playlist file: $predictedPath");
+        resolvedSongs.add(song.copyWith(filePath: predictedPath));
+      } else {
+        // Fallback to original (which implies if it was local, it stays local, if stream, stays stream)
+        resolvedSongs.add(song);
+      }
+    }
+    return resolvedSongs;
+  }
 
   Future<void> _playTrack(SongModel song, List<SongModel> queue) async {
     if (_loadingSongTitle != null) return;
@@ -31,8 +171,23 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     setState(() => _loadingSongTitle = song.title);
 
     try {
+      // 🚀 RESOLVE LOCAL FILES BEFORE PLAYING
+      final playlists = ref.read(playlistProvider);
+      final playlist = playlists.firstWhere((p) => p.id == widget.playlistId);
+
+      // Show "Preparing..." or similar?
+      final resolvedQueue = await _resolveLocalFiles(queue, playlist.name);
+
+      // Find the target song in the resolved queue (by index or reference)
+      final index = queue.indexOf(song);
+      final resolvedSong = (index != -1 && index < resolvedQueue.length)
+          ? resolvedQueue[index]
+          : song;
+
       if (mounted) {
-        await ref.read(playerProvider.notifier).playSong(song, newQueue: queue);
+        await ref
+            .read(playerProvider.notifier)
+            .playSong(resolvedSong, newQueue: resolvedQueue);
       }
     } catch (e) {
       if (mounted) {
@@ -220,21 +375,86 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
             actions: [
               // 🚀 DOWNLOAD ALL BUTTON
               IconButton(
-                icon: Icon(Icons.download_rounded, color: textColor, size: 28),
+                // 🚀 SHOW CHECKLIST IF ALL DOWNLOADED
+                icon: (rowData.isNotEmpty &&
+                        rowData.every(
+                            (r) => _downloadStatus[r.song.filePath] == true))
+                    ? const Icon(Icons.download_done_rounded,
+                        color: Colors.greenAccent, size: 28)
+                    : Icon(Icons.download_rounded, color: textColor, size: 28),
                 tooltip: "Download All",
-                onPressed: () {
+                onPressed: () async {
                   if (rowData.isEmpty) return;
 
-                  // Convert RowData back to SongModel list
-                  final songsToDownload = rowData.map((r) => r.song).toList();
+                  final allDownloaded = rowData.isNotEmpty &&
+                      rowData.every(
+                          (r) => _downloadStatus[r.song.filePath] == true);
 
-                  BulkDownloadService()
-                      .downloadAlbum(playlist.name, songsToDownload);
+                  if (allDownloaded) {
+                    // 🚀 DELETE MODE
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: Theme.of(context).cardColor,
+                        title: Text("Delete Downloads?",
+                            style: TextStyle(color: textColor)),
+                        content: Text(
+                            "This will remove all downloaded songs for this playlist from your device.",
+                            style: TextStyle(color: textColor)),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("Cancel")),
+                          TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text("Delete",
+                                  style: TextStyle(color: Colors.red))),
+                        ],
+                      ),
+                    );
 
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Started downloading all songs..."),
-                    duration: Duration(seconds: 2),
-                  ));
+                    if (confirm == true) {
+                      final baseDir = await BulkDownloadService()
+                          .getAlbumDownloadDirectory(playlist.name);
+                      if (baseDir != null && await baseDir.exists()) {
+                        await baseDir.delete(recursive: true);
+
+                        // Reset status
+                        if (mounted) {
+                          setState(() {
+                            // Clear all statuses for this playlist's songs
+                            for (var r in rowData) {
+                              _downloadStatus[r.song.filePath] = false;
+                            }
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("All downloads removed"),
+                                backgroundColor: Colors.red),
+                          );
+                          // Force re-check just in case
+                          _checkDownloadStatus();
+                        }
+                      }
+                    }
+                  } else {
+                    // 🚀 DOWNLOAD MODE
+                    // Convert RowData back to SongModel list
+                    final songsToDownload = rowData.map((r) => r.song).toList();
+
+                    // 🚀 Just trigger logic, service handles checking duplicates
+                    BulkDownloadService()
+                        .downloadAlbum(playlist.name, songsToDownload);
+
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Started downloading all songs..."),
+                      duration: Duration(seconds: 2),
+                    ));
+
+                    // 🚀 Wait and check status (Poor man's refresh, better to listen to service in future)
+                    await Future.delayed(const Duration(seconds: 2));
+                    _checkDownloadStatus();
+                  }
                 },
               ),
               PopupMenuButton<String>(
@@ -288,11 +508,23 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                                         child: CircularProgressIndicator(
                                             strokeWidth: 2,
                                             color: accentColor)))
-                                : Text("${index + 1}",
-                                    style: TextStyle(
-                                        color: subtitleColor,
-                                        fontWeight: FontWeight.bold),
-                                    textAlign: TextAlign.center)),
+                                : (BulkDownloadService()
+                                            .currentSongNotifier
+                                            .value ==
+                                        data.song.filePath)
+                                    ? Center(
+                                        // 🚀 DOWNLOADING SPINNER
+                                        child: SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: accentColor)))
+                                    : Text("${index + 1}",
+                                        style: TextStyle(
+                                            color: subtitleColor,
+                                            fontWeight: FontWeight.bold),
+                                        textAlign: TextAlign.center)),
                         const SizedBox(width: 10),
                         // Overlay
                         SongCardOverlay(
@@ -326,6 +558,13 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                               style: TextStyle(
                                   color: subtitleColor, fontSize: 12)),
                         ),
+                        // 🚀 DOWNLOAD INDICATOR
+                        if (_downloadStatus[data.song.filePath] == true)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Icon(Icons.download_done_rounded,
+                                size: 16, color: accentColor),
+                          ),
                         const SizedBox(width: 32), // 🚀 DOUBLED GAP
                         // Date (Fixed Width)
                         SizedBox(

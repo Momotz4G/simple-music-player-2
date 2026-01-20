@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:permission_handler/permission_handler.dart'; // 🚀 IMPORT
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -29,6 +30,12 @@ class BulkDownloadService {
 
   // Error notifier for ban/limit messages
   final ValueNotifier<String?> errorNotifier = ValueNotifier(null);
+
+  // 🚀 Real-time status for UI
+  final ValueNotifier<String?> currentSongNotifier = ValueNotifier(null);
+  final StreamController<String> _songCompleteController =
+      StreamController.broadcast();
+  Stream<String> get songCompleteStream => _songCompleteController.stream;
 
   bool _isDownloading = false;
   bool _isCancelled = false; // 🚀 ADDED
@@ -72,8 +79,28 @@ class BulkDownloadService {
       // 0. ENSURE YOUTUBE DOWNLOADER IS INITIALIZED
       await _ytService.initialize();
 
+      // 🚀 REQUEST PERMISSIONS (ANDROID)
+      if (Platform.isAndroid) {
+        // Request Storage (Android < 13)
+        var status = await Permission.storage.request();
+        // Request Audio (Android 13+)
+        if (status.isDenied || status.isRestricted) {
+          final audioStatus = await Permission.audio.request();
+          if (audioStatus.isGranted) status = audioStatus;
+        }
+
+        // Final Check
+        if (!status.isGranted &&
+            !await Permission.manageExternalStorage.isGranted) {
+          print("⛔ Permission Denied");
+          errorNotifier.value = "Storage permission required to download!";
+          _isDownloading = false;
+          return;
+        }
+      }
+
       // 1. Get Base Directory: downloads/SimpleMusicDownloads/playlists/{Album Title}
-      final baseDir = await _getAlbumDownloadDirectory(albumTitle);
+      final baseDir = await getAlbumDownloadDirectory(albumTitle);
       if (baseDir == null) {
         print("❌ Could not get download directory");
         _isDownloading = false;
@@ -101,6 +128,7 @@ class BulkDownloadService {
         }
 
         final song = songs[i];
+        currentSongNotifier.value = song.filePath; // 🚀 Notify Start
 
         // 🛑 CHECK BAN STATUS FIRST
         final isBanned = await MetricsService().isUserBanned();
@@ -232,6 +260,7 @@ class BulkDownloadService {
             print("⏭️ Skipping (already exists): ${song.title}");
             completed++;
             _updateProgress(completed, total, "Skipping existing...");
+            _songCompleteController.add(song.filePath); // 🚀 Notify Cached
             continue; // Next song
           }
 
@@ -255,6 +284,8 @@ class BulkDownloadService {
 
             // 6. 🛑 TRACK USAGE (Only for new downloads)
             await MetricsService().trackDownloadMetadata(metadata);
+
+            _songCompleteController.add(song.filePath); // 🚀 Notify Success
           }
         } else {
           print("⚠️ No match found for ${song.title}");
@@ -284,6 +315,7 @@ class BulkDownloadService {
     } finally {
       _isDownloading = false;
       _isCancelled = false; // Reset flag
+      currentSongNotifier.value = null; // 🚀 Reset
     }
   }
 
@@ -312,7 +344,7 @@ class BulkDownloadService {
         details: "$completed / $total Songs Downloaded");
   }
 
-  Future<Directory?> _getAlbumDownloadDirectory(String albumTitle) async {
+  Future<Directory?> getAlbumDownloadDirectory(String albumTitle) async {
     // downloads/SimpleMusicDownloads/playlists/{Album Title}
 
     String? basePath;

@@ -5,7 +5,8 @@ import 'package:palette_generator/palette_generator.dart';
 import '../../models/song_model.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/search_bridge_provider.dart';
-import '../../services/spotify_service.dart';
+
+import '../../services/hybrid_service.dart';
 import '../../services/wikipedia_service.dart';
 import '../../services/smart_download_service.dart';
 import '../components/song_card_overlay.dart';
@@ -78,11 +79,11 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
 
   Future<void> _fetchTopTracks() async {
     setState(() => _isLoadingTracks = true);
-    final artistId =
-        await SpotifyService.getArtistId(artistName: widget.artistName);
-    if (artistId != null) {
-      final tracks = await SpotifyService.getArtistTopTracks(artistId);
 
+    // HYBRID SEARCH BY NAME (Handles ID lookup internally)
+    final tracks = await HybridService.getArtistTopTracks(widget.artistName);
+
+    if (tracks.isNotEmpty) {
       // Convert to SongModel with predicted paths
       final songModels = await Future.wait(tracks.map((t) async {
         final predictedPath = await _smartService.getPredictedCachePath(t);
@@ -99,7 +100,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
       }));
 
       // FETCH ALBUMS (Discography)
-      final albums = await SpotifyService.getArtistAlbums(artistId);
+      final albums = await HybridService.getArtistAlbums(widget.artistName);
 
       if (mounted) {
         setState(() {
@@ -121,6 +122,19 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
 
     // 2. Spotify Banner (Priority 2)
     if (url == null) {
+      // Used HybridService? Or specific Header logic?
+      // SpotifyService explicit Banner calls are fine as they might just fail gracefully.
+      // But we can try to wrap them.
+      // Let's keep direct Spotify for these heavy specific visuals, but add Try/Catch wrapper here if not present?
+      // Or better, let HybridService handle "getArtist" which returns image.
+
+      final artist = await HybridService.getArtist("unknown",
+          artistName: widget.artistName);
+      if (artist != null) {
+        url = artist.imageUrl;
+      }
+
+      /*
       final artistId =
           await SpotifyService.getArtistId(artistName: widget.artistName);
       if (artistId != null) {
@@ -130,6 +144,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
         url ??= await SpotifyService.getArtistImage(
             artistName: widget.artistName, highQuality: true);
       }
+      */
     }
 
     if (mounted) {

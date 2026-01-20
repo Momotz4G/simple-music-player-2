@@ -54,6 +54,7 @@ android {
             keepDebugSymbols.add("**/libffmpeg.zip.so")
             keepDebugSymbols.add("**/libyoutubedl_android.so")
             keepDebugSymbols.add("**/libmetadata_god.so")
+            keepDebugSymbols.add("**/libpython.zip.so")
         }
     }
     // 🚀 Disable Lint to avoid File Locking errors

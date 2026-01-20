@@ -45,12 +45,16 @@ class LibraryPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
+            // 🚀 FIX: Align with Floating Menu Button (Status Bar + ~12px padding)
+            SizedBox(height: MediaQuery.of(context).padding.top + 12),
 
             // HEADER (Shifted Mobile)
             Padding(
+              // 🚀 FIX: Use standard padding, the dynamic top margin handles the vertical alignment
               padding: EdgeInsets.only(
-                  left: (Platform.isAndroid || Platform.isIOS) ? 40.0 : 0.0),
+                  left: (Platform.isAndroid || Platform.isIOS)
+                      ? 72.0 // Needs space for floating drawer button
+                      : 0.0),
               child: Text(
                 'Local Library',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -98,6 +102,24 @@ class LibraryPage extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // REFRESH BUTTON
+                Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: IconButton(
+                    tooltip: "Refresh Library",
+                    icon: Icon(Icons.refresh_rounded, color: activeIconColor),
+                    onPressed: () {
+                      library.refreshLibrary();
+                    },
                   ),
                 ),
 

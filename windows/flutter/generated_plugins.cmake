@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_windows
+  flutter_inappwebview_windows
   flutter_media_metadata
   isar_flutter_libs
   just_audio_windows

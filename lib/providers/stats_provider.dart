@@ -116,14 +116,15 @@ class StatsNotifier extends StateNotifier<StatsState> {
       );
     } else {
       updatedEntry = StatEntry(
-        id: id,
-        title: song.title,
-        artist: song.artist,
-        album: song.album,
-        playCount: 1,
-        totalSeconds: 0,
-        lastKnownPath: song.filePath,
-      );
+          id: id,
+          title: song.title,
+          artist: song.artist,
+          album: song.album,
+          playCount: 1,
+          totalSeconds: 0,
+          lastKnownPath: song.filePath,
+          spotifyId: song.spotifyId,
+          deezerId: song.deezerId);
     }
     currentEntries[id] = updatedEntry;
     state = StatsState(entries: currentEntries);
@@ -144,6 +145,8 @@ class StatsNotifier extends StateNotifier<StatsState> {
           existing.onlineArtUrl = song.onlineArtUrl;
         }
         if (song.sourceUrl != null) existing.youtubeUrl = song.sourceUrl;
+        if (song.spotifyId != null) existing.spotifyId = song.spotifyId;
+        if (song.deezerId != null) existing.deezerId = song.deezerId;
 
         await isar.savedStats.put(existing);
       } else {
@@ -156,7 +159,9 @@ class StatsNotifier extends StateNotifier<StatsState> {
           ..totalSeconds = 0
           ..lastKnownPath = song.filePath
           ..onlineArtUrl = song.onlineArtUrl
-          ..youtubeUrl = song.sourceUrl;
+          ..youtubeUrl = song.sourceUrl
+          ..spotifyId = song.spotifyId
+          ..deezerId = song.deezerId;
 
         await isar.savedStats.put(newStat);
       }
@@ -191,14 +196,15 @@ class StatsNotifier extends StateNotifier<StatsState> {
       );
     } else {
       updatedEntry = StatEntry(
-        id: id,
-        title: song.title,
-        artist: song.artist,
-        album: song.album,
-        playCount: 0,
-        totalSeconds: seconds,
-        lastKnownPath: song.filePath,
-      );
+          id: id,
+          title: song.title,
+          artist: song.artist,
+          album: song.album,
+          playCount: 0,
+          totalSeconds: seconds,
+          lastKnownPath: song.filePath,
+          spotifyId: song.spotifyId,
+          deezerId: song.deezerId);
     }
     currentEntries[id] = updatedEntry;
     state = StatsState(entries: currentEntries);
@@ -213,6 +219,9 @@ class StatsNotifier extends StateNotifier<StatsState> {
 
       if (existing != null) {
         existing.totalSeconds += seconds;
+        // Also update IDs on time log just in case
+        if (song.spotifyId != null) existing.spotifyId = song.spotifyId;
+        if (song.deezerId != null) existing.deezerId = song.deezerId;
         await isar.savedStats.put(existing);
       } else {
         final newStat = SavedStat()
@@ -224,7 +233,9 @@ class StatsNotifier extends StateNotifier<StatsState> {
           ..totalSeconds = seconds
           ..lastKnownPath = song.filePath
           ..onlineArtUrl = song.onlineArtUrl
-          ..youtubeUrl = song.sourceUrl;
+          ..youtubeUrl = song.sourceUrl
+          ..spotifyId = song.spotifyId
+          ..deezerId = song.deezerId;
 
         await isar.savedStats.put(newStat);
       }

@@ -11,6 +11,7 @@ class SongMetadata {
   final String? isrc; // International Standard Recording Code
   final String? spotifyId; // Spotify track ID for FLAC matching
   final String? spotifyArtistId; // Spotify artist ID for recommendations
+  final String? deezerId; // Deezer track ID for direct FLAC match
 
   SongMetadata({
     required this.title,
@@ -25,6 +26,7 @@ class SongMetadata {
     this.isrc,
     this.spotifyId,
     this.spotifyArtistId,
+    this.deezerId,
   });
 
   SongMetadata copyWith({
@@ -40,6 +42,7 @@ class SongMetadata {
     String? isrc,
     String? spotifyId,
     String? spotifyArtistId,
+    String? deezerId,
   }) {
     return SongMetadata(
       title: title ?? this.title,
@@ -54,8 +57,10 @@ class SongMetadata {
       isrc: isrc ?? this.isrc,
       spotifyId: spotifyId ?? this.spotifyId,
       spotifyArtistId: spotifyArtistId ?? this.spotifyArtistId,
+      deezerId: deezerId ?? this.deezerId,
     );
   }
+
   Map<String, dynamic> toJson() {
     return {
       'title': title,
@@ -70,6 +75,7 @@ class SongMetadata {
       'isrc': isrc,
       'spotifyId': spotifyId,
       'spotifyArtistId': spotifyArtistId,
+      'deezerId': deezerId,
     };
   }
 }

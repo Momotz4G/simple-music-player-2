@@ -9,7 +9,8 @@ import '../../providers/search_bridge_provider.dart';
 import '../../models/album_model.dart';
 import '../../models/artist_model.dart';
 import '../../models/song_metadata.dart';
-import '../../services/spotify_service.dart';
+
+import '../../services/hybrid_service.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -112,7 +113,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       setState(() => _isLoadingSuggestions = true);
 
       try {
-        final results = await SpotifyService.searchAll(query, limit: 5);
+        final results = await HybridService.searchAll(query, limit: 5);
         if (mounted && _isSuggesting) {
           setState(() {
             _songSuggestions = results['songs'] as List<SongMetadata>;

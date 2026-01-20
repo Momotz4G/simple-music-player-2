@@ -10,6 +10,15 @@ abstract class Env {
   @EnviedField(varName: 'SPOTIFY_CLIENT_SECRET', obfuscate: true)
   static final String spotifyClientSecret = _Env.spotifyClientSecret;
 
+  // 🚀 Secondary Spotify App (for high-volume search operations)
+  @EnviedField(
+      varName: 'SPOTIFY_CLIENT_ID_2', obfuscate: true, defaultValue: '')
+  static final String spotifyClientId2 = _Env.spotifyClientId2;
+
+  @EnviedField(
+      varName: 'SPOTIFY_CLIENT_SECRET_2', obfuscate: true, defaultValue: '')
+  static final String spotifyClientSecret2 = _Env.spotifyClientSecret2;
+
   @EnviedField(varName: 'DISCORD_APP_ID', obfuscate: true)
   static final String discordAppId = _Env.discordAppId;
 

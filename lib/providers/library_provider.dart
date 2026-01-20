@@ -11,9 +11,11 @@ import 'package:isar/isar.dart';
 import '../data/schemas.dart'; // The Isar Schema
 import 'db_provider.dart'; // To access the DB Service
 import '../models/song_model.dart';
+import 'settings_provider.dart'; // 🚀 IMPORT
 
 class LibraryProvider extends ChangeNotifier {
   final Ref ref; // We need Ref to talk to other providers (DB)
+  final bool ignoreSubfolders; // 🚀 Injected dependency
 
   List<SongModel> _songs = [];
   List<SongModel> _filteredSongs = [];
@@ -36,7 +38,8 @@ class LibraryProvider extends ChangeNotifier {
     '.flac',
     '.m4a',
     '.ogg',
-    '.aac'
+    '.aac',
+    '.opus'
   ];
 
   // 🚀 New Method: Request Permissions manually
@@ -56,7 +59,7 @@ class LibraryProvider extends ChangeNotifier {
   }
 
   // Constructor now requires 'Ref'
-  LibraryProvider(this.ref) {
+  LibraryProvider(this.ref, {required this.ignoreSubfolders}) {
     _loadSavedPath();
   }
 
@@ -84,7 +87,28 @@ class LibraryProvider extends ChangeNotifier {
     final dbSongs = await dbService.getAllSongs();
 
     // Convert Isar 'Song' entities back to 'SongModel' for the UI
-    _songs = dbSongs.map((e) => _mapToModel(e)).toList();
+    final allSongs = dbSongs.map((e) => _mapToModel(e)).toList();
+
+    // 🚀 FILTERING LOGIC
+    if (_selectedFolder != null) {
+      if (ignoreSubfolders) {
+        // Strict Check: Only include files directly in selectedFolder
+        _songs = allSongs.where((s) {
+          final parent = p.dirname(s.filePath);
+          // Normalize paths for comparison (handle trailing slashes/case)
+          return p.equals(parent, _selectedFolder!);
+        }).toList();
+      } else {
+        // Recursive Check: Include files in selectedFolder OR its children
+        _songs = allSongs.where((s) {
+          return p.isWithin(_selectedFolder!, s.filePath) ||
+              p.equals(p.dirname(s.filePath), _selectedFolder!);
+        }).toList();
+      }
+    } else {
+      // No folder selected? Show everything (or nothing, depending on design)
+      _songs = allSongs;
+    }
 
     // Apply your Natural Sort
     _sortSongs();
@@ -146,12 +170,15 @@ class LibraryProvider extends ChangeNotifier {
     notifyListeners();
 
     final dbService = ref.read(dbServiceProvider);
+    // Ignore subfolders if setting is enabled (Default: true)
+    // final ignoreSubfolders = ref.read(settingsProvider).ignoreSubfolders; // REMOVED
 
     try {
       final dir = Directory(path);
       if (await dir.exists()) {
-        final List<FileSystemEntity> entities =
-            await dir.list(recursive: false, followLinks: false).toList();
+        final List<FileSystemEntity> entities = await dir
+            .list(recursive: !ignoreSubfolders, followLinks: false)
+            .toList();
 
         List<Song> batchToAdd = [];
 
@@ -323,5 +350,6 @@ class LibraryProvider extends ChangeNotifier {
 
 // UPDATE THE PROVIDER DEFINITION (Must pass ref!)
 final libraryProvider = ChangeNotifierProvider<LibraryProvider>((ref) {
-  return LibraryProvider(ref);
+  final settings = ref.watch(settingsProvider);
+  return LibraryProvider(ref, ignoreSubfolders: settings.ignoreSubfolders);
 });

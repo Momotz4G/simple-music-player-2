@@ -10,6 +10,7 @@ import 'package:window_manager/window_manager.dart';
 import '../../providers/player_provider.dart';
 import '../../models/song_model.dart';
 import '../../services/canvas_service.dart';
+
 import '../../services/spotify_service.dart';
 import '../components/smart_art.dart';
 
@@ -156,6 +157,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
   // --------------------------------------------------------------------------
 
   Future<void> _autoLoadCanvas(String title, String artist) async {
+    print("🎬 Canvas: Starting load for '$title' by '$artist'");
     final oldController = _videoController;
     if (mounted) {
       setState(() {
@@ -166,13 +168,24 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
     }
     if (oldController != null) await oldController.dispose();
 
-    final spotifyUrl = await SpotifyService.getTrackLink(title, artist);
+    // Canvas requires Spotify URL - no fallback to Deezer possible
+    String? spotifyUrl;
+    try {
+      print("🎬 Canvas: Calling SpotifyService.getTrackLink...");
+      spotifyUrl = await SpotifyService.getTrackLink(title, artist);
+      print("🎬 Canvas: Got spotifyUrl = $spotifyUrl");
+    } catch (e) {
+      print("🎬 Canvas: SpotifyService error: $e");
+      // 429 or other error - cannot load Canvas, gracefully degrade
+    }
 
     if (spotifyUrl != null) {
       if (!mounted) return;
       setState(() => _loadingStatus = "Fetching Canvas...");
+      print("🎬 Canvas: Loading canvas from URL...");
       await _loadCanvasFromUrl(spotifyUrl);
     } else {
+      print("🎬 Canvas: No Spotify URL found, skipping canvas");
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -543,6 +556,46 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (playerState.isBuffering)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    "FETCHING LOSSLESS...",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           Text(
                             song.title,
                             style: const TextStyle(

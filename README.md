@@ -33,6 +33,7 @@
 - **Playback Queue**: Persistent queue that remembers your playlist between sessions
 - **Remove Song in Queue**: Swipe left from a song in queue to remove it
 - **Multiple Audio Versions**: Choose between different versions of a song (original, acoustic, live, etc.)
+- **Wide Format Support**: Plays MP3, FLAC, WAV, AAC, M4A, OGG, and **Opus** files
 
 ### 🎤 **Lyrics & Metadata**
 - **Synced Lyrics**: Sing along with time-synced lyrics (LRC) fetched automatically from LRCLIB.net

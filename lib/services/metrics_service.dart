@@ -19,6 +19,9 @@ class MetricsService {
   String? _userId;
   String? get userId => _userId;
 
+  // 🚀 Mutex for sequential updates
+  Future<void> _lastUpdateFuture = Future.value();
+
   // 🚀 LOCAL SESSION TRACKING (for accurate quota enforcement)
   int _sessionDownloadCount = 0;
   DateTime? _sessionStartDate;
@@ -240,6 +243,20 @@ class MetricsService {
   Future<void> _incrementUserStat(String fieldName) async {
     if (!_initialized || _userId == null) return;
 
+    // 🚀 SERIALIZE REQUESTS (Prevents Race Condition in Bulk Downloads)
+    // Chain this request to the end of the previous one
+    _lastUpdateFuture = _lastUpdateFuture.whenComplete(() async {
+      try {
+        await _performIncrement(fieldName);
+      } catch (e) {
+        debugPrint("⚠️ Sequential Increment Error: $e");
+      }
+    });
+
+    await _lastUpdateFuture;
+  }
+
+  Future<void> _performIncrement(String fieldName) async {
     try {
       // 1. Fetch Current Data
       final currentData = await PocketBaseService().getUserMetrics();
@@ -424,13 +441,20 @@ class MetricsService {
 
   // --- ADMIN FUNCTIONALITY ---
 
-  Stream<List<AdminUserData>> getAllUserMetrics() {
-    // Poll every 1 second for "Live" feel
-    return Stream.periodic(const Duration(seconds: 1)).asyncMap((_) async {
-      final data = await PocketBaseService().fetchAllMetrics();
-      return data
-          .map((d) => AdminUserData(id: d['user_id'] ?? 'unknown', data: d))
-          .toList();
+  Stream<AdminMetricsResult> getAllUserMetrics() {
+    // Poll every 5 seconds for "Live" feel
+    return Stream.periodic(const Duration(seconds: 5)).asyncMap((_) async {
+      final result = await PocketBaseService().fetchAllMetrics();
+      final items = (result['items'] as List<dynamic>?) ?? [];
+      final totalCount = (result['totalCount'] as int?) ?? 0;
+      return AdminMetricsResult(
+        items: items
+            .map((d) => AdminUserData(
+                id: (d as Map<String, dynamic>)['user_id'] ?? 'unknown',
+                data: d))
+            .toList(),
+        totalCount: totalCount,
+      );
     }).asBroadcastStream();
   }
 
@@ -470,4 +494,10 @@ class AdminUserData {
   final String id;
   final Map<String, dynamic> data;
   AdminUserData({required this.id, required this.data});
+}
+
+class AdminMetricsResult {
+  final List<AdminUserData> items;
+  final int totalCount;
+  AdminMetricsResult({required this.items, required this.totalCount});
 }

@@ -225,7 +225,8 @@ class PocketBaseService {
   }
 
   // ADMIN: FETCH ALL USERS (Requires Admin Auth)
-  Future<List<Map<String, dynamic>>> fetchAllMetrics() async {
+  // Returns: { 'items': List<Map>, 'totalCount': int }
+  Future<Map<String, dynamic>> fetchAllMetrics() async {
     try {
       // Authenticate as admin if not already
       // PocketBase v0.23+ uses _superusers collection
@@ -239,13 +240,16 @@ class PocketBaseService {
 
       final records = await pb.collection('metrics').getList(
             page: 1,
-            perPage: 100, // Reasonable limit for now
+            perPage: 100, // Preview limit
             sort: '-last_active',
           );
-      return records.items.map((r) => r.data..['id'] = r.id).toList();
+      return {
+        'items': records.items.map((r) => r.data..['id'] = r.id).toList(),
+        'totalCount': records.totalItems, // Real total from database
+      };
     } catch (e) {
       debugPrint("⚠️ Admin Fetch Error: $e");
-      return [];
+      return {'items': [], 'totalCount': 0};
     }
   }
 

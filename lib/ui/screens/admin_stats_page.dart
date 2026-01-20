@@ -12,10 +12,10 @@ class AdminStatsPage extends StatelessWidget {
 
   // Helper to safely parse timestamp (Handles String or generic dynamic)
   DateTime? _parseTimestamp(dynamic value) {
-    if (value is DateTime) return value;
+    if (value is DateTime) return value.toUtc();
     if (value is String) {
       try {
-        return DateTime.parse(value);
+        return DateTime.parse(value).toUtc();
       } catch (_) {}
     }
     return null;
@@ -43,7 +43,7 @@ class AdminStatsPage extends StatelessWidget {
           )
         ],
       ),
-      body: StreamBuilder<List<AdminUserData>>(
+      body: StreamBuilder<AdminMetricsResult>(
         stream: MetricsService().getAllUserMetrics(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -54,14 +54,19 @@ class AdminStatsPage extends StatelessWidget {
             // Return empty container or loading if strict waiting, but stream might be instant empty.
           }
 
-          final docs = snapshot.data ?? [];
+          final result = snapshot.data;
+          final docs = result?.items ?? [];
+          final totalUsersInDb =
+              result?.totalCount ?? 0; // Real total from database
+
           if (docs.isEmpty) {
             return const Center(
                 child: Text("No user data found (PocketBase Mode)."));
           }
 
           // 🚀 METRICS AGGREGATION
-          final totalUsers = docs.length;
+          final totalUsersDisplayed =
+              docs.length; // Preview count (limited to 100)
           final activeUsers = docs.where((user) {
             final timestamp = _parseTimestamp(user.data['last_active']);
             if (timestamp == null) return false;
@@ -76,7 +81,7 @@ class AdminStatsPage extends StatelessWidget {
                 child: Row(
                   children: [
                     _buildSummaryCard(context, "Total Users",
-                        totalUsers.toString(), Icons.people),
+                        totalUsersInDb.toString(), Icons.people),
                     const SizedBox(width: 16),
                     _buildSummaryCard(context, "Active Now",
                         activeUsers.toString(), Icons.circle,
@@ -109,7 +114,8 @@ class AdminStatsPage extends StatelessWidget {
                         // QUOTA LOGIC
                         final lastDate =
                             _parseTimestamp(data['last_download_date']);
-                        final now = DateTime.now();
+                        final now = DateTime.now()
+                            .toUtc(); // 🚀 FIX: Match MetricsService UTC logic
                         final isToday = lastDate != null &&
                             lastDate.day == now.day &&
                             lastDate.month == now.month &&

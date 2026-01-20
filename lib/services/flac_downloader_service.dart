@@ -37,18 +37,22 @@ class FlacDownloaderService {
   /// Get streaming URLs from song.link API for a Spotify track
   Future<StreamingUrls?> getStreamingUrls(String spotifyTrackId) async {
     if (spotifyTrackId.isEmpty) return null;
+    final spotifyUrl = 'https://open.spotify.com/track/$spotifyTrackId';
+    return getStreamingUrlsFromSpecificUrl(spotifyUrl);
+  }
 
+  /// Get streaming URLs from song.link API for ANY provider URL (Spotify, Deezer, etc)
+  Future<StreamingUrls?> getStreamingUrlsFromSpecificUrl(
+      String resourceUrl) async {
     // Rate limiting
     await _applySongLinkRateLimit();
 
     try {
       // Build song.link API URL
-      // Base64 decoded: https://api.song.link/v1-alpha.1/links?url=
       const apiBase = 'https://api.song.link/v1-alpha.1/links?url=';
-      final spotifyUrl = 'https://open.spotify.com/track/$spotifyTrackId';
-      final apiUrl = '$apiBase${Uri.encodeComponent(spotifyUrl)}';
+      final apiUrl = '$apiBase${Uri.encodeComponent(resourceUrl)}';
 
-      debugPrint('🔗 Getting streaming URLs from song.link...');
+      debugPrint('🔗 Getting streaming URLs from song.link for: $resourceUrl');
 
       final response = await _client.get(
         Uri.parse(apiUrl),
@@ -61,7 +65,7 @@ class FlacDownloaderService {
       if (response.statusCode == 429) {
         debugPrint('⚠️ song.link rate limit hit, waiting...');
         await Future.delayed(const Duration(seconds: 15));
-        return getStreamingUrls(spotifyTrackId); // Retry
+        return getStreamingUrlsFromSpecificUrl(resourceUrl); // Retry
       }
 
       if (response.statusCode != 200) {
@@ -75,7 +79,7 @@ class FlacDownloaderService {
       if (linksByPlatform == null) return null;
 
       final urls = StreamingUrls(
-        spotifyId: spotifyTrackId,
+        spotifyId: '', // Not strictly needed for this flow
         deezerUrl: _extractPlatformUrl(linksByPlatform, 'deezer'),
         tidalUrl: _extractPlatformUrl(linksByPlatform, 'tidal'),
         amazonUrl: _extractPlatformUrl(linksByPlatform, 'amazonMusic'),
@@ -898,16 +902,40 @@ class FlacDownloaderService {
 
         if (ffmpegPath != null) {
           try {
-            final result = await Process.run(
-              ffmpegPath,
-              [
-                '-y', // Overwrite output
-                '-i', tempPath, // Input temp file
-                '-c:a', 'copy', // Copy audio (no re-encode)
-                outputPath, // Output as .flac
-              ],
-              runInShell: true,
-            );
+            ProcessResult result;
+            if (Platform.isWindows) {
+              // 🚀 WINDOWS FIX: Run from the bin directory to avoid quoting issues with spaces in path
+              final ffmpegFile = File(ffmpegPath);
+              final workingDir = ffmpegFile.parent.path;
+              final exeName = ffmpegFile.uri.pathSegments.last;
+
+              result = await Process.run(
+                exeName,
+                [
+                  '-y',
+                  '-i',
+                  tempPath,
+                  '-c:a',
+                  'copy',
+                  outputPath,
+                ],
+                workingDirectory: workingDir, // Key Fix
+                runInShell: false,
+              );
+            } else {
+              result = await Process.run(
+                ffmpegPath,
+                [
+                  '-y',
+                  '-i',
+                  tempPath,
+                  '-c:a',
+                  'copy',
+                  outputPath,
+                ],
+                runInShell: false,
+              );
+            }
 
             if (result.exitCode == 0 && await File(outputPath).exists()) {
               conversionSuccess = true;
@@ -1023,17 +1051,35 @@ class FlacDownloaderService {
       final ffmpegPath = await _getFFmpegPath();
       if (ffmpegPath != null) {
         try {
-          final result = await Process.run(
-            ffmpegPath,
-            ['-y', '-i', inputPath, '-c:a', 'copy', outputPath],
-            runInShell: true,
-          );
+          ProcessResult result;
+          if (Platform.isWindows) {
+            // 🚀 WINDOWS FIX: Run from the bin directory to avoid quoting issues with spaces in path
+            final ffmpegFile = File(ffmpegPath);
+            final workingDir = ffmpegFile.parent.path;
+            final exeName = ffmpegFile.uri.pathSegments.last;
+
+            result = await Process.run(
+              exeName,
+              ['-y', '-i', inputPath, '-c:a', 'copy', outputPath],
+              workingDirectory: workingDir, // Key Fix
+              runInShell: false,
+            );
+          } else {
+            result = await Process.run(
+              ffmpegPath,
+              ['-y', '-i', inputPath, '-c:a', 'copy', outputPath],
+              runInShell: false,
+            );
+          }
 
           if (result.exitCode == 0 && await File(outputPath).exists()) {
             conversionSuccess = true;
             debugPrint('✓ Desktop FFmpeg conversion successful');
           } else {
             debugPrint('⚠️ Desktop FFmpeg conversion failed: ${result.stderr}');
+            if (result.stdout.toString().isNotEmpty) {
+              debugPrint('  FFmpeg stdout: ${result.stdout}');
+            }
           }
         } catch (e) {
           debugPrint('⚠️ Desktop FFmpeg error: $e');
