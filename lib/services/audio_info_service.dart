@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ffmpeg_kit_flutter_new_audio/ffprobe_kit.dart';
+import '../models/song_model.dart';
 
 /// Audio quality information model
 class AudioInfo {
@@ -131,13 +132,41 @@ class AudioInfoService {
     }
   }
 
-  /// Get audio info for a file
+  /// Get audio info for a SongModel (Resilient)
+  Future<AudioInfo?> getAudioInfoForSong(SongModel song) async {
+    // 1. Try local file if it exists
+    if (!song.filePath.startsWith('http')) {
+      final file = File(song.filePath);
+      if (await file.exists()) {
+        return await getAudioInfo(song.filePath);
+      }
+    }
+
+    // 2. Try source URL if it exists
+    if (song.sourceUrl != null && song.sourceUrl!.startsWith('http')) {
+      return await getAudioInfo(song.sourceUrl!);
+    }
+
+    // 3. Fallback to basic info from song metadata
+    return _getBasicInfo(song.filePath, 0, _getFormatFromPath(song.filePath));
+  }
+
+  /// Get audio info for a file or URL
   Future<AudioInfo?> getAudioInfo(String filePath) async {
     try {
-      final file = File(filePath);
-      if (!await file.exists()) return null;
+      final isUrl = filePath.startsWith('http');
+      int fileSize = 0;
 
-      final fileSize = await file.length();
+      if (!isUrl) {
+        final file = File(filePath);
+        if (!await file.exists()) {
+          // If file doesn't exist but it's not a URL, we can't do much with ffprobe
+          // Return basic info as fallback instead of null
+          return _getBasicInfo(filePath, 0, _getFormatFromPath(filePath));
+        }
+        fileSize = await file.length();
+      }
+
       final format = _getFormatFromPath(filePath);
 
       // Mobile: Use FFprobeKit from ffmpeg_kit_flutter_new_audio
@@ -242,7 +271,9 @@ class AudioInfoService {
 
   /// Get format from file path
   String _getFormatFromPath(String path) {
-    final ext = path.split('.').last.toLowerCase();
+    // Remove query parameters if it's a URL
+    final purePath = path.split('?').first;
+    final ext = purePath.split('.').last.toLowerCase();
     switch (ext) {
       case 'flac':
         return 'FLAC';

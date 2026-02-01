@@ -63,6 +63,16 @@ class YoutubeDLPlugin : FlutterPlugin, MethodCallHandler {
                     FFmpeg.getInstance().init(context)
                 }
                 Log.d(TAG, "Initialization Success")
+                
+                // Auto-update yt-dlp to get latest fixes
+                try {
+                    Log.d(TAG, "Checking for yt-dlp updates...")
+                    val updateStatus = YoutubeDL.getInstance().updateYoutubeDL(context)
+                    Log.d(TAG, "yt-dlp update status: $updateStatus")
+                } catch (e: Exception) {
+                    Log.w(TAG, "yt-dlp update failed (non-critical): ${e.message}")
+                }
+                
                 withContext(Dispatchers.Main) {
                     result.success(true)
                 }
@@ -110,7 +120,10 @@ class YoutubeDLPlugin : FlutterPlugin, MethodCallHandler {
 
                 val request = YoutubeDLRequest(url)
                 request.addOption("-o", filePath)
-                request.addOption("-f", "bestaudio[ext=m4a]/bestaudio/best")
+                request.addOption("-x") // Extract audio
+                request.addOption("-f", "bestaudio") // Get best audio (usually Opus ~160kbps)
+                request.addOption("--audio-format", "m4a") // Convert to M4A
+                request.addOption("--audio-quality", "128K") // Fixed bitrate matching YouTube source (no upscaling)
                 request.addOption("--no-mtime")
                 request.addOption("-v")
                 

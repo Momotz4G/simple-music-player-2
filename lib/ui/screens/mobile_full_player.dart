@@ -66,7 +66,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
               song.duration,
             );
         // 🚀 Fetch Audio Quality
-        _fetchAudioInfo(song.filePath);
+        _fetchAudioInfo(song);
       }
     });
   }
@@ -116,6 +116,20 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
 
   // Canvas loading logic (from desktop full_screen_player)
   Future<void> _autoLoadCanvas(String title, String artist) async {
+    // 🚀 Check if canvas is disabled in settings
+    final settings = ref.read(settingsProvider);
+    if (settings.disableCanvas) {
+      if (mounted) {
+        setState(() {
+          _videoController?.dispose();
+          _videoController = null;
+          _isLoadingCanvas = false;
+          _canvasStatus = "";
+        });
+      }
+      return;
+    }
+
     final oldController = _videoController;
     if (mounted) {
       setState(() {
@@ -173,14 +187,14 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
   }
 
   // 🚀 FETCH AUDIO INFO
-  Future<void> _fetchAudioInfo(String filePath) async {
+  Future<void> _fetchAudioInfo(SongModel song) async {
     if (!mounted) return;
     setState(() {
       _isLoadingInfo = true;
       _audioInfo = null;
     });
 
-    final info = await AudioInfoService().getAudioInfo(filePath);
+    final info = await AudioInfoService().getAudioInfoForSong(song);
 
     if (mounted) {
       setState(() {
@@ -200,12 +214,32 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     final hasVideo =
         _videoController != null && _videoController!.value.isInitialized;
 
-    // Listen for song changes to reload canvas
+    // Listen for song changes to reload canvas, lyrics, and audio info
     ref.listen<PlayerState>(playerProvider, (previous, next) {
-      if (previous?.currentSong?.filePath != next.currentSong?.filePath) {
-        if (next.currentSong != null) {
-          _autoLoadCanvas(next.currentSong!.title, next.currentSong!.artist);
-          _fetchAudioInfo(next.currentSong!.filePath); // 🚀 Update Info
+      final prevSong = previous?.currentSong;
+      final nextSong = next.currentSong;
+
+      // Check if song has actually changed (path or title/artist)
+      if (prevSong?.filePath != nextSong?.filePath ||
+          prevSong?.title != nextSong?.title ||
+          prevSong?.artist != nextSong?.artist) {
+        if (nextSong != null) {
+          // Reset states immediately for UI feedback
+          setState(() {
+            _audioInfo = null;
+            _isLoadingInfo = true;
+          });
+
+          _autoLoadCanvas(nextSong.title, nextSong.artist);
+          _fetchAudioInfo(nextSong); // 🚀 Update Info
+
+          // 🚀 Update Lyrics Preview
+          ref.read(lyricsProvider.notifier).loadLyrics(
+                nextSong.filePath,
+                nextSong.title,
+                nextSong.artist,
+                nextSong.duration,
+              );
         }
       }
     });

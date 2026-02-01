@@ -24,6 +24,7 @@ import 'song_context_menu.dart';
 import 'song_info_dialog.dart';
 import '../../services/audio_info_service.dart';
 import 'marquee_text.dart';
+import 'audio_output_dialog.dart';
 
 enum TimeUnit { hour, minute, second }
 
@@ -588,6 +589,16 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                             if (hasSong) {
                               SongInfoDialog.show(context, song);
                             }
+                          } else if (value == 'audio_output') {
+                            if (hasSong) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AudioOutputDialog(
+                                  audioInfo: _audioInfo,
+                                  filePath: song.filePath,
+                                ),
+                              );
+                            }
                           }
                         },
                         itemBuilder: (context) {
@@ -680,6 +691,21 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                         color: primaryColor, size: 20),
                                     const SizedBox(width: 12),
                                     Text("Song Information",
+                                        style: TextStyle(color: primaryColor)),
+                                  ],
+                                ),
+                              ),
+
+                            // 7. AUDIO OUTPUT OPTION
+                            if (hasSong)
+                              PopupMenuItem(
+                                value: 'audio_output',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.output_rounded,
+                                        color: primaryColor, size: 20),
+                                    const SizedBox(width: 12),
+                                    Text("Audio Output",
                                         style: TextStyle(color: primaryColor)),
                                   ],
                                 ),

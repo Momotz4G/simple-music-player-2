@@ -9,6 +9,8 @@ import 'dart:typed_data';
 
 import '../models/song_model.dart';
 import '../services/spotify_service.dart';
+import '../services/debug_log_service.dart';
+import '../ui/components/smart_art.dart';
 import 'library_provider.dart';
 
 class MetadataState {
@@ -214,12 +216,12 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
       final metadata = await MetadataGod.readMetadata(file: path);
       if (state.selectedSong?.filePath != path) return;
 
-      // Only load from disk if our current model has null artwork (e.g. optimized import).
-      final existingBytes = state.selectedSong?.albumArtBytes;
+      // Always prioritize fresh disk bytes since we just read them
+      // existingBytes might be stale or from a cached model
       final diskBytes = metadata.picture?.data;
 
       final updatedSong = state.selectedSong?.copyWith(
-        albumArtBytes: existingBytes ?? diskBytes,
+        albumArtBytes: diskBytes, // Trust the fresh read
       );
 
       state = state.copyWith(
@@ -288,22 +290,80 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
 
   Future<void> saveChanges() async {
     if (state.selectedSong == null) return;
-    final filePath = state.selectedSong!.filePath;
+    var filePath = state.selectedSong!.filePath;
     state = state.copyWith(isSaving: true, statusMessage: "Saving tags...");
 
     try {
       Picture? pictureToWrite;
 
-      if (state.coverUrl != null) {
-        final resp = await http.get(Uri.parse(state.coverUrl!));
-        if (resp.statusCode == 200) {
-          pictureToWrite =
-              Picture(data: resp.bodyBytes, mimeType: 'image/jpeg');
+      // 🚀 ARTWORK HANDLING
+      if (state.coverUrl != null && state.coverUrl!.isNotEmpty) {
+        state = state.copyWith(statusMessage: "Downloading album art...");
+        try {
+          final resp = await http.get(Uri.parse(state.coverUrl!));
+          if (resp.statusCode == 200 && resp.bodyBytes.isNotEmpty) {
+            // Detect mime type from response or default to jpeg
+            String mimeType = resp.headers['content-type'] ?? 'image/jpeg';
+            if (!mimeType.startsWith('image/')) mimeType = 'image/jpeg';
+
+            pictureToWrite = Picture(data: resp.bodyBytes, mimeType: mimeType);
+            state = state.copyWith(
+                statusMessage:
+                    "Album art downloaded (${resp.bodyBytes.length} bytes)");
+          } else {
+            state = state.copyWith(
+                statusMessage:
+                    "Warning: Could not download art (HTTP ${resp.statusCode})");
+          }
+        } catch (e) {
+          state =
+              state.copyWith(statusMessage: "Warning: Art download failed: $e");
         }
       } else if (state.selectedSong!.albumArtBytes != null) {
+        // Keep existing embedded art
         pictureToWrite = Picture(
             data: state.selectedSong!.albumArtBytes!, mimeType: 'image/jpeg');
+        state = state.copyWith(statusMessage: "Using existing album art...");
+      } else {
+        state = state.copyWith(statusMessage: "No album art to write...");
       }
+
+      // 🚀 PRE-FLIGHT CHECK & PATH CORRECTION
+      var file = File(filePath);
+      if (!await file.exists()) {
+        // Try decoding the path (in case it was URL encoded like %20)
+        final decodedPath = Uri.decodeFull(filePath);
+        final decodedFile = File(decodedPath);
+        if (await decodedFile.exists()) {
+          file = decodedFile;
+          filePath = decodedPath;
+        } else {
+          throw "File not found: $filePath";
+        }
+      }
+
+      // 🚀 READ CHECK - Verify file is accessible (skip timestamp test, Android blocks it)
+      try {
+        final bytes = await file.readAsBytes();
+        if (bytes.isEmpty) {
+          throw "File is empty or unreadable";
+        }
+        // Note: We skip setLastModified test - Android EPERM (OS Error 1) is common
+        // but MetadataGod may still be able to write the actual tags.
+      } on FileSystemException catch (e) {
+        throw "Cannot read file: ${e.message} (OS Error ${e.osError?.errorCode})";
+      }
+
+      // 🚀 DEBUG: Log what we're about to write
+      final _log = DebugLogService();
+      _log.info('=== METADATA SAVE START ===');
+      _log.info('File: $filePath');
+      _log.info('Title: ${state.title}');
+      _log.info('Artist: ${state.artist}');
+      _log.info(
+          'Picture: ${pictureToWrite != null ? "${pictureToWrite.data.length} bytes, ${pictureToWrite.mimeType}" : "NULL - NO ART"}');
+
+      state = state.copyWith(statusMessage: "Writing metadata to file...");
 
       await MetadataGod.writeMetadata(
         file: filePath,
@@ -319,14 +379,40 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
         ),
       );
 
+      _log.success('writeMetadata() completed without exception');
+
+      // 🚀 DEBUG: Verify what was actually written
+      final verifyMeta = await MetadataGod.readMetadata(file: filePath);
+      _log.info('=== VERIFY READ BACK ===');
+      _log.info('Read Title: ${verifyMeta.title}');
+      _log.info('Read Artist: ${verifyMeta.artist}');
+      if (verifyMeta.picture != null) {
+        _log.success(
+            'Read Picture: ${verifyMeta.picture!.data.length} bytes ✓');
+      } else {
+        _log.error('Read Picture: NULL - ART NOT EMBEDDED!');
+      }
+      _log.info('=== METADATA SAVE END ===');
+
+      if (verifyMeta.picture == null && pictureToWrite != null) {
+        state = state.copyWith(
+            statusMessage:
+                "Warning: Art was sent but NOT embedded by library!");
+      }
+
       // IN-MEMORY UPDATE
       // Create the new song object with the data we JUST wrote (including new bytes)
       final newSong = state.selectedSong!.copyWith(
         title: state.title,
         artist: state.artist,
         album: state.album,
-        albumArtBytes: pictureToWrite?.data, // Use the new bytes immediately
+        albumArtBytes: verifyMeta.picture?.data ??
+            pictureToWrite?.data, // Use verified data
       );
+
+      // 🚀 INVALIDATE ART CACHE so UI shows fresh art immediately
+      SmartArt.invalidateCache(filePath);
+      _log.info('SmartArt cache invalidated for: $filePath');
 
       ref.read(libraryProvider).updateSingleSong(newSong);
 

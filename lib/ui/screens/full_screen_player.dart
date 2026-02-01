@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart' as ja;
 import 'package:window_manager/window_manager.dart';
 
 import '../../providers/player_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../models/song_model.dart';
 import '../../services/canvas_service.dart';
 
@@ -157,6 +158,20 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
   // --------------------------------------------------------------------------
 
   Future<void> _autoLoadCanvas(String title, String artist) async {
+    // 🚀 Check if canvas is disabled in settings
+    final settings = ref.read(settingsProvider);
+    if (settings.disableCanvas) {
+      if (mounted) {
+        setState(() {
+          _videoController?.dispose();
+          _videoController = null;
+          _isLoading = false;
+          _loadingStatus = "";
+        });
+      }
+      return;
+    }
+
     print("🎬 Canvas: Starting load for '$title' by '$artist'");
     final oldController = _videoController;
     if (mounted) {

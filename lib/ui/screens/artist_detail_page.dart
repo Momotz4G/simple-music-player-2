@@ -289,17 +289,27 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            widget.artistName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 56,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1.0,
-                              height: 1.0,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          Builder(
+                            builder: (context) {
+                              // 🚀 Responsive font size
+                              final screenWidth =
+                                  MediaQuery.of(context).size.width;
+                              final isNarrow = screenWidth < 500;
+                              final fontSize = isNarrow ? 32.0 : 56.0;
+
+                              return Text(
+                                widget.artistName,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: fontSize,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1.0,
+                                  height: 1.0,
+                                ),
+                                maxLines: isNarrow ? 3 : 2,
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            },
                           ),
                           const SizedBox(height: 16),
                           Text(

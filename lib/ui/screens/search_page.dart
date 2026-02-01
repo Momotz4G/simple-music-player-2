@@ -170,24 +170,54 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   Future<void> _runSearch() async {
     final keyword = _urlController.text.trim();
     if (keyword.isEmpty) {
-      ref.read(downloadSearchProvider.notifier).searchSpotify('');
+      setState(() {
+        _songSuggestions = [];
+        _albumSuggestions = [];
+        _artistSuggestions = [];
+        _isSuggesting = false;
+        _currentStatus = 'Ready. Search for a song.';
+      });
       return;
     }
 
+    // 🚀 Show loading state
     setState(() {
       _currentStatus = 'Searching Spotify for "$keyword"...';
+      _isLoadingSuggestions = true;
+      _isSuggesting = true; // Keep suggestion list visible
     });
 
-    await ref.read(downloadSearchProvider.notifier).searchSpotify(keyword);
+    try {
+      // 🚀 Use searchAll to get Songs, Albums, Artists (5 each)
+      final results = await HybridService.searchAll(keyword, limit: 5);
 
-    setState(() {
-      final results = ref.read(downloadSearchProvider);
-      _currentStatus = results.isNotEmpty
-          ? 'Found ${results.length} results. Select one to check matches.'
-          : 'No Spotify results found.';
-      // 🚀 Close suggestions when verified search runs
-      _isSuggesting = false;
-    });
+      if (mounted) {
+        setState(() {
+          _songSuggestions = results['songs'] as List<SongMetadata>;
+          _albumSuggestions = results['albums'] as List<AlbumModel>;
+          _artistSuggestions = results['artists'] as List<ArtistModel>;
+          _isLoadingSuggestions = false;
+
+          final songCount = _songSuggestions.length;
+          final albumCount = _albumSuggestions.length;
+          final artistCount = _artistSuggestions.length;
+
+          if (songCount + albumCount + artistCount > 0) {
+            _currentStatus =
+                'Found $songCount songs, $albumCount albums, $artistCount artists.';
+          } else {
+            _currentStatus = 'No Spotify results found.';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingSuggestions = false;
+          _currentStatus = 'Search failed: $e';
+        });
+      }
+    }
   }
 
   // --- 2. Match Logic ---
@@ -249,11 +279,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
               style: TextStyle(color: textColor),
               onChanged: _onSearchQueryChanged, // 🚀 Trigger suggestions
-              onSubmitted: (_) {
-                setState(
-                    () => _isSuggesting = false); // Hide suggestions on Enter
-                _runSearch();
-              },
+              onSubmitted: (_) => _runSearch(),
               decoration: InputDecoration(
                 labelText: 'Song Title or Keyword',
                 hintText: 'Search Spotify...',

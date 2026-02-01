@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:simple_music_player_2/services/android_audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // NEW ENUM
@@ -22,6 +23,12 @@ class SettingsState {
   final String streamingQuality; // standard, high, lossless
   final bool showDebugButton;
   final bool ignoreSubfolders; // NEW: Default true
+  final bool disableCanvas; // Disable Spotify Canvas video loading
+  final List<String> additionalMusicFolders; // Additional import paths
+  final bool
+      wasapiExclusive; // Windows: WASAPI exclusive mode for bit-perfect audio
+  final String? audioDeviceId; // Selected MPV audio device ID
+  final bool androidBitPerfect; // Android 14+: Bit-perfect audio mode
 
   SettingsState({
     this.isDarkMode = true,
@@ -37,6 +44,11 @@ class SettingsState {
     this.streamingQuality = 'high', // Default to high (M4A)
     this.showDebugButton = false,
     this.ignoreSubfolders = true,
+    this.disableCanvas = true,
+    this.additionalMusicFolders = const [],
+    this.wasapiExclusive = false, // Default OFF - exclusive locks audio device
+    this.audioDeviceId,
+    this.androidBitPerfect = false,
   });
 
   SettingsState copyWith({
@@ -53,6 +65,11 @@ class SettingsState {
     String? streamingQuality,
     bool? showDebugButton,
     bool? ignoreSubfolders,
+    bool? disableCanvas,
+    List<String>? additionalMusicFolders,
+    bool? wasapiExclusive,
+    String? audioDeviceId,
+    bool? androidBitPerfect,
   }) {
     return SettingsState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -69,6 +86,12 @@ class SettingsState {
       streamingQuality: streamingQuality ?? this.streamingQuality,
       showDebugButton: showDebugButton ?? this.showDebugButton,
       ignoreSubfolders: ignoreSubfolders ?? this.ignoreSubfolders,
+      disableCanvas: disableCanvas ?? this.disableCanvas,
+      additionalMusicFolders:
+          additionalMusicFolders ?? this.additionalMusicFolders,
+      wasapiExclusive: wasapiExclusive ?? this.wasapiExclusive,
+      audioDeviceId: audioDeviceId ?? this.audioDeviceId,
+      androidBitPerfect: androidBitPerfect ?? this.androidBitPerfect,
     );
   }
 }
@@ -100,6 +123,17 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final streaming = _prefs.getString('streamingQuality') ?? 'high';
     final showDebug = _prefs.getBool('showDebugButton') ?? false;
     final ignoreSub = _prefs.getBool('ignoreSubfolders') ?? true;
+    final disableCanvas = _prefs.getBool('disableCanvas') ?? false;
+    final additionalFolders =
+        _prefs.getStringList('additionalMusicFolders') ?? [];
+    final wasapiExclusive = _prefs.getBool('wasapiExclusive') ?? false;
+    final audioDeviceId = _prefs.getString('audioDeviceId'); // Nullable
+    final androidBitPerfect = _prefs.getBool('androidBitPerfect') ?? false;
+
+    // Initialize Android Bit-Perfect mode if enabled
+    if (androidBitPerfect) {
+      AndroidAudioService.setBitPerfectMode(true);
+    }
 
     state = SettingsState(
       isDarkMode: isDark,
@@ -115,6 +149,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       streamingQuality: streaming,
       showDebugButton: showDebug,
       ignoreSubfolders: ignoreSub,
+      disableCanvas: disableCanvas,
+      additionalMusicFolders: additionalFolders,
+      wasapiExclusive: wasapiExclusive,
+      audioDeviceId: audioDeviceId,
+      androidBitPerfect: androidBitPerfect,
     );
   }
 
@@ -185,6 +224,62 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> toggleIgnoreSubfolders(bool enabled) async {
     await _prefs.setBool('ignoreSubfolders', enabled);
     state = state.copyWith(ignoreSubfolders: enabled);
+  }
+
+  Future<void> toggleDisableCanvas(bool enabled) async {
+    await _prefs.setBool('disableCanvas', enabled);
+    state = state.copyWith(disableCanvas: enabled);
+  }
+
+  /// Toggle WASAPI exclusive mode (Windows only)
+  /// Note: Requires app restart to take effect
+  Future<void> toggleWasapiExclusive(bool enabled) async {
+    await _prefs.setBool('wasapiExclusive', enabled);
+    state = state.copyWith(wasapiExclusive: enabled);
+  }
+
+  /// Set Audio Device ID (Windows only)
+  Future<void> setAudioDeviceId(String? deviceId) async {
+    if (deviceId == null) {
+      await _prefs.remove('audioDeviceId');
+    } else {
+      await _prefs.setString('audioDeviceId', deviceId);
+    }
+    state = state.copyWith(audioDeviceId: deviceId);
+  }
+
+  // Additional Music Folders
+  Future<void> addMusicFolder(String path) async {
+    if (state.additionalMusicFolders.contains(path)) return;
+    final newFolders = [...state.additionalMusicFolders, path];
+    await _prefs.setStringList('additionalMusicFolders', newFolders);
+    state = state.copyWith(additionalMusicFolders: newFolders);
+  }
+
+  Future<void> removeMusicFolder(String path) async {
+    final newFolders =
+        state.additionalMusicFolders.where((f) => f != path).toList();
+    await _prefs.setStringList('additionalMusicFolders', newFolders);
+    state = state.copyWith(additionalMusicFolders: newFolders);
+  }
+
+  Future<void> clearAllMusicFolders() async {
+    await _prefs.remove('additionalMusicFolders');
+    state = state.copyWith(additionalMusicFolders: []);
+  }
+
+  /// Toggle Android 14+ Bit-Perfect Mode
+  Future<void> toggleAndroidBitPerfect(bool enabled) async {
+    // Attempt to set mode via MethodChannel
+    final success = await AndroidAudioService.setBitPerfectMode(enabled);
+    if (!success) {
+      // If native call failed (e.g. no USB device), do not update state to true
+      // But if we were trying to disable, allow it.
+      if (enabled) return;
+    }
+
+    await _prefs.setBool('androidBitPerfect', enabled);
+    state = state.copyWith(androidBitPerfect: enabled);
   }
 }
 

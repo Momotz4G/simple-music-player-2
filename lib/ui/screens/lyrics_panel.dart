@@ -59,7 +59,8 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
       if (!mounted) return;
 
       if (next.currentSong != null &&
-          previous?.currentSong?.filePath != next.currentSong!.filePath) {
+          (previous?.currentSong?.filePath != next.currentSong!.filePath ||
+              previous?.currentSong?.title != next.currentSong!.title)) {
         ref.read(lyricsProvider.notifier).loadLyrics(
               next.currentSong!.filePath,
               next.currentSong!.title,

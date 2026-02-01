@@ -181,109 +181,223 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
             // --- HEADER ---
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(32, 100, 32, 24),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 220,
-                      height: 220,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.4),
-                            blurRadius: 40,
-                            offset: const Offset(0, 20),
-                          )
-                        ],
-                        image: DecorationImage(
-                          image: imageProvider,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            const Text("SONG",
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1)),
-                            const SizedBox(height: 8),
-                            Text(
-                              song.title,
-                              style: TextStyle(
-                                fontSize: 50,
-                                fontWeight: FontWeight.w800,
-                                color: textColor,
-                                height: 1.0,
+                padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // 🚀 Responsive: Use vertical layout on narrow screens
+                    final isNarrow = constraints.maxWidth < 500;
+                    final artSize = isNarrow
+                        ? constraints.maxWidth * 0.6
+                        : 220.0; // Scale album art
+                    final titleFontSize =
+                        isNarrow ? 28.0 : 50.0; // Scale title font
+
+                    if (isNarrow) {
+                      // --- MOBILE: VERTICAL LAYOUT ---
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Album Art
+                          Container(
+                            width: artSize,
+                            height: artSize,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.4),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 15),
+                                )
+                              ],
+                              image: DecorationImage(
+                                image: imageProvider,
+                                fit: BoxFit.cover,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 24),
-                            Row(
+                          ),
+                          const SizedBox(height: 24),
+                          // Song Label
+                          const Text("SONG",
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.5,
+                                  color: Colors.grey)),
+                          const SizedBox(height: 8),
+                          // Title
+                          Text(
+                            song.title,
+                            style: TextStyle(
+                              fontSize: titleFontSize,
+                              fontWeight: FontWeight.w800,
+                              color: textColor,
+                              height: 1.1,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 16),
+                          // Artist Row
+                          GestureDetector(
+                            onTap: () {
+                              ref.read(navigationStackProvider.notifier).push(
+                                    NavigationItem(
+                                      type: NavigationType.artist,
+                                      data: ArtistSelection(
+                                          artistName: song.artist,
+                                          songs: <SongModel>[]),
+                                    ),
+                                  );
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 CircleAvatar(
-                                  radius: 12,
+                                  radius: 14,
                                   backgroundColor: Colors.grey,
                                   backgroundImage: _artistImageUrl != null
                                       ? NetworkImage(_artistImageUrl!)
                                       : null,
                                   child: _artistImageUrl == null
-                                      ? const Icon(Icons.person, size: 14)
+                                      ? const Icon(Icons.person, size: 16)
                                       : null,
                                 ),
                                 const SizedBox(width: 8),
-                                Expanded(
-                                  child: _MarqueeText(
-                                    text: song.artist,
+                                Flexible(
+                                  child: Text(
+                                    song.artist,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      decoration: _isArtistHovered
-                                          ? TextDecoration.underline
-                                          : null,
-                                      decorationColor: textColor,
                                       color: textColor,
+                                      fontSize: 15,
                                     ),
-                                    onTap: () {
-                                      ref
-                                          .read(
-                                              navigationStackProvider.notifier)
-                                          .push(
-                                            NavigationItem(
-                                              type: NavigationType.artist,
-                                              data: ArtistSelection(
-                                                  artistName: song.artist,
-                                                  songs: <SongModel>[]),
-                                            ),
-                                          );
-                                    },
-                                    onHover: (isHovered) => setState(
-                                        () => _isArtistHovered = isHovered),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "${song.year?.split('-').first ?? "Unknown"} • ${song.duration.toInt() ~/ 60}:${(song.duration.toInt() % 60).toString().padLeft(2, '0')}",
-                              style: TextStyle(
-                                  color: textColor.withOpacity(0.7),
-                                  fontSize: 13),
+                          ),
+                          const SizedBox(height: 8),
+                          // Year & Duration
+                          Text(
+                            "${song.year?.split('-').first ?? "Unknown"} • ${song.duration.toInt() ~/ 60}:${(song.duration.toInt() % 60).toString().padLeft(2, '0')}",
+                            style: TextStyle(
+                                color: textColor.withOpacity(0.6),
+                                fontSize: 13),
+                          ),
+                        ],
+                      );
+                    } else {
+                      // --- DESKTOP/TABLET: HORIZONTAL LAYOUT ---
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: artSize,
+                            height: artSize,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.4),
+                                  blurRadius: 40,
+                                  offset: const Offset(0, 20),
+                                )
+                              ],
+                              image: DecorationImage(
+                                image: imageProvider,
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                          ),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  const Text("SONG",
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1)),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    song.title,
+                                    style: TextStyle(
+                                      fontSize: titleFontSize,
+                                      fontWeight: FontWeight.w800,
+                                      color: textColor,
+                                      height: 1.0,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: Colors.grey,
+                                        backgroundImage: _artistImageUrl != null
+                                            ? NetworkImage(_artistImageUrl!)
+                                            : null,
+                                        child: _artistImageUrl == null
+                                            ? const Icon(Icons.person, size: 14)
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: _MarqueeText(
+                                          text: song.artist,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            decoration: _isArtistHovered
+                                                ? TextDecoration.underline
+                                                : null,
+                                            decorationColor: textColor,
+                                            color: textColor,
+                                          ),
+                                          onTap: () {
+                                            ref
+                                                .read(navigationStackProvider
+                                                    .notifier)
+                                                .push(
+                                                  NavigationItem(
+                                                    type: NavigationType.artist,
+                                                    data: ArtistSelection(
+                                                        artistName: song.artist,
+                                                        songs: <SongModel>[]),
+                                                  ),
+                                                );
+                                          },
+                                          onHover: (isHovered) => setState(() =>
+                                              _isArtistHovered = isHovered),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "${song.year?.split('-').first ?? "Unknown"} • ${song.duration.toInt() ~/ 60}:${(song.duration.toInt() % 60).toString().padLeft(2, '0')}",
+                                    style: TextStyle(
+                                        color: textColor.withOpacity(0.7),
+                                        fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                  },
                 ),
               ),
             ),

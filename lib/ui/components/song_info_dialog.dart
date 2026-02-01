@@ -35,7 +35,7 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
     try {
       final service = AudioInfoService();
       await service.initialize();
-      final info = await service.getAudioInfo(widget.song.filePath);
+      final info = await service.getAudioInfoForSong(widget.song);
       if (mounted) {
         setState(() {
           _audioInfo = info;

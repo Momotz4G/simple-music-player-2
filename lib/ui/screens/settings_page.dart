@@ -6,6 +6,7 @@ import 'package:provider/provider.dart' as p;
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart'; // Import for device list
 
 import '../../providers/settings_provider.dart';
 import '../../providers/library_provider.dart';
@@ -13,6 +14,8 @@ import '../../providers/stats_provider.dart';
 import '../../providers/player_provider.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../services/metrics_service.dart';
+import '../../services/android_audio_service.dart'; // NEW
+import '../../services/usb_audio_service.dart'; // USB Audio for Android <14
 import 'admin_stats_page.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -32,6 +35,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   String _savedPattern = "{artist} - {title}";
   String _savedPlaylistPattern = "{artist} - {title}";
+
+  // Audio Device Handling
+  List<Map<String, String>> _audioDevices = [];
+  bool _loadingAudioDevices = false;
+  bool _isAndroidBitPerfectSupported = false; // NEW
+
+  // USB Audio for Android <14
+  List<UsbDacDevice> _usbDacs = [];
+  bool _loadingUsbDacs = false;
+  UsbDacDevice? _connectedDac;
+  bool _usbAudioEnabled = false;
 
   bool get _unsavedSingle => _formatCtrl.text != _savedPattern;
   bool get _unsavedPlaylist =>
@@ -56,6 +70,37 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     _loadCacheSize();
     _loadFormat();
     _loadVersion();
+    if (Platform.isWindows) {
+      _loadAudioDevices();
+    }
+    if (Platform.isAndroid) {
+      _checkAndroidSupport();
+    }
+  }
+
+  Future<void> _checkAndroidSupport() async {
+    final supported = await AndroidAudioService.isBitPerfectSupported();
+    if (mounted) {
+      setState(() {
+        _isAndroidBitPerfectSupported = supported;
+      });
+    }
+  }
+
+  Future<void> _loadAudioDevices() async {
+    setState(() => _loadingAudioDevices = true);
+    try {
+      final devices = await JustAudioMediaKit.listAudioDevices();
+      if (mounted) {
+        setState(() {
+          _audioDevices = devices;
+          _loadingAudioDevices = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error listing devices: $e");
+      if (mounted) setState(() => _loadingAudioDevices = false);
+    }
   }
 
   Future<void> _loadVersion() async {
@@ -427,6 +472,73 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             activeColor: accentColor,
             onChanged: (val) => settingsNotifier.toggleIgnoreSubfolders(val),
           ),
+
+          // Import Additional Paths Section
+          ListTile(
+            leading: Icon(Icons.create_new_folder_rounded, color: accentColor),
+            title: Text("Import Additional Paths",
+                style: TextStyle(color: textColor)),
+            subtitle: Text("Add more folders to scan",
+                style: TextStyle(color: subtitleColor)),
+            trailing: TextButton.icon(
+              icon: Icon(Icons.add, color: accentColor, size: 18),
+              label: Text("Add", style: TextStyle(color: accentColor)),
+              onPressed: () async {
+                String? result = await FilePicker.platform.getDirectoryPath();
+                if (result != null) {
+                  await settingsNotifier.addMusicFolder(result);
+                  // Scan the newly added folder
+                  await library.scanAdditionalFolder(result);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              "Added folder: ${result.split(Platform.pathSeparator).last}")),
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+
+          // Display list of additional folders as removable chips
+          if (settings.additionalMusicFolders.isNotEmpty)
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: settings.additionalMusicFolders.map((folder) {
+                  final folderName = folder.split(Platform.pathSeparator).last;
+                  return Tooltip(
+                    message: folder, // Show full path on hover
+                    child: Chip(
+                      backgroundColor: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey[200],
+                      avatar: Icon(Icons.folder, size: 18, color: accentColor),
+                      label: Text(
+                        folderName,
+                        style: TextStyle(color: textColor, fontSize: 12),
+                      ),
+                      deleteIcon: Icon(Icons.close,
+                          size: 16,
+                          color: isDark ? Colors.white54 : Colors.black54),
+                      onDeleted: () async {
+                        await settingsNotifier.removeMusicFolder(folder);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text("Removed folder: $folderName")),
+                          );
+                        }
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
           const SizedBox(height: 30),
 
           // DOWNLOADS
@@ -745,6 +857,158 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               );
             },
           ),
+          SwitchListTile(
+            title: Text("Disable Canvas", style: TextStyle(color: textColor)),
+            subtitle: Text("Hide Spotify Canvas video, show album art instead",
+                style: TextStyle(color: subtitleColor)),
+            value: settings.disableCanvas,
+            activeColor: accentColor,
+            onChanged: (val) => settingsNotifier.toggleDisableCanvas(val),
+          ),
+
+          // WASAPI Exclusive Mode (Windows Only)
+          if (Platform.isWindows)
+            SwitchListTile(
+              title: Text("WASAPI Exclusive Mode",
+                  style: TextStyle(color: textColor)),
+              subtitle: Text(
+                settings.wasapiExclusive
+                    ? "Bit-perfect audio with auto sample rate (Restart required)"
+                    : "Enable for audiophile DAC playback (Restart required)",
+                style: TextStyle(color: subtitleColor),
+              ),
+              value: settings.wasapiExclusive,
+              activeColor: accentColor,
+              onChanged: (val) {
+                settingsNotifier.toggleWasapiExclusive(val);
+                _showRestartDialog(context);
+              },
+            ),
+
+          // Android Bit-Perfect Mode (Android 14+)
+          if (Platform.isAndroid)
+            SwitchListTile(
+              title: Text("Android 14+ Bit-Perfect",
+                  style: TextStyle(color: textColor)),
+              subtitle: Text(
+                _isAndroidBitPerfectSupported
+                    ? "Bypass system mixer for USB DACs"
+                    : "Requires Android 14+ and USB DAC",
+                style: TextStyle(color: subtitleColor),
+              ),
+              value: settings.androidBitPerfect,
+              activeColor: accentColor,
+              onChanged: _isAndroidBitPerfectSupported
+                  ? (val) {
+                      settingsNotifier.toggleAndroidBitPerfect(val);
+                      if (val) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  "Bit-Perfect Mode Enabled. Volume control may be disabled.")),
+                        );
+                      }
+                    }
+                  : null, // Disable if not supported
+            ),
+
+          // USB Audio Bypass for Android < 14 (NEW)
+          if (Platform.isAndroid && !_isAndroidBitPerfectSupported)
+            _buildUsbAudioBypassSection(context, settings, settingsNotifier,
+                isDark, textColor, subtitleColor, accentColor),
+
+          if (Platform.isWindows) ...[
+            // Audio Device Selector
+            ListTile(
+              title: Text("Audio Output Device",
+                  style: TextStyle(color: textColor)),
+              subtitle: _loadingAudioDevices
+                  ? Text("Loading devices...",
+                      style: TextStyle(color: subtitleColor, fontSize: 12))
+                  : Text(
+                      settings.audioDeviceId == null
+                          ? "System Default"
+                          : (_audioDevices.firstWhere(
+                                  (d) => d['name'] == settings.audioDeviceId,
+                                  orElse: () => {})['description'] ??
+                              "Custom Device"),
+                      style: TextStyle(color: subtitleColor),
+                    ),
+              trailing: _loadingAudioDevices
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: accentColor),
+                    )
+                  : Theme(
+                      data: Theme.of(context).copyWith(
+                        hoverColor: Colors.transparent,
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                      ),
+                      child: DropdownButton<String?>(
+                        value: settings.audioDeviceId != null &&
+                                _audioDevices.any(
+                                    (d) => d['name'] == settings.audioDeviceId)
+                            ? settings.audioDeviceId
+                            : null, // Default to null if not found
+                        dropdownColor: Theme.of(context).cardColor,
+                        style: TextStyle(
+                            color: textColor, fontWeight: FontWeight.bold),
+                        underline: Container(),
+                        icon: Icon(Icons.keyboard_arrow_down_rounded,
+                            color: accentColor),
+                        alignment: Alignment.centerRight,
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text("System Default"),
+                          ),
+                          ..._audioDevices.map((d) {
+                            return DropdownMenuItem<String?>(
+                              value: d['name'],
+                              child: Container(
+                                constraints:
+                                    const BoxConstraints(maxWidth: 200),
+                                child: Text(
+                                  d['description'] ?? "Unknown",
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
+                        onChanged: (String? newId) {
+                          settingsNotifier.setAudioDeviceId(newId);
+                          _showRestartDialog(context);
+                        },
+                      ),
+                    ),
+            ),
+
+            // Exclusive Mode Warning
+            if (settings.wasapiExclusive && settings.audioDeviceId == null)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded,
+                        color: Colors.amber, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Warning: Exclusive Mode works best when a specific device is selected above, rather than System Default.",
+                        style: TextStyle(
+                            color: Colors.amber.shade300, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 8),
+          ],
 
           const SizedBox(height: 30),
 
@@ -892,6 +1156,232 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  // ============ USB Audio Bypass for Android <14 ============
+
+  Widget _buildUsbAudioBypassSection(
+    BuildContext context,
+    dynamic settings,
+    dynamic settingsNotifier,
+    bool isDark,
+    Color textColor,
+    Color? subtitleColor,
+    Color accentColor,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+
+        // USB Audio Bypass Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: accentColor.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.usb_rounded, color: accentColor, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    "USB Audio Bypass (Beta) - Direct DAC output for Android 13 and below",
+                    style: TextStyle(
+                      color: accentColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Enable/Disable USB Audio (Temporarily Disabled - Coming Soon)
+        SwitchListTile(
+          title: Row(
+            children: [
+              Text("USB Audio Bypass",
+                  style: TextStyle(color: textColor.withOpacity(0.5))),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                ),
+                child: const Text(
+                  "Coming Soon",
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          subtitle: Text(
+            "This feature is under development",
+            style: TextStyle(color: subtitleColor?.withOpacity(0.5)),
+          ),
+          value: false,
+          activeColor: accentColor,
+          onChanged: null, // Disabled
+        ),
+
+        // DAC List (when enabled) - Temporarily hidden while feature is under development
+        if (false && _usbAudioEnabled) ...[
+          // Scan button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "Connected USB DACs:",
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _loadingUsbDacs ? null : _scanForUsbDacs,
+                  icon: _loadingUsbDacs
+                      ? SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: accentColor,
+                          ),
+                        )
+                      : Icon(Icons.refresh, color: accentColor, size: 16),
+                  label: Text(
+                    _loadingUsbDacs ? "Scanning..." : "Scan",
+                    style: TextStyle(color: accentColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // DAC List
+          if (_usbDacs.isEmpty && !_loadingUsbDacs)
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: subtitleColor, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "No USB DAC detected. Connect a USB audio device and tap Scan.",
+                        style: TextStyle(color: subtitleColor, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ...List.generate(_usbDacs.length, (index) {
+              final dac = _usbDacs[index];
+              final isConnected = _connectedDac?.vendorId == dac.vendorId &&
+                  _connectedDac?.productId == dac.productId;
+
+              return ListTile(
+                leading: Icon(
+                  Icons.speaker_rounded,
+                  color: isConnected ? Colors.green : accentColor,
+                ),
+                title: Text(
+                  dac.deviceName,
+                  style: TextStyle(color: textColor),
+                ),
+                subtitle: Text(
+                  "VID:${dac.vendorId.toRadixString(16).toUpperCase()} PID:${dac.productId.toRadixString(16).toUpperCase()}",
+                  style: TextStyle(color: subtitleColor, fontSize: 11),
+                ),
+                trailing: isConnected
+                    ? Chip(
+                        label: const Text("Connected"),
+                        backgroundColor: Colors.green.withOpacity(0.2),
+                        labelStyle: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 11,
+                        ),
+                      )
+                    : TextButton(
+                        onPressed: () => _connectToDac(dac),
+                        child: Text("Connect",
+                            style: TextStyle(color: accentColor)),
+                      ),
+              );
+            }),
+        ],
+
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Future<void> _scanForUsbDacs() async {
+    setState(() => _loadingUsbDacs = true);
+    try {
+      final dacs = await UsbAudioService.getConnectedDacs();
+      if (mounted) {
+        setState(() {
+          _usbDacs = dacs;
+          _loadingUsbDacs = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error scanning USB DACs: $e");
+      if (mounted) setState(() => _loadingUsbDacs = false);
+    }
+  }
+
+  Future<void> _connectToDac(UsbDacDevice dac) async {
+    // Use the PlayerNotifier to enable bypass (this also opens the DAC)
+    final playerNotifier = ref.read(playerProvider.notifier);
+    final success = await playerNotifier.enableUsbAudioBypass(dac);
+    if (success) {
+      setState(() => _connectedDac = dac);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text("Connected to ${dac.deviceName} - USB Bypass Active")),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content:
+                  Text("Failed to connect to DAC. Check USB permissions.")),
+        );
+      }
+    }
+  }
+
   // Admin Tap Logic
   int _adminTapCount = 0;
   DateTime? _lastTapTime;
@@ -910,6 +1400,53 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _adminTapCount = 0;
       _showAdminLoginDialog(context);
     }
+  }
+
+  Future<void> _showRestartDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false, // Force choice
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        title: const Text("Restart Required"),
+        content: const Text(
+          "Changing the audio output device requires a restart application to take effect.\n\nWould you like to restart now?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text("Changes will apply on next restart.")),
+                );
+              }
+            },
+            child: const Text("Later"),
+          ),
+          FilledButton(
+            onPressed: () async {
+              // Restart Logic
+              if (Platform.isWindows) {
+                // Launch new instance
+                await Process.start(Platform.resolvedExecutable, []);
+                exit(0);
+              } else {
+                Navigator.pop(context);
+                // Fallback for other platforms
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text(
+                          "Auto-restart not supported. Please restart manually.")),
+                );
+              }
+            },
+            child: const Text("Restart Now"),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _showAdminLoginDialog(BuildContext context) async {

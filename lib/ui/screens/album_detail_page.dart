@@ -301,107 +301,231 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                   // --- ALBUM HEADER ---
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(32, 100, 32, 24),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            width: 220,
-                            height: 220,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.4),
-                                  blurRadius: 40,
-                                  offset: const Offset(0, 20),
-                                )
-                              ],
-                              image: DecorationImage(
-                                image: imageProvider, // USE DYNAMIC PROVIDER
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.end,
+                      padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          // 🚀 Responsive: Use vertical layout on narrow screens
+                          final isNarrow = constraints.maxWidth < 500;
+                          final artSize =
+                              isNarrow ? constraints.maxWidth * 0.6 : 220.0;
+                          final titleFontSize = isNarrow ? 26.0 : 50.0;
+
+                          if (isNarrow) {
+                            // --- MOBILE: VERTICAL LAYOUT ---
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
+                                // Album Art
+                                Container(
+                                  width: artSize,
+                                  height: artSize,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.4),
+                                        blurRadius: 30,
+                                        offset: const Offset(0, 15),
+                                      )
+                                    ],
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                // Album Label
                                 const Text("ALBUM",
                                     style: TextStyle(
-                                        fontSize: 12,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        letterSpacing: 1)),
+                                        letterSpacing: 1.5,
+                                        color: Colors.grey)),
                                 const SizedBox(height: 8),
+                                // Title
                                 Text(
                                   widget.album.title,
                                   style: TextStyle(
-                                    fontSize: 50,
+                                    fontSize: titleFontSize,
                                     fontWeight: FontWeight.w800,
                                     color: textColor,
-                                    height: 1.0,
+                                    height: 1.1,
                                   ),
-                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 24),
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 12,
-                                      backgroundColor: Colors.grey[800],
-                                      backgroundImage: _artistImageUrl != null
-                                          ? NetworkImage(_artistImageUrl!)
-                                          : null,
-                                      child: _artistImageUrl == null
-                                          ? const Icon(Icons.person, size: 14)
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    MouseRegion(
-                                      cursor: SystemMouseCursors.click,
-                                      onEnter: (_) => setState(
-                                          () => _isArtistHovered = true),
-                                      onExit: (_) => setState(
-                                          () => _isArtistHovered = false),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          ref
-                                              .read(navigationStackProvider
-                                                  .notifier)
-                                              .push(
-                                                NavigationItem(
-                                                  type: NavigationType.artist,
-                                                  data: ArtistSelection(
-                                                      artistName:
-                                                          widget.album.artist,
-                                                      songs: <SongModel>[]),
-                                                ),
-                                              );
-                                        },
-                                        child: Text(widget.album.artist,
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                decoration: _isArtistHovered
-                                                    ? TextDecoration.underline
-                                                    : null,
-                                                decorationColor: textColor,
-                                                color: textColor)),
+                                const SizedBox(height: 16),
+                                // Artist Row
+                                GestureDetector(
+                                  onTap: () {
+                                    ref
+                                        .read(navigationStackProvider.notifier)
+                                        .push(
+                                          NavigationItem(
+                                            type: NavigationType.artist,
+                                            data: ArtistSelection(
+                                                artistName: widget.album.artist,
+                                                songs: <SongModel>[]),
+                                          ),
+                                        );
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 14,
+                                        backgroundColor: Colors.grey[800],
+                                        backgroundImage: _artistImageUrl != null
+                                            ? NetworkImage(_artistImageUrl!)
+                                            : null,
+                                        child: _artistImageUrl == null
+                                            ? const Icon(Icons.person, size: 16)
+                                            : null,
                                       ),
-                                    ),
-                                    Text(
-                                      " • ${widget.album.releaseDate.split('-').first} • ${_tracks.length} songs",
-                                      style: TextStyle(
-                                          color: textColor.withOpacity(0.7)),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 8),
+                                      Flexible(
+                                        child: Text(
+                                          widget.album.artist,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: textColor,
+                                            fontSize: 15,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                // Year & Track Count
+                                Text(
+                                  "${widget.album.releaseDate.split('-').first} • ${_tracks.length} songs",
+                                  style: TextStyle(
+                                      color: textColor.withOpacity(0.6),
+                                      fontSize: 13),
                                 ),
                               ],
-                            ),
-                          ),
-                        ],
+                            );
+                          } else {
+                            // --- DESKTOP/TABLET: HORIZONTAL LAYOUT ---
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Container(
+                                  width: artSize,
+                                  height: artSize,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(4),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.4),
+                                        blurRadius: 40,
+                                        offset: const Offset(0, 20),
+                                      )
+                                    ],
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 24),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      const Text("ALBUM",
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1)),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        widget.album.title,
+                                        style: TextStyle(
+                                          fontSize: titleFontSize,
+                                          fontWeight: FontWeight.w800,
+                                          color: textColor,
+                                          height: 1.0,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 12,
+                                            backgroundColor: Colors.grey[800],
+                                            backgroundImage: _artistImageUrl !=
+                                                    null
+                                                ? NetworkImage(_artistImageUrl!)
+                                                : null,
+                                            child: _artistImageUrl == null
+                                                ? const Icon(Icons.person,
+                                                    size: 14)
+                                                : null,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          MouseRegion(
+                                            cursor: SystemMouseCursors.click,
+                                            onEnter: (_) => setState(
+                                                () => _isArtistHovered = true),
+                                            onExit: (_) => setState(
+                                                () => _isArtistHovered = false),
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                ref
+                                                    .read(
+                                                        navigationStackProvider
+                                                            .notifier)
+                                                    .push(
+                                                      NavigationItem(
+                                                        type: NavigationType
+                                                            .artist,
+                                                        data: ArtistSelection(
+                                                            artistName: widget
+                                                                .album.artist,
+                                                            songs: <SongModel>[]),
+                                                      ),
+                                                    );
+                                              },
+                                              child: Text(widget.album.artist,
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      decoration:
+                                                          _isArtistHovered
+                                                              ? TextDecoration
+                                                                  .underline
+                                                              : null,
+                                                      decorationColor:
+                                                          textColor,
+                                                      color: textColor)),
+                                            ),
+                                          ),
+                                          Text(
+                                            " • ${widget.album.releaseDate.split('-').first} • ${_tracks.length} songs",
+                                            style: TextStyle(
+                                                color:
+                                                    textColor.withOpacity(0.7)),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                        },
                       ),
                     ),
                   ),

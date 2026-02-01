@@ -6,9 +6,12 @@ import 'package:flutter/services.dart'; // Full import for MethodChannel
 import 'package:path_provider/path_provider.dart';
 
 import '../models/youtube_search_result.dart';
+import '../models/binaries_update_info.dart';
+import '../models/download_progress.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as yt_explode;
 import 'debug_log_service.dart';
+import 'package:http/http.dart' as http;
 
 class YoutubeDownloaderService {
   static final YoutubeDownloaderService _instance =
@@ -24,8 +27,19 @@ class YoutubeDownloaderService {
   late String _ytDlpPath;
   late String _ffmpegPath;
   late String _ffprobePath;
+  late String _binDirPath;
 
   bool _isInitialized = false;
+
+  // 🔒 Lock to prevent downloads during yt-dlp update
+  bool _isUpdatingYtDlp = false;
+
+  // 🚀 Binaries update notifiers (Desktop only)
+  // UI listens to these to show mandatory update dialog
+  final ValueNotifier<BinariesUpdateInfo?> binariesUpdateNotifier =
+      ValueNotifier(null);
+  final ValueNotifier<DownloadProgress?> binariesProgressNotifier =
+      ValueNotifier(null);
 
   // 🚀 Native yt-dlp for Android (via MethodChannel)
   static const _nativeChannel =
@@ -75,22 +89,23 @@ class YoutubeDownloaderService {
       final fileName = _getExecutableName(binary);
       final file = File('${binDir.path}/$fileName');
 
-      // Copy from assets to app directory if not exists
-      if (!await file.exists()) {
-        try {
-          final byteData = await rootBundle.load('assets/binaries/$assetName');
-          await file.writeAsBytes(byteData.buffer
-              .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+      // ALWAYS copy/overwrite binaries from assets to ensure users get latest version on app update
+      try {
+        final byteData = await rootBundle.load('assets/binaries/$assetName');
+        await file.writeAsBytes(
+          byteData.buffer
+              .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
+          flush: true,
+        );
 
-          // CRITICAL FOR MAC/LINUX: Make executable
-          if (!Platform.isWindows) {
-            await Process.run('chmod', ['+x', file.path]);
-          }
-
-          if (kDebugMode) print('Copied $assetName to ${file.path}');
-        } catch (e) {
-          print("Error copying binary $binary: $e");
+        // CRITICAL FOR MAC/LINUX: Make executable
+        if (!Platform.isWindows) {
+          await Process.run('chmod', ['+x', file.path]);
         }
+
+        if (kDebugMode) print('📦 Updated binary: $assetName -> ${file.path}');
+      } catch (e) {
+        print("Error copying binary $binary: $e");
       }
     }
 
@@ -98,6 +113,11 @@ class YoutubeDownloaderService {
     _ytDlpPath = '${binDir.path}/${_getExecutableName('yt-dlp')}';
     _ffmpegPath = '${binDir.path}/${_getExecutableName('ffmpeg')}';
     _ffprobePath = '${binDir.path}/${_getExecutableName('ffprobe')}';
+    _binDirPath = binDir.path;
+
+    // 🚀 Check for yt-dlp updates (UI will show mandatory dialog if update available)
+    // This only checks, doesn't download - UI triggers download when user sees dialog
+    checkForBinariesUpdate();
 
     _isInitialized = true;
     print("✅ Downloader Initialized for ${Platform.operatingSystem}");
@@ -130,6 +150,210 @@ class YoutubeDownloaderService {
   String _getExecutableName(String base) {
     if (Platform.isWindows) return '$base.exe';
     return base; // Mac/Linux don't use .exe
+  }
+
+  // --- yt-dlp Auto-Update for Desktop ---
+  // Downloads latest yt-dlp from GitHub releases
+  static const _ytDlpGitHubApiUrl =
+      'https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest';
+  static const _versionPrefKey = 'ytdlp_version';
+  static const _lastCheckPrefKey = 'ytdlp_last_check';
+
+  /// Check for yt-dlp updates and notify UI if update available (Desktop only)
+  /// Does NOT download - UI must call downloadBinariesUpdate() when user confirms
+  Future<void> checkForBinariesUpdate() async {
+    if (!Platform.isWindows && !Platform.isMacOS && !Platform.isLinux) return;
+
+    final debug = DebugLogService();
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      // Throttle checks to once per day
+      final lastCheck = prefs.getInt(_lastCheckPrefKey) ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final oneDayMs = 24 * 60 * 60 * 1000;
+
+      if (now - lastCheck < oneDayMs) {
+        debug.info('🔄 yt-dlp: Skipping update check (checked within 24h)');
+        return;
+      }
+
+      debug.info('🔄 yt-dlp: Checking for updates...');
+
+      // Get latest release info from GitHub
+      final response = await http.get(
+        Uri.parse(_ytDlpGitHubApiUrl),
+        headers: {'Accept': 'application/vnd.github.v3+json'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode != 200) {
+        debug.warning('🔄 yt-dlp: GitHub API returned ${response.statusCode}');
+        await prefs.setInt(_lastCheckPrefKey, now); // Don't retry immediately
+        return;
+      }
+
+      final releaseData = jsonDecode(response.body);
+      final latestVersion = releaseData['tag_name'] as String?;
+      final storedVersion = prefs.getString(_versionPrefKey);
+
+      if (latestVersion == null) {
+        debug.warning('🔄 yt-dlp: Could not parse version from GitHub');
+        return;
+      }
+
+      // Check if we have this version already
+      if (storedVersion == latestVersion) {
+        debug.info('🔄 yt-dlp: Already at latest version ($latestVersion)');
+        await prefs.setInt(_lastCheckPrefKey, now);
+        return;
+      }
+
+      debug.info(
+          '🔄 yt-dlp: New version available! $storedVersion -> $latestVersion');
+
+      // Find the correct asset for this platform
+      final assets = releaseData['assets'] as List<dynamic>;
+      String? downloadUrl;
+      int sizeBytes = 0;
+
+      if (Platform.isWindows) {
+        for (var asset in assets) {
+          final name = asset['name'] as String;
+          if (name == 'yt-dlp.exe') {
+            downloadUrl = asset['browser_download_url'] as String;
+            sizeBytes = asset['size'] as int? ?? 0;
+            break;
+          }
+        }
+      } else if (Platform.isMacOS) {
+        for (var asset in assets) {
+          final name = asset['name'] as String;
+          if (name == 'yt-dlp_macos' || name == 'yt-dlp') {
+            downloadUrl = asset['browser_download_url'] as String;
+            sizeBytes = asset['size'] as int? ?? 0;
+            break;
+          }
+        }
+      } else {
+        // Linux
+        for (var asset in assets) {
+          final name = asset['name'] as String;
+          if (name == 'yt-dlp_linux' || name == 'yt-dlp') {
+            downloadUrl = asset['browser_download_url'] as String;
+            sizeBytes = asset['size'] as int? ?? 0;
+            break;
+          }
+        }
+      }
+
+      if (downloadUrl == null) {
+        debug.warning(
+            '🔄 yt-dlp: Could not find binary for ${Platform.operatingSystem}');
+        return;
+      }
+
+      // 🚀 Notify UI that update is available (mandatory dialog will show)
+      binariesUpdateNotifier.value = BinariesUpdateInfo(
+        latestVersion: latestVersion,
+        currentVersion: storedVersion,
+        downloadUrl: downloadUrl,
+        sizeBytes: sizeBytes,
+      );
+
+      debug.info(
+          '🔄 yt-dlp: Update info sent to UI (size: ${(sizeBytes / 1024 / 1024).toStringAsFixed(1)} MB)');
+    } catch (e) {
+      debug.warning('🔄 yt-dlp: Update check failed (non-critical): $e');
+      // Don't throw - the bundled version will work
+    }
+  }
+
+  /// Download and install yt-dlp update (called by UI after user sees mandatory dialog)
+  Future<void> downloadBinariesUpdate() async {
+    final updateInfo = binariesUpdateNotifier.value;
+    if (updateInfo == null) return;
+
+    final debug = DebugLogService();
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      debug.info('🔄 yt-dlp: Starting download from ${updateInfo.downloadUrl}');
+
+      // 🔒 Set lock before writing to prevent downloads from using partial binary
+      _isUpdatingYtDlp = true;
+
+      // Show initial progress
+      binariesProgressNotifier.value = DownloadProgress(
+        receivedMB: 0,
+        totalMB: updateInfo.sizeBytes / (1024 * 1024),
+        progress: 0,
+        status: 'Downloading yt-dlp...',
+      );
+
+      // Stream the download for progress updates
+      final client = http.Client();
+      final request = http.Request('GET', Uri.parse(updateInfo.downloadUrl));
+      final response = await client.send(request);
+
+      if (response.statusCode != 200) {
+        debug.warning('🔄 yt-dlp: Download failed with ${response.statusCode}');
+        _isUpdatingYtDlp = false;
+        binariesProgressNotifier.value = null;
+        binariesUpdateNotifier.value = null;
+        client.close();
+        return;
+      }
+
+      final totalBytes = response.contentLength ?? updateInfo.sizeBytes;
+      int receivedBytes = 0;
+      List<int> bytes = [];
+
+      await for (var chunk in response.stream) {
+        bytes.addAll(chunk);
+        receivedBytes += chunk.length;
+
+        binariesProgressNotifier.value = DownloadProgress(
+          receivedMB: receivedBytes / (1024 * 1024),
+          totalMB: totalBytes / (1024 * 1024),
+          progress: receivedBytes / totalBytes,
+          status: 'Downloading yt-dlp...',
+        );
+      }
+
+      client.close();
+
+      // Write to file
+      final targetFilename = Platform.isWindows ? 'yt-dlp.exe' : 'yt-dlp';
+      final targetPath = '$_binDirPath/$targetFilename';
+      final file = File(targetPath);
+      await file.writeAsBytes(bytes, flush: true);
+
+      // Make executable on Mac/Linux
+      if (!Platform.isWindows) {
+        await Process.run('chmod', ['+x', targetPath]);
+      }
+
+      // 🔓 Release lock after successful write
+      _isUpdatingYtDlp = false;
+
+      // Save version info
+      await prefs.setString(_versionPrefKey, updateInfo.latestVersion);
+      await prefs.setInt(
+          _lastCheckPrefKey, DateTime.now().millisecondsSinceEpoch);
+
+      // Clear notifiers
+      binariesProgressNotifier.value = null;
+      binariesUpdateNotifier.value = null;
+
+      debug.success('🔄 yt-dlp: Updated to ${updateInfo.latestVersion}!');
+      print('✅ yt-dlp updated to ${updateInfo.latestVersion}');
+    } catch (e) {
+      _isUpdatingYtDlp = false; // 🔓 Release lock on error
+      binariesProgressNotifier.value = null;
+      binariesUpdateNotifier.value = null;
+      debug.error('🔄 yt-dlp: Download failed: $e');
+      // Don't throw - the bundled version will work as fallback
+    }
   }
 
   // --- Cache Path ---
@@ -339,11 +563,12 @@ class YoutubeDownloaderService {
     required Function(double progress) onProgress,
     required Function(bool success) onComplete,
     String audioFormat = 'mp3',
+    String streamingQuality = 'high', // standard, high, lossless
   }) async {
     // 1. MOBILE (Android/iOS): Native Dart Download (YoutubeExplode)
     if (Platform.isAndroid || Platform.isIOS) {
-      await _downloadMobile(
-          youtubeUrl, outputFilePath, onProgress, onComplete, audioFormat);
+      await _downloadMobile(youtubeUrl, outputFilePath, onProgress, onComplete,
+          audioFormat, streamingQuality);
       return;
     }
 
@@ -359,8 +584,8 @@ class YoutubeDownloaderService {
       onComplete(false);
       return;
     }
-    await _downloadDesktop(
-        youtubeUrl, outputFilePath, onProgress, onComplete, audioFormat);
+    await _downloadDesktop(youtubeUrl, outputFilePath, onProgress, onComplete,
+        audioFormat, streamingQuality);
   }
 
   // --- Mobile Implementation (Native yt-dlp via MethodChannel) ---
@@ -371,6 +596,8 @@ class YoutubeDownloaderService {
     Function(double) onProgress,
     Function(bool) onComplete,
     String expectedFormat,
+    String
+        streamingQuality, // Note: Mobile native yt-dlp quality is handled on native side
   ) async {
     final debug = DebugLogService();
     debug.info("📱 Starting download via Native yt-dlp...");
@@ -531,9 +758,24 @@ class YoutubeDownloaderService {
 
       var m4aStreams = audioStreams
           .where((s) => s.container.toString().toLowerCase().contains('mp4'));
-      var streamInfo = m4aStreams.isNotEmpty
-          ? m4aStreams.withHighestBitrate()
-          : audioStreams.withHighestBitrate();
+
+      var bestM4a =
+          m4aStreams.isNotEmpty ? m4aStreams.withHighestBitrate() : null;
+      var bestOverall = audioStreams.withHighestBitrate();
+
+      // Default to best overall (likely Opus) if M4A is garbage
+      var streamInfo = bestOverall;
+
+      // If we have a decent M4A stream (>64kbps), prefer it for compatibility
+      // (itag 140 is ~128kbps)
+      if (bestM4a != null && bestM4a.bitrate.kiloBitsPerSecond > 64) {
+        streamInfo = bestM4a;
+      } else {
+        if (bestM4a != null) {
+          debug.warning(
+              "📱 [Fallback] M4A quality low (${bestM4a.bitrate.kiloBitsPerSecond}kbps). Switching to ${streamInfo.container} (${streamInfo.bitrate.kiloBitsPerSecond}kbps) for better quality.");
+        }
+      }
 
       debug.info(
           "📱 [Fallback] Selected: ${streamInfo.container} @ ${streamInfo.bitrate.kiloBitsPerSecond}kbps");
@@ -616,6 +858,7 @@ class YoutubeDownloaderService {
     Function(double) onProgress,
     Function(bool) onComplete,
     String audioFormat,
+    String streamingQuality,
   ) async {
     // SINGLE SHOT COMPLETION: Ensure we only call onComplete once
     bool hasCompleted = false;
@@ -626,12 +869,29 @@ class YoutubeDownloaderService {
       }
     }
 
+    // 🔒 Wait if yt-dlp is being updated (max 30 seconds)
+    if (_isUpdatingYtDlp) {
+      print('⏳ Waiting for yt-dlp update to complete...');
+      int waitCount = 0;
+      while (_isUpdatingYtDlp && waitCount < 30) {
+        await Future.delayed(const Duration(seconds: 1));
+        waitCount++;
+      }
+      if (_isUpdatingYtDlp) {
+        print('⚠️ yt-dlp update taking too long, proceeding anyway');
+      }
+    }
+
+    // Use fixed bitrate matching YouTube's source quality (no upscaling)
+    // YouTube max is ~128kbps AAC or ~160kbps Opus - we use 128K to match source
+
     final args = [
       '-x',
       '--no-playlist',
-      '--extractor-args', 'youtube:player_client=default',
+      '-f', 'ba', // Best audio source (usually Opus/WebM ~160kbps)
       '--audio-format', audioFormat,
-      '--audio-quality', '0',
+      '--audio-quality',
+      '128K', // Fixed bitrate matching YouTube source (no upscaling)
       '--force-overwrites',
 
       // TELL YTDLP WHERE FFMPEG IS
@@ -649,9 +909,10 @@ class YoutubeDownloaderService {
       // Handle Stdout (Progress) safely
       process.stdout.transform(utf8.decoder).listen(
         (data) {
+          print('📥 YTDLP: $data'); // Debug output
           try {
             final progressMatch =
-                RegExp(r'\[download\]\s+(\d+\.\d+)%').firstMatch(data);
+                RegExp(r'\[download\]\s+(\d+\.?\d*)%').firstMatch(data);
             if (progressMatch != null) {
               double progress = double.parse(progressMatch.group(1)!) / 100.0;
               onProgress(progress.clamp(0.0, 1.0));
@@ -669,10 +930,7 @@ class YoutubeDownloaderService {
       // Handle Stderr (Errors) safely
       process.stderr.transform(utf8.decoder).listen(
         (data) {
-          if (!data.contains('[download]') &&
-              !data.contains('[ExtractAudio]')) {
-            print('❌ YTDLP ERR: $data'); // ALWAYS PRINT
-          }
+          print('❌ YTDLP ERR: $data'); // ALWAYS PRINT
         },
         onError: (e) {
           if (kDebugMode) print("Stderr stream error: $e");

@@ -46,6 +46,8 @@ import '../../models/daily_mix_model.dart'; // 🎵 Daily Mix model
 import '../../services/update_service.dart';
 import '../../services/bulk_download_service.dart';
 import '../../services/smart_download_service.dart';
+import '../../services/youtube_downloader_service.dart'; // 🚀 Binaries update
+import '../../models/binaries_update_info.dart'; // 🚀 Binaries update
 import '../components/download_progress_widget.dart';
 
 import '../../providers/interface_provider.dart';
@@ -85,6 +87,11 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     // 🚀 LISTEN FOR BULK DOWNLOAD ERRORS (Ban/Limit)
     BulkDownloadService().errorNotifier.addListener(_onBulkDownloadError);
+
+    // 🚀 LISTEN FOR BINARIES UPDATE (Desktop only - mandatory update)
+    YoutubeDownloaderService()
+        .binariesUpdateNotifier
+        .addListener(_onBinariesUpdate);
   }
 
   // 🚀 CONNECTIVITY MONITOR
@@ -171,10 +178,156 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
   }
 
+  // 🚀 BINARIES UPDATE (Desktop only - mandatory)
+  void _onBinariesUpdate() {
+    final updateInfo = YoutubeDownloaderService().binariesUpdateNotifier.value;
+    if (updateInfo != null && mounted) {
+      // Show mandatory update dialog
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showBinariesUpdateDialog(updateInfo);
+      });
+    }
+  }
+
+  void _showBinariesUpdateDialog(BinariesUpdateInfo updateInfo) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Mandatory - cannot dismiss
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        title: Row(
+          children: const [
+            Icon(Icons.system_update_rounded, color: Colors.blue),
+            SizedBox(width: 8),
+            Text("Binaries Update Required"),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("A new version of yt-dlp is available."),
+            const SizedBox(height: 8),
+            Text(
+              "${updateInfo.currentVersion ?? 'Bundled'} → ${updateInfo.latestVersion}",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Size: ${updateInfo.sizeMB} MB",
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "This update is required for YouTube downloads to work correctly.",
+              style: TextStyle(fontSize: 13),
+            ),
+          ],
+        ),
+        actions: [
+          // No "Later" button - update is mandatory
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _downloadBinariesUpdate();
+            },
+            child: const Text("Update Now"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _downloadBinariesUpdate() {
+    // Show progress dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => ValueListenableBuilder<DownloadProgress?>(
+        valueListenable: YoutubeDownloaderService().binariesProgressNotifier,
+        builder: (context, progress, child) {
+          // Close dialog when download completes
+          if (progress == null &&
+              YoutubeDownloaderService().binariesUpdateNotifier.value == null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (Navigator.canPop(dialogContext)) {
+                Navigator.pop(dialogContext);
+              }
+            });
+          }
+
+          final percentage = ((progress?.progress ?? 0) * 100).toInt();
+          final receivedMB = progress?.receivedMB.toStringAsFixed(1) ?? '0';
+          final totalMB = progress?.totalMB.toStringAsFixed(1) ?? '0';
+          final status = progress?.status ?? 'Preparing...';
+
+          return AlertDialog(
+            backgroundColor: Theme.of(context).cardColor,
+            title: Row(
+              children: const [
+                Icon(Icons.download_rounded, color: Colors.blue),
+                SizedBox(width: 8),
+                Text("Updating yt-dlp"),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(status),
+                const SizedBox(height: 16),
+                LinearProgressIndicator(
+                  value: progress?.progress,
+                  backgroundColor: Theme.of(context).dividerColor,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "$receivedMB MB / $totalMB MB",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    ),
+                    Text(
+                      "$percentage%",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    // Start the download
+    YoutubeDownloaderService().downloadBinariesUpdate();
+  }
+
   @override
   void dispose() {
     _connectivityTimer?.cancel(); // 🚀 Cancel connectivity monitor
     BulkDownloadService().errorNotifier.removeListener(_onBulkDownloadError);
+    YoutubeDownloaderService()
+        .binariesUpdateNotifier
+        .removeListener(_onBinariesUpdate);
     super.dispose();
   }
 
@@ -1031,6 +1184,16 @@ class _MainShellState extends ConsumerState<MainShell> {
                 'Downloads',
                 Icons.download_rounded,
                 LibraryView.downloads,
+                currentView,
+                notifier,
+                isDark,
+                hasSelection,
+                accentColor),
+            _buildMobileNavItem(
+                context,
+                'Metadata Editor',
+                Icons.build_circle_rounded,
+                LibraryView.tools,
                 currentView,
                 notifier,
                 isDark,

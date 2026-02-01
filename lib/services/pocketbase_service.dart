@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import '../env/env.dart';
 import 'debug_log_service.dart';
 
@@ -39,19 +40,53 @@ class PocketBaseService {
   }
 
   String? _cachedMetricsId; // Cache metrics record ID
+  String? _cachedHostname; // Cache device name
   static const _networkTimeout =
       Duration(seconds: 5); // 🚀 Timeout for network calls
+
+  Future<String> _getDeviceName() async {
+    if (_cachedHostname != null) return _cachedHostname!;
+
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        _cachedHostname = "${androidInfo.manufacturer} ${androidInfo.model}";
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        _cachedHostname = "${iosInfo.name} (${iosInfo.model})";
+      } else if (Platform.isWindows) {
+        final winInfo = await deviceInfo.windowsInfo;
+        _cachedHostname = winInfo.computerName;
+      } else if (Platform.isLinux) {
+        final linuxInfo = await deviceInfo.linuxInfo;
+        _cachedHostname = linuxInfo.prettyName;
+      } else if (Platform.isMacOS) {
+        final macInfo = await deviceInfo.macOsInfo;
+        _cachedHostname = macInfo.computerName;
+      } else {
+        _cachedHostname = Platform.localHostname;
+      }
+    } catch (e) {
+      _cachedHostname = "Unknown Device";
+    }
+    return _cachedHostname!;
+  }
 
   // SAVE DATA (Upsert: Create or Update) - No List permission needed
   Future<void> saveData(Map<String, dynamic> data) async {
     if (!_initialized || _userId == null) return;
+
+    // 🚀 Inject Real Hostname
+    final hostname = await _getDeviceName();
+    final dataWithHost = {...data, 'hostname': hostname};
 
     // 1. Try to use cached metrics record ID
     if (_cachedMetricsId != null) {
       try {
         await pb
             .collection('metrics')
-            .update(_cachedMetricsId!, body: data)
+            .update(_cachedMetricsId!, body: dataWithHost)
             .timeout(_networkTimeout);
         return;
       } catch (e) {
@@ -68,7 +103,7 @@ class PocketBaseService {
         try {
           await pb
               .collection('metrics')
-              .update(storedId, body: data)
+              .update(storedId, body: dataWithHost)
               .timeout(_networkTimeout);
           _cachedMetricsId = storedId;
           return;
@@ -97,7 +132,7 @@ class PocketBaseService {
         final existingId = existingRecords.items.first.id;
         await pb
             .collection('metrics')
-            .update(existingId, body: data)
+            .update(existingId, body: dataWithHost)
             .timeout(_networkTimeout);
         _cachedMetricsId = existingId;
 
@@ -115,17 +150,10 @@ class PocketBaseService {
 
     // 4. Create new record (only if no existing record found)
     try {
-      // 🚀 Include hostname in initial record creation
-      String hostname = 'Unknown';
-      try {
-        hostname = Platform.localHostname;
-      } catch (_) {}
-
       final rec = await pb.collection('metrics').create(body: {
         'user_id': _userId,
-        'hostname': hostname,
         'os': Platform.operatingSystem,
-        ...data,
+        ...dataWithHost,
       }).timeout(_networkTimeout);
       _cachedMetricsId = rec.id;
 

@@ -8,6 +8,7 @@ import 'package:metadata_god/metadata_god.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:smtc_windows/smtc_windows.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 
 // --- PROJECT IMPORTS ---
 import 'providers/settings_provider.dart';
@@ -29,6 +30,26 @@ Future<void> main() async {
   } catch (e) {
     debugPrint("⚠️ MetadataGod Init Failed: $e");
   }
+
+  // 🎵 Initialize MediaKit audio backend for Windows/Linux
+  // Read WASAPI exclusive setting from SharedPreferences (must be done before AudioPlayer is created)
+  if (Platform.isWindows) {
+    final prefs = await SharedPreferences.getInstance();
+    final wasapiExclusive = prefs.getBool('wasapiExclusive') ?? false;
+    if (wasapiExclusive) {
+      JustAudioMediaKit.audioExclusive = true;
+      debugPrint("🎵 [Main] WASAPI Exclusive Mode ENABLED");
+    } else {
+      debugPrint("🎵 [Main] WASAPI Exclusive Mode DISABLED (default)");
+    }
+
+    final audioDeviceId = prefs.getString('audioDeviceId');
+    if (audioDeviceId != null) {
+      JustAudioMediaKit.audioDeviceId = audioDeviceId;
+      debugPrint("🎵 [Main] Audio Device Override: $audioDeviceId");
+    }
+  }
+  JustAudioMediaKit.ensureInitialized();
 
   // Initialize Analytics (Startup)
   // 🚀 Reduced timeout for faster offline startup

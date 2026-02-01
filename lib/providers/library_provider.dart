@@ -25,6 +25,7 @@ class LibraryProvider extends ChangeNotifier {
   String? _selectedFolder;
   String? _error;
   bool _isPermissionDenied = false;
+  bool _disposed = false; // 🚀 Track disposal state
 
   List<SongModel> get songs => _searchQuery.isEmpty ? _songs : _filteredSongs;
   bool get isLoading => _isLoading;
@@ -42,6 +43,17 @@ class LibraryProvider extends ChangeNotifier {
     '.opus'
   ];
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  /// Safe wrapper to prevent calling notifyListeners after dispose
+  void _safeNotify() {
+    if (!_disposed) notifyListeners();
+  }
+
   // 🚀 New Method: Request Permissions manually
   Future<void> requestPermissions() async {
     // Note: We need to import permission_handler.
@@ -50,7 +62,7 @@ class LibraryProvider extends ChangeNotifier {
     // BUT to reset the state:
     _error = null;
     _isPermissionDenied = false;
-    notifyListeners();
+    _safeNotify();
     // After UI requests permission, it should call pickFolder or reload.
     // Actually, let's just retry scanning current folder if exists.
     if (_selectedFolder != null) {
@@ -70,12 +82,18 @@ class LibraryProvider extends ChangeNotifier {
     // 1. First, load whatever is already in the DB (Instant Load)
     await _fetchFromDatabase();
 
-    // 2. Then, if we have a path, verify it and scan for changes
+    // 2. Then, if we have a main path, verify it and scan for changes
     if (savedPath != null) {
       _selectedFolder = savedPath;
-      notifyListeners();
+      _safeNotify();
       // Run scan in background so UI shows DB data immediately
-      _scanFolder(savedPath);
+      await _scanFolder(savedPath);
+    }
+
+    // 3. Also scan additional folders from settings
+    final settings = ref.read(settingsProvider);
+    for (final folder in settings.additionalMusicFolders) {
+      await _scanFolder(folder);
     }
   }
 
@@ -89,22 +107,31 @@ class LibraryProvider extends ChangeNotifier {
     // Convert Isar 'Song' entities back to 'SongModel' for the UI
     final allSongs = dbSongs.map((e) => _mapToModel(e)).toList();
 
-    // 🚀 FILTERING LOGIC
-    if (_selectedFolder != null) {
-      if (ignoreSubfolders) {
-        // Strict Check: Only include files directly in selectedFolder
-        _songs = allSongs.where((s) {
-          final parent = p.dirname(s.filePath);
-          // Normalize paths for comparison (handle trailing slashes/case)
-          return p.equals(parent, _selectedFolder!);
-        }).toList();
-      } else {
-        // Recursive Check: Include files in selectedFolder OR its children
-        _songs = allSongs.where((s) {
-          return p.isWithin(_selectedFolder!, s.filePath) ||
-              p.equals(p.dirname(s.filePath), _selectedFolder!);
-        }).toList();
-      }
+    // Get all folders to filter: main folder + additional folders
+    final settings = ref.read(settingsProvider);
+    final List<String> allFolders = [
+      if (_selectedFolder != null) _selectedFolder!,
+      ...settings.additionalMusicFolders,
+    ];
+
+    // 🚀 FILTERING LOGIC - Include songs from any configured folder
+    if (allFolders.isNotEmpty) {
+      _songs = allSongs.where((s) {
+        for (final folder in allFolders) {
+          if (ignoreSubfolders) {
+            // Strict Check: Only include files directly in folder
+            final parent = p.dirname(s.filePath);
+            if (p.equals(parent, folder)) return true;
+          } else {
+            // Recursive Check: Include files in folder OR its children
+            if (p.isWithin(folder, s.filePath) ||
+                p.equals(p.dirname(s.filePath), folder)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }).toList();
     } else {
       // No folder selected? Show everything (or nothing, depending on design)
       _songs = allSongs;
@@ -119,7 +146,7 @@ class LibraryProvider extends ChangeNotifier {
     } else {
       _filteredSongs = List.from(_songs);
     }
-    notifyListeners();
+    _safeNotify();
   }
 
   // Helper to convert DB Schema -> UI Model
@@ -147,7 +174,7 @@ class LibraryProvider extends ChangeNotifier {
             song.album.toLowerCase().contains(lowerQuery);
       }).toList();
     }
-    notifyListeners();
+    _safeNotify();
   }
 
   Future<void> pickFolder() async {
@@ -167,7 +194,7 @@ class LibraryProvider extends ChangeNotifier {
     _isLoading = true;
     _error = null; // Reset error
     _isPermissionDenied = false;
-    notifyListeners();
+    _safeNotify();
 
     final dbService = ref.read(dbServiceProvider);
     // Ignore subfolders if setting is enabled (Default: true)
@@ -223,7 +250,7 @@ class LibraryProvider extends ChangeNotifier {
     await _fetchFromDatabase();
 
     _isLoading = false;
-    notifyListeners();
+    _safeNotify();
   }
 
   // Returns an Isar 'Song' object
@@ -255,11 +282,24 @@ class LibraryProvider extends ChangeNotifier {
   // RE-ADDED HELPERS
 
   Future<void> refreshLibrary() async {
+    // Scan main folder
     if (_selectedFolder != null) {
       await _scanFolder(_selectedFolder!);
-    } else {
+    }
+    // Scan all additional folders
+    final settings = ref.read(settingsProvider);
+    for (final folder in settings.additionalMusicFolders) {
+      await _scanFolder(folder);
+    }
+    // If no folders at all, just refresh from DB
+    if (_selectedFolder == null && settings.additionalMusicFolders.isEmpty) {
       await _fetchFromDatabase();
     }
+  }
+
+  /// Scan a new additional folder and add songs to library
+  Future<void> scanAdditionalFolder(String path) async {
+    await _scanFolder(path);
   }
 
   Future<void> updateSingleSong(SongModel newSong) async {
@@ -290,7 +330,7 @@ class LibraryProvider extends ChangeNotifier {
       } else {
         _filteredSongs = List.from(_songs);
       }
-      notifyListeners();
+      _safeNotify();
     }
   }
 
@@ -337,14 +377,17 @@ class LibraryProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('saved_music_folder');
 
-    // 3. Clear the Database
+    // 3. Clear additional folders from settings
+    await ref.read(settingsProvider.notifier).clearAllMusicFolders();
+
+    // 4. Clear the Database
     final dbService = ref.read(dbServiceProvider);
     final isar = await dbService.db;
     await isar.writeTxn(() async {
       await isar.songs.clear(); // Wipes all songs from Isar
     });
 
-    notifyListeners();
+    _safeNotify();
   }
 }
 

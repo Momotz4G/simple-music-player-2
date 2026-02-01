@@ -8,6 +8,10 @@ import '../../services/spotify_service.dart';
 import '../../models/song_model.dart';
 import '../components/smart_art.dart';
 
+import 'package:permission_handler/permission_handler.dart';
+
+import 'package:device_info_plus/device_info_plus.dart'; // 🚀 IMPORT
+
 class ToolsPage extends ConsumerStatefulWidget {
   const ToolsPage({super.key});
 
@@ -15,20 +19,226 @@ class ToolsPage extends ConsumerStatefulWidget {
   ConsumerState<ToolsPage> createState() => _ToolsPageState();
 }
 
-class _ToolsPageState extends ConsumerState<ToolsPage> {
+class _ToolsPageState extends ConsumerState<ToolsPage>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  // 🚀 ADD MIXIN
   bool _isLibraryExpanded = false;
   bool _isExternalExpanded = true;
+  bool _hasPermission = true;
+
+  // Mobile Support
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this); // 🚀 REGISTER OBSERVER
+    _tabController = TabController(length: 2, vsync: this);
+    _checkPermission();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this); // 🚀 REMOVE OBSERVER
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  // 🚀 RE-CHECK ON RESUME
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermission();
+    }
+  }
+
+  Future<void> _checkPermission() async {
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      // Android 11+ (SDK 30+)
+      if (androidInfo.version.sdkInt >= 30) {
+        if (await Permission.manageExternalStorage.status.isGranted) {
+          setState(() => _hasPermission = true);
+        } else {
+          setState(() => _hasPermission = false);
+        }
+      }
+      // Android 10 or lower
+      else {
+        if (await Permission.storage.status.isGranted) {
+          setState(() => _hasPermission = true);
+        } else {
+          setState(() => _hasPermission = false);
+        }
+      }
+    }
+  }
+
+  Future<void> _requestPermission() async {
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+
+    if (androidInfo.version.sdkInt >= 30) {
+      // Direct user to "All Files Access"
+      if (await Permission.manageExternalStorage.request().isGranted) {
+        setState(() => _hasPermission = true);
+      } else {
+        // If request() fails to open the specific screen or is denied,
+        // we might try openAppSettings() as a fallback, but usually request() handles it.
+      }
+    } else {
+      // Legacy Storage Permission
+      if (await Permission.storage.request().isGranted) {
+        setState(() => _hasPermission = true);
+      } else {
+        openAppSettings();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final library = ref.watch(libraryProvider);
-    final metadataState = ref.watch(metadataProvider);
-    final metadataNotifier = ref.read(metadataProvider.notifier);
+    if (!_hasPermission && Platform.isAndroid) {
+      return _buildPermissionRequest();
+    }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final borderColor = isDark ? Colors.white10 : Colors.black12;
-    final sectionColor = isDark ? Colors.grey[900] : Colors.grey[200];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Mobile Layout (< 800px width)
+        if (constraints.maxWidth < 800) {
+          return _buildMobileLayout(context);
+        }
+        // Desktop Layout
+        return _buildDesktopLayout(context);
+      },
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        title: Row(
+          children: const [
+            Icon(Icons.info_outline, color: Colors.orangeAccent),
+            SizedBox(width: 8),
+            Text("Metadata Editor"),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+                "Fix your metadata editor in a second and just search it."),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orangeAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orangeAccent.withOpacity(0.3)),
+              ),
+              child: const Text(
+                "Note: Album art is changing after state \"Saved Successfully\", you don't need to worries its not saved, it's just caching problem in app and I currently fix it. You can verify with file manager or else.",
+                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Close"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPermissionRequest() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.folder_off, size: 64, color: Colors.orange),
+          const SizedBox(height: 16),
+          const Text(
+            "Permission Required",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              "To edit tags, we need 'All Files Access' permission. This allows us to modify your music files directly.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: _requestPermission,
+            icon: const Icon(Icons.check),
+            label: const Text("Grant Permission"),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    final metadataState = ref.watch(metadataProvider);
+
+    // Auto-switch to editor tab if a song is selected AND we are on the files tab
+    // Note: We need to be careful not to cycle endlessly.
+    // Ideally, the selection tap should drive the tab switch.
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        // 🚀 Reserve space for the floating hamburger menu (MainShell)
+        leading: const SizedBox(width: 56),
+        title: const Text("Metadata Editor", style: TextStyle(fontSize: 18)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: "Files"),
+            Tab(text: "Editor"),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: () => _showInfoDialog(context),
+          ),
+          if (metadataState.importedSongs.isNotEmpty)
+            IconButton(
+                tooltip: "Clear Imported",
+                icon: const Icon(Icons.delete_sweep),
+                onPressed: () {
+                  ref.read(metadataProvider.notifier).clearImported();
+                })
+        ],
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // TAB 1: FILES LIST
+          _buildLeftPanel(context, isMobile: true),
+
+          // TAB 2: EDITOR
+          _buildRightPanel(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    final metadataState = ref.watch(metadataProvider);
+    final borderColor = Theme.of(context).dividerColor;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -48,108 +258,32 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                           style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: textColor)),
-                      if (metadataState.importedSongs.isNotEmpty)
-                        IconButton(
-                          tooltip: "Clear Imported",
-                          icon: const Icon(Icons.delete_sweep,
-                              color: Colors.grey),
-                          onPressed: metadataNotifier.clearImported,
-                        )
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.color)),
+                      Row(
+                        children: [
+                          IconButton(
+                            tooltip: "Diagnostics",
+                            icon: const Icon(Icons.help_outline),
+                            onPressed: () => _showInfoDialog(context),
+                          ),
+                          if (metadataState.importedSongs.isNotEmpty)
+                            IconButton(
+                              tooltip: "Clear Imported",
+                              icon: const Icon(Icons.delete_sweep,
+                                  color: Colors.grey),
+                              onPressed: ref
+                                  .read(metadataProvider.notifier)
+                                  .clearImported,
+                            )
+                        ],
+                      )
                     ],
                   ),
                 ),
-                Expanded(
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: _buildSectionHeader(
-                          context,
-                          "Library Data (${library.songs.length})",
-                          sectionColor!,
-                          textColor,
-                          isExpanded: _isLibraryExpanded,
-                          onToggle: () => setState(
-                              () => _isLibraryExpanded = !_isLibraryExpanded),
-                          onBulkTap: _isLibraryExpanded
-                              ? () => _showBulkConfirmDialog(
-                                  context, ref, library.songs, "Library")
-                              : null,
-                        ),
-                      ),
-                      if (_isLibraryExpanded)
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) => _buildSongTile(
-                                context,
-                                library.songs[index],
-                                metadataState.selectedSong,
-                                metadataNotifier),
-                            childCount: library.songs.length,
-                          ),
-                        ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 20),
-                          child: _buildSectionHeader(
-                            context,
-                            "External Files (${metadataState.importedSongs.length})",
-                            sectionColor,
-                            textColor,
-                            isExpanded: _isExternalExpanded,
-                            onToggle: () => setState(() =>
-                                _isExternalExpanded = !_isExternalExpanded),
-                            onBulkTap: metadataState.importedSongs.isNotEmpty
-                                ? () => _showBulkConfirmDialog(
-                                    context,
-                                    ref,
-                                    metadataState.importedSongs,
-                                    "Imported Files")
-                                : null,
-                          ),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () => metadataNotifier
-                                      .pickExternalFiles(folder: false),
-                                  icon: const Icon(Icons.insert_drive_file),
-                                  label: const Text("Add Files"),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () => metadataNotifier
-                                      .pickExternalFiles(folder: true),
-                                  icon: const Icon(Icons.create_new_folder),
-                                  label: const Text("Add Folder"),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (_isExternalExpanded)
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) => _buildSongTile(
-                                context,
-                                metadataState.importedSongs[index],
-                                metadataState.selectedSong,
-                                metadataNotifier),
-                            childCount: metadataState.importedSongs.length,
-                          ),
-                        ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                    ],
-                  ),
-                ),
+                Expanded(child: _buildLeftPanel(context, isMobile: false)),
               ],
             ),
           ),
@@ -159,87 +293,192 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
           // --- RIGHT PANEL ---
           Expanded(
             flex: 6,
-            child: Column(
+            child: _buildRightPanel(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeftPanel(BuildContext context, {required bool isMobile}) {
+    final library = ref.watch(libraryProvider);
+    final metadataState = ref.watch(metadataProvider);
+    final metadataNotifier = ref.read(metadataProvider.notifier);
+    final sectionColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey[900]
+        : Colors.grey[200];
+    final textColor =
+        Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: _buildSectionHeader(
+            context,
+            "Library Data (${library.songs.length})",
+            sectionColor!,
+            textColor,
+            isExpanded: _isLibraryExpanded,
+            onToggle: () =>
+                setState(() => _isLibraryExpanded = !_isLibraryExpanded),
+            onBulkTap: _isLibraryExpanded
+                ? () => _showBulkConfirmDialog(
+                    context, ref, library.songs, "Library")
+                : null,
+          ),
+        ),
+        if (_isLibraryExpanded)
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _buildSongTile(context, library.songs[index],
+                  metadataState.selectedSong, metadataNotifier,
+                  isMobile: isMobile),
+              childCount: library.songs.length,
+            ),
+          ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: _buildSectionHeader(
+              context,
+              "External Files (${metadataState.importedSongs.length})",
+              sectionColor,
+              textColor,
+              isExpanded: _isExternalExpanded,
+              onToggle: () =>
+                  setState(() => _isExternalExpanded = !_isExternalExpanded),
+              onBulkTap: metadataState.importedSongs.isNotEmpty
+                  ? () => _showBulkConfirmDialog(context, ref,
+                      metadataState.importedSongs, "Imported Files")
+                  : null,
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
               children: [
-                if (metadataState.isSaving ||
-                    metadataState.statusMessage.isNotEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: metadataState.isSaving
-                          ? Colors.blue.withOpacity(0.1)
-                          : Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: metadataState.isSaving
-                              ? Colors.blue.withOpacity(0.3)
-                              : Colors.green.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            if (metadataState.isSaving)
-                              const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2))
-                            else
-                              const Icon(Icons.check_circle,
-                                  size: 16, color: Colors.green),
-                            const SizedBox(width: 12),
-                            Expanded(
-                                child: Text(metadataState.statusMessage,
-                                    style: TextStyle(color: textColor))),
-                          ],
-                        ),
-                        if (metadataState.progressTotal > 0)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: LinearProgressIndicator(
-                              value: metadataState.progressCurrent /
-                                  metadataState.progressTotal,
-                              minHeight: 6,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          )
-                      ],
-                    ),
-                  ),
                 Expanded(
-                  child: metadataState.selectedSong == null
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.edit_note,
-                                  size: 64,
-                                  color: Colors.grey.withOpacity(0.5)),
-                              const SizedBox(height: 16),
-                              const Text("Select a song from the left to edit",
-                                  style: TextStyle(color: Colors.grey)),
-                            ],
-                          ),
-                        )
-                      : metadataState.isLoadingMetadata
-                          ? const Center(child: CircularProgressIndicator())
-                          : _EditorPanel(
-                              key: ValueKey(
-                                  metadataState.selectedSong?.filePath),
-                              state: metadataState,
-                              notifier: metadataNotifier,
-                              textColor: textColor,
-                            ),
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        metadataNotifier.pickExternalFiles(folder: false),
+                    icon: const Icon(Icons.insert_drive_file),
+                    label: const Text("Add Files"),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        metadataNotifier.pickExternalFiles(folder: true),
+                    icon: const Icon(Icons.create_new_folder),
+                    label: const Text("Add Folder"),
+                  ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+        if (_isExternalExpanded)
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _buildSongTile(
+                  context,
+                  metadataState.importedSongs[index],
+                  metadataState.selectedSong,
+                  metadataNotifier,
+                  isMobile: isMobile),
+              childCount: metadataState.importedSongs.length,
+            ),
+          ),
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
+      ],
+    );
+  }
+
+  Widget _buildRightPanel(BuildContext context) {
+    // Extracted content of the original Right Panel
+    final metadataState = ref.watch(metadataProvider);
+    final metadataNotifier = ref.read(metadataProvider.notifier);
+    final textColor =
+        Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
+    return Column(
+      children: [
+        if (metadataState.isSaving || metadataState.statusMessage.isNotEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: metadataState.isSaving
+                  ? Colors.blue.withOpacity(0.1)
+                  : Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                  color: metadataState.isSaving
+                      ? Colors.blue.withOpacity(0.3)
+                      : Colors.green.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    if (metadataState.isSaving)
+                      const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                    else
+                      const Icon(Icons.check_circle,
+                          size: 16, color: Colors.green),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: Text(metadataState.statusMessage,
+                            style: TextStyle(color: textColor))),
+                  ],
+                ),
+                if (metadataState.progressTotal > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: LinearProgressIndicator(
+                      value: metadataState.progressCurrent /
+                          metadataState.progressTotal,
+                      minHeight: 6,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  )
+              ],
+            ),
+          ),
+        Expanded(
+          child: metadataState.selectedSong == null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.edit_note,
+                          size: 64, color: Colors.grey.withOpacity(0.5)),
+                      const SizedBox(height: 16),
+                      const Text("Select a song from the list to edit",
+                          style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                )
+              : metadataState.isLoadingMetadata
+                  ? const Center(child: CircularProgressIndicator())
+                  : _EditorPanel(
+                      // Key includes art bytes hash to force rebuild when art changes
+                      key: ValueKey(
+                          '${metadataState.selectedSong?.filePath}_${metadataState.selectedSong?.albumArtBytes?.hashCode ?? 0}'),
+                      state: metadataState,
+                      notifier: metadataNotifier,
+                      textColor: textColor,
+                    ),
+        ),
+      ],
     );
   }
 
@@ -297,7 +536,8 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
   }
 
   Widget _buildSongTile(BuildContext context, SongModel song,
-      SongModel? selected, MetadataNotifier notifier) {
+      SongModel? selected, MetadataNotifier notifier,
+      {bool isMobile = false}) {
     final isSelected = song.filePath == selected?.filePath;
     final textColor = Theme.of(context).brightness == Brightness.dark
         ? Colors.white
@@ -321,7 +561,12 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
       subtitle: Text(song.artist,
           maxLines: 1,
           style: const TextStyle(color: Colors.grey, fontSize: 12)),
-      onTap: () => notifier.selectSong(song),
+      onTap: () {
+        notifier.selectSong(song);
+        if (isMobile) {
+          _tabController.animateTo(1); // Switch to Editor tab
+        }
+      },
     );
   }
 
@@ -423,19 +668,27 @@ class _EditorPanelState extends State<_EditorPanel> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                // FIX: Logic to handle Network URL (New Art) OR File Path (Existing)
+                // Priority: 1) Network URL (new Spotify art) 2) Bytes in memory 3) SmartArt from file
                 child: widget.state.coverUrl != null
                     ? Image.network(widget.state.coverUrl!, fit: BoxFit.cover)
-                    : (widget.state.selectedSong?.filePath != null
-                        ? SmartArt(
-                            path: widget.state.selectedSong!.filePath,
-                            size: 140,
-                            borderRadius: 8,
-                            onlineArtUrl:
-                                widget.state.selectedSong!.onlineArtUrl,
+                    : (widget.state.selectedSong?.albumArtBytes != null
+                        ? Image.memory(
+                            widget.state.selectedSong!.albumArtBytes!,
+                            fit: BoxFit.cover,
+                            gaplessPlayback: true,
                           )
-                        : const Icon(Icons.music_note,
-                            size: 50, color: Colors.white24)),
+                        : (widget.state.selectedSong?.filePath != null
+                            ? SmartArt(
+                                key: ValueKey(
+                                    'art_${widget.state.selectedSong!.filePath}_${DateTime.now().millisecondsSinceEpoch}'),
+                                path: widget.state.selectedSong!.filePath,
+                                size: 140,
+                                borderRadius: 8,
+                                onlineArtUrl:
+                                    widget.state.selectedSong!.onlineArtUrl,
+                              )
+                            : const Icon(Icons.music_note,
+                                size: 50, color: Colors.white24))),
               ),
             ),
             const SizedBox(width: 24),

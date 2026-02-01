@@ -5,6 +5,8 @@ import 'dart:convert'; // REQUIRED for JSON
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../services/usb_audio_service.dart'; // USB Audio for Android <14
 import 'package:shared_preferences/shared_preferences.dart'; // Just ensuring
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:palette_generator/palette_generator.dart';
@@ -129,6 +131,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       RemoteControlService(); // Remote Control Service
   late final AutoQueueService _autoQueueService; // Endless Queue Service
   final Ref ref;
+
+  // USB Audio bypass flag (for Android <14 bit-perfect playback)
+  bool _useUsbAudioBypass = false;
+  UsbDacDevice? _connectedUsbDac;
 
   Stream<Duration> get positionStream => _musicService.player.positionStream;
 
@@ -1150,21 +1156,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (_playlistIndex == -1) _playlistIndex = 0;
 
     // JIT CACHING CHECK
-    // 🚀 QUALITY UPGRADE CHECK
-    final prefs = await SharedPreferences.getInstance();
-    final quality = prefs.getString('streamingQuality') ?? 'high';
-    DebugLogService().info(
-        "🔍 UPGRADE DEBUG: Quality=$quality | Extension=${song.filePath.split('.').last}");
-    bool needsUpgrade = false;
-    if (quality == 'lossless' &&
-        !song.filePath.endsWith('.flac') &&
-        song.filePath != "cloud_stream") {
-      needsUpgrade = true;
-      print(
-          "🎧 Quality Upgrade: Song is M4A/MP3 but quality is 'lossless'. Triggering JIT.");
-    }
+    // 🐛 FIX: If the local file exists, ALWAYS play it directly.
+    // Quality upgrade should only apply when streaming (file doesn't exist).
+    // This ensures local library songs are never re-downloaded with FLAC quality setting.
+    final fileExists = await File(song.filePath).exists();
 
-    if (!await File(song.filePath).exists() || needsUpgrade) {
+    if (!fileExists) {
       print(
           "⚠️ Play Error: File not found at ${song.filePath}. Attempting JIT Cache...");
       state = state.copyWith(isBuffering: true); // 🚀 BUFFER START
@@ -1213,12 +1210,29 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     final isSameSong = state.currentSong?.filePath == song.filePath;
     if (isSameSong && !forceReload) {
-      await _musicService.seek(0);
-      if (!state.isPlaying) await _musicService.resume();
+      // USB Audio bypass for seek
+      if (_useUsbAudioBypass) {
+        await UsbAudioService.seek(0);
+        if (!state.isPlaying) await _resumeUsbAudio();
+      } else {
+        await _musicService.seek(0);
+        if (!state.isPlaying) await _musicService.resume();
+      }
     } else {
       state = state.copyWith(currentSong: song, isPlaying: true);
 
-      await _musicService.play(song);
+      // 🎧 USB AUDIO BYPASS: Try USB playback first for Android <14 bit-perfect
+      if (_useUsbAudioBypass && Platform.isAndroid) {
+        final usbSuccess = await _playViaUsbAudio(song);
+        if (usbSuccess) {
+          print("🎧 USB Audio Bypass: Playing via USB DAC");
+        } else {
+          print("⚠️ USB Audio Bypass: Falling back to normal playback");
+          await _musicService.play(song);
+        }
+      } else {
+        await _musicService.play(song);
+      }
     }
     _updateDiscord();
     _saveSettings(); // SAVE STATE
@@ -1309,19 +1323,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       }
 
       // JIT CACHING CHECK
-      // 🚀 QUALITY UPGRADE CHECK (User Queue)
-      final prefs = await SharedPreferences.getInstance();
-      final quality = prefs.getString('streamingQuality') ?? 'high';
-      bool needsUpgrade = false;
-      if (quality == 'lossless' &&
-          !nextSong.filePath.endsWith('.flac') &&
-          nextSong.filePath != "cloud_stream") {
-        needsUpgrade = true;
-        print(
-            "🎧 Quality Upgrade (Queue): Song is M4A/MP3 but quality is 'lossless'. Triggering JIT.");
-      }
+      // 🐛 FIX: If local file exists, play directly. No quality upgrade for local files.
+      final fileExists = await File(nextSong.filePath).exists();
 
-      if (!await File(nextSong.filePath).exists() || needsUpgrade) {
+      if (!fileExists) {
         state = state.copyWith(isBuffering: true); // 🚀 BUFFER START
         print(
             "⚠️ Play Next: File not found at ${nextSong.filePath}. Attempting JIT Cache...");
@@ -1436,19 +1441,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
 
         // JIT CACHING CHECK
-        // 🚀 QUALITY UPGRADE CHECK (Playlist)
-        final prefs = await SharedPreferences.getInstance();
-        final quality = prefs.getString('streamingQuality') ?? 'high';
-        bool needsUpgrade = false;
-        if (quality == 'lossless' &&
-            !nextSong.filePath.endsWith('.flac') &&
-            nextSong.filePath != "cloud_stream") {
-          needsUpgrade = true;
-          print(
-              "🎧 Quality Upgrade (Playlist): Song is M4A/MP3 but quality is 'lossless'. Triggering JIT.");
-        }
+        // 🐛 FIX: If local file exists, play directly. No quality upgrade for local files.
+        final fileExists = await File(nextSong.filePath).exists();
 
-        if (!await File(nextSong.filePath).exists() || needsUpgrade) {
+        if (!fileExists) {
           print(
               "⚠️ Play Next: File not found at ${nextSong.filePath}. Attempting JIT Cache...");
           final meta = SongMetadata(
@@ -2333,6 +2329,92 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       filePath: state.currentSong?.filePath,
       queue: queueData,
     );
+  }
+
+  // ============== USB Audio Bypass (Android <14 Bit-Perfect) ==============
+
+  /// Check if USB Audio bypass is currently active
+  bool get isUsbAudioBypassActive =>
+      _useUsbAudioBypass && _connectedUsbDac != null;
+
+  /// Enable USB Audio bypass with a connected DAC
+  Future<bool> enableUsbAudioBypass(UsbDacDevice dac) async {
+    if (!Platform.isAndroid) return false;
+
+    final success = await UsbAudioService.openDac(dac);
+    if (success) {
+      _connectedUsbDac = dac;
+      _useUsbAudioBypass = true;
+      print("🔊 USB Audio Bypass ENABLED: ${dac.deviceName}");
+      return true;
+    }
+    return false;
+  }
+
+  /// Disable USB Audio bypass and return to normal playback
+  Future<void> disableUsbAudioBypass() async {
+    if (_useUsbAudioBypass) {
+      await UsbAudioService.closeDac();
+      _connectedUsbDac = null;
+      _useUsbAudioBypass = false;
+      print("🔇 USB Audio Bypass DISABLED");
+    }
+  }
+
+  /// Play a song through USB Audio (for Android <14 bit-perfect)
+  Future<bool> _playViaUsbAudio(SongModel song) async {
+    if (!_useUsbAudioBypass || _connectedUsbDac == null) {
+      return false;
+    }
+
+    try {
+      // For USB Audio, we need a local file path
+      if (song.filePath == "cloud_stream" ||
+          !await File(song.filePath).exists()) {
+        print("⚠️ USB Audio: Cannot play cloud streams or missing files");
+        return false;
+      }
+
+      // Prepare the file for USB playback
+      final prepared = await UsbAudioService.prepareFile(song.filePath);
+      if (!prepared) {
+        print("❌ USB Audio: Failed to prepare file");
+        return false;
+      }
+
+      // Start USB playback
+      final success = await UsbAudioService.play();
+      if (success) {
+        print("✅ USB Audio: Playing ${song.title}");
+        state = state.copyWith(isPlaying: true);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("❌ USB Audio Error: $e");
+      return false;
+    }
+  }
+
+  /// Pause USB Audio playback
+  Future<void> _pauseUsbAudio() async {
+    if (_useUsbAudioBypass) {
+      await UsbAudioService.pause();
+    }
+  }
+
+  /// Resume USB Audio playback
+  Future<void> _resumeUsbAudio() async {
+    if (_useUsbAudioBypass) {
+      await UsbAudioService.resume();
+    }
+  }
+
+  /// Stop USB Audio playback
+  Future<void> _stopUsbAudio() async {
+    if (_useUsbAudioBypass) {
+      await UsbAudioService.stop();
+    }
   }
 }
 
