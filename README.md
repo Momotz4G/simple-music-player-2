@@ -38,6 +38,10 @@
 ### 🎤 **Lyrics & Metadata**
 - **Synced Lyrics**: Sing along with time-synced lyrics (LRC) fetched automatically from LRCLIB.net
 - **Lyrics Panel**: Beautiful, scrollable lyrics view with auto-scroll and tap-to-seek
+- **Lyrics Romanization**: Automatically romanize lyrics for Korean (Hangul → Revised Romanization), Japanese (Kanji/Hiragana/Katakana → Romaji), and Chinese (Hanzi → Pinyin with tone marks)
+- **Lyrics Translation**: Translate lyrics in real-time to 14 languages — English, Indonesian, Korean, Japanese, Chinese, Spanish, French, German, Portuguese, Thai, Vietnamese, Arabic, Russian, and Hindi
+- **Import SRT**: Import subtitle files (SRT) as synced lyrics for any song
+- **Save Lyrics to SRT**: Export currently loaded lyrics to SRT subtitle format
 - **Metadata Editor**: Edit song tags, album art, and details directly within the app
 - **Smart Recognition**: Search and fetch missing metadata and album art using Spotify's database
 - **Wikipedia Integration**: Artist information and biographies fetched from Wikipedia

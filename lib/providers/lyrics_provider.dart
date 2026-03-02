@@ -5,6 +5,10 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../utils/chinese_romanizer.dart';
+import '../utils/japanese_romanizer.dart';
+import '../utils/korean_romanizer.dart';
+
 class LyricLine {
   final String text;
   final double time;
@@ -18,6 +22,7 @@ class LyricsState {
   final bool isLoading;
   final double syncOffset;
   final bool isFromApi;
+  final bool hasLocalLrc;
 
   LyricsState({
     this.rawLyrics = '',
@@ -25,6 +30,7 @@ class LyricsState {
     this.isLoading = false,
     this.syncOffset = 0.0,
     this.isFromApi = false,
+    this.hasLocalLrc = false,
   });
 
   LyricsState copyWith({
@@ -33,6 +39,7 @@ class LyricsState {
     bool? isLoading,
     double? syncOffset,
     bool? isFromApi,
+    bool? hasLocalLrc,
   }) {
     return LyricsState(
       rawLyrics: rawLyrics ?? this.rawLyrics,
@@ -40,6 +47,7 @@ class LyricsState {
       isLoading: isLoading ?? this.isLoading,
       syncOffset: syncOffset ?? this.syncOffset,
       isFromApi: isFromApi ?? this.isFromApi,
+      hasLocalLrc: hasLocalLrc ?? this.hasLocalLrc,
     );
   }
 }
@@ -47,8 +55,88 @@ class LyricsState {
 class LyricsNotifier extends StateNotifier<LyricsState> {
   LyricsNotifier() : super(LyricsState());
 
+  @override
+  set state(LyricsState value) {
+    final oldLyrics = state.parsedLyrics;
+    super.state = value;
+    if (value.parsedLyrics.isNotEmpty && value.parsedLyrics != oldLyrics) {
+      _prefetchAsianRomanization(value.parsedLyrics);
+    }
+  }
+
+  /// Automatically pre-fetch Japanese and Chinese romanization
+  Future<void> _prefetchAsianRomanization(List<LyricLine> lyrics) async {
+    final linesToFetch = <String, String>{}; // text → 'ja' or 'zh'
+
+    for (final l in lyrics) {
+      if (KoreanRomanizer.containsKorean(l.text)) continue;
+      if (JapaneseRomanizer.containsJapanese(l.text)) {
+        linesToFetch[l.text] = 'ja';
+      } else if (ChineseRomanizer.containsChinese(l.text)) {
+        linesToFetch[l.text] = 'zh';
+      }
+    }
+
+    if (linesToFetch.isEmpty) return;
+
+    final futures = linesToFetch.entries.map((entry) async {
+      if (entry.value == 'ja') {
+        await JapaneseRomanizer.romanize(entry.key);
+      } else {
+        await ChineseRomanizer.romanize(entry.key);
+      }
+    });
+
+    await Future.wait(futures);
+  }
+
   void addOffset(double delta) {
     state = state.copyWith(syncOffset: state.syncOffset + delta);
+  }
+
+  /// Force re-fetch lyrics from LRCLib API (skips local .lrc check).
+  Future<void> refreshLyricsFromApi(
+      String title, String artist, double durationSecs) async {
+    state = state.copyWith(
+        isLoading: true,
+        rawLyrics: '',
+        parsedLyrics: [],
+        syncOffset: 0.0,
+        isFromApi: false);
+    try {
+      print("🔄 Refreshing lyrics from LRCLib for: $title - $artist");
+      await _fetchFromApi(title, artist, durationSecs);
+    } catch (e) {
+      print("Refresh Lyrics Error: $e");
+      state = state.copyWith(
+          isLoading: false, rawLyrics: "Error refreshing lyrics.");
+    }
+  }
+
+  /// Load lyrics from imported file content. Synced if timestamps detected, plain if not.
+  void loadLyricsFromContent(String content) {
+    final parsed = _parseLrc(content);
+    if (parsed.isNotEmpty) {
+      // Has synced timestamps
+      state = state.copyWith(
+        isLoading: false,
+        rawLyrics: content,
+        parsedLyrics: parsed,
+        syncOffset: 0.0,
+        isFromApi: false,
+        hasLocalLrc: false,
+      );
+    } else {
+      // Plain text lyrics (no timestamps)
+      state = state.copyWith(
+        isLoading: false,
+        rawLyrics: content,
+        parsedLyrics: [],
+        syncOffset: 0.0,
+        isFromApi: false,
+        hasLocalLrc: false,
+      );
+    }
   }
 
   Future<void> loadLyrics(
@@ -58,7 +146,8 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         rawLyrics: '',
         parsedLyrics: [],
         syncOffset: 0.0,
-        isFromApi: false);
+        isFromApi: false,
+        hasLocalLrc: false);
 
     try {
       // 1. EMBEDDED LYRICS (via MetadataRetriever - DISABLED)
@@ -97,6 +186,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
           rawLyrics: content,
           parsedLyrics: _parseLrc(content),
           isFromApi: false, // It's local
+          hasLocalLrc: true,
         );
         return;
       }

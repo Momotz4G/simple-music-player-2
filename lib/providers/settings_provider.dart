@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:simple_music_player_2/services/android_audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:simple_music_player_2/utils/translation_service.dart';
 
 // NEW ENUM
 enum VisualizerStyle { spectrum, wave, pulse }
@@ -29,6 +30,8 @@ class SettingsState {
       wasapiExclusive; // Windows: WASAPI exclusive mode for bit-perfect audio
   final String? audioDeviceId; // Selected MPV audio device ID
   final bool androidBitPerfect; // Android 14+: Bit-perfect audio mode
+  final bool disableRomanization; // Disable romanization display for lyrics
+  final String translationLanguage; // Target language for lyrics translation
 
   SettingsState({
     this.isDarkMode = true,
@@ -49,6 +52,8 @@ class SettingsState {
     this.wasapiExclusive = false, // Default OFF - exclusive locks audio device
     this.audioDeviceId,
     this.androidBitPerfect = false,
+    this.disableRomanization = false, // Default: romanization enabled
+    this.translationLanguage = 'en', // Default: translate to English
   });
 
   SettingsState copyWith({
@@ -70,6 +75,8 @@ class SettingsState {
     bool? wasapiExclusive,
     String? audioDeviceId,
     bool? androidBitPerfect,
+    bool? disableRomanization,
+    String? translationLanguage,
   }) {
     return SettingsState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -92,6 +99,8 @@ class SettingsState {
       wasapiExclusive: wasapiExclusive ?? this.wasapiExclusive,
       audioDeviceId: audioDeviceId ?? this.audioDeviceId,
       androidBitPerfect: androidBitPerfect ?? this.androidBitPerfect,
+      disableRomanization: disableRomanization ?? this.disableRomanization,
+      translationLanguage: translationLanguage ?? this.translationLanguage,
     );
   }
 }
@@ -129,6 +138,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final wasapiExclusive = _prefs.getBool('wasapiExclusive') ?? false;
     final audioDeviceId = _prefs.getString('audioDeviceId'); // Nullable
     final androidBitPerfect = _prefs.getBool('androidBitPerfect') ?? false;
+    final disableRomanization = _prefs.getBool('disableRomanization') ?? false;
+    final translationLanguage = _prefs.getString('translationLanguage') ?? 'en';
 
     // Initialize Android Bit-Perfect mode if enabled
     if (androidBitPerfect) {
@@ -154,6 +165,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       wasapiExclusive: wasapiExclusive,
       audioDeviceId: audioDeviceId,
       androidBitPerfect: androidBitPerfect,
+      disableRomanization: disableRomanization,
+      translationLanguage: translationLanguage,
     );
   }
 
@@ -229,6 +242,17 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> toggleDisableCanvas(bool enabled) async {
     await _prefs.setBool('disableCanvas', enabled);
     state = state.copyWith(disableCanvas: enabled);
+  }
+
+  Future<void> toggleDisableRomanization(bool enabled) async {
+    await _prefs.setBool('disableRomanization', enabled);
+    state = state.copyWith(disableRomanization: enabled);
+  }
+
+  Future<void> setTranslationLanguage(String langCode) async {
+    await _prefs.setString('translationLanguage', langCode);
+    TranslationService.clearCache(); // Flush cache when language changes
+    state = state.copyWith(translationLanguage: langCode);
   }
 
   /// Toggle WASAPI exclusive mode (Windows only)

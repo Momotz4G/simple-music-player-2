@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 🚀 Required for LogicalKeyboardKey
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:package_info_plus/package_info_plus.dart'; // 🚀 IMPORT
@@ -691,131 +691,193 @@ class _MainShellState extends ConsumerState<MainShell> {
         }
         return KeyEventResult.ignored;
       },
-      child: Scaffold(
-        key: _scaffoldKey, // 🚀 Use GlobalKey for drawer access
-        endDrawer: const QueueDrawer(),
-        // 🚀 MOBILE: Navigation Drawer (Hamburger Menu)
-        drawer: !isDesktop
-            ? _buildMobileDrawer(context, currentView, isDark)
-            : null,
-        body: Stack(
-          children: [
-            // 1. AMBIENT BACKGROUND LAYER (Bottom)
-            const Positioned.fill(
-              child: AmbientBackground(),
-            ),
+      child: PopScope(
+        canPop: false, // We handle all back navigation ourselves
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return; // Already popped, nothing to do
 
-            // 2. MAIN CONTENT AREA (Sidebar + Page)
-            Positioned.fill(
-              top: (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
-                  ? 32
-                  : 0, // Title bar on desktop only
-              child: Row(
-                children: [
-                  if (isDesktop)
-                    _buildSidebar(context, currentView, isDark, glassBgColor),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
+          // 1. If navigation stack has items, pop the last one
+          if (navigationStack.isNotEmpty) {
+            ref.read(navigationStackProvider.notifier).pop();
+            return;
+          }
+
+          // 2. If not on Home, go back to Home
+          if (currentView != LibraryView.browse) {
+            ref
+                .read(libraryPresentationProvider.notifier)
+                .setView(LibraryView.browse);
+            return;
+          }
+
+          // 3. Already on Home with empty stack — show exit confirmation
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Theme.of(context).cardColor,
+              title: Text(
+                'Exit App?',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              content: Text(
+                'Are you sure you want to exit?',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => SystemNavigator.pop(),
+                  child: const Text(
+                    'Exit',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        child: Scaffold(
+          key: _scaffoldKey, // 🚀 Use GlobalKey for drawer access
+          endDrawer: const QueueDrawer(),
+          // 🚀 MOBILE: Navigation Drawer (Hamburger Menu)
+          drawer: !isDesktop
+              ? _buildMobileDrawer(context, currentView, isDark)
+              : null,
+          body: Stack(
+            children: [
+              // 1. AMBIENT BACKGROUND LAYER (Bottom)
+              const Positioned.fill(
+                child: AmbientBackground(),
+              ),
+
+              // 2. MAIN CONTENT AREA (Sidebar + Page)
+              Positioned.fill(
+                top:
+                    (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                        ? 32
+                        : 0, // Title bar on desktop only
+                child: Row(
+                  children: [
+                    if (isDesktop)
+                      _buildSidebar(context, currentView, isDark, glassBgColor),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Container(
+                          key: ValueKey(navigationStack.isNotEmpty
+                              ? 'stack_${navigationStack.length}_${navigationStack.last.type}'
+                              : currentView),
+                          padding: navigationStack.isNotEmpty
+                              ? (isDesktop
+                                  ? EdgeInsets.zero
+                                  : const EdgeInsets.only(bottom: 140))
+                              : EdgeInsets.only(bottom: isDesktop ? 105 : 140),
+                          child:
+                              _buildMainContent(navigationStack, currentView),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 3. CUSTOM TITLE BAR (Top Layer - Desktop Only)
+              if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 40,
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                       child: Container(
-                        key: ValueKey(navigationStack.isNotEmpty
-                            ? 'stack_${navigationStack.length}_${navigationStack.last.type}'
-                            : currentView),
-                        padding: navigationStack.isNotEmpty
-                            ? (isDesktop
-                                ? EdgeInsets.zero
-                                : const EdgeInsets.only(bottom: 140))
-                            : EdgeInsets.only(bottom: isDesktop ? 105 : 140),
-                        child: _buildMainContent(navigationStack, currentView),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // 3. CUSTOM TITLE BAR (Top Layer - Desktop Only)
-            if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 40,
-                child: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                    child: Container(
-                      color: glassBgColor,
-                      child: WindowTitleBarBox(
-                        child: Row(
-                          children: [
-                            Expanded(child: MoveWindow()),
-                            const TopSearchBar(),
-                            Expanded(child: MoveWindow()),
-                            const WindowButtons(),
-                          ],
+                        color: glassBgColor,
+                        child: WindowTitleBarBox(
+                          child: Row(
+                            children: [
+                              Expanded(child: MoveWindow()),
+                              const TopSearchBar(),
+                              Expanded(child: MoveWindow()),
+                              const WindowButtons(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
 
-            // 4. LYRICS PANEL OVERLAY
-            // 4. LYRICS PANEL OVERLAY (Desktop Only)
-            if (isDesktop)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeInOutCubic,
-                left: 0,
-                right: 0,
-                top: isLyricsVisible ? 32 : screenHeight,
-                height: screenHeight - 32,
-                child: const LyricsPanel(),
-              ),
+              // 4. LYRICS PANEL OVERLAY
+              // 4. LYRICS PANEL OVERLAY (Desktop Only)
+              if (isDesktop)
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeInOutCubic,
+                  left: 0,
+                  right: 0,
+                  top: isLyricsVisible ? 32 : screenHeight,
+                  height: screenHeight - 32,
+                  child: const LyricsPanel(),
+                ),
 
-            // 5. PLAYER BAR (Fixed Bottom)
-            const Positioned(left: 0, right: 0, bottom: 0, child: PlayerBar()),
+              // 5. PLAYER BAR (Fixed Bottom)
+              const Positioned(
+                  left: 0, right: 0, bottom: 0, child: PlayerBar()),
 
-            // 6. MOBILE: Hamburger Menu Button (Overlay)
-            // 🚀 Only show on main pages (empty stack), otherwise rely on Back button
-            if (!isDesktop && navigationStack.isEmpty)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 16,
-                left: 16,
-                child: Builder(
-                  // Use Builder to get the Scaffold's context
-                  builder: (scaffoldContext) => Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.black.withOpacity(0.7)
-                          : Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.menu_rounded),
-                      iconSize: 28,
-                      color: isDark ? Colors.white : Colors.black,
-                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              // 6. MOBILE: Hamburger Menu Button (Overlay)
+              // 🚀 Only show on main pages (empty stack), otherwise rely on Back button
+              if (!isDesktop && navigationStack.isEmpty)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 16,
+                  child: Builder(
+                    // Use Builder to get the Scaffold's context
+                    builder: (scaffoldContext) => Container(
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.black.withOpacity(0.7)
+                            : Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.menu_rounded),
+                        iconSize: 28,
+                        color: isDark ? Colors.white : Colors.black,
+                        onPressed: () =>
+                            _scaffoldKey.currentState?.openDrawer(),
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-            // 7. DEBUG FLOATING BUTTON (Conditional - All Platforms)
-            if (ref.watch(settingsProvider).showDebugButton)
-              const DebugFloatingButton(child: SizedBox.shrink()),
-          ],
+              // 7. DEBUG FLOATING BUTTON (Conditional - All Platforms)
+              if (ref.watch(settingsProvider).showDebugButton)
+                const DebugFloatingButton(child: SizedBox.shrink()),
+            ],
+          ),
+          // 🚀 Removed NavigationBar - replaced with drawer
         ),
-        // 🚀 Removed NavigationBar - replaced with drawer
-      ),
+      ), // Close PopScope
     );
   }
 

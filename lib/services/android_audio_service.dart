@@ -33,4 +33,21 @@ class AndroidAudioService {
       return false;
     }
   }
+
+  /// Get native audio output info (sample rate, device, bit-perfect status)
+  static Future<Map<String, dynamic>?> getNativeOutputInfo() async {
+    if (!Platform.isAndroid) return null;
+
+    try {
+      final result =
+          await _channel.invokeMethod<Map>('getNativeOutputSampleRate');
+      if (result != null) {
+        return Map<String, dynamic>.from(result);
+      }
+      return null;
+    } on PlatformException catch (e) {
+      debugPrint("Failed to get native output info: ${e.message}");
+      return null;
+    }
+  }
 }

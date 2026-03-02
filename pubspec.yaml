@@ -1,7 +1,7 @@
 name: simple_music_player_2
 description: "A new modern Flutter music player."
 publish_to: 'none'
-version: 2.3.0+1
+version: 2.4.0+1
 
 environment:
   sdk: '>=3.2.3 <4.0.0'
@@ -29,7 +29,7 @@ dependencies:
   # Tools
   shared_preferences: ^2.2.2
   path: ^1.9.0
-  file_picker: ^10.3.7
+  file_picker: ^10.3.10
   package_info_plus: ^8.0.0
 
   # Parsing HTTP
@@ -95,6 +95,7 @@ dependencies:
   ffmpeg_kit_flutter_new_audio: ^2.0.0
   open_filex: ^4.4.0  # For auto-installing APK updates
   flutter_inappwebview: ^6.1.5
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

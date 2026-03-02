@@ -1420,6 +1420,18 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                 isDark: isDark,
                 accentColor: settings.accentColor,
               ),
+              // Library
+              _buildNavButton(
+                icon: Icons.folder_rounded,
+                label: "Library",
+                isActive: currentView == LibraryView.localLibrary,
+                onTap: () {
+                  ref.read(navigationStackProvider.notifier).clear();
+                  presentationNotifier.setView(LibraryView.localLibrary);
+                },
+                isDark: isDark,
+                accentColor: settings.accentColor,
+              ),
               // Settings
               _buildNavButton(
                 icon: Icons.settings_rounded,

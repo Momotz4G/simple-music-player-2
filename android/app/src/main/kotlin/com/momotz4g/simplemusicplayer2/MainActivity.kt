@@ -19,15 +19,61 @@ class MainActivity : AudioServiceActivity() {
         }
 
         io.flutter.plugin.common.MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
-            if (call.method == "setBitPerfectMode") {
-                val enable = call.argument<Boolean>("enable") ?: false
-                if (android.os.Build.VERSION.SDK_INT >= 34) { // Android 14 (Upside Down Cake)
-                    setBitPerfectAudio(enable, result)
-                } else {
-                    result.error("UNSUPPORTED_VERSION", "Android 14+ required for bit-perfect audio", null)
+            when (call.method) {
+                "setBitPerfectMode" -> {
+                    val enable = call.argument<Boolean>("enable") ?: false
+                    if (android.os.Build.VERSION.SDK_INT >= 34) {
+                        setBitPerfectAudio(enable, result)
+                    } else {
+                        result.error("UNSUPPORTED_VERSION", "Android 14+ required for bit-perfect audio", null)
+                    }
                 }
-            } else {
-                result.notImplemented()
+                "getNativeOutputSampleRate" -> {
+                    try {
+                        val audioManager = getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager
+                        val nativeRate = audioManager.getProperty(android.media.AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)
+                        val framesPerBuffer = audioManager.getProperty(android.media.AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
+                        
+                        // Get active output device info
+                        val devices = audioManager.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS)
+                        val activeDevice = devices.firstOrNull { 
+                            it.type == android.media.AudioDeviceInfo.TYPE_USB_DEVICE || 
+                            it.type == android.media.AudioDeviceInfo.TYPE_USB_HEADSET 
+                        } ?: devices.firstOrNull {
+                            it.type == android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
+                            it.type == android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET
+                        } ?: devices.firstOrNull {
+                            it.type == android.media.AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+                        }
+                        
+                        val deviceName = activeDevice?.productName?.toString() ?: "Unknown"
+                        val deviceType = when (activeDevice?.type) {
+                            android.media.AudioDeviceInfo.TYPE_USB_DEVICE -> "USB DAC"
+                            android.media.AudioDeviceInfo.TYPE_USB_HEADSET -> "USB Headset"
+                            android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> "Wired Headphones"
+                            android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET -> "Wired Headset"
+                            android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> "Bluetooth A2DP"
+                            android.media.AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth SCO"
+                            android.media.AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> "Built-in Speaker"
+                            else -> "Audio Output"
+                        }
+                        
+                        // Get supported sample rates from active device
+                        val supportedRates = activeDevice?.sampleRates?.toList() ?: emptyList()
+                        
+                        result.success(mapOf(
+                            "nativeSampleRate" to (nativeRate?.toIntOrNull() ?: 48000),
+                            "framesPerBuffer" to (framesPerBuffer?.toIntOrNull() ?: 256),
+                            "deviceName" to deviceName,
+                            "deviceType" to deviceType,
+                            "supportedRates" to supportedRates,
+                            "bitPerfectEnabled" to bitPerfectModeEnabled
+                        ))
+                    } catch (e: Exception) {
+                        result.error("NATIVE_ERROR", e.message, null)
+                    }
+                }
+                else -> result.notImplemented()
             }
         }
     }

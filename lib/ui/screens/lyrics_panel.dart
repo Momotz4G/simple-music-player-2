@@ -1,10 +1,18 @@
+import 'dart:io';
 import 'dart:ui';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../providers/lyrics_provider.dart';
 import '../../providers/player_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../utils/chinese_romanizer.dart';
+import '../../utils/japanese_romanizer.dart';
+import '../../utils/korean_romanizer.dart';
+import '../../utils/translation_service.dart';
 import '../components/smart_art.dart';
 import '../components/vinyl_disk.dart';
 
@@ -22,6 +30,8 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
 
   int _activeLyricIndex = -1;
   bool _isUserScrolling = false;
+  bool _showTranslation = false;
+  bool _translationLoading = false;
 
   @override
   void initState() {
@@ -39,6 +49,42 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
     });
   }
 
+  void _toggleTranslation(dynamic lyricsState, dynamic playerState) async {
+    if (_showTranslation) {
+      setState(() => _showTranslation = false);
+      return;
+    }
+
+    final song = playerState.currentSong;
+    if (song == null) return;
+    final lyrics = lyricsState.parsedLyrics;
+    if (lyrics.isEmpty) return;
+
+    final songKey = '${song.title}-${song.artist}';
+
+    // If already cached, just show
+    if (TranslationService.hasCached(songKey)) {
+      setState(() => _showTranslation = true);
+      return;
+    }
+
+    // Fetch translation
+    setState(() => _translationLoading = true);
+    final targetLang = ref.read(settingsProvider).translationLanguage;
+    final lines = lyrics.map<String>((l) => l.text as String).toList();
+    await TranslationService.translateLyrics(
+      songKey: songKey,
+      lines: lines,
+      targetLang: targetLang,
+    );
+    if (mounted) {
+      setState(() {
+        _translationLoading = false;
+        _showTranslation = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lyricsState = ref.watch(lyricsProvider);
@@ -54,6 +100,9 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
     final subHeaderColor = isDark ? Colors.white70 : Colors.black54;
 
     final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = Platform.isAndroid || Platform.isIOS;
+    final showActions = playerState.currentSong != null;
+    final sideWidth = showActions ? (isMobile ? 48.0 : 180.0) : 48.0;
 
     ref.listen(playerProvider, (previous, next) {
       if (!mounted) return;
@@ -61,6 +110,9 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
       if (next.currentSong != null &&
           (previous?.currentSong?.filePath != next.currentSong!.filePath ||
               previous?.currentSong?.title != next.currentSong!.title)) {
+        JapaneseRomanizer.clearCache();
+        ChineseRomanizer.clearCache();
+
         ref.read(lyricsProvider.notifier).loadLyrics(
               next.currentSong!.filePath,
               next.currentSong!.title,
@@ -76,6 +128,52 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
           currentLyrics,
           ref.read(lyricsProvider).syncOffset,
         );
+      }
+    });
+
+    // Auto-translate when lyrics finish loading and translation is on
+    ref.listen(lyricsProvider, (previous, next) {
+      if (!mounted || !_showTranslation) return;
+      if (next.parsedLyrics.isNotEmpty &&
+          (previous == null ||
+              previous.parsedLyrics.isEmpty ||
+              previous.isLoading)) {
+        final song = ref.read(playerProvider).currentSong;
+        if (song == null) return;
+        final songKey = '${song.title}-${song.artist}';
+        if (TranslationService.hasCached(songKey)) return;
+        setState(() => _translationLoading = true);
+        final targetLang = ref.read(settingsProvider).translationLanguage;
+        final lines = next.parsedLyrics.map<String>((l) => l.text).toList();
+        TranslationService.translateLyrics(
+          songKey: songKey,
+          lines: lines,
+          targetLang: targetLang,
+        ).then((_) {
+          if (mounted) setState(() => _translationLoading = false);
+        });
+      }
+    });
+
+    // Re-translate when target language changes in settings
+    ref.listen(settingsProvider, (previous, next) {
+      if (!mounted || !_showTranslation) return;
+      if (previous != null &&
+          previous.translationLanguage != next.translationLanguage) {
+        final song = ref.read(playerProvider).currentSong;
+        if (song == null) return;
+        final lyrics = ref.read(lyricsProvider).parsedLyrics;
+        if (lyrics.isEmpty) return;
+        final songKey = '${song.title}-${song.artist}';
+        setState(() => _translationLoading = true);
+        final lines = lyrics.map<String>((l) => l.text).toList();
+        TranslationService.translateLyrics(
+          songKey: songKey,
+          lines: lines,
+          targetLang: next.translationLanguage,
+        ).then((_) {
+          if (mounted) setState(() => _translationLoading = false);
+        });
       }
     });
 
@@ -134,15 +232,23 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.keyboard_arrow_down,
-                            color: headerTextColor),
-                        onPressed: () {
-                          ref
-                              .read(playerProvider.notifier)
-                              .setLyricsVisibility(false);
-                        },
+                      // Left side: down arrow, sized to balance the right side
+                      SizedBox(
+                        width: sideWidth,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                            icon: Icon(Icons.keyboard_arrow_down,
+                                color: headerTextColor),
+                            onPressed: () {
+                              ref
+                                  .read(playerProvider.notifier)
+                                  .setLyricsVisibility(false);
+                            },
+                          ),
+                        ),
                       ),
+                      // Center: Title (always perfectly centered)
                       Expanded(
                         child: Column(
                           children: [
@@ -176,7 +282,239 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                           ],
                         ),
                       ),
-                      // Removed: const SizedBox(width: 48) to prevent overlap
+                      // Right side: action buttons
+                      if (showActions)
+                        SizedBox(
+                          width: sideWidth,
+                          child: isMobile
+                              ? Align(
+                                  alignment: Alignment.centerRight,
+                                  child: lyricsState.isLoading
+                                      ? Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: headerTextColor,
+                                            ),
+                                          ),
+                                        )
+                                      : PopupMenuButton<String>(
+                                          icon: Icon(Icons.more_vert,
+                                              color: headerTextColor),
+                                          color: isDark
+                                              ? const Color(0xFF1E1E1E)
+                                              : Colors.white,
+                                          onSelected: (value) {
+                                            if (value == 'import') {
+                                              _pickAndImportLyrics(ref);
+                                            } else if (value == 'save') {
+                                              _saveLyricsToFile(
+                                                ref,
+                                                playerState.currentSong!,
+                                                lyricsState.rawLyrics,
+                                              );
+                                            } else if (value == 'refresh') {
+                                              final song =
+                                                  playerState.currentSong!;
+                                              ref
+                                                  .read(lyricsProvider.notifier)
+                                                  .refreshLyricsFromApi(
+                                                    song.title,
+                                                    song.artist,
+                                                    song.duration,
+                                                  );
+                                            } else if (value == 'translate') {
+                                              _toggleTranslation(
+                                                  lyricsState, playerState);
+                                            }
+                                          },
+                                          itemBuilder: (BuildContext context) =>
+                                              <PopupMenuEntry<String>>[
+                                            PopupMenuItem<String>(
+                                              value: 'import',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.file_open_outlined,
+                                                      color: headerTextColor,
+                                                      size: 20),
+                                                  const SizedBox(width: 12),
+                                                  Text('Import',
+                                                      style: TextStyle(
+                                                          color:
+                                                              headerTextColor)),
+                                                ],
+                                              ),
+                                            ),
+                                            if ((lyricsState.parsedLyrics
+                                                        .isNotEmpty ||
+                                                    lyricsState.rawLyrics
+                                                        .isNotEmpty) &&
+                                                playerState.currentSong!
+                                                        .filePath !=
+                                                    'cloud_stream')
+                                              PopupMenuItem<String>(
+                                                value: 'save',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.save_outlined,
+                                                        color: headerTextColor,
+                                                        size: 20),
+                                                    const SizedBox(width: 12),
+                                                    Text('Save',
+                                                        style: TextStyle(
+                                                            color:
+                                                                headerTextColor)),
+                                                  ],
+                                                ),
+                                              ),
+                                            PopupMenuItem<String>(
+                                              value: 'refresh',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.refresh,
+                                                      color: headerTextColor,
+                                                      size: 20),
+                                                  const SizedBox(width: 12),
+                                                  Text('Refresh',
+                                                      style: TextStyle(
+                                                          color:
+                                                              headerTextColor)),
+                                                ],
+                                              ),
+                                            ),
+                                            if (lyricsState
+                                                .parsedLyrics.isNotEmpty)
+                                              PopupMenuItem<String>(
+                                                value: 'translate',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                        _showTranslation
+                                                            ? Icons
+                                                                .translate_rounded
+                                                            : Icons
+                                                                .translate_rounded,
+                                                        color: _showTranslation
+                                                            ? accentColor
+                                                            : headerTextColor,
+                                                        size: 20),
+                                                    const SizedBox(width: 12),
+                                                    Text(
+                                                        _showTranslation
+                                                            ? 'Hide Translation'
+                                                            : 'Translate',
+                                                        style: TextStyle(
+                                                            color:
+                                                                headerTextColor)),
+                                                  ],
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Tooltip(
+                                      message: 'Import Lyrics',
+                                      child: _buildMiniButton(
+                                        Icons.file_open_outlined,
+                                        () => _pickAndImportLyrics(ref),
+                                        isDark,
+                                      ),
+                                    ),
+                                    // Save button: when any lyrics are loaded
+                                    if ((lyricsState.parsedLyrics.isNotEmpty ||
+                                            lyricsState.rawLyrics.isNotEmpty) &&
+                                        playerState.currentSong!.filePath !=
+                                            'cloud_stream')
+                                      Tooltip(
+                                        message: 'Save Lyrics',
+                                        child: _buildMiniButton(
+                                          Icons.save_outlined,
+                                          () => _saveLyricsToFile(
+                                            ref,
+                                            playerState.currentSong!,
+                                            lyricsState.rawLyrics,
+                                          ),
+                                          isDark,
+                                        ),
+                                      ),
+                                    lyricsState.isLoading
+                                        ? Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: headerTextColor,
+                                              ),
+                                            ),
+                                          )
+                                        : Tooltip(
+                                            message: 'Refresh Lyrics',
+                                            child: _buildMiniButton(
+                                              Icons.refresh,
+                                              () {
+                                                final song =
+                                                    playerState.currentSong!;
+                                                ref
+                                                    .read(
+                                                        lyricsProvider.notifier)
+                                                    .refreshLyricsFromApi(
+                                                      song.title,
+                                                      song.artist,
+                                                      song.duration,
+                                                    );
+                                              },
+                                              isDark,
+                                            ),
+                                          ),
+                                    if (lyricsState.parsedLyrics.isNotEmpty)
+                                      _translationLoading
+                                          ? Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: SizedBox(
+                                                width: 18,
+                                                height: 18,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  color: headerTextColor,
+                                                ),
+                                              ),
+                                            )
+                                          : Tooltip(
+                                              message: 'Translate Lyrics',
+                                              child: InkWell(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                onTap: () => _toggleTranslation(
+                                                    lyricsState, playerState),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8),
+                                                  child: Icon(
+                                                    Icons.translate_rounded,
+                                                    color: _showTranslation
+                                                        ? accentColor
+                                                        : headerTextColor,
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                  ],
+                                ),
+                        )
+                      else
+                        SizedBox(width: sideWidth),
                     ],
                   ),
                 ),
@@ -205,10 +543,12 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
               ],
             ),
 
-            // LAYER 4: WATERMARK
-            if (lyricsState.isFromApi && !lyricsState.isLoading)
+            // LAYER 4: WATERMARK (only when lyrics are actually found)
+            if (lyricsState.isFromApi &&
+                !lyricsState.isLoading &&
+                lyricsState.parsedLyrics.isNotEmpty)
               Positioned(
-                top: 24,
+                top: 90,
                 right: 24,
                 child: Container(
                   padding:
@@ -273,11 +613,147 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.all(6.0),
+        padding: const EdgeInsets.all(8.0),
         child: Icon(icon,
-            size: 14, color: isDark ? Colors.white70 : Colors.black87),
+            size: 20, color: isDark ? Colors.white70 : Colors.black87),
       ),
     );
+  }
+
+  Widget _buildHeaderAction({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        hoverColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+        splashColor: (isDark ? Colors.white : Colors.black).withOpacity(0.15),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndImportLyrics(WidgetRef ref) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['lrc', 'txt'],
+      dialogTitle: 'Import Lyrics File',
+    );
+    if (result != null && result.files.single.path != null) {
+      final file = File(result.files.single.path!);
+      final content = await file.readAsString();
+      if (content.trim().isNotEmpty) {
+        ref.read(lyricsProvider.notifier).loadLyricsFromContent(content);
+      }
+    }
+  }
+
+  Future<void> _saveLyricsToFile(
+    WidgetRef ref,
+    dynamic song,
+    String rawLyrics,
+  ) async {
+    // Check if local .lrc already exists
+    final lrcPath = p.setExtension(song.filePath, '.lrc');
+    final lrcExists = File(lrcPath).existsSync();
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save Lyrics'),
+        content: Text(
+          lrcExists
+              ? 'This song already has a local .lrc file.\nDo you want to overwrite it?'
+              : 'Save current lyrics next to the audio file?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(lrcExists ? 'Overwrite' : 'Save'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      print('🎵 Audio file: ${song.filePath}');
+      print('📝 LRC target: $lrcPath');
+
+      // Safety: never overwrite the audio file
+      if (lrcPath == song.filePath || p.extension(lrcPath) != '.lrc') {
+        print('❌ Cannot save: unsafe path detected');
+        return;
+      }
+
+      // Build LRC content with timestamps from parsedLyrics
+      final parsedLyrics = ref.read(lyricsProvider).parsedLyrics;
+      String lrcContent;
+      if (parsedLyrics.isNotEmpty) {
+        final buffer = StringBuffer();
+        for (final line in parsedLyrics) {
+          final minutes = (line.time ~/ 60).toInt();
+          final seconds = line.time % 60;
+          buffer.writeln(
+            '[${minutes.toString().padLeft(2, '0')}:${seconds.toStringAsFixed(2).padLeft(5, '0')}]${line.text}',
+          );
+        }
+        lrcContent = buffer.toString();
+      } else {
+        lrcContent = rawLyrics;
+      }
+
+      final file = File(lrcPath);
+      await file.writeAsString(lrcContent);
+      print('💾 Saved lyrics to: $lrcPath');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lyrics saved as .lrc file'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ Failed to save lyrics: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save lyrics: $e'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   void _syncLyrics(double currentPos, List<LyricLine> lyrics, double offset) {
@@ -342,6 +818,23 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
             opacity = 1.0;
           } else if ((index - _activeLyricIndex).abs() <= 1) opacity = 0.6;
 
+          final hasKorean = KoreanRomanizer.containsKorean(line.text);
+          final hasJapanese =
+              !hasKorean && JapaneseRomanizer.containsJapanese(line.text);
+          final hasChinese = !hasKorean &&
+              !hasJapanese &&
+              ChineseRomanizer.containsChinese(line.text);
+          String? romanized;
+          if (!ref.read(settingsProvider).disableRomanization) {
+            if (hasKorean) {
+              romanized = KoreanRomanizer.romanize(line.text);
+            } else if (hasJapanese) {
+              romanized = JapaneseRomanizer.getCached(line.text);
+            } else if (hasChinese) {
+              romanized = ChineseRomanizer.getCached(line.text);
+            }
+          }
+
           return GestureDetector(
             onTap: () {
               playerNotifier.seek(line.time);
@@ -357,24 +850,77 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
               padding: const EdgeInsets.symmetric(vertical: 12),
               transform: Matrix4.identity()..scale(isActive ? 1.05 : 1.0),
               alignment: Alignment.center,
-              child: Text(
-                line.text,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: isActive ? 32 : 22,
-                  fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
-                  color: isActive
-                      ? activeColor
-                      : inactiveColor.withOpacity(opacity),
-                  height: 1.4,
-                  shadows: isActive
-                      ? [
-                          BoxShadow(
-                              color: activeColor.withOpacity(0.5),
-                              blurRadius: 20)
-                        ]
-                      : [],
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Original text
+                  Text(
+                    line.text,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: isActive ? 32 : 22,
+                      fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
+                      color: isActive
+                          ? activeColor
+                          : inactiveColor.withOpacity(opacity),
+                      height: 1.4,
+                      shadows: isActive
+                          ? [
+                              BoxShadow(
+                                  color: activeColor.withOpacity(0.5),
+                                  blurRadius: 20)
+                            ]
+                          : [],
+                    ),
+                  ),
+                  // Romanization
+                  if (romanized != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      romanized,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isActive ? 18 : 14,
+                        fontWeight: FontWeight.w400,
+                        fontStyle: FontStyle.italic,
+                        color: isActive
+                            ? activeColor.withOpacity(0.7)
+                            : inactiveColor.withOpacity(opacity * 0.6),
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                  // Translation
+                  if (_showTranslation) ...[
+                    Builder(builder: (context) {
+                      final song = ref.read(playerProvider).currentSong;
+                      if (song == null) return const SizedBox.shrink();
+                      final songKey = '${song.title}-${song.artist}';
+                      final translations =
+                          TranslationService.getCached(songKey);
+                      if (translations == null ||
+                          index >= translations.length ||
+                          translations[index].isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '(${translations[index]})',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: isActive ? 16 : 12,
+                            fontWeight: FontWeight.w400,
+                            color: isActive
+                                ? activeColor.withOpacity(0.6)
+                                : inactiveColor.withOpacity(opacity * 0.5),
+                            height: 1.3,
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ],
               ),
             ),
           );

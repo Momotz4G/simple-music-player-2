@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -858,6 +859,49 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             },
           ),
           SwitchListTile(
+            title: Text("Disable Romanization",
+                style: TextStyle(color: textColor)),
+            subtitle: Text(
+                "Hide romaji/pinyin below Korean, Japanese, and Chinese lyrics",
+                style: TextStyle(color: subtitleColor)),
+            value: settings.disableRomanization,
+            activeColor: accentColor,
+            onChanged: (val) => settingsNotifier.toggleDisableRomanization(val),
+          ),
+          ListTile(
+            title: Text("Translation Language",
+                style: TextStyle(color: textColor)),
+            subtitle: Text("Target language for lyrics translation",
+                style: TextStyle(color: subtitleColor)),
+            trailing: DropdownButton<String>(
+              value: settings.translationLanguage,
+              dropdownColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+              style: TextStyle(color: textColor),
+              underline: const SizedBox(),
+              onChanged: (value) {
+                if (value != null) {
+                  settingsNotifier.setTranslationLanguage(value);
+                }
+              },
+              items: const [
+                DropdownMenuItem(value: 'en', child: Text('English')),
+                DropdownMenuItem(value: 'id', child: Text('Indonesian')),
+                DropdownMenuItem(value: 'ko', child: Text('Korean')),
+                DropdownMenuItem(value: 'ja', child: Text('Japanese')),
+                DropdownMenuItem(value: 'zh-CN', child: Text('Chinese')),
+                DropdownMenuItem(value: 'es', child: Text('Spanish')),
+                DropdownMenuItem(value: 'fr', child: Text('French')),
+                DropdownMenuItem(value: 'de', child: Text('German')),
+                DropdownMenuItem(value: 'pt', child: Text('Portuguese')),
+                DropdownMenuItem(value: 'th', child: Text('Thai')),
+                DropdownMenuItem(value: 'vi', child: Text('Vietnamese')),
+                DropdownMenuItem(value: 'ar', child: Text('Arabic')),
+                DropdownMenuItem(value: 'ru', child: Text('Russian')),
+                DropdownMenuItem(value: 'hi', child: Text('Hindi')),
+              ],
+            ),
+          ),
+          SwitchListTile(
             title: Text("Disable Canvas", style: TextStyle(color: textColor)),
             subtitle: Text("Hide Spotify Canvas video, show album art instead",
                 style: TextStyle(color: subtitleColor)),
@@ -1131,6 +1175,64 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             value: settings.showDebugButton,
             activeColor: accentColor,
             onChanged: (val) => settingsNotifier.toggleShowDebugButton(val),
+          ),
+          const SizedBox(height: 50),
+
+          // COMMUNITY
+          Text("COMMUNITY",
+              style:
+                  TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.discord, size: 20),
+                  label: const Text("Join Us"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5865F2),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () async {
+                    final url =
+                        Uri.parse('https://discord.com/invite/WkmB8kJWR');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url,
+                          mode: LaunchMode.externalApplication);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.favorite, size: 20),
+                  label: const Text("Donate"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE91E63),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () async {
+                    final url =
+                        Uri.parse('https://sociabuzz.com/momotz4g/tribe');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url,
+                          mode: LaunchMode.externalApplication);
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 50),
 

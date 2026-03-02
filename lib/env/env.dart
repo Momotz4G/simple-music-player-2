@@ -73,4 +73,8 @@ abstract class Env {
   // 🚀 Remote Control Config
   @EnviedField(varName: 'REMOTE_CONTROL_URL', obfuscate: true)
   static final String remoteControlUrl = _Env.remoteControlUrl;
+
+  // 🚀 Romaji API Config
+  @EnviedField(varName: 'ROMAJI_API_URL', obfuscate: true)
+  static final String romajiApiUrl = _Env.romajiApiUrl;
 }

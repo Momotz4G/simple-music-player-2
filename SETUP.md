@@ -94,6 +94,13 @@ POCKETBASE_ADMIN_PASSWORD=your-admin-password
 # Your self-hosted remote control web app URL
 # ══════════════════════════════════════════════════════════════
 REMOTE_CONTROL_URL=https://your-remote-control-url.com
+
+# ══════════════════════════════════════════════════════════════
+# ROMAJI API (Required for Lyrics Romanization & Translation)
+# Your own Vercel-hosted API for Japanese/Chinese romanization
+# and lyrics translation. Deploy from: romaji-api/ folder
+# ══════════════════════════════════════════════════════════════
+ROMAJI_API_URL=https://your-romaji-api.vercel.app
 ```
 
 ### How to Get API Keys
@@ -116,6 +123,28 @@ REMOTE_CONTROL_URL=https://your-remote-control-url.com
 - **No registration required.**
 - The app comes with a default public ID (`798273057`) which works out of the box.
 - You only need to change this if you have a specific private App ID.
+
+#### Romaji API (Required)
+This API handles Japanese romanization (Kuroshiro), Chinese Pinyin conversion, and lyrics translation (Google Translate). You need to deploy your own instance to avoid quota issues.
+
+1. Navigate to the `romaji-api/` folder in the repository
+2. Install [Vercel CLI](https://vercel.com/docs/cli): `npm i -g vercel`
+3. Deploy:
+   ```bash
+   cd romaji-api
+   vercel --prod
+   ```
+4. Copy your deployment URL (e.g., `https://your-romaji-api.vercel.app`)
+5. Set `ROMAJI_API_URL=https://your-romaji-api.vercel.app` in `.env`
+
+The API provides 3 endpoints:
+| Endpoint | Purpose |
+|----------|---------|
+| `/api/romanize` | Japanese → Romaji (Kuroshiro) |
+| `/api/pinyin` | Chinese → Pinyin |
+| `/api/translate` | Lyrics translation (Google Translate) |
+
+> ⚠️ **Important:** Each user must deploy their own Romaji API. Using someone else's URL will consume their Vercel quota.
 
 ---
 

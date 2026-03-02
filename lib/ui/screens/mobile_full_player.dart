@@ -25,6 +25,11 @@ import 'lyrics_panel.dart';
 import '../components/queue_sheet.dart'; // 🚀 IMPORT
 import '../components/song_info_dialog.dart'; // 🚀 IMPORT
 import '../../services/audio_info_service.dart'; // 🚀 Audio Quality Info
+import '../components/audio_output_dialog.dart'; // 🚀 Audio Output
+import '../../utils/chinese_romanizer.dart';
+import '../../utils/japanese_romanizer.dart';
+import '../../utils/korean_romanizer.dart';
+import '../../utils/translation_service.dart';
 
 /// Mobile-optimized full player page with Canvas video support
 /// Opens when user taps the mini player bar on mobile
@@ -41,6 +46,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
   bool _isLoadingCanvas = false;
   String _canvasStatus = "Loading canvas...";
   double _dragOffset = 0.0; // 🚀 Track drag distance
+  bool _showTranslation = false;
+  bool _translationLoading = false;
   double _panningOffset = 0.0; // 🚀 Visual scroll cancellation
   final ScrollController _scrollController = ScrollController();
   double _scrollOffset = 0.0; // 🚀 Track scroll for lyrics visibility
@@ -458,6 +465,24 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                           SizedBox(width: 12),
                           Text(
                             "Listening Party",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Audio Output
+                    const PopupMenuItem(
+                      value: 'audio_output',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.output_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            "Audio Output",
                             style: TextStyle(color: Colors.white),
                           ),
                         ],
@@ -1056,19 +1081,88 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                     return const SizedBox.shrink();
                   }
                   final isCurrent = idx == currentIndex;
+                  final text = lyrics[idx].text;
+
+                  // Check romanization
+                  final hasKorean = KoreanRomanizer.containsKorean(text);
+                  final hasJapanese =
+                      !hasKorean && JapaneseRomanizer.containsJapanese(text);
+                  final hasChinese = !hasKorean &&
+                      !hasJapanese &&
+                      ChineseRomanizer.containsChinese(text);
+
+                  String? romanized;
+                  final disableRoman =
+                      ref.read(settingsProvider).disableRomanization;
+                  if (!disableRoman) {
+                    if (hasKorean) {
+                      romanized = KoreanRomanizer.romanize(text);
+                    } else if (hasJapanese) {
+                      romanized = JapaneseRomanizer.getCached(text);
+                    } else if (hasChinese) {
+                      romanized = ChineseRomanizer.getCached(text);
+                    }
+                  }
+
+                  // Translation display
+                  final song = ref.read(playerProvider).currentSong;
+                  final songKey =
+                      song != null ? '${song.title}-${song.artist}' : '';
+                  final translations = _showTranslation
+                      ? TranslationService.getCached(songKey)
+                      : null;
+                  final hasTranslation = translations != null &&
+                      idx < translations.length &&
+                      translations[idx].isNotEmpty;
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Text(
-                      lyrics[idx].text,
-                      style: TextStyle(
-                        color: isCurrent ? Colors.white : Colors.white38,
-                        fontSize: isCurrent ? 18 : 15,
-                        fontWeight:
-                            isCurrent ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      children: [
+                        Text(
+                          text,
+                          style: TextStyle(
+                            color: isCurrent ? Colors.white : Colors.white38,
+                            fontSize: isCurrent ? 18 : 15,
+                            fontWeight:
+                                isCurrent ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (romanized != null && romanized.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              romanized,
+                              style: TextStyle(
+                                fontSize: isCurrent ? 14 : 12,
+                                fontWeight: isCurrent
+                                    ? FontWeight.w500
+                                    : FontWeight.normal,
+                                color:
+                                    isCurrent ? Colors.white70 : Colors.white30,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        if (hasTranslation)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              '(${translations[idx]})',
+                              style: TextStyle(
+                                fontSize: isCurrent ? 13 : 11,
+                                fontWeight: FontWeight.normal,
+                                color:
+                                    isCurrent ? Colors.white54 : Colors.white24,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                      ],
                     ),
                   );
                 }),
@@ -1084,6 +1178,58 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                     tooltip: "View Queue",
                     onPressed: () => _showQueueSheet(context),
                   ),
+                  _translationLoading
+                      ? const Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white54,
+                            ),
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.translate_rounded),
+                          color: _showTranslation
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.white54,
+                          iconSize: 24,
+                          tooltip: "Translate Lyrics",
+                          onPressed: () async {
+                            if (_showTranslation) {
+                              setState(() => _showTranslation = false);
+                              return;
+                            }
+                            final song = ref.read(playerProvider).currentSong;
+                            if (song == null) return;
+                            final lyrics =
+                                ref.read(lyricsProvider).parsedLyrics;
+                            if (lyrics.isEmpty) return;
+                            final songKey = '${song.title}-${song.artist}';
+                            if (TranslationService.hasCached(songKey)) {
+                              setState(() => _showTranslation = true);
+                              return;
+                            }
+                            setState(() => _translationLoading = true);
+                            final targetLang =
+                                ref.read(settingsProvider).translationLanguage;
+                            final lines =
+                                lyrics.map<String>((l) => l.text).toList();
+                            await TranslationService.translateLyrics(
+                              songKey: songKey,
+                              lines: lines,
+                              targetLang: targetLang,
+                            );
+                            if (mounted) {
+                              setState(() {
+                                _translationLoading = false;
+                                _showTranslation = true;
+                              });
+                            }
+                          },
+                        ),
                 ],
               ),
             ],
@@ -1160,6 +1306,15 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
         break;
       case 'listening_party':
         _showListeningPartyDialog();
+        break;
+      case 'audio_output':
+        showDialog(
+          context: context,
+          builder: (context) => AudioOutputDialog(
+            audioInfo: _audioInfo,
+            filePath: (song as SongModel).filePath,
+          ),
+        );
         break;
     }
   }

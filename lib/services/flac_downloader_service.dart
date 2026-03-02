@@ -57,7 +57,7 @@ class FlacDownloaderService {
       final response = await _client.get(
         Uri.parse(apiUrl),
         headers: {'User-Agent': 'SimpleMusicPlayer/1.0'},
-      );
+      ).timeout(const Duration(seconds: 15));
 
       _lastSongLinkCall = DateTime.now();
       _songLinkCallCount++;
@@ -79,14 +79,15 @@ class FlacDownloaderService {
       if (linksByPlatform == null) return null;
 
       final urls = StreamingUrls(
-        spotifyId: '', // Not strictly needed for this flow
+        spotifyId: '',
         deezerUrl: _extractPlatformUrl(linksByPlatform, 'deezer'),
         tidalUrl: _extractPlatformUrl(linksByPlatform, 'tidal'),
         amazonUrl: _extractPlatformUrl(linksByPlatform, 'amazonMusic'),
+        qobuzUrl: _extractPlatformUrl(linksByPlatform, 'qobuz'),
       );
 
       debugPrint('✓ Found URLs - Deezer: ${urls.deezerUrl != null}, '
-          'Tidal: ${urls.tidalUrl != null}');
+          'Tidal: ${urls.tidalUrl != null}, Qobuz: ${urls.qobuzUrl != null}');
 
       return urls;
     } catch (e) {
@@ -176,7 +177,9 @@ class FlacDownloaderService {
       final logger = DebugLogService();
       logger.info('DEEZER: Requesting DeezMate API for $trackId');
 
-      final response = await _client.get(Uri.parse(url));
+      final response = await _client
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 200) {
         debugPrint('❌ DeezMate API error: ${response.statusCode}');
@@ -266,44 +269,21 @@ class FlacDownloaderService {
 
   Future<List<String>> _getTidalApiServers() async {
     final logger = DebugLogService();
-    // Hardcoded fallback servers (Decoded from SpotiFLAC Go source)
+    // Updated servers from SpotiFLAC v7.1.0 + Monochrome Music (Feb 2026)
+    // Old servers (qqdl.site, binimum.org, kinoplus.online) are all dead (403/503)
+    // Note: spotisaver.net servers use HTTP only (no SSL)
     final fallbackServers = [
-      'https://vogel.qqdl.site',
-      'https://maus.qqdl.site',
-      'https://hund.qqdl.site',
-      'https://katze.qqdl.site',
-      'https://wolf.qqdl.site',
-      'https://tidal.kinoplus.online',
-      'https://tidal-api.binimum.org',
       'https://triton.squid.wtf',
+      'https://eu-central.monochrome.tf',
+      'https://us-west.monochrome.tf',
+      'https://arran.monochrome.tf',
+      'http://hifi-one.spotisaver.net',
+      'http://hifi-two.spotisaver.net',
     ];
 
-    try {
-      // 🚀 FIX: Try 'master' branch instead of 'main'
-      final url =
-          'https://raw.githubusercontent.com/afkarxyz/SpotiFLAC/master/tidal.json';
-      logger.info('TIDAL: Fetching servers from GitHub (master)...');
-      final response = await _client.get(Uri.parse(url));
-
-      if (response.statusCode != 200) {
-        logger.warning(
-            'TIDAL: GitHub returned ${response.statusCode}. Using fallbacks.');
-        return fallbackServers;
-      }
-
-      final List<dynamic> servers = json.decode(response.body);
-      logger.info('TIDAL: Parsed ${servers.length} servers from GitHub');
-      // combine with fallbacks just in case
-      final allServers = <String>{
-        ...servers.map((s) => 'https://$s'),
-        ...fallbackServers
-      }.toList();
-      return allServers;
-    } catch (e) {
-      debugPrint('❌ Error getting Tidal API servers: $e');
-      logger.error('TIDAL: Error fetching servers: $e. Using fallbacks.');
-      return fallbackServers;
-    }
+    logger.info(
+        'TIDAL: Using updated server list (${fallbackServers.length} servers)');
+    return fallbackServers;
   }
 
   /// Download FLAC from Tidal using external API
@@ -337,10 +317,11 @@ class FlacDownloaderService {
       // Try each server for this quality
       for (final server in servers) {
         try {
-          final apiUrl = '$server/track?id=$trackId&quality=$quality';
-          final response = await _client
-              .get(Uri.parse(apiUrl))
-              .timeout(const Duration(seconds: 30));
+          final apiUrl = '$server/track/?id=$trackId&quality=$quality';
+          final response = await _client.get(Uri.parse(apiUrl), headers: {
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+          }).timeout(const Duration(seconds: 30));
 
           if (response.statusCode != 200) continue;
 
@@ -453,27 +434,10 @@ class FlacDownloaderService {
 
     File? file;
 
-    // === STEP 1: Try Tidal HI_RES_LOSSLESS ===
-    if (urls.tidalUrl != null) {
-      debugPrint('🎧 Step 1: Trying Tidal HI_RES_LOSSLESS...');
-      logger.info('FLAC: Step 1 - Trying Tidal HI_RES_LOSSLESS...');
-      file = await _downloadFromTidalWithQuality(
-        tidalUrl: urls.tidalUrl!,
-        outputPath: outputPath,
-        quality: 'HI_RES_LOSSLESS',
-        onProgress: onProgress,
-      );
-      if (file != null) {
-        logger.success('FLAC: Tidal Hi-Res success');
-        return FlacDownloadResult.success(file, 'tidal-hires');
-      }
-      logger.warning('FLAC: Tidal Hi-Res failed');
-    }
-
-    // === STEP 2: Try Deezer (has own quality handling) ===
+    // === STEP 1: Try Deezer first (most reliable as of 2026) ===
     if (urls.deezerUrl != null) {
-      debugPrint('🎧 Step 2: Trying Deezer FLAC...');
-      logger.info('FLAC: Step 2 - Trying Deezer FLAC...');
+      debugPrint('🎧 Step 1: Trying Deezer FLAC...');
+      logger.info('FLAC: Step 1 - Trying Deezer FLAC...');
       file = await downloadFromDeezer(
         deezerUrl: urls.deezerUrl!,
         outputPath: outputPath,
@@ -487,6 +451,23 @@ class FlacDownloaderService {
         return FlacDownloadResult.success(file, 'deezer');
       }
       logger.warning('FLAC: Deezer failed');
+    }
+
+    // === STEP 2: Try Tidal HI_RES_LOSSLESS ===
+    if (urls.tidalUrl != null) {
+      debugPrint('🎧 Step 2: Trying Tidal HI_RES_LOSSLESS...');
+      logger.info('FLAC: Step 2 - Trying Tidal HI_RES_LOSSLESS...');
+      file = await _downloadFromTidalWithQuality(
+        tidalUrl: urls.tidalUrl!,
+        outputPath: outputPath,
+        quality: 'HI_RES_LOSSLESS',
+        onProgress: onProgress,
+      );
+      if (file != null) {
+        logger.success('FLAC: Tidal Hi-Res success');
+        return FlacDownloadResult.success(file, 'tidal-hires');
+      }
+      logger.warning('FLAC: Tidal Hi-Res failed');
     }
 
     // === STEP 3: Try Tidal LOSSLESS (CD quality fallback) ===
@@ -503,12 +484,20 @@ class FlacDownloaderService {
       }
     }
 
-    // === STEP 4: Final check with Qobuz if ISRC available ===
-    if (isrc != null && isrc.isNotEmpty) {
-      final available = await checkQobuzAvailability(isrc);
-      if (available) {
-        debugPrint('⚠️ Qobuz available but download not yet implemented');
+    // === STEP 4: Try Qobuz FLAC ===
+    if (urls.qobuzUrl != null) {
+      debugPrint('🎧 Step 4: Trying Qobuz FLAC...');
+      logger.info('FLAC: Step 4 - Trying Qobuz FLAC...');
+      file = await _downloadFromQobuz(
+        qobuzUrl: urls.qobuzUrl!,
+        outputPath: outputPath,
+        onProgress: onProgress,
+      );
+      if (file != null) {
+        logger.success('FLAC: Qobuz download success');
+        return FlacDownloadResult.success(file, 'qobuz');
       }
+      logger.warning('FLAC: Qobuz failed');
     }
 
     return FlacDownloadResult.failed('Download failed on all services');
@@ -535,11 +524,12 @@ class FlacDownloaderService {
 
     for (final server in servers) {
       try {
-        final apiUrl = '$server/track?id=$trackId&quality=$quality';
+        final apiUrl = '$server/track/?id=$trackId&quality=$quality';
         logger.info("TIDAL: Requesting $apiUrl");
-        final response = await _client
-            .get(Uri.parse(apiUrl))
-            .timeout(const Duration(seconds: 10)); // Reduced timeout
+        final response = await _client.get(Uri.parse(apiUrl), headers: {
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+        }).timeout(const Duration(seconds: 10)); // Reduced timeout
 
         if (response.statusCode != 200) {
           logger
@@ -653,6 +643,104 @@ class FlacDownloaderService {
         }
       } catch (e) {
         debugPrint('⚠️ Tidal $server ($quality) failed: $e');
+        continue;
+      }
+    }
+
+    return null;
+  }
+
+  /// Extract Qobuz track ID from URL
+  /// Handles formats like: https://www.qobuz.com/us-en/album/.../track_id
+  /// or https://open.qobuz.com/track/track_id
+  String? _extractQobuzTrackId(String qobuzUrl) {
+    try {
+      final uri = Uri.parse(qobuzUrl);
+      final segments = uri.pathSegments;
+
+      // Format: /track/12345 or /us-en/album/.../12345
+      // Try to get the last numeric segment
+      for (int i = segments.length - 1; i >= 0; i--) {
+        if (RegExp(r'^\d+$').hasMatch(segments[i])) {
+          return segments[i];
+        }
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('⚠️ Could not extract Qobuz track ID from: $qobuzUrl');
+      return null;
+    }
+  }
+
+  /// Download FLAC from Qobuz using qobuz.squid.wtf API
+  /// Quality codes: 5=HiRes 192/24, 6=HiRes 96/24, 7=FLAC, 27=MP3 320
+  Future<File?> _downloadFromQobuz({
+    required String qobuzUrl,
+    required String outputPath,
+    Function(double)? onProgress,
+  }) async {
+    final trackId = _extractQobuzTrackId(qobuzUrl);
+    if (trackId == null) {
+      debugPrint('❌ Could not extract Qobuz track ID from: $qobuzUrl');
+      return null;
+    }
+
+    final logger = DebugLogService();
+    const qobuzApiBase = 'https://qobuz.squid.wtf/api';
+
+    // Try qualities in order: HiRes 192/24 → HiRes 96/24 → FLAC
+    final qualities = ['5', '6', '7'];
+
+    for (final quality in qualities) {
+      try {
+        final apiUrl =
+            '$qobuzApiBase/download-music?track_id=$trackId&quality=$quality';
+        logger.info('QOBUZ: Requesting $apiUrl');
+
+        final response = await _client.get(
+          Uri.parse(apiUrl),
+          headers: {
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+          },
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode != 200) {
+          logger.warning(
+              'QOBUZ: API returned ${response.statusCode} for quality $quality');
+          continue;
+        }
+
+        final data = json.decode(response.body);
+
+        if (data['success'] != true || data['data']?['url'] == null) {
+          logger.warning('QOBUZ: No download URL for quality $quality');
+          continue;
+        }
+
+        final downloadUrl = data['data']['url'] as String;
+        debugPrint('📥 Downloading from Qobuz (quality=$quality)...');
+        logger.info('QOBUZ: Got download URL, downloading...');
+
+        // Download the file
+        final file = await _downloadFile(
+          url: downloadUrl,
+          outputPath: outputPath,
+          onProgress: onProgress,
+        );
+
+        if (file != null) {
+          final fileSize = await file.length();
+          debugPrint(
+              '📁 Qobuz Downloaded: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
+          logger.success(
+              'QOBUZ: Download success (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)');
+          return file;
+        }
+      } catch (e) {
+        debugPrint('⚠️ Qobuz quality $quality failed: $e');
+        logger.warning('QOBUZ: Quality $quality failed: $e');
         continue;
       }
     }
@@ -1130,6 +1218,16 @@ class FlacDownloaderService {
       debugPrint(
           '📁 Downloaded: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
 
+      // Reject suspiciously small files (< 1MB = likely a preview/fragment)
+      if (fileSize < 1024 * 1024) {
+        debugPrint(
+            '⚠️ File too small (${fileSize} bytes), likely a preview/fragment. Rejecting.');
+        try {
+          await file.delete();
+        } catch (_) {}
+        return null;
+      }
+
       return file;
     } catch (e) {
       debugPrint('❌ Download error: $e');
@@ -1230,9 +1328,9 @@ class StreamingUrls {
     this.qobuzUrl,
   });
 
-  /// Returns true if FLAC download is available (Deezer or Tidal only)
-  /// Amazon is not included as we cannot download FLAC from it
-  bool get hasAnyUrl => deezerUrl != null || tidalUrl != null;
+  /// Returns true if FLAC download is available (Deezer, Tidal, or Qobuz)
+  bool get hasAnyUrl =>
+      deezerUrl != null || tidalUrl != null || qobuzUrl != null;
 }
 
 /// Deezer track metadata
