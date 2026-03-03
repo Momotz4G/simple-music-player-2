@@ -16,7 +16,15 @@
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 ---
+<p align="center">
+  <strong>Support me here</strong>
+</p>
+<p align="center">
+  <a href="https://sociabuzz.com/momotz4g/tribe"><img src="https://i.ibb.co.com/sdPBSBBQ/sociabuzz-logo.png" height="60"></a>
+  <a href="https://discord.gg/5Tt7PqBM6g"><img src="https://nikke.gg/wp-content/uploads/join-us-discord.png" height="60"></a>
+</p>
 
+---
 ## ✨ Key Features
 
 ### 🎨 **Stunning UI/UX**
