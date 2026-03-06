@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/song_model.dart';
 import '../../services/audio_info_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Dialog to display detailed song information including audio quality
 class SongInfoDialog extends StatefulWidget {
@@ -58,6 +59,7 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
     final textColor = isDark ? Colors.white : Colors.black;
     final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
     final accentColor = Theme.of(context).colorScheme.primary;
+    final l10n = AppLocalizations.of(context)!;
 
     return AlertDialog(
       backgroundColor: Theme.of(context).cardColor,
@@ -67,7 +69,7 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Song Information',
+              l10n.songInformation,
               style: TextStyle(color: textColor, fontSize: 18),
             ),
           ),
@@ -97,13 +99,13 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
                         const SizedBox(height: 16),
 
                         // Song Details Section
-                        _buildSectionHeader('Track Details', isDark),
-                        _buildInfoRow('Title', widget.song.title, textColor,
-                            subtitleColor),
-                        _buildInfoRow('Artist', widget.song.artist, textColor,
-                            subtitleColor),
-                        _buildInfoRow('Album', widget.song.album, textColor,
-                            subtitleColor),
+                        _buildSectionHeader(l10n.trackDetails, isDark),
+                        _buildInfoRow(l10n.titleLabel, widget.song.title,
+                            textColor, subtitleColor),
+                        _buildInfoRow(l10n.artistLabel, widget.song.artist,
+                            textColor, subtitleColor),
+                        _buildInfoRow(l10n.albumLabel, widget.song.album,
+                            textColor, subtitleColor),
                         if (widget.song.isrc != null &&
                             widget.song.isrc!.isNotEmpty)
                           _buildInfoRow('ISRC', widget.song.isrc!, textColor,
@@ -113,31 +115,37 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
 
                         // Audio Quality Section
                         if (_audioInfo != null) ...[
-                          _buildSectionHeader('Audio Quality', isDark),
-                          _buildInfoRow('Format', _audioInfo!.format, textColor,
-                              subtitleColor),
+                          _buildSectionHeader(l10n.audioQuality, isDark),
+                          _buildInfoRow(l10n.formatLabel, _audioInfo!.format,
+                              textColor, subtitleColor),
                           _buildInfoRow(
-                              'Codec',
+                              l10n.codecLabel,
                               _audioInfo!.codec.toUpperCase(),
                               textColor,
                               subtitleColor),
-                          _buildInfoRow('Bitrate', _audioInfo!.bitrateDisplay,
-                              textColor, subtitleColor),
                           _buildInfoRow(
-                              'Sample Rate',
+                              l10n.bitrateLabel,
+                              _audioInfo!.bitrateDisplay,
+                              textColor,
+                              subtitleColor),
+                          _buildInfoRow(
+                              l10n.sampleRateLabel,
                               _audioInfo!.sampleRateDisplay,
                               textColor,
                               subtitleColor),
                           if (_audioInfo!.bitDepth != null)
                             _buildInfoRow(
-                                'Bit Depth',
+                                l10n.bitDepthLabel,
                                 _audioInfo!.bitDepthDisplay,
                                 textColor,
                                 subtitleColor),
-                          _buildInfoRow('Channels', _audioInfo!.channelsDisplay,
-                              textColor, subtitleColor),
                           _buildInfoRow(
-                              'File Size',
+                              l10n.channelsLabel,
+                              _audioInfo!.channelsDisplay,
+                              textColor,
+                              subtitleColor),
+                          _buildInfoRow(
+                              l10n.fileSizeLabel,
                               _audioInfo!.fileSizeDisplay,
                               textColor,
                               subtitleColor),
@@ -145,7 +153,7 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
                           const SizedBox(height: 16),
 
                           // File Path Section
-                          _buildSectionHeader('File Location', isDark),
+                          _buildSectionHeader(l10n.fileLocation, isDark),
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -171,7 +179,7 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Close', style: TextStyle(color: accentColor)),
+          child: Text(l10n.close, style: TextStyle(color: accentColor)),
         ),
       ],
     );

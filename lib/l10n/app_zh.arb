@@ -1,0 +1,755 @@
+{
+  "browse": "浏览",
+  "search": "搜索",
+  "history": "历史",
+  "stats": "统计",
+  "library": "库",
+  "playlists": "播放列表",
+  "artists": "艺术家",
+  "albums": "专辑",
+  "local_library": "本地库",
+  "downloads": "下载",
+  "metadata_editor": "元数据编辑器",
+  "toggleLyrics": "切换歌词",
+  "settings": "设置",
+  "navigation": "导航",
+  "system": "系统",
+  "language": "语言",
+  "english": "英语",
+  "indonesian": "印尼语",
+  "korean": "韩语",
+  "japanese": "日语",
+  "chinese": "中文",
+  "spanish": "西班牙语",
+  "french": "法语",
+  "german": "德语",
+  "portuguese": "葡萄牙语",
+  "thai": "泰语",
+  "vietnamese": "越南语",
+  "arabic": "阿拉伯语",
+  "russian": "俄语",
+  "hindi": "印地语",
+  "appearance": "外观",
+  "atmospheres": "氛围",
+  "none": "无",
+  "winter": "冬季",
+  "autumn": "秋季",
+  "rainyCity": "雨城",
+  "sakura": "樱花",
+  "lunarNewYear": "农历新年",
+  "cyberpunk": "赛博朋克",
+  "underwater": "水下",
+  "nordicAurora": "极光",
+  "galacticSpace": "银河太空",
+  "desertMirage": "沙漠海市蜃楼",
+  "general": "常规",
+  "darkMode": "深色模式",
+  "lockedAtmosphere": "氛围激活时已锁定",
+  "useDarkTheme": "使用深色主题",
+  "syncThemeAlbumArt": "主题与专辑封面同步",
+  "tintBackground": "用歌曲颜色渲染背景和可视化器",
+  "accentColor": "强调色",
+  "chooseAccentColor": "选择您喜欢的静态颜色",
+  "contentRegion": "内容区域",
+  "setCountryReleases": "设置新发行和排行榜的国家",
+  "unitedStates": "美国",
+  "indonesia": "印度尼西亚",
+  "southKorea": "韩国",
+  "japan": "日本",
+  "unitedKingdom": "英国",
+  "brazil": "巴西",
+  "visualizer": "可视化器",
+  "enableBarVisualizer": "启用条形可视化器",
+  "showAnimatedWaves": "在播放栏显示动态波形",
+  "opacity": "不透明度",
+  "visualizerStyle": "可视化器样式",
+  "chooseAnimationType": "选择动画类型",
+  "spectrumBars": "频谱条",
+  "fluidWave": "平滑波形",
+  "circularPulse": "圆形脉冲",
+  "rainbowMode": "彩虹模式",
+  "useMixedColors": "使用混合颜色（同步优先）",
+  "integration": "集成",
+  "discordRPC": "Discord Rich Presence",
+  "showStatusDiscord": "在 Discord 上显示状态",
+  "musicFolderLocation": "音乐文件夹位置",
+  "noFolderSelected": "未选择文件夹",
+  "change": "更改",
+  "expand": "展开",
+  "ignoreSubfolderScan": "忽略子文件夹扫描",
+  "onlyScanSelected": "仅扫描选定的文件夹（默认开启）",
+  "importAdditionalPaths": "导入额外路径",
+  "addFoldersScan": "添加要扫描的文件夹",
+  "add": "添加",
+  "singleTracks": "单曲",
+  "unsavedChanges": "有未保存的更改",
+  "playlistAlbumTracks": "播放列表 / 专辑曲目",
+  "audioFormat": "音频格式",
+  "preferredOutputFormat": "下载的首选输出格式",
+  "flacNote": "注：FLAC 仅适用于单曲下载。播放列表批量下载将使用 M4A 格式。",
+  "downloadLocation": "下载位置",
+  "resetToDefault": "恢复默认",
+  "changeFolder": "更改文件夹",
+  "streaming": "在线播放",
+  "streamingQuality": "流媒体质量",
+  "standardQuality": "标准 (MP3)",
+  "highQuality": "高质量 (M4A)",
+  "losslessQuality": "无损 (自动)",
+  "standardDesc": "MP3 - 文件较小，缓冲较快",
+  "highDesc": "M4A - 音质较好，表现平衡",
+  "losslessDesc": "FLAC - 来自 Deezer/Tidal 的无损质量",
+  "selectStreamingQuality": "选择流媒体质量",
+  "losslessNote": "如果可用，将从 Deezer/Tidal 播放无损 FLAC。如果不可用，将回退到 M4A。",
+  "playback": "播放",
+  "endlessQueue": "无限队列",
+  "autoAddSimilar": "当队列接近结束时自动添加相似歌曲",
+  "disableRomanization": "禁用罗马拼音",
+  "hideRomajiPinyin": "不在韩语、日语或中文歌词下方显示罗马拼音",
+  "translationLanguage": "翻译语言",
+  "targetLanguageLyrics": "歌词翻译的目标语言",
+  "disableCanvas": "禁用 Canvas",
+  "hideCanvas": "不显示 Spotify Canvas 视频，而是显示专辑封面",
+  "wasapiExclusive": "WASAPI 独占模式",
+  "bitPerfectWindows": "自动采样率的位完美音频（需要重启）",
+  "audiophileDAC": "在使用发烧级 DAC 播放时启用（需要重启）",
+  "android14BitPerfect": "Android 14+ 位完美",
+  "bypassSystemMixer": "绕过系统混音器以支持 USB DAC",
+  "requiresAndroid14": "需要 Android 14+ 和 USB DAC",
+  "bitPerfectEnabled": "位完美模式已启用。音量控制可能失效。",
+  "audioOutputDevice": "音频输出设备",
+  "loadingDevices": "正在加载设备...",
+  "systemDefault": "系统默认",
+  "exclusiveWarning": "警告：如果您在上方选择了特定设备而非系统默认，独占模式效果最佳。",
+  "dataCleanup": "数据与清理",
+  "resetLibraryPath": "重置库路径",
+  "unlinkFolder": "取消文件夹链接并清除歌曲列表",
+  "resetLibraryTitle": "重置库？",
+  "resetLibraryContent": "这将从播放器中移除当前文件夹。实际文件不会被删除。",
+  "resetPath": "重置路径",
+  "clearStreamingCache": "清除流媒体缓存",
+  "freeUpSpace": "释放空间",
+  "resetStatistics": "重置统计数据",
+  "clearPlayHistory": "清除播放历史和收听时间",
+  "resetStatsTitle": "重置统计数据？",
+  "resetStatsContent": "此操作不可撤销。\\n所有播放次数和收听时间将永久锁定。",
+  "resetEverything": "确认重置",
+  "debugging": "调试",
+  "showDebugButton": "显示浮动调试按钮",
+  "toggleDebugButton": "切换浮动调试控制台",
+  "community": "社区",
+  "donate": "捐赠",
+  "joinUs": "加入我们",
+  "usbAudioBypass": "USB 音频绕过 (Beta) - 适用于 Android 13 及以下版本的直接 DAC 输出",
+  "comingSoon": "即将推出",
+  "underDevelopment": "此功能正在开发中",
+  "version": "版本",
+  "restartRequired": "需要重启",
+  "restartContent": "需要重启应用程序才能应用音频输出设备的更改。\\n\\n现在重启吗？",
+  "later": "稍后",
+  "restartNow": "现在重启",
+  "applyOnRestart": "更改将在下次重启时生效。",
+  "autoRestartNotSupported": "不支持自动重启。请手动重启。",
+  "enterAdminCode": "请输入管理员访问代码",
+  "accessCode": "访问代码",
+  "cancel": "取消",
+  "access": "访问",
+  "invalidCode": "访问代码无效",
+  "formatSaved": "格式已保存！",
+  "addedFolder": "已添加文件夹: {folder}",
+  "removedFolder": "已移除文件夹: {folder}",
+  "downloadPathUpdated": "下载路径已更新: {path}",
+  "downloadPathReset": "下载路径已重置为默认值。",
+  "libraryPathReset": "库路径已重置。",
+  "cacheCleared": "缓存已成功清除！",
+  "changesApplyRestart": "更改将在下次重启时生效。",
+  "changeLanguage": "更改应用语言",
+  "unlinkFolderClear": "取消文件夹链接并清除歌曲列表",
+  "enterAdminAccessCode": "请输入管理员访问代码",
+  "invalidAccessCode": "访问代码无效",
+  "androidBitPerfect": "Android 14+ 位完美",
+  "customDevice": "自定义设备",
+  "exclusiveModeWarning": "警告：如果您在上方选择了特定设备而非系统默认，独占模式效果最佳。",
+  "freeUpSpace": "释放空间 (当前: {size})",
+  "@freeUpSpace": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "statisticsReset": "统计数据已重置。",
+  "toggleDebugConsole": "切换浮动调试控制台",
+  "usbAudioBypassBeta": "USB 音频绕过 (Beta) - 针对 Android 13 及以下版本的直接 DAC 输出",
+  "connectedUsbDacs": "已连接的 USB DAC:",
+  "scanning": "正在扫描...",
+  "scan": "扫描",
+  "noUsbDacDetected": "未检测到 USB DAC。请连接 USB 音频设备并点击“扫描”。",
+  "connected": "已连接",
+  "connect": "连接",
+  "failedToConnectDac": "连接 DAC 失败。请检查 USB 权限。",
+  "connectedToDac": "已连接到 {deviceName} - USB 绕过已启用",
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "changingAudioDeviceRestart": "需要重启应用才能应用音频输出设备更改。\\n\\n现在重启吗？",
+  "translateLyrics": "翻译歌词",
+  "viewQueue": "查看队列",
+  "loadingLyrics": "正在加载歌词...",
+  "noLyricsAvailable": "暂无歌词",
+  "noSyncedLyricsFound": "未找到同步歌词",
+  "justEnjoyVibes": "尽情享受音乐。",
+  "scrollForLyrics": "滑动查看歌词",
+  "switchingTo": "正在切换到",
+  "metadataEditorInfo": "您可以在元数据编辑器中搜索并快速修复。",
+  "metadataEditorNote": "注：在状态显示“保存成功”后，专辑封面可能会改变。这并不意味着没有保存，而是应用程序内的缓存问题，我们正在修复中。您可以在文件管理器中确认。",
+  "close": "关闭",
+  "permissionRequired": "需要权限",
+  "permissionRequiredDesc": "编辑标签需要“所有文件访问”权限。这将允许直接修改您的音乐文件。",
+  "grantPermission": "授予权限",
+  "files": "文件",
+  "editor": "编辑器",
+  "clearImported": "清除导入",
+  "libraryData": "库数据",
+  "externalFiles": "外部文件",
+  "addFiles": "添加文件",
+  "addFolder": "添加文件夹",
+  "selectSongToEdit": "从列表中选择要编辑的歌曲",
+  "fixAll": "修复全部",
+  "autoTagTitle": "⚠️ 自动标记 {sourceName}？",
+  "@autoTagTitle": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "autoTagContent": "将在 Spotify 上搜索“{sourceName}”的所有 {count} 首歌曲并自动覆盖标签。\\n\\n此操作不可撤销。",
+  "@autoTagContent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "startBulkProcess": "开始批量处理",
+  "title": "标题",
+  "artist": "艺术家",
+  "album": "专辑",
+  "genre": "流派",
+  "year": "年份",
+  "trackNumber": "曲目编号",
+  "discNumber": "碟号",
+  "autoFixComingSoon": "自动修复（即将推出）",
+  "manualSearch": "手动搜索",
+  "revert": "还原",
+  "saveChangesToFile": "将更改保存到文件",
+  "searchSpotify": "搜索 Spotify",
+  "searchHint": "搜索...",
+  "selectMatch": "选择匹配项",
+  "upNext": "下一首",
+  "fetchingLossless": "正在获取无损音质...",
+  "noMusicPlaying": "未播放音乐",
+  "refreshList": "刷新列表",
+  "noDownloadsFound": "未找到下载内容",
+  "play": "播放",
+  "showInFolder": "在文件夹中显示",
+  "delete": "删除",
+  "deleteFileTitle": "删除文件？",
+  "deleteFileContent": "您确定要删除“{filename}”吗？\\n此操作不可撤销。",
+  "downloadedTo": "下载到: {path}",
+  "folderPath": "文件夹: {path}",
+  "errorDeleting": "删除错误: {error}",
+  "ok": "确定",
+  "searchSongs": "搜索歌曲...",
+  "noResultsFound": "未找到结果",
+  "refreshLibrary": "刷新库",
+  "shuffleAll": "全部打乱",
+  "switchToListView": "切换到列表视图",
+  "switchToGridView": "切换到网格视图",
+  "songsLoadedCount": "已加载 {count} 首歌曲...",
+  "grantAccess": "授予访问权限",
+  "selectDifferentFolder": "选择其他文件夹",
+  "selectFolder": "选择文件夹",
+  "noSongsInFolder": "在此文件夹中未找到歌曲。",
+  "queueUpdated": "队列已更新",
+  "playingNext": "插播（下一首）",
+  "addedToQueue": "已添加到队列",
+  "playingTrack": "正在播放曲目",
+  "error": "错误",
+  "noPlaylistsFound": "未找到播放列表",
+  "addToPlaylist": "添加到播放列表",
+  "songAlreadyInPlaylist": "歌曲已在播放列表中",
+  "addedToPlaylistSuccess": "已添加到播放列表",
+  "alreadyInLikedSongs": "已经在喜欢的歌曲中",
+  "addedToLikedSongs": "已添加到喜欢的歌曲",
+  "likedSongs": "喜欢的歌曲",
+  "preparingDownload": "正在准备下载",
+  "fetchingMetadataSpotify": "正在从 Spotify 获取元数据...",
+  "preparingDownloadNotification": "正在准备下载",
+  "downloadStarted": "下载已开始",
+  "downloading": "正在下载",
+  "preparingDownloadFormat": "正在准备下载 ({format})...",
+  "searching": "正在搜索...",
+  "findingBestMatchYoutube": "正在 YouTube 上寻找最佳匹配...",
+  "downloadingFlac": "正在下载 FLAC",
+  "fetchingLosslessAudio": "正在获取无损音频...",
+  "downloadComplete": "下载完成",
+  "flacSavedToDownloads": "FLAC 已保存到下载文件夹",
+  "downloadCompleteNotification": "下载完成",
+  "flacUnavailable": "FLAC 不可用",
+  "flacUnavailableDesc": "FLAC 不可用，下载失败。请尝试更改设置。",
+  "flacUnavailableNotification": "FLAC 不可用",
+  "changeFormatInSettings": "请在设置中更改输出格式",
+  "flacError": "FLAC 错误",
+  "couldNotDownloadFlac": "无法下载 FLAC。",
+  "downloadingFormat": "正在下载 {format}",
+  "savedAsFormat": "已保存为 {format}",
+  "downloadFailed": "下载失败",
+  "downloadError": "下载错误",
+  "playNext": "插播下一首",
+  "addToQueue": "添加到队列",
+  "addToFavorite": "添加到收藏",
+  "goToArtist": "前往艺术家",
+  "download": "下载",
+  "noAlbumsFound": "未找到专辑",
+  "moreOptions": "更多选项",
+  "titleLabel": "标题",
+  "artistLabel": "艺术家",
+  "albumLabel": "专辑",
+  "downloadAll": "全部下载",
+  "albumRemovedFromPlaylists": "专辑已从播放列表中移除",
+  "albumAddedToPlaylists": "专辑已添加到播放列表",
+  "startedDownloadingAll": "开始下载所有歌曲...",
+  "playingFromAlbum": "正在播放专辑",
+  "unknownArtist": "未知艺术家",
+  "songsCount": "{count} 首歌曲",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@deleteFileContent": {
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@folderPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@errorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadingFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryNotLoaded": "库未加载。",
+  "noArtistsFound": "未找到艺术家。",
+  "goToLocalLibraryToSelect": "请前往“本地库”选择一个音乐文件夹。",
+  "popularOnSpotify": "Spotify 热门",
+  "songsInLibrary": "库中有 {count} 首歌曲",
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shuffle": "打乱",
+  "shufflingArtist": "正在打乱 {artistName}...",
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "showMore": "展开",
+  "showLess": "收起",
+  "discography": "全部作品",
+  "seeAll": "查看全部",
+  "newPlaylist": "新建播放列表",
+  "noPlaylistsYet": "尚无播放列表",
+  "createPlaylist": "创建播放列表",
+  "emptyPlaylist": "空播放列表",
+  "emptyPlaylistSubtitle": "创建一个新的空播放列表",
+  "importFromSpotify": "从 Spotify 导入",
+  "importFromSpotifySubtitle": "粘贴 Spotify 播放列表链接",
+  "playlistNameHint": "播放列表名称",
+  "importSpotifyPlaylist": "导入 Spotify 播放列表",
+  "deletePlaylistTitle": "删除播放列表？",
+  "deletePlaylistConfirm": "确认要删除“{name}”吗？",
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistNotFound": "未找到播放列表",
+  "noSongsAdded": "尚未添加歌曲",
+  "deleteDownloadsTitle": "删除下载内容？",
+  "deleteDownloadsConfirm": "这将从此播放列表中移除所有已下载到此设备的歌曲。",
+  "allDownloadsRemoved": "所有下载内容已移除",
+  "rename": "重命名",
+  "removeFromPlaylist": "从播放列表中移除",
+  "renamePlaylist": "重命名播放列表",
+  "listeningStats": "听歌统计",
+  "topArtist": "顶级艺术家",
+  "mostListened": "听得最多的歌曲",
+  "timeListened": "收听时长",
+  "totalPlays": "总播放回数",
+  "minutes": "分钟",
+  "tracks": "音轨",
+  "songs": "歌曲",
+  "noStatsYet": "尚无统计数据。",
+  "noArtistStatsYet": "尚无艺术家统计数据。",
+  "play": "播放",
+  "plays": "次播放",
+  "min": "分",
+  "share": "分享",
+  "savedTo": "已保存到“{path}”",
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "myTopTrackOn": "我在 Simple Player 上的 {header}! 🎵",
+  "@myTopTrackOn": {
+    "placeholders": {
+      "header": {
+        "type": "String"
+      }
+    }
+  },
+  "fileMissingHistory": "文件丢失且不在历史记录中。",
+  "restoring": "正在恢复",
+  "reBuffering": "正在重新缓冲...",
+  "nowPlaying": "正在播放",
+  "recentlyPlayed": "最近播放",
+  "clearHistory": "清除历史记录",
+  "noHistoryYet": "尚无历史记录",
+  "cloud": "云端",
+  "cached": "已缓存",
+  "searchingStatus": "正在搜索",
+  "findingStream": "正在寻找串流来源...",
+  "noStreamMatch": "未找到匹配的串流。",
+  "errorSearchingStream": "搜索串流时出错。",
+  "rebufferingFromCloud": "正在从云端重新缓冲...",
+  "musicSearch": "音乐搜索",
+  "songTitleKeyword": "歌名或关键字",
+  "searchSpotifyHint": "搜索 Spotify...",
+  "readySearchSong": "准备就绪。搜索一首歌吧。",
+  "searchingSpotifyFor": "正在 Spotify 上搜索“{keyword}”...",
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "offline": "离线",
+  "foundResults": "找到 {songCount} 首歌曲, {albumCount} 张专辑, {artistCount} 位艺术家。",
+  "@foundResults": {
+    "placeholders": {
+      "songCount": {
+        "type": "int"
+      },
+      "albumCount": {
+        "type": "int"
+      },
+      "artistCount": {
+        "type": "int"
+      }
+    }
+  },
+  "noSpotifyResults": "未找到 Spotify 结果。",
+  "searchFailedStatus": "搜索失败: {error}",
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noInternetConnection": "无网络连接",
+  "checkNetworkTryAgain": "请检查网络并重试",
+  "noSuggestionsFound": "未找到建议。",
+  "statusWithText": "状态: {status}",
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "goodMorning": "早上好",
+  "goodAfternoon": "下午好",
+  "goodEvening": "晚上好",
+  "jumpBackIn": "继续收听",
+  "yourTopMix": "您的顶级混音",
+  "youMayLike": "您可能喜欢",
+  "yourPlaylists": "您的播放列表",
+  "quickMix": "快捷混音",
+  "madeForYou": "为您推荐",
+  "rediscover": "重新发现",
+  "doYouRemember": "你还记得吗？",
+  "countSongs": "{count, plural, =1{1 首歌曲} other{{count} 首歌曲}}",
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savePlaylistTitle": "保存“{title}”？",
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savePlaylistContent": "这将基于这些歌曲创建一个新的播放列表。",
+  "savedAs": "已保存为“{name}”!",
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "保存",
+  "searchSongsOrAlbumsAndArtistsHint": "搜索歌曲、专辑或艺术家...",
+  "playQueue": "播放队列",
+  "downloadSong": "下载歌曲",
+  "sleepTimer": "睡眠定时器",
+  "minutesDuration": "{count, plural, =1{1 分钟} other{{count} 分钟}}",
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursDuration": "{count, plural, =1{1 小时} other{{count} 小时}}",
+  "@hoursDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "customTime": "自定义时间",
+  "turnOffTimer": "关闭定时器",
+  "musicWillStopIn": "音乐将在 {label} 后停止",
+  "stopTimer": "停止定时器 ({time})",
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@musicWillStopIn": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "setCustomTimer": "设置自定义定时器",
+  "enterDuration": "输入时长...",
+  "hourShort": "时",
+  "minuteShort": "分",
+  "secondShort": "秒",
+  "timerSetForHours": "定时器已设置为 {count} 小时后",
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSetForMinutes": "定时器已设置为 {count} 分钟后",
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSetForSeconds": "定时器已设置为 {count} 秒后",
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "start": "开始",
+  "errorCouldNotCreateSession": "错误：无法创建会话。",
+  "scanToControlPlayback": "使用您的手机扫描并控制播放。",
+  "session": "会话: {id}",
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "loadingCanvas": "正在加载 Canvas...",
+  "searchingSpotify": "正在搜索 Spotify...",
+  "fetchingCanvas": "正在获取 Canvas...",
+  "nowPlayingHeader": "正在播放",
+  "nowPlayingSection": "正在播放",
+  "upNextSection": "下一首",
+  "recommendationsSection": "推荐",
+  "fromLibrarySection": "来自媒体库",
+  "queueIsEmpty": "队列为空",
+  "historySection": "历史",
+  "upNextCount": "下一首 ({count})",
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fromLibraryCount": "来自媒体库 ({count})",
+  "@fromLibraryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recommendationsCount": "推荐 ({count})",
+  "@recommendationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongPlaying": "暂无播放歌曲",
+  "selectTrackToStart": "请选择曲目开始播放",
+  "importLabel": "导入",
+  "saveLabel": "保存",
+  "refreshLabel": "刷新",
+  "hideTranslation": "隐藏翻译",
+  "translateLabel": "翻译",
+  "lyricsByLRCLIB": "歌词来源 LRCLIB",
+  "importLyricsFile": "导入歌词文件",
+  "overwriteLrcWarning": "此歌曲已存在本地 .lrc 文件。\\n是否覆盖？",
+  "saveLrcPrompt": "是否要将当前歌词保存为音频文件旁的 .lrc 文件？",
+  "overwrite": "覆盖",
+  "lyricsSavedSuccess": "歌词已保存为 .lrc 文件",
+  "lyricsSaveError": "保存歌词失败",
+  "equalizer": "均衡器",
+  "trackDetails": "曲目详细信息",
+  "audioQuality": "音频质量",
+  "formatLabel": "格式",
+  "codecLabel": "编解码器",
+  "bitrateLabel": "比特率",
+  "sampleRateLabel": "采样率",
+  "bitDepthLabel": "位深",
+  "channelsLabel": "通道",
+  "fileSizeLabel": "文件大小",
+  "fileLocation": "文件位置",
+  "audioSource": "音频来源",
+  "pathLabel": "路径",
+  "inputLabel": "输入",
+  "engineLabel": "引擎",
+  "eqLabel": "EQ",
+  "dspLabel": "DSP",
+  "androidMixer": "Android 混音器",
+  "bypassedBitPerfect": "绕过（位完美）",
+  "resamplingLabel": "重采样",
+  "activeNoResampling": "激励中（无需重采样）",
+  "nativeRate": "原生速率",
+  "signalOutput": "信号输出",
+  "outputLabel": "输出",
+  "samplingRateLabel": "采样率",
+  "bitsLabel": "位",
+  "statusLabel": "状态",
+  "unknown": "未知",
+  "unknownDevice": "未知设备",
+  "sharedMode": "共享",
+  "exclusiveMode": "独占",
+  "androidAudioTrack": "Android AudioTrack",
+  "songInformation": "歌曲信息",
+  "selectVersion": "选择版本",
+  "searchYoutubeHint": "搜索 YouTube...",
+  "androidAudioEffectsNote": "注：音频效果仅在 Android 设备上可用。",
+  "deletePreset": "删除预设",
+  "saveAsNewPreset": "另存为新预设",
+  "savePreset": "保存预设",
+  "enterPresetName": "输入预设名称 (例如：我的大低音)",
+  "presetSaved": "预设已保存！",
+  "miniPlayer": "迷你播放器",
+  "listeningParty": "音乐派对",
+  "audioOutput": "音频输出",
+  "lyricsTooltip": "歌词",
+  "queueTooltip": "队列",
+  "moreOptionsTooltip": "更多选项",
+  "muteTooltip": "静音",
+  "unmuteTooltip": "取消静音",
+  "fullScreenPlayerTooltip": "全屏播放器",
+  "importLyricsTooltip": "导入歌词",
+  "saveLyricsTooltip": "保存歌词",
+  "refreshLyricsTooltip": "刷新歌词",
+  "translateLyricsTooltip": "翻译歌词"
+}

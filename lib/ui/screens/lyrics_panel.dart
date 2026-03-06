@@ -14,6 +14,7 @@ import '../../utils/japanese_romanizer.dart';
 import '../../utils/korean_romanizer.dart';
 import '../../utils/translation_service.dart';
 import '../components/smart_art.dart';
+import '../../l10n/app_localizations.dart';
 import '../components/vinyl_disk.dart';
 
 class LyricsPanel extends ConsumerStatefulWidget {
@@ -30,7 +31,6 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
 
   int _activeLyricIndex = -1;
   bool _isUserScrolling = false;
-  bool _showTranslation = false;
   bool _translationLoading = false;
 
   @override
@@ -50,8 +50,10 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
   }
 
   void _toggleTranslation(dynamic lyricsState, dynamic playerState) async {
-    if (_showTranslation) {
-      setState(() => _showTranslation = false);
+    final currentlyShowing = ref.read(lyricsProvider).showTranslation;
+
+    if (currentlyShowing) {
+      ref.read(lyricsProvider.notifier).setShowTranslation(false);
       return;
     }
 
@@ -64,7 +66,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
 
     // If already cached, just show
     if (TranslationService.hasCached(songKey)) {
-      setState(() => _showTranslation = true);
+      ref.read(lyricsProvider.notifier).setShowTranslation(true);
       return;
     }
 
@@ -80,8 +82,8 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
     if (mounted) {
       setState(() {
         _translationLoading = false;
-        _showTranslation = true;
       });
+      ref.read(lyricsProvider.notifier).setShowTranslation(true);
     }
   }
 
@@ -93,11 +95,11 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
 
     final accentColor = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final solidBgColor = isDark ? Colors.black : Colors.white;
-    final inactiveTextColor = isDark ? Colors.white60 : Colors.black54;
+    final bgColor = isDark
+        ? const Color(0xFF121212).withValues(alpha: 0.9)
+        : Colors.white.withValues(alpha: 0.95);
     final headerTextColor = isDark ? Colors.white : Colors.black;
-    final subHeaderColor = isDark ? Colors.white70 : Colors.black54;
+    final l10n = AppLocalizations.of(context)!;
 
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = Platform.isAndroid || Platform.isIOS;
@@ -133,7 +135,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
 
     // Auto-translate when lyrics finish loading and translation is on
     ref.listen(lyricsProvider, (previous, next) {
-      if (!mounted || !_showTranslation) return;
+      if (!mounted || !ref.read(lyricsProvider).showTranslation) return;
       if (next.parsedLyrics.isNotEmpty &&
           (previous == null ||
               previous.parsedLyrics.isEmpty ||
@@ -157,7 +159,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
 
     // Re-translate when target language changes in settings
     ref.listen(settingsProvider, (previous, next) {
-      if (!mounted || !_showTranslation) return;
+      if (!mounted || !ref.read(lyricsProvider).showTranslation) return;
       if (previous != null &&
           previous.translationLanguage != next.translationLanguage) {
         final song = ref.read(playerProvider).currentSong;
@@ -184,7 +186,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
         }
       },
       child: Container(
-        color: solidBgColor,
+        color: bgColor,
         child: Stack(
           children: [
             // LAYER 1: BACKGROUND
@@ -211,12 +213,12 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                     end: Alignment.bottomCenter,
                     colors: isDark
                         ? [
-                            Colors.black.withOpacity(0.5),
-                            Colors.black.withOpacity(0.9)
+                            Colors.black.withValues(alpha: 0.5),
+                            Colors.black.withValues(alpha: 0.9)
                           ]
                         : [
-                            Colors.white.withOpacity(0.5),
-                            Colors.white.withOpacity(0.9)
+                            Colors.white.withValues(alpha: 0.5),
+                            Colors.white.withValues(alpha: 0.9)
                           ],
                   ),
                 ),
@@ -253,11 +255,13 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                         child: Column(
                           children: [
                             Text(
-                              "Now Playing",
+                              l10n.nowPlayingHeader,
                               style: TextStyle(
-                                  fontSize: 12,
-                                  color: subHeaderColor,
-                                  letterSpacing: 1.0),
+                                fontSize: 12,
+                                fontWeight: FontWeight.normal,
+                                color: isDark ? Colors.white54 : Colors.black54,
+                                letterSpacing: 1.0,
+                              ),
                             ),
                             if (playerState.currentSong != null)
                               Text(
@@ -266,9 +270,10 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: headerTextColor),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: headerTextColor,
+                                ),
                               ),
                             const SizedBox(height: 8),
                             Container(
@@ -341,7 +346,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                                       color: headerTextColor,
                                                       size: 20),
                                                   const SizedBox(width: 12),
-                                                  Text('Import',
+                                                  Text(l10n.importLabel,
                                                       style: TextStyle(
                                                           color:
                                                               headerTextColor)),
@@ -363,7 +368,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                                         color: headerTextColor,
                                                         size: 20),
                                                     const SizedBox(width: 12),
-                                                    Text('Save',
+                                                    Text(l10n.saveLabel,
                                                         style: TextStyle(
                                                             color:
                                                                 headerTextColor)),
@@ -378,7 +383,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                                       color: headerTextColor,
                                                       size: 20),
                                                   const SizedBox(width: 12),
-                                                  Text('Refresh',
+                                                  Text(l10n.refreshLabel,
                                                       style: TextStyle(
                                                           color:
                                                               headerTextColor)),
@@ -392,20 +397,20 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                                 child: Row(
                                                   children: [
                                                     Icon(
-                                                        _showTranslation
-                                                            ? Icons
-                                                                .translate_rounded
-                                                            : Icons
-                                                                .translate_rounded,
-                                                        color: _showTranslation
+                                                        Icons.translate_rounded,
+                                                        color: lyricsState
+                                                                .showTranslation
                                                             ? accentColor
                                                             : headerTextColor,
                                                         size: 20),
                                                     const SizedBox(width: 12),
                                                     Text(
-                                                        _showTranslation
-                                                            ? 'Hide Translation'
-                                                            : 'Translate',
+                                                        lyricsState
+                                                                .showTranslation
+                                                            ? l10n
+                                                                .hideTranslation
+                                                            : l10n
+                                                                .translateLabel,
                                                         style: TextStyle(
                                                             color:
                                                                 headerTextColor)),
@@ -420,7 +425,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Tooltip(
-                                      message: 'Import Lyrics',
+                                      message: l10n.importLyricsTooltip,
                                       child: _buildMiniButton(
                                         Icons.file_open_outlined,
                                         () => _pickAndImportLyrics(ref),
@@ -433,7 +438,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                         playerState.currentSong!.filePath !=
                                             'cloud_stream')
                                       Tooltip(
-                                        message: 'Save Lyrics',
+                                        message: l10n.saveLyricsTooltip,
                                         child: _buildMiniButton(
                                           Icons.save_outlined,
                                           () => _saveLyricsToFile(
@@ -457,7 +462,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                             ),
                                           )
                                         : Tooltip(
-                                            message: 'Refresh Lyrics',
+                                            message: l10n.refreshLyricsTooltip,
                                             child: _buildMiniButton(
                                               Icons.refresh,
                                               () {
@@ -491,7 +496,10 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                               ),
                                             )
                                           : Tooltip(
-                                              message: 'Translate Lyrics',
+                                              message:
+                                                  lyricsState.showTranslation
+                                                      ? l10n.hideTranslation
+                                                      : l10n.translateLabel,
                                               child: InkWell(
                                                 borderRadius:
                                                     BorderRadius.circular(8),
@@ -502,7 +510,8 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                                                       const EdgeInsets.all(8),
                                                   child: Icon(
                                                     Icons.translate_rounded,
-                                                    color: _showTranslation
+                                                    color: lyricsState
+                                                            .showTranslation
                                                         ? accentColor
                                                         : headerTextColor,
                                                     size: 20,
@@ -530,13 +539,17 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                               playerState.currentSong?.filePath, // Pass Path
                               playerState.currentSong?.onlineArtUrl, // Pass URL
                               playerState.isPlaying,
+                              l10n,
                             )
                           : _buildSyncedLyricsList(
                               lyricsState.parsedLyrics,
                               accentColor,
-                              inactiveTextColor,
+                              headerTextColor.withValues(
+                                  alpha:
+                                      0.54), // Use headerTextColor with opacity
                               ref.read(playerProvider.notifier),
                               screenHeight,
+                              lyricsState,
                             ),
                 ),
                 const SizedBox(height: 95),
@@ -554,16 +567,17 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.white12)),
-                  child: const Text(
-                    "Lyrics by LRCLIB",
-                    style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5),
+                  child: Text(
+                    l10n.lyricsByLRCLIB,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),
@@ -657,10 +671,11 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
   }
 
   Future<void> _pickAndImportLyrics(WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['lrc', 'txt'],
-      dialogTitle: 'Import Lyrics File',
+      dialogTitle: l10n.importLyricsFile,
     );
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
@@ -676,6 +691,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
     dynamic song,
     String rawLyrics,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     // Check if local .lrc already exists
     final lrcPath = p.setExtension(song.filePath, '.lrc');
     final lrcExists = File(lrcPath).existsSync();
@@ -684,20 +700,18 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Save Lyrics'),
+        title: Text(l10n.saveLabel),
         content: Text(
-          lrcExists
-              ? 'This song already has a local .lrc file.\nDo you want to overwrite it?'
-              : 'Save current lyrics next to the audio file?',
+          lrcExists ? l10n.overwriteLrcWarning : l10n.saveLrcPrompt,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(lrcExists ? 'Overwrite' : 'Save'),
+            child: Text(lrcExists ? l10n.overwrite : l10n.saveLabel),
           ),
         ],
       ),
@@ -737,9 +751,9 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Lyrics saved as .lrc file'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(l10n.lyricsSavedSuccess),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -748,7 +762,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save lyrics: $e'),
+            content: Text('${l10n.lyricsSaveError}: $e'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -769,6 +783,20 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
     }
 
     if (index != _activeLyricIndex) {
+      // 🚀 Handle song restart/seek to start (index becomes -1)
+      if (index == -1 && _activeLyricIndex >= 0) {
+        setState(() => _activeLyricIndex = -1);
+        if (_itemScrollController.isAttached) {
+          _itemScrollController.scrollTo(
+            index: 0,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeInOutCubic,
+            alignment: 0.0, // Top
+          );
+        }
+        return;
+      }
+
       setState(() => _activeLyricIndex = index);
       if (!_isUserScrolling && _activeLyricIndex >= 0) {
         _scrollToActiveLine();
@@ -793,6 +821,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
     Color inactiveColor,
     dynamic playerNotifier,
     double screenHeight,
+    LyricsState lyricsState,
   ) {
     return Listener(
       onPointerDown: (_) => _isUserScrolling = true,
@@ -862,12 +891,12 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                       fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
                       color: isActive
                           ? activeColor
-                          : inactiveColor.withOpacity(opacity),
+                          : inactiveColor.withValues(alpha: opacity),
                       height: 1.4,
                       shadows: isActive
                           ? [
                               BoxShadow(
-                                  color: activeColor.withOpacity(0.5),
+                                  color: activeColor.withValues(alpha: 0.5),
                                   blurRadius: 20)
                             ]
                           : [],
@@ -884,14 +913,14 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                         fontWeight: FontWeight.w400,
                         fontStyle: FontStyle.italic,
                         color: isActive
-                            ? activeColor.withOpacity(0.7)
-                            : inactiveColor.withOpacity(opacity * 0.6),
+                            ? activeColor.withValues(alpha: 0.7)
+                            : inactiveColor.withValues(alpha: opacity * 0.6),
                         height: 1.3,
                       ),
                     ),
                   ],
                   // Translation
-                  if (_showTranslation) ...[
+                  if (lyricsState.showTranslation) ...[
                     Builder(builder: (context) {
                       final song = ref.read(playerProvider).currentSong;
                       if (song == null) return const SizedBox.shrink();
@@ -912,8 +941,9 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                             fontSize: isActive ? 16 : 12,
                             fontWeight: FontWeight.w400,
                             color: isActive
-                                ? activeColor.withOpacity(0.6)
-                                : inactiveColor.withOpacity(opacity * 0.5),
+                                ? activeColor.withValues(alpha: 0.6)
+                                : inactiveColor.withValues(
+                                    alpha: opacity * 0.5),
                             height: 1.3,
                           ),
                         ),
@@ -930,7 +960,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
   }
 
   Widget _buildRawLyrics(String text, bool isDark, String? artPath,
-      String? onlineArtUrl, bool isPlaying) {
+      String? onlineArtUrl, bool isPlaying, AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -942,7 +972,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
               isPlaying: isPlaying),
           const SizedBox(height: 40),
           Text(
-            "No Synced Lyrics Found",
+            l10n.noSyncedLyricsFound,
             style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -950,7 +980,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
           ),
           const SizedBox(height: 8),
           Text(
-            text.contains("Error") ? text : "Just enjoy the vibes.",
+            text.contains("Error") ? text : l10n.justEnjoyVibes,
             style: TextStyle(
                 fontSize: 14, color: isDark ? Colors.white54 : Colors.black54),
           ),

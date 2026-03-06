@@ -7,6 +7,20 @@ import 'package:simple_music_player_2/utils/translation_service.dart';
 // NEW ENUM
 enum VisualizerStyle { spectrum, wave, pulse }
 
+enum AtmosphereTheme {
+  none,
+  winter,
+  autumn,
+  rainyCity,
+  sakura,
+  lunarNewYear,
+  cyberpunk,
+  underwater,
+  nordicAurora,
+  galactic,
+  desertMirage
+}
+
 // --- STATE DEFINITION ---
 class SettingsState {
   final bool isDarkMode;
@@ -32,6 +46,9 @@ class SettingsState {
   final bool androidBitPerfect; // Android 14+: Bit-perfect audio mode
   final bool disableRomanization; // Disable romanization display for lyrics
   final String translationLanguage; // Target language for lyrics translation
+  final bool enableSnowEffect; // DEPRECATED: use atmosphereTheme
+  final AtmosphereTheme atmosphereTheme; // Active seasonal atmosphere theme
+  final String appLocale; // NEW: Application UI language (e.g., 'en', 'id')
 
   SettingsState({
     this.isDarkMode = true,
@@ -54,6 +71,9 @@ class SettingsState {
     this.androidBitPerfect = false,
     this.disableRomanization = false, // Default: romanization enabled
     this.translationLanguage = 'en', // Default: translate to English
+    this.enableSnowEffect = false, // DEPRECATED
+    this.atmosphereTheme = AtmosphereTheme.none,
+    this.appLocale = 'en',
   });
 
   SettingsState copyWith({
@@ -77,6 +97,9 @@ class SettingsState {
     bool? androidBitPerfect,
     bool? disableRomanization,
     String? translationLanguage,
+    bool? enableSnowEffect,
+    AtmosphereTheme? atmosphereTheme,
+    String? appLocale,
   }) {
     return SettingsState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -101,6 +124,9 @@ class SettingsState {
       androidBitPerfect: androidBitPerfect ?? this.androidBitPerfect,
       disableRomanization: disableRomanization ?? this.disableRomanization,
       translationLanguage: translationLanguage ?? this.translationLanguage,
+      enableSnowEffect: enableSnowEffect ?? this.enableSnowEffect,
+      atmosphereTheme: atmosphereTheme ?? this.atmosphereTheme,
+      appLocale: appLocale ?? this.appLocale,
     );
   }
 }
@@ -140,6 +166,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final androidBitPerfect = _prefs.getBool('androidBitPerfect') ?? false;
     final disableRomanization = _prefs.getBool('disableRomanization') ?? false;
     final translationLanguage = _prefs.getString('translationLanguage') ?? 'en';
+    final enableSnowEffect = _prefs.getBool('enableSnowEffect') ?? false;
+    final appLocale = _prefs.getString('appLocale') ?? 'en';
+
+    // Load Theme Enum
+    final themeIndex = _prefs.getInt('atmosphereTheme') ??
+        (enableSnowEffect
+            ? AtmosphereTheme.winter.index
+            : AtmosphereTheme.none.index);
+    final theme = AtmosphereTheme.values[themeIndex];
 
     // Initialize Android Bit-Perfect mode if enabled
     if (androidBitPerfect) {
@@ -167,6 +202,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       androidBitPerfect: androidBitPerfect,
       disableRomanization: disableRomanization,
       translationLanguage: translationLanguage,
+      enableSnowEffect: enableSnowEffect,
+      atmosphereTheme: theme,
+      appLocale: appLocale,
     );
   }
 
@@ -304,6 +342,28 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
     await _prefs.setBool('androidBitPerfect', enabled);
     state = state.copyWith(androidBitPerfect: enabled);
+  }
+
+  /// Toggle Snow Effect (Lacy backward compatibility)
+  Future<void> toggleSnowEffect(bool enabled) async {
+    await setAtmosphereTheme(
+        enabled ? AtmosphereTheme.winter : AtmosphereTheme.none);
+  }
+
+  /// Set Active Atmosphere Theme
+  Future<void> setAtmosphereTheme(AtmosphereTheme theme) async {
+    await _prefs.setInt('atmosphereTheme', theme.index);
+    // Sync deprecated bool
+    await _prefs.setBool('enableSnowEffect', theme == AtmosphereTheme.winter);
+    state = state.copyWith(
+      atmosphereTheme: theme,
+      enableSnowEffect: theme == AtmosphereTheme.winter,
+    );
+  }
+
+  Future<void> setAppLocale(String localeCode) async {
+    await _prefs.setString('appLocale', localeCode);
+    state = state.copyWith(appLocale: localeCode);
   }
 }
 

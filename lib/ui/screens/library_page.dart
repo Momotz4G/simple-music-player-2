@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
@@ -9,9 +8,11 @@ import '../../providers/library_provider.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/library_presentation_provider.dart';
 import '../../models/song_model.dart';
+import '../../providers/settings_provider.dart';
 import '../components/song_card_overlay.dart';
 import '../components/song_context_menu.dart';
 import '../components/smart_art.dart';
+import '../../l10n/app_localizations.dart';
 
 String _formatDuration(double seconds) {
   if (seconds.isNaN || seconds.isInfinite) return "--:--";
@@ -30,11 +31,16 @@ class LibraryPage extends ConsumerWidget {
     final presentationState = ref.watch(libraryPresentationProvider);
     final isGridView = presentationState.isGridView;
 
-    // --- THEME LOGIC ---
+    final settings = ref.watch(settingsProvider);
+    final hasTheme = settings.atmosphereTheme != AtmosphereTheme.none;
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleColor = isDark ? Colors.white : const Color(0xFF212121);
-    final surfaceColor =
-        isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5);
+    final surfaceColor = hasTheme
+        ? (isDark
+            ? Colors.white.withValues(alpha: 0.1)
+            : Colors.black.withValues(alpha: 0.05))
+        : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5));
     final iconColor = isDark ? Colors.grey : Colors.grey[600];
     final activeIconColor = isDark ? Colors.white : Colors.black;
 
@@ -56,7 +62,7 @@ class LibraryPage extends ConsumerWidget {
                       ? 72.0 // Needs space for floating drawer button
                       : 0.0),
               child: Text(
-                'Local Library',
+                AppLocalizations.of(context)!.local_library,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: titleColor,
@@ -86,12 +92,13 @@ class LibraryPage extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: "Search songs...",
-                              hintStyle:
-                                  TextStyle(color: Colors.grey, fontSize: 15),
+                            decoration: InputDecoration(
+                              hintText:
+                                  AppLocalizations.of(context)!.searchSongs,
+                              hintStyle: const TextStyle(
+                                  color: Colors.grey, fontSize: 15),
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.only(bottom: 4),
+                              contentPadding: const EdgeInsets.only(bottom: 4),
                             ),
                             style: TextStyle(color: titleColor, fontSize: 15),
                             cursorColor: Theme.of(context).primaryColor,
@@ -115,7 +122,7 @@ class LibraryPage extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: IconButton(
-                    tooltip: "Refresh Library",
+                    tooltip: AppLocalizations.of(context)!.refreshLibrary,
                     icon: Icon(Icons.refresh_rounded, color: activeIconColor),
                     onPressed: () {
                       library.refreshLibrary();
@@ -133,7 +140,7 @@ class LibraryPage extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: IconButton(
-                    tooltip: "Shuffle All",
+                    tooltip: AppLocalizations.of(context)!.shuffleAll,
                     icon: Icon(Icons.shuffle_rounded, color: activeIconColor),
                     onPressed: () {
                       if (library.songs.isNotEmpty) {
@@ -163,8 +170,8 @@ class LibraryPage extends ConsumerWidget {
                         color: activeIconColor,
                         size: 22),
                     tooltip: isGridView
-                        ? "Switch to List View"
-                        : "Switch to Grid View",
+                        ? AppLocalizations.of(context)!.switchToListView
+                        : AppLocalizations.of(context)!.switchToGridView,
                     onPressed: () {
                       ref
                           .read(libraryPresentationProvider.notifier)
@@ -201,7 +208,9 @@ class LibraryPage extends ConsumerWidget {
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: textColor)),
             const SizedBox(height: 20),
-            Text("${library.songs.length} songs loaded...",
+            Text(
+                AppLocalizations.of(context)!
+                    .songsLoadedCount(library.songs.length),
                 style: TextStyle(
                     color: textColor,
                     fontSize: 18,
@@ -216,7 +225,7 @@ class LibraryPage extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded,
+            const Icon(Icons.error_outline_rounded,
                 size: 48, color: Colors.redAccent),
             const SizedBox(height: 16),
             Padding(
@@ -237,7 +246,7 @@ class LibraryPage extends ConsumerWidget {
                   library.requestPermissions();
                 },
                 icon: const Icon(Icons.lock_open_rounded),
-                label: const Text("Grant Access"),
+                label: Text(AppLocalizations.of(context)!.grantAccess),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
@@ -247,7 +256,8 @@ class LibraryPage extends ConsumerWidget {
               OutlinedButton.icon(
                 onPressed: library.pickFolder,
                 icon: const Icon(Icons.folder_open_rounded),
-                label: const Text("Select Different Folder"),
+                label:
+                    Text(AppLocalizations.of(context)!.selectDifferentFolder),
               ),
           ],
         ),
@@ -261,7 +271,7 @@ class LibraryPage extends ConsumerWidget {
           style: OutlinedButton.styleFrom(
               side: const BorderSide(color: Colors.grey),
               foregroundColor: textColor),
-          child: const Text("Select Folder"),
+          child: Text(AppLocalizations.of(context)!.selectFolder),
         ),
       );
     }
@@ -271,16 +281,16 @@ class LibraryPage extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.music_off_rounded, size: 48, color: Colors.grey),
+            const Icon(Icons.music_off_rounded, size: 48, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
-              "No songs found in this folder.",
+              AppLocalizations.of(context)!.noSongsInFolder,
               style: TextStyle(color: textColor, fontSize: 16),
             ),
             const SizedBox(height: 24),
             OutlinedButton(
               onPressed: library.pickFolder,
-              child: const Text("Select Different Folder"),
+              child: Text(AppLocalizations.of(context)!.selectDifferentFolder),
             ),
           ],
         ),
@@ -356,8 +366,8 @@ class SongListTile extends ConsumerWidget {
           onTap: () => notifier.playSong(song, newQueue: allSongs),
           borderRadius: BorderRadius.circular(8),
           hoverColor: isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.black.withOpacity(0.05),
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
@@ -454,7 +464,15 @@ class SongGridTile extends ConsumerWidget {
     final isPlaying = playerState.currentSong?.filePath == song.filePath;
     final activeColor = Theme.of(context).primaryColor;
 
-    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final settings = ref.watch(settingsProvider);
+    final hasTheme = settings.atmosphereTheme != AtmosphereTheme.none;
+
+    final cardBg = hasTheme
+        ? (isDark
+            ? Colors.black.withValues(alpha: 0.15)
+            : Colors.white.withValues(alpha: 0.15))
+        : (isDark ? const Color(0xFF1E1E1E) : Colors.white);
+
     final titleColor = isDark ? Colors.white : const Color(0xFF212121);
     final artistColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
@@ -467,20 +485,26 @@ class SongGridTile extends ConsumerWidget {
           onTap: () => notifier.playSong(song, newQueue: allSongs),
           borderRadius: BorderRadius.circular(12),
           hoverColor: isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.black.withOpacity(0.05),
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: cardBg,
               borderRadius: BorderRadius.circular(12),
               border: isPlaying
-                  ? Border.all(color: activeColor.withOpacity(0.5), width: 2)
-                  : null,
+                  ? Border.all(
+                      color: activeColor.withValues(alpha: 0.5), width: 2)
+                  : (hasTheme
+                      ? Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.05))
+                      : null),
               boxShadow: [
-                if (!isDark)
+                if (!isDark && !hasTheme)
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4))
               ],

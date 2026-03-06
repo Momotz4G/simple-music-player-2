@@ -37,29 +37,49 @@ const SongSchema = CollectionSchema(
       name: r'dateAdded',
       type: IsarType.dateTime,
     ),
-    r'duration': PropertySchema(
+    r'discNumber': PropertySchema(
       id: 4,
+      name: r'discNumber',
+      type: IsarType.long,
+    ),
+    r'duration': PropertySchema(
+      id: 5,
       name: r'duration',
       type: IsarType.double,
     ),
+    r'genre': PropertySchema(
+      id: 6,
+      name: r'genre',
+      type: IsarType.string,
+    ),
     r'lastPlayed': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'lastPlayed',
       type: IsarType.dateTime,
     ),
     r'path': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'path',
       type: IsarType.string,
     ),
     r'playCount': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'playCount',
       type: IsarType.long,
     ),
     r'title': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'title',
+      type: IsarType.string,
+    ),
+    r'trackNumber': PropertySchema(
+      id: 11,
+      name: r'trackNumber',
+      type: IsarType.long,
+    ),
+    r'year': PropertySchema(
+      id: 12,
+      name: r'year',
       type: IsarType.string,
     )
   },
@@ -104,8 +124,20 @@ int _songEstimateSize(
     }
   }
   bytesCount += 3 + object.artist.length * 3;
+  {
+    final value = object.genre;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.path.length * 3;
   bytesCount += 3 + object.title.length * 3;
+  {
+    final value = object.year;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -119,11 +151,15 @@ void _songSerialize(
   writer.writeString(offsets[1], object.album);
   writer.writeString(offsets[2], object.artist);
   writer.writeDateTime(offsets[3], object.dateAdded);
-  writer.writeDouble(offsets[4], object.duration);
-  writer.writeDateTime(offsets[5], object.lastPlayed);
-  writer.writeString(offsets[6], object.path);
-  writer.writeLong(offsets[7], object.playCount);
-  writer.writeString(offsets[8], object.title);
+  writer.writeLong(offsets[4], object.discNumber);
+  writer.writeDouble(offsets[5], object.duration);
+  writer.writeString(offsets[6], object.genre);
+  writer.writeDateTime(offsets[7], object.lastPlayed);
+  writer.writeString(offsets[8], object.path);
+  writer.writeLong(offsets[9], object.playCount);
+  writer.writeString(offsets[10], object.title);
+  writer.writeLong(offsets[11], object.trackNumber);
+  writer.writeString(offsets[12], object.year);
 }
 
 Song _songDeserialize(
@@ -137,12 +173,16 @@ Song _songDeserialize(
   object.album = reader.readStringOrNull(offsets[1]);
   object.artist = reader.readString(offsets[2]);
   object.dateAdded = reader.readDateTime(offsets[3]);
-  object.duration = reader.readDouble(offsets[4]);
+  object.discNumber = reader.readLongOrNull(offsets[4]);
+  object.duration = reader.readDouble(offsets[5]);
+  object.genre = reader.readStringOrNull(offsets[6]);
   object.id = id;
-  object.lastPlayed = reader.readDateTimeOrNull(offsets[5]);
-  object.path = reader.readString(offsets[6]);
-  object.playCount = reader.readLong(offsets[7]);
-  object.title = reader.readString(offsets[8]);
+  object.lastPlayed = reader.readDateTimeOrNull(offsets[7]);
+  object.path = reader.readString(offsets[8]);
+  object.playCount = reader.readLong(offsets[9]);
+  object.title = reader.readString(offsets[10]);
+  object.trackNumber = reader.readLongOrNull(offsets[11]);
+  object.year = reader.readStringOrNull(offsets[12]);
   return object;
 }
 
@@ -162,15 +202,23 @@ P _songDeserializeProp<P>(
     case 3:
       return (reader.readDateTime(offset)) as P;
     case 4:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 5:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 8:
       return (reader.readString(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
+      return (reader.readString(offset)) as P;
+    case 11:
+      return (reader.readLongOrNull(offset)) as P;
+    case 12:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -755,6 +803,75 @@ extension SongQueryFilter on QueryBuilder<Song, Song, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Song, Song, QAfterFilterCondition> discNumberIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'discNumber',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> discNumberIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'discNumber',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> discNumberEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'discNumber',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> discNumberGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'discNumber',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> discNumberLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'discNumber',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> discNumberBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'discNumber',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Song, Song, QAfterFilterCondition> durationEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -813,6 +930,150 @@ extension SongQueryFilter on QueryBuilder<Song, Song, QFilterCondition> {
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'genre',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'genre',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'genre',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'genre',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'genre',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'genre',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'genre',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'genre',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'genre',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreMatches(String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'genre',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'genre',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> genreIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'genre',
+        value: '',
       ));
     });
   }
@@ -1245,6 +1506,219 @@ extension SongQueryFilter on QueryBuilder<Song, Song, QFilterCondition> {
       ));
     });
   }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> trackNumberIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'trackNumber',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> trackNumberIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'trackNumber',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> trackNumberEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'trackNumber',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> trackNumberGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'trackNumber',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> trackNumberLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'trackNumber',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> trackNumberBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'trackNumber',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'year',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'year',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'year',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'year',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'year',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'year',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'year',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'year',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'year',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearMatches(String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'year',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'year',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> yearIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'year',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension SongQueryObject on QueryBuilder<Song, Song, QFilterCondition> {}
@@ -1300,6 +1774,18 @@ extension SongQuerySortBy on QueryBuilder<Song, Song, QSortBy> {
     });
   }
 
+  QueryBuilder<Song, Song, QAfterSortBy> sortByDiscNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> sortByDiscNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discNumber', Sort.desc);
+    });
+  }
+
   QueryBuilder<Song, Song, QAfterSortBy> sortByDuration() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'duration', Sort.asc);
@@ -1309,6 +1795,18 @@ extension SongQuerySortBy on QueryBuilder<Song, Song, QSortBy> {
   QueryBuilder<Song, Song, QAfterSortBy> sortByDurationDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'duration', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> sortByGenre() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'genre', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> sortByGenreDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'genre', Sort.desc);
     });
   }
 
@@ -1357,6 +1855,30 @@ extension SongQuerySortBy on QueryBuilder<Song, Song, QSortBy> {
   QueryBuilder<Song, Song, QAfterSortBy> sortByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> sortByTrackNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'trackNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> sortByTrackNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'trackNumber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> sortByYear() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'year', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> sortByYearDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'year', Sort.desc);
     });
   }
 }
@@ -1410,6 +1932,18 @@ extension SongQuerySortThenBy on QueryBuilder<Song, Song, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Song, Song, QAfterSortBy> thenByDiscNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> thenByDiscNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discNumber', Sort.desc);
+    });
+  }
+
   QueryBuilder<Song, Song, QAfterSortBy> thenByDuration() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'duration', Sort.asc);
@@ -1419,6 +1953,18 @@ extension SongQuerySortThenBy on QueryBuilder<Song, Song, QSortThenBy> {
   QueryBuilder<Song, Song, QAfterSortBy> thenByDurationDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'duration', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> thenByGenre() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'genre', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> thenByGenreDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'genre', Sort.desc);
     });
   }
 
@@ -1481,6 +2027,30 @@ extension SongQuerySortThenBy on QueryBuilder<Song, Song, QSortThenBy> {
       return query.addSortBy(r'title', Sort.desc);
     });
   }
+
+  QueryBuilder<Song, Song, QAfterSortBy> thenByTrackNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'trackNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> thenByTrackNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'trackNumber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> thenByYear() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'year', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> thenByYearDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'year', Sort.desc);
+    });
+  }
 }
 
 extension SongQueryWhereDistinct on QueryBuilder<Song, Song, QDistinct> {
@@ -1510,9 +2080,22 @@ extension SongQueryWhereDistinct on QueryBuilder<Song, Song, QDistinct> {
     });
   }
 
+  QueryBuilder<Song, Song, QDistinct> distinctByDiscNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'discNumber');
+    });
+  }
+
   QueryBuilder<Song, Song, QDistinct> distinctByDuration() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'duration');
+    });
+  }
+
+  QueryBuilder<Song, Song, QDistinct> distinctByGenre(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'genre', caseSensitive: caseSensitive);
     });
   }
 
@@ -1539,6 +2122,19 @@ extension SongQueryWhereDistinct on QueryBuilder<Song, Song, QDistinct> {
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Song, Song, QDistinct> distinctByTrackNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'trackNumber');
+    });
+  }
+
+  QueryBuilder<Song, Song, QDistinct> distinctByYear(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'year', caseSensitive: caseSensitive);
     });
   }
 }
@@ -1574,9 +2170,21 @@ extension SongQueryProperty on QueryBuilder<Song, Song, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Song, int?, QQueryOperations> discNumberProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'discNumber');
+    });
+  }
+
   QueryBuilder<Song, double, QQueryOperations> durationProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'duration');
+    });
+  }
+
+  QueryBuilder<Song, String?, QQueryOperations> genreProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'genre');
     });
   }
 
@@ -1601,6 +2209,18 @@ extension SongQueryProperty on QueryBuilder<Song, Song, QQueryProperty> {
   QueryBuilder<Song, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
+    });
+  }
+
+  QueryBuilder<Song, int?, QQueryOperations> trackNumberProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'trackNumber');
+    });
+  }
+
+  QueryBuilder<Song, String?, QQueryOperations> yearProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'year');
     });
   }
 }

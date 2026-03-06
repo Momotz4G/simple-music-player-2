@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
@@ -9,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart'; // 🚀 QR Code
 import '../../providers/player_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/timer_provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/lyrics_provider.dart'; // 🚀 For mini lyrics preview
 import '../../services/canvas_service.dart';
 import '../../services/spotify_service.dart';
@@ -44,13 +44,12 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     with SingleTickerProviderStateMixin {
   VideoPlayerController? _videoController;
   bool _isLoadingCanvas = false;
-  String _canvasStatus = "Loading canvas...";
+  String? _canvasStatus;
   double _dragOffset = 0.0; // 🚀 Track drag distance
   bool _showTranslation = false;
   bool _translationLoading = false;
   double _panningOffset = 0.0; // 🚀 Visual scroll cancellation
   final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0.0; // 🚀 Track scroll for lyrics visibility
   AnimationController? _dragAnimationController; // 🚀 For interactive drag
 
   // 🚀 AUDIO QUALITY INFO STATE
@@ -142,7 +141,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       setState(() {
         _videoController = null;
         _isLoadingCanvas = true;
-        _canvasStatus = "Searching Spotify...";
+        _canvasStatus = AppLocalizations.of(context)!.searchingSpotify;
       });
     }
     if (oldController != null) await oldController.dispose();
@@ -151,7 +150,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
 
     if (spotifyUrl != null) {
       if (!mounted) return;
-      setState(() => _canvasStatus = "Fetching Canvas...");
+      setState(
+          () => _canvasStatus = AppLocalizations.of(context)!.fetchingCanvas);
       await _loadCanvasFromUrl(spotifyUrl);
     } else {
       if (mounted) {
@@ -251,6 +251,26 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       }
     });
 
+    // 🚀 Reactive Canvas Disable: Watch settings and dispose if disabled mid-session
+    ref.listen<SettingsState>(settingsProvider, (prev, next) {
+      if (next.disableCanvas && _videoController != null) {
+        setState(() {
+          _videoController?.dispose();
+          _videoController = null;
+          _isLoadingCanvas = false;
+          _canvasStatus = "";
+        });
+      } else if (!next.disableCanvas &&
+          prev?.disableCanvas == true &&
+          _videoController == null) {
+        // Re-load if enabled mid-session
+        final song = ref.read(playerProvider).currentSong;
+        if (song != null) {
+          _autoLoadCanvas(song.title, song.artist);
+        }
+      }
+    });
+
     if (song == null) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -262,10 +282,10 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        body: const Center(
+        body: Center(
           child: Text(
-            "No music playing",
-            style: TextStyle(color: Colors.white54),
+            AppLocalizations.of(context)!.noMusicPlaying,
+            style: const TextStyle(color: Colors.white54),
           ),
         ),
       );
@@ -307,7 +327,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                     padding: const EdgeInsets.only(right: 8),
                     child: Center(
                       child: Text(
-                        _canvasStatus,
+                        _canvasStatus ??
+                            AppLocalizations.of(context)!.loadingCanvas,
                         style: const TextStyle(
                             fontSize: 10, color: Colors.white54),
                       ),
@@ -331,165 +352,167 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                   icon: const Icon(Icons.more_vert, color: Colors.white54),
                   color: Colors.grey[900],
                   onSelected: (value) => _handleMenuAction(value, song),
-                  itemBuilder: (context) => [
-                    // Timer
-                    PopupMenuItem(
-                      value: 'timer',
-                      child: Row(
-                        children: [
-                          Icon(
-                            ref.read(timerProvider).isActive
-                                ? Icons.timer_rounded
-                                : Icons.timer_outlined,
-                            color: ref.read(timerProvider).isActive
-                                ? settings.accentColor
-                                : Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          const TimerDisplay(),
-                        ],
+                  itemBuilder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return [
+                      // Timer
+                      PopupMenuItem(
+                        value: 'timer',
+                        child: Row(
+                          children: [
+                            Icon(
+                              ref.read(timerProvider).isActive
+                                  ? Icons.timer_rounded
+                                  : Icons.timer_outlined,
+                              color: ref.read(timerProvider).isActive
+                                  ? settings.accentColor
+                                  : Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            const TimerDisplay(),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Equalizer
-                    const PopupMenuItem(
-                      value: 'equalizer',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.equalizer_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          SizedBox(width: 12),
-                          Text("Equalizer",
-                              style: TextStyle(color: Colors.white)),
-                        ],
+                      // Equalizer
+                      PopupMenuItem(
+                        value: 'equalizer',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.equalizer_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(l10n.equalizer,
+                                style: const TextStyle(color: Colors.white)),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Song Info
-                    const PopupMenuItem(
-                      value: 'song_info',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          SizedBox(width: 12),
-                          Text("Song Information",
-                              style: TextStyle(color: Colors.white)),
-                        ],
+                      // Song Info
+                      PopupMenuItem(
+                        value: 'song_info',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(l10n.songInformation,
+                                style: const TextStyle(color: Colors.white)),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Select Version
-                    const PopupMenuItem(
-                      value: 'version',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.switch_video_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            "Select Version",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                      // Select Version
+                      PopupMenuItem(
+                        value: 'version',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.switch_video_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.selectVersion,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Add to Playlist
-                    const PopupMenuItem(
-                      value: 'add_to_playlist',
-                      child: Row(
-                        children: [
-                          Icon(Icons.playlist_add,
-                              color: Colors.white, size: 20),
-                          SizedBox(width: 12),
-                          Text(
-                            "Add to Playlist",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                      // Add to Playlist
+                      PopupMenuItem(
+                        value: 'add_to_playlist',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.playlist_add,
+                                color: Colors.white, size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.addToPlaylist,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Add to Favorites
-                    const PopupMenuItem(
-                      value: 'add_to_favorite',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.favorite_border,
-                            color: Colors.redAccent,
-                            size: 20,
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            "Add to Favorites",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                      // Add to Favorites
+                      PopupMenuItem(
+                        value: 'add_to_favorite',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.favorite_border,
+                              color: Colors.redAccent,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.addToFavorite,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Download
-                    PopupMenuItem(
-                      value: 'download',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.download_rounded,
-                            color: settings.accentColor,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            "Download Song",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                      // Download
+                      PopupMenuItem(
+                        value: 'download',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.download_rounded,
+                              color: settings.accentColor,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.downloadSong,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Listening Party
-                    const PopupMenuItem(
-                      value: 'listening_party',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.qr_code_2_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            "Listening Party",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                      // Listening Party
+                      PopupMenuItem(
+                        value: 'listening_party',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.qr_code_2_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.listeningParty,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Audio Output
-                    const PopupMenuItem(
-                      value: 'audio_output',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.output_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            "Audio Output",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                      // Audio Output
+                      PopupMenuItem(
+                        value: 'audio_output',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.output_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.audioOutput,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Queue removed from here
-                  ],
+                    ];
+                  },
                 ),
               ],
             ),
@@ -516,7 +539,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                 // LAYER 2: Blur overlay (less blur when video is playing)
                 Positioned.fill(
                   child: Container(
-                    color: Colors.black.withOpacity(hasVideo ? 0.4 : 0.6),
+                    color: Colors.black.withValues(alpha: hasVideo ? 0.4 : 0.6),
                   ),
                 ),
                 // LAYER 3: Video in center (if playing)
@@ -528,7 +551,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha: 0.5),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),
@@ -546,10 +569,10 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withOpacity(0.5),
+                          Colors.black.withValues(alpha: 0.5),
                           Colors.transparent,
                           Colors.transparent,
-                          Colors.black.withOpacity(0.8),
+                          Colors.black.withValues(alpha: 0.8),
                         ],
                         stops: const [0.0, 0.2, 0.6, 1.0],
                       ),
@@ -639,7 +662,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withOpacity(0.5),
+                                                        .withValues(alpha: 0.5),
                                                     blurRadius: 30,
                                                     spreadRadius: 5,
                                                   ),
@@ -793,7 +816,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                         decoration:
                                                             BoxDecoration(
                                                           color: Colors.white
-                                                              .withOpacity(0.1),
+                                                              .withValues(
+                                                                  alpha: 0.1),
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(4),
@@ -962,15 +986,16 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                         ),
                                         const Spacer(flex: 2),
                                         // Scroll Indicator
-                                        Icon(
+                                        const Icon(
                                           Icons.keyboard_arrow_down,
                                           color: Colors.white30,
                                           size: 28,
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          "Scroll for lyrics",
-                                          style: TextStyle(
+                                          AppLocalizations.of(context)!
+                                              .scrollForLyrics,
+                                          style: const TextStyle(
                                               color: Colors.white30,
                                               fontSize: 11),
                                         ),
@@ -996,10 +1021,10 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
 
           // LYRICS OVERLAY - ABSOLUTELY ON TOP OF EVERYTHING
           if (playerState.isLyricsVisible)
-            Positioned.fill(
+            const Positioned.fill(
               child: Material(
                 color: Colors.transparent,
-                child: const LyricsPanel(),
+                child: LyricsPanel(),
               ),
             ),
         ],
@@ -1051,24 +1076,25 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
               ),
               // Lyrics content
               if (lyricsState.isLoading)
-                const Padding(
-                  padding: EdgeInsets.all(20),
+                Padding(
+                  padding: const EdgeInsets.all(20),
                   child: Text(
-                    "Loading lyrics...",
-                    style: TextStyle(color: Colors.white54, fontSize: 14),
+                    AppLocalizations.of(context)!.loadingLyrics,
+                    style: const TextStyle(color: Colors.white54, fontSize: 14),
                   ),
                 )
               else if (lyrics.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
-                    children: const [
-                      Icon(Icons.lyrics_outlined,
+                    children: [
+                      const Icon(Icons.lyrics_outlined,
                           color: Colors.white38, size: 32),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Text(
-                        "No lyrics available",
-                        style: TextStyle(color: Colors.white54, fontSize: 14),
+                        AppLocalizations.of(context)!.noLyricsAvailable,
+                        style: const TextStyle(
+                            color: Colors.white54, fontSize: 14),
                       ),
                     ],
                   ),
@@ -1175,7 +1201,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                     icon: const Icon(Icons.queue_music_rounded),
                     color: Colors.white54,
                     iconSize: 24,
-                    tooltip: "View Queue",
+                    tooltip: AppLocalizations.of(context)!.viewQueue,
                     onPressed: () => _showQueueSheet(context),
                   ),
                   _translationLoading
@@ -1196,7 +1222,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                               ? Theme.of(context).colorScheme.primary
                               : Colors.white54,
                           iconSize: 24,
-                          tooltip: "Translate Lyrics",
+                          tooltip:
+                              AppLocalizations.of(context)!.translateLyrics,
                           onPressed: () async {
                             if (_showTranslation) {
                               setState(() => _showTranslation = false);
@@ -1250,9 +1277,12 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     );
 
     if (result != null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Switching to: ${result.title}")));
+      ).showSnackBar(SnackBar(
+          content: Text(
+              "${AppLocalizations.of(context)!.switchingTo}: ${result.title}")));
 
       ref.read(playerProvider.notifier).swapCurrentSongVersion(result.url);
     }
@@ -1292,7 +1322,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
         SongContextMenuRegion.handleAction(
           context,
           ref,
-          SongAction.addToFavorites,
+          SongAction.addToFavorite,
           song,
         );
         break;
@@ -1390,22 +1420,25 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
   }
 
   void _showTimerDialog() {
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text("Sleep Timer", style: TextStyle(color: Colors.white)),
+        title:
+            Text(l10n.sleepTimer, style: const TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _timerOption(15, "15 Minutes"),
-            _timerOption(30, "30 Minutes"),
-            _timerOption(45, "45 Minutes"),
-            _timerOption(60, "1 Hour"),
+            _timerOption(15, l10n.minutesDuration(15)),
+            _timerOption(30, l10n.minutesDuration(30)),
+            _timerOption(45, l10n.minutesDuration(45)),
+            _timerOption(60, l10n.hoursDuration(1)),
             ListTile(
               leading: const Icon(Icons.edit_rounded, color: Colors.white70),
-              title: const Text("Custom Time",
-                  style: TextStyle(color: Colors.white)),
+              title: Text(l10n.customTime,
+                  style: const TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
                 _showCustomTimerInput();
@@ -1417,9 +1450,9 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                 Icons.timer_off_rounded,
                 color: Colors.redAccent,
               ),
-              title: const Text(
-                "Turn Off Timer",
-                style: TextStyle(color: Colors.redAccent),
+              title: Text(
+                l10n.turnOffTimer,
+                style: const TextStyle(color: Colors.redAccent),
               ),
               onTap: () {
                 ref.read(timerProvider.notifier).cancelTimer();
@@ -1440,12 +1473,13 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     showDialog(
       context: context,
       builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor: Colors.grey[900],
-              title: const Text("Set Custom Timer",
-                  style: TextStyle(color: Colors.white)),
+              title: Text(l10n.setCustomTimer,
+                  style: const TextStyle(color: Colors.white)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1454,9 +1488,9 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                     keyboardType: TextInputType.number,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: "Enter duration...",
+                      hintText: l10n.enterDuration,
                       hintStyle:
-                          TextStyle(color: Colors.white.withOpacity(0.5)),
+                          TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                       border: const OutlineInputBorder(),
                       enabledBorder: const OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.white24)),
@@ -1480,16 +1514,16 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                     selectedColor: Colors.white,
                     fillColor: accentColor,
                     color: Colors.white70,
-                    children: const [
+                    children: [
                       Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Hr")),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(l10n.hourShort)),
                       Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Min")),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(l10n.minuteShort)),
                       Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Sec")),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(l10n.secondShort)),
                     ],
                   ),
                 ],
@@ -1497,8 +1531,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel",
-                      style: TextStyle(color: Colors.white70)),
+                  child: Text(l10n.cancel,
+                      style: const TextStyle(color: Colors.white70)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: accentColor),
@@ -1516,12 +1550,20 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
 
                       ref.read(timerProvider.notifier).startTimer(duration);
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Timer set for $value ${unit.name}s")));
+                      String message = "";
+                      if (unit == TimeUnit.hour) {
+                        message = l10n.timerSetForHours(value);
+                      } else if (unit == TimeUnit.minute) {
+                        message = l10n.timerSetForMinutes(value);
+                      } else {
+                        message = l10n.timerSetForSeconds(value);
+                      }
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text(message)));
                     }
                   },
-                  child: const Text("Start",
-                      style: TextStyle(color: Colors.white)),
+                  child: Text(l10n.start,
+                      style: const TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -1539,7 +1581,9 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
         Navigator.pop(context);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("Music will stop in $label")));
+        ).showSnackBar(SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.musicWillStopIn(label))));
       },
     );
   }

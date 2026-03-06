@@ -23,6 +23,7 @@ class LyricsState {
   final double syncOffset;
   final bool isFromApi;
   final bool hasLocalLrc;
+  final bool showTranslation;
 
   LyricsState({
     this.rawLyrics = '',
@@ -31,6 +32,7 @@ class LyricsState {
     this.syncOffset = 0.0,
     this.isFromApi = false,
     this.hasLocalLrc = false,
+    this.showTranslation = false,
   });
 
   LyricsState copyWith({
@@ -40,6 +42,7 @@ class LyricsState {
     double? syncOffset,
     bool? isFromApi,
     bool? hasLocalLrc,
+    bool? showTranslation,
   }) {
     return LyricsState(
       rawLyrics: rawLyrics ?? this.rawLyrics,
@@ -48,12 +51,21 @@ class LyricsState {
       syncOffset: syncOffset ?? this.syncOffset,
       isFromApi: isFromApi ?? this.isFromApi,
       hasLocalLrc: hasLocalLrc ?? this.hasLocalLrc,
+      showTranslation: showTranslation ?? this.showTranslation,
     );
   }
 }
 
 class LyricsNotifier extends StateNotifier<LyricsState> {
   LyricsNotifier() : super(LyricsState());
+
+  void setShowTranslation(bool value) {
+    state = state.copyWith(showTranslation: value);
+  }
+
+  void toggleTranslation() {
+    state = state.copyWith(showTranslation: !state.showTranslation);
+  }
 
   @override
   set state(LyricsState value) {
@@ -273,19 +285,55 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         if (data.isNotEmpty) {
-          // Try to find exact match first
-          var match = data.firstWhere((item) => item['syncedLyrics'] != null,
-              orElse: () => null);
+          // Find best match by checking title similarity
+          final lowerTargetTitle = cleanTitle.toLowerCase();
 
-          // If no synced lyrics, just take first result
-          match ??= data.first;
+          Map<String, dynamic>? bestMatch;
 
-          String lyrics = match['syncedLyrics'] ?? "";
+          // Priority 1: Exact matching title + synced lyrics
+          bestMatch = data.firstWhere(
+            (item) =>
+                (item['trackName']
+                        ?.toString()
+                        .toLowerCase()
+                        .contains(lowerTargetTitle) ??
+                    false) &&
+                item['syncedLyrics'] != null &&
+                item['syncedLyrics'].toString().trim().isNotEmpty,
+            orElse: () => null,
+          );
+
+          // Priority 2: Exact matching title + plain lyrics
+          bestMatch ??= data.firstWhere(
+            (item) =>
+                (item['trackName']
+                        ?.toString()
+                        .toLowerCase()
+                        .contains(lowerTargetTitle) ??
+                    false) &&
+                item['plainLyrics'] != null &&
+                item['plainLyrics'].toString().trim().isNotEmpty,
+            orElse: () => null,
+          );
+
+          // Priority 3: Fallback to the first result that has synced lyrics
+          bestMatch ??= data.firstWhere(
+            (item) =>
+                item['syncedLyrics'] != null &&
+                item['syncedLyrics'].toString().trim().isNotEmpty,
+            orElse: () => null,
+          );
+
+          // Final fallback: just take the absolute first result
+          bestMatch ??= data.first;
+
+          String lyrics = bestMatch?['syncedLyrics'] ?? "";
           // If still empty, try plain lyrics
-          if (lyrics.isEmpty) lyrics = match['plainLyrics'] ?? "";
+          if (lyrics.isEmpty) lyrics = bestMatch?['plainLyrics'] ?? "";
 
           if (lyrics.isNotEmpty) {
-            print("✅ Found Search Result Lyrics");
+            print(
+                "✅ Found Search Result Lyrics for: ${bestMatch?['trackName']}");
             if (!mounted) return;
             state = state.copyWith(
               isLoading: false,

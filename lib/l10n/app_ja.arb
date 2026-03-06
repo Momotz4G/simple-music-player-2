@@ -1,0 +1,755 @@
+{
+  "browse": "見つける",
+  "search": "検索",
+  "history": "履歴",
+  "stats": "統計",
+  "library": "ライブラリ",
+  "playlists": "プレイリスト",
+  "artists": "アーティスト",
+  "albums": "アルバム",
+  "local_library": "ローカルライブラリ",
+  "downloads": "ダウンロード",
+  "metadata_editor": "メタデータエディタ",
+  "toggleLyrics": "歌詞を切り替える",
+  "settings": "設定",
+  "navigation": "ナビゲーション",
+  "system": "システム",
+  "language": "言語",
+  "english": "英語",
+  "indonesian": "インドネシア語",
+  "korean": "韓国語",
+  "japanese": "日本語",
+  "chinese": "中国語",
+  "spanish": "スペイン語",
+  "french": "フランス語",
+  "german": "ドイツ語",
+  "portuguese": "ポルトガル語",
+  "thai": "タイ語",
+  "vietnamese": "ベトナム語",
+  "arabic": "アラビア語",
+  "russian": "ロシア語",
+  "hindi": "ヒンディー語",
+  "appearance": "外観",
+  "atmospheres": "アトモスフィア",
+  "none": "なし",
+  "winter": "冬",
+  "autumn": "秋",
+  "rainyCity": "雨の街",
+  "sakura": "桜",
+  "lunarNewYear": "旧正月",
+  "cyberpunk": "サイバーパンク",
+  "underwater": "水中",
+  "nordicAurora": "オーロラ",
+  "galacticSpace": "ギャラクシースペース",
+  "desertMirage": "砂漠の蜃気楼",
+  "general": "一般",
+  "darkMode": "ダークモード",
+  "lockedAtmosphere": "アトモスフィアが有効な間はロックされます",
+  "useDarkTheme": "ダークテーマを使用する",
+  "syncThemeAlbumArt": "アルバムアートとテーマを同期する",
+  "tintBackground": "曲の色で背景とビジュアライザーを染める",
+  "accentColor": "アクセントカラー",
+  "chooseAccentColor": "お好みの静的な色を選択してください",
+  "contentRegion": "コンテンツ地域",
+  "setCountryReleases": "新譜とチャートの国を設定する",
+  "unitedStates": "アメリカ合衆国",
+  "indonesia": "インドネシア",
+  "southKorea": "韓国",
+  "japan": "日本",
+  "unitedKingdom": "イギリス",
+  "brazil": "ブラジル",
+  "visualizer": "ビジュアライザー",
+  "enableBarVisualizer": "バービジュアライザーを有効にする",
+  "showAnimatedWaves": "プレイヤーバーにアニメーションウェーブを表示する",
+  "opacity": "不透明度",
+  "visualizerStyle": "ビジュアライザースタイル",
+  "chooseAnimationType": "アニメーションタイプを選択してください",
+  "spectrumBars": "スペクトラムバー",
+  "fluidWave": "フルイドウェーブ",
+  "circularPulse": "サーキュラーパルス",
+  "rainbowMode": "レインボーモード",
+  "useMixedColors": "ミックスカラーを使用する（同期を優先）",
+  "integration": "連携",
+  "discordRPC": "Discord Rich Presence",
+  "showStatusDiscord": "Discordにステータスを表示する",
+  "musicFolderLocation": "音楽フォルダの場所",
+  "noFolderSelected": "フォルダが選択されていません",
+  "change": "変更",
+  "expand": "拡大",
+  "ignoreSubfolderScan": "サブフォルダのスキャンを無視する",
+  "onlyScanSelected": "選択したフォルダのみをスキャンする（デフォルト：オン）",
+  "importAdditionalPaths": "追加パスのインポート",
+  "addFoldersScan": "スキャンするフォルダを追加する",
+  "add": "追加",
+  "singleTracks": "シングルトラック",
+  "unsavedChanges": "保存されていない変更があります",
+  "playlistAlbumTracks": "プレイリスト / アルバムトラック",
+  "audioFormat": "オーディオ形式",
+  "preferredOutputFormat": "ダウンロードの優先出力形式",
+  "flacNote": "備考: FLACはシングルトラックのダウンロードのみ可能です。プレイリストの一括ダウンロードにはM4A形式が使用されます。",
+  "downloadLocation": "ダウンロード場所",
+  "resetToDefault": "デフォルトに戻す",
+  "changeFolder": "フォルダを変更する",
+  "streaming": "ストリーミング",
+  "streamingQuality": "ストリーミング音質",
+  "standardQuality": "標準 (MP3)",
+  "highQuality": "高音質 (M4A)",
+  "losslessQuality": "ロスレス (自動)",
+  "standardDesc": "MP3 - ファイルサイズが小さく、バッファリングが速い",
+  "highDesc": "M4A - 音質が良く、バランスが取れている",
+  "losslessDesc": "FLAC - Deezer/Tidalからのロスレス品質",
+  "selectStreamingQuality": "ストリーミング音質を選択してください",
+  "losslessNote": "利用可能な場合、Deezer/TidalからロスレスFLACをストリーミングします。利用できない場合はM4Aにフォールバックします。",
+  "playback": "再生",
+  "endlessQueue": "エンドレスキュー",
+  "autoAddSimilar": "キューが空に近づいたときに似た曲を自動追加する",
+  "disableRomanization": "ローマ字表記を無効にする",
+  "hideRomajiPinyin": "韓国語、日本語、中国語の歌詞の下にローマ字/ピンインを表示しない",
+  "translationLanguage": "翻訳言語",
+  "targetLanguageLyrics": "歌詞翻訳のターゲット言語",
+  "disableCanvas": "Canvasを無効にする",
+  "hideCanvas": "Spotify Canvasビデオを表示せず、代わりにアルバムアートを表示する",
+  "wasapiExclusive": "WASAPI排他モード",
+  "bitPerfectWindows": "自動サンプルレートによるビットパーフェクトオーディオ（再起動が必要）",
+  "audiophileDAC": "オーディオフィルDACでの再生時に有効にする（再起動が必要）",
+  "android14BitPerfect": "Android 14+ ビットパーフェクト",
+  "bypassSystemMixer": "USB DACのためにシステムミキサーをバイパスする",
+  "requiresAndroid14": "Android 14以降とUSB DACが必要です",
+  "bitPerfectEnabled": "ビットパーフェクトモードが有効です。音量調節が無効になる場合があります。",
+  "audioOutputDevice": "オーディオ出力デバイス",
+  "loadingDevices": "デバイスを読み込み中...",
+  "systemDefault": "システムデフォルト",
+  "exclusiveWarning": "警告: 排他モードは、システムデフォルトではなく、特定のデバイスを上記で選択した場合に最適に動作します。",
+  "dataCleanup": "データとクリーンアップ",
+  "resetLibraryPath": "ライブラリパスをリセットする",
+  "unlinkFolder": "フォルダのリンクを解除し、曲リストをクリアする",
+  "resetLibraryTitle": "ライブラリをリセットしますか？",
+  "resetLibraryContent": "これにより、プレイヤーから現在のフォルダが削除されます。実際のファイルは削除されません。",
+  "resetPath": "パスをリセットする",
+  "clearStreamingCache": "ストリーミングキャッシュをクリアする",
+  "freeUpSpace": "空き容量を増やす",
+  "resetStatistics": "統計をリセットする",
+  "clearPlayHistory": "再生履歴と聴取時間をクリアする",
+  "resetStatsTitle": "統計をリセットしますか？",
+  "resetStatsContent": "この操作は取り消せません。\\nすべての再生回数と聴取時間が永久に失われます。",
+  "resetEverything": "すべてリセットする",
+  "debugging": "デバッグ",
+  "showDebugButton": "フローティングデバッグボタンを表示する",
+  "toggleDebugButton": "フローティングデバッグコンソールの表示を切り替える",
+  "community": "コミュニティ",
+  "donate": "寄付する",
+  "joinUs": "コミュニティに参加する",
+  "usbAudioBypass": "USBオーディオバイパス (ベータ) - Android 13以下向け直接DAC出力",
+  "comingSoon": "近日公開",
+  "underDevelopment": "この機能は開発中です",
+  "version": "バージョン",
+  "restartRequired": "再起動が必要",
+  "restartContent": "オーディオ出力デバイスの変更を適用するには、アプリの再起動が必要です。\\n\\n今すぐ再起動しますか？",
+  "later": "後で",
+  "restartNow": "今すぐ再起動",
+  "applyOnRestart": "変更は次回の再起動時に適用されます。",
+  "autoRestartNotSupported": "自動再起動はサポートされていません。手動で再起動してください。",
+  "enterAdminCode": "管理者アクセスコードを入力してください",
+  "accessCode": "アクセスコード",
+  "cancel": "キャンセル",
+  "access": "アクセス",
+  "invalidCode": "無効なアクセスコードです",
+  "formatSaved": "形式を保存しました！",
+  "addedFolder": "フォルダを追加しました: {folder}",
+  "removedFolder": "フォルダを削除しました: {folder}",
+  "downloadPathUpdated": "ダウンロードパスを更新しました: {path}",
+  "downloadPathReset": "ダウンロードパスをデフォルトにリセットしました。",
+  "libraryPathReset": "ライブラリパスをリセットしました。",
+  "cacheCleared": "キャッシュを正常にクリアしました！",
+  "changesApplyRestart": "変更は次回の再起動時に適用されます。",
+  "changeLanguage": "アプリの言語を変更する",
+  "unlinkFolderClear": "フォルダのリンクを解除し、曲リストをクリアする",
+  "enterAdminAccessCode": "管理者アクセスコードを入力してください",
+  "invalidAccessCode": "無効なアクセスコードです",
+  "androidBitPerfect": "Android 14+ ビットパーフェクト",
+  "customDevice": "カスタムデバイス",
+  "exclusiveModeWarning": "警告: 排他モードは、システムデフォルトではなく、特定のデバイスを上記で選択した場合に最適に動作します。",
+  "freeUpSpace": "空き容量を増やす (現在: {size})",
+  "@freeUpSpace": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "statisticsReset": "統計をリセットしました。",
+  "toggleDebugConsole": "フローティングデバッグコンソールの表示を切り替える",
+  "usbAudioBypassBeta": "USBオーディオバイパス (ベータ) - Android 13以下向け直接DAC出力",
+  "connectedUsbDacs": "接続されたUSB DAC:",
+  "scanning": "スキャン中...",
+  "scan": "スキャン",
+  "noUsbDacDetected": "USB DACが検出されませんでした。USBオーディオデバイスを接続して「スキャン」をタップしてください。",
+  "connected": "接続済み",
+  "connect": "接続",
+  "failedToConnectDac": "DACへの接続に失敗しました。USBの権限を確認してください。",
+  "connectedToDac": "{deviceName} に接続済み - USBバイパス有効",
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "changingAudioDeviceRestart": "オーディオ出力デバイスの変更を適用するには、アプリの再起動が必要です。\\n\\n今すぐ再起動しますか？",
+  "translateLyrics": "歌詞を翻訳する",
+  "viewQueue": "キューを表示する",
+  "loadingLyrics": "歌詞を読み込み中...",
+  "noLyricsAvailable": "歌詞がありません",
+  "noSyncedLyricsFound": "同期された歌詞が見つかりません",
+  "justEnjoyVibes": "ただ音楽を楽しみましょう。",
+  "scrollForLyrics": "スクロールして歌詞を表示",
+  "switchingTo": "切り替え中",
+  "metadataEditorInfo": "メタデータエディタで検索してすぐに修正できます。",
+  "metadataEditorNote": "備考: 「正常に保存されました」というステータスの後、アルバムアートが変わることがあります。これは保存されていないわけではなく、アプリ内のキャッシュの問題であり、現在修正中です。ファイルマネージャー等で確認できます。",
+  "close": "閉じる",
+  "permissionRequired": "権限が必要です",
+  "permissionRequiredDesc": "タグを編集するには、「全ファイルへのアクセス」権限が必要です。これにより、音楽ファイルを直接修正できるようになります。",
+  "grantPermission": "権限を許可する",
+  "files": "ファイル",
+  "editor": "エディタ",
+  "clearImported": "インポート内容をクリアする",
+  "libraryData": "ライブラリデータ",
+  "externalFiles": "外部ファイル",
+  "addFiles": "ファイルを追加する",
+  "addFolder": "フォルダを追加する",
+  "selectSongToEdit": "リストから編集する曲を選択してください",
+  "fixAll": "すべて修正する",
+  "autoTagTitle": "⚠️ {sourceName} を自動タグ付けしますか？",
+  "@autoTagTitle": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "autoTagContent": "Spotifyで「{sourceName}」の全{count}曲を検索し、タグを自動的に上書きします。\\n\\nこの操作は取り消せません。",
+  "@autoTagContent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "startBulkProcess": "一括処理を開始する",
+  "title": "タイトル",
+  "artist": "アーティスト",
+  "album": "アルバム",
+  "genre": "ジャンル",
+  "year": "年",
+  "trackNumber": "トラック番号",
+  "discNumber": "ディスク番号",
+  "autoFixComingSoon": "自動修正（近日公開）",
+  "manualSearch": "手動検索",
+  "revert": "元に戻す",
+  "saveChangesToFile": "変更をファイルに保存する",
+  "searchSpotify": "Spotifyを検索",
+  "searchHint": "検索...",
+  "selectMatch": "一致するものを選択",
+  "upNext": "次の曲",
+  "fetchingLossless": "ロスレスを取得中...",
+  "noMusicPlaying": "音楽を再生していません",
+  "refreshList": "リストを更新する",
+  "noDownloadsFound": "ダウンロードが見つかりません",
+  "play": "再生",
+  "showInFolder": "フォルダに表示する",
+  "delete": "削除",
+  "deleteFileTitle": "ファイルを削除しますか？",
+  "deleteFileContent": "「{filename}」を削除しますか？\\nこの操作は取り消せません。",
+  "downloadedTo": "ダウンロード先: {path}",
+  "folderPath": "フォルダ: {path}",
+  "errorDeleting": "削除エラー: {error}",
+  "ok": "OK",
+  "searchSongs": "曲を検索...",
+  "noResultsFound": "結果が見つかりません",
+  "refreshLibrary": "ライブラリを更新する",
+  "shuffleAll": "すべてシャッフル",
+  "switchToListView": "リスト表示に切り替える",
+  "switchToGridView": "グリッド表示に切り替える",
+  "songsLoadedCount": "{count}曲を読み込みました...",
+  "grantAccess": "アクセスを許可する",
+  "selectDifferentFolder": "別のフォルダを選択する",
+  "selectFolder": "フォルダを選択する",
+  "noSongsInFolder": "このフォルダに曲は見つかりませんでした。",
+  "queueUpdated": "キューを更新しました",
+  "playingNext": "次に再生",
+  "addedToQueue": "キューに追加しました",
+  "playingTrack": "トラックを再生中",
+  "error": "エラー",
+  "noPlaylistsFound": "プレイリストが見つかりません",
+  "addToPlaylist": "プレイリストに追加する",
+  "songAlreadyInPlaylist": "この曲は既にプレイリストにあります",
+  "addedToPlaylistSuccess": "プレイリストに追加しました",
+  "alreadyInLikedSongs": "既にお気に入りの曲にあります",
+  "addedToLikedSongs": "お気に入りの曲に追加しました",
+  "likedSongs": "お気に入りの曲",
+  "preparingDownload": "ダウンロードを準備中",
+  "fetchingMetadataSpotify": "Spotifyからメタデータを取得中...",
+  "preparingDownloadNotification": "ダウンロード準備中",
+  "downloadStarted": "ダウンロードを開始しました",
+  "downloading": "ダウンロード中",
+  "preparingDownloadFormat": "ダウンロードを準備中 ({format})...",
+  "searching": "検索中...",
+  "findingBestMatchYoutube": "YouTubeで最適な一致を検索中...",
+  "downloadingFlac": "FLACをダウンロード中",
+  "fetchingLosslessAudio": "ロスレスオーディオを取得中...",
+  "downloadComplete": "ダウンロード完了",
+  "flacSavedToDownloads": "FLACをダウンロードフォルダに保存しました",
+  "downloadCompleteNotification": "ダウンロード完了",
+  "flacUnavailable": "FLAC利用不可",
+  "flacUnavailableDesc": "FLACが利用できないため、ダウンロードに失敗しました。設定を変更してみてください。",
+  "flacUnavailableNotification": "FLAC利用不可",
+  "changeFormatInSettings": "設定で出力形式を変更してください",
+  "flacError": "FLACエラー",
+  "couldNotDownloadFlac": "FLACをダウンロードできませんでした。",
+  "downloadingFormat": "{format} をダウンロード中",
+  "savedAsFormat": "{format} として保存しました",
+  "downloadFailed": "ダウンロード失敗",
+  "downloadError": "ダウンロードエラー",
+  "playNext": "次に再生",
+  "addToQueue": "キューに追加する",
+  "addToFavorite": "お気に入りに追加する",
+  "goToArtist": "アーティストへ移動",
+  "download": "ダウンロード",
+  "noAlbumsFound": "アルバムが見つかりません",
+  "moreOptions": "その他のオプション",
+  "titleLabel": "タイトル",
+  "artistLabel": "アーティスト",
+  "albumLabel": "アルバム",
+  "downloadAll": "すべてダウンロード",
+  "albumRemovedFromPlaylists": "アルバムをプレイリストから削除しました",
+  "albumAddedToPlaylists": "アルバムをプレイリストに追加しました",
+  "startedDownloadingAll": "すべての曲のダウンロードを開始しました...",
+  "playingFromAlbum": "アルバムから再生中",
+  "unknownArtist": "不明なアーティスト",
+  "songsCount": "{count}曲",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@deleteFileContent": {
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@folderPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@errorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadingFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryNotLoaded": "ライブラリが読み込まれていません。",
+  "noArtistsFound": "アーティストが見つかりません。",
+  "goToLocalLibraryToSelect": "「ローカルライブラリ」から音楽フォルダを選択してください。",
+  "popularOnSpotify": "Spotifyで人気",
+  "songsInLibrary": "ライブラリ内の{count}曲",
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shuffle": "シャッフル",
+  "shufflingArtist": "{artistName} をシャッフル中...",
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "showMore": "もっと見る",
+  "showLess": "少なく表示",
+  "discography": "ディスコグラフィ",
+  "seeAll": "すべて表示",
+  "newPlaylist": "新しいプレイリスト",
+  "noPlaylistsYet": "プレイリストがまだありません",
+  "createPlaylist": "プレイリストを作成する",
+  "emptyPlaylist": "空のプレイリスト",
+  "emptyPlaylistSubtitle": "新しく空のプレイリストを作成する",
+  "importFromSpotify": "Spotifyからインポート",
+  "importFromSpotifySubtitle": "SpotifyプレイリストのURLを貼り付け",
+  "playlistNameHint": "プレイリスト名",
+  "importSpotifyPlaylist": "Spotifyプレイリストをインポートする",
+  "deletePlaylistTitle": "プレイリストを削除しますか？",
+  "deletePlaylistConfirm": "「{name}」を削除しますか？",
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistNotFound": "プレイリストが見つかりません",
+  "noSongsAdded": "曲がまだ追加されていません",
+  "deleteDownloadsTitle": "ダウンロードを削除しますか？",
+  "deleteDownloadsConfirm": "これにより、このプレイリストのためにダウンロードされたすべての曲がデバイスから削除されます。",
+  "allDownloadsRemoved": "すべてのダウンロードを削除しました",
+  "rename": "名前を変更する",
+  "removeFromPlaylist": "プレイリストから削除する",
+  "renamePlaylist": "プレイリストの名前を変更する",
+  "listeningStats": "聴取統計",
+  "topArtist": "トップアーティスト",
+  "mostListened": "最も聴いた曲",
+  "timeListened": "聴取時間",
+  "totalPlays": "総再生回数",
+  "minutes": "分",
+  "tracks": "トラック",
+  "songs": "曲",
+  "noStatsYet": "統計がまだありません。",
+  "noArtistStatsYet": "アーティスト統計がまだありません。",
+  "play": "再生",
+  "plays": "回再生",
+  "min": "分",
+  "share": "共有する",
+  "savedTo": "「{path}」に保存しました",
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "myTopTrackOn": "Simple Playerでの私の{header}！ 🎵",
+  "@myTopTrackOn": {
+    "placeholders": {
+      "header": {
+        "type": "String"
+      }
+    }
+  },
+  "fileMissingHistory": "ファイルが見つからず、履歴にもありません。",
+  "restoring": "復元中",
+  "reBuffering": "再バッファリング中...",
+  "nowPlaying": "再生中",
+  "recentlyPlayed": "最近再生した曲",
+  "clearHistory": "履歴をクリアする",
+  "noHistoryYet": "履歴がまだありません",
+  "cloud": "クラウド",
+  "cached": "キャッシュ済み",
+  "searchingStatus": "検索中",
+  "findingStream": "ストリームソースを検索中...",
+  "noStreamMatch": "一致するストリームが見つかりませんでした。",
+  "errorSearchingStream": "ストリームの検索中にエラーが発生しました。",
+  "rebufferingFromCloud": "クラウドから再バッファリング中...",
+  "musicSearch": "音楽検索",
+  "songTitleKeyword": "曲名またはキーワード",
+  "searchSpotifyHint": "Spotifyを検索...",
+  "readySearchSong": "準備完了。曲を検索してください。",
+  "searchingSpotifyFor": "Spotifyで「{keyword}」を検索中...",
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "offline": "オフライン",
+  "foundResults": "{songCount}曲、{albumCount}アルバム、{artistCount}アーティストが見つかりました。",
+  "@foundResults": {
+    "placeholders": {
+      "songCount": {
+        "type": "int"
+      },
+      "albumCount": {
+        "type": "int"
+      },
+      "artistCount": {
+        "type": "int"
+      }
+    }
+  },
+  "noSpotifyResults": "Spotifyの結果が見つかりませんでした。",
+  "searchFailedStatus": "検索失敗: {error}",
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noInternetConnection": "インターネット接続がありません",
+  "checkNetworkTryAgain": "ネットワークを確認してやり直してください",
+  "noSuggestionsFound": "提案が見つかりませんでした。",
+  "statusWithText": "ステータス: {status}",
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "goodMorning": "おはようございます",
+  "goodAfternoon": "こんにちは",
+  "goodEvening": "こんばんは",
+  "jumpBackIn": "また聴く",
+  "yourTopMix": "あなたのトップミックス",
+  "youMayLike": "おすすめの曲",
+  "yourPlaylists": "あなたのプレイリスト",
+  "quickMix": "クイックミックス",
+  "madeForYou": "あなたにおすすめ",
+  "rediscover": "再発見する",
+  "doYouRemember": "覚えていますか？",
+  "countSongs": "{count, plural, =1{1曲} other{{count}曲}}",
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savePlaylistTitle": "「{title}」を保存しますか？",
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savePlaylistContent": "これらの曲で新しいプレイリストを作成します。",
+  "savedAs": "「{name}」として保存しました！",
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "保存する",
+  "searchSongsOrAlbumsAndArtistsHint": "曲、アルバム、またはアーティストを検索...",
+  "playQueue": "再生キュー",
+  "downloadSong": "曲をダウンロードする",
+  "sleepTimer": "スリープタイマー",
+  "minutesDuration": "{count, plural, =1{1分} other{{count}分}}",
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursDuration": "{count, plural, =1{1時間} other{{count}時間}}",
+  "@hoursDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "customTime": "カスタム時間",
+  "turnOffTimer": "タイマーをオフにする",
+  "musicWillStopIn": "{label} 後に音楽を停止します",
+  "stopTimer": "タイマーを停止 ({time})",
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@musicWillStopIn": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "setCustomTimer": "カスタムタイマーを設定する",
+  "enterDuration": "時間を入力...",
+  "hourShort": "時間",
+  "minuteShort": "分",
+  "secondShort": "秒",
+  "timerSetForHours": "{count}時間後にタイマーを設定しました",
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSetForMinutes": "{count}分後にタイマーを設定しました",
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSetForSeconds": "{count}秒後にタイマーを設定しました",
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "start": "開始",
+  "errorCouldNotCreateSession": "エラー: セッションを作成できませんでした。",
+  "scanToControlPlayback": "スマートフォンでスキャンして再生をコントロールします。",
+  "session": "セッション: {id}",
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "loadingCanvas": "Canvasを読み込み中...",
+  "searchingSpotify": "Spotifyを検索中...",
+  "fetchingCanvas": "Canvasを取得中...",
+  "nowPlayingHeader": "再生中",
+  "nowPlayingSection": "再生中",
+  "upNextSection": "次の曲",
+  "recommendationsSection": "レコメンド",
+  "fromLibrarySection": "ライブラリから",
+  "queueIsEmpty": "キューが空です",
+  "historySection": "履歴",
+  "upNextCount": "次の曲 ({count})",
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fromLibraryCount": "ライブラリから ({count})",
+  "@fromLibraryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recommendationsCount": "レコメンド ({count})",
+  "@recommendationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongPlaying": "再生中の曲はありません",
+  "selectTrackToStart": "再生するトラックを選択してください",
+  "importLabel": "インポート",
+  "saveLabel": "保存",
+  "refreshLabel": "更新",
+  "hideTranslation": "翻訳を隠す",
+  "translateLabel": "翻訳",
+  "lyricsByLRCLIB": "Lyrics by LRCLIB",
+  "importLyricsFile": "歌詞ファイルをインポートする",
+  "overwriteLrcWarning": "この曲には既にローカルの.lrcファイルがあります。\\n上書きしますか？",
+  "saveLrcPrompt": "現在の歌詞をオーディオファイルの隣に保存しますか？",
+  "overwrite": "上書きする",
+  "lyricsSavedSuccess": "歌詞を.lrcファイルとして保存しました",
+  "lyricsSaveError": "歌詞の保存に失敗しました",
+  "equalizer": "イコライザー",
+  "trackDetails": "トラックの詳細",
+  "audioQuality": "オーディオ品質",
+  "formatLabel": "形式",
+  "codecLabel": "コーデック",
+  "bitrateLabel": "ビットレート",
+  "sampleRateLabel": "サンプルレート",
+  "bitDepthLabel": "ビット深度",
+  "channelsLabel": "チャンネル",
+  "fileSizeLabel": "ファイルサイズ",
+  "fileLocation": "ファイルの場所",
+  "audioSource": "オーディオソース",
+  "pathLabel": "パス",
+  "inputLabel": "入力",
+  "engineLabel": "エンジン",
+  "eqLabel": "EQ",
+  "dspLabel": "DSP",
+  "androidMixer": "Androidミキサー",
+  "bypassedBitPerfect": "バイパス（ビットパーフェクト）",
+  "resamplingLabel": "リサンプリング",
+  "activeNoResampling": "アクティブ（リサンプリング不要）",
+  "nativeRate": "ネイティブレート",
+  "signalOutput": "信号出力",
+  "outputLabel": "出力",
+  "samplingRateLabel": "サンプリングレート",
+  "bitsLabel": "ビット",
+  "statusLabel": "ステータス",
+  "unknown": "不明",
+  "unknownDevice": "不明なデバイス",
+  "sharedMode": "共有",
+  "exclusiveMode": "排他",
+  "androidAudioTrack": "Android AudioTrack",
+  "songInformation": "曲の情報",
+  "selectVersion": "バージョンを選択",
+  "searchYoutubeHint": "YouTubeを検索...",
+  "androidAudioEffectsNote": "備考: オーディオエフェクトはAndroidデバイスのみ有効です。",
+  "deletePreset": "プリセットを削除する",
+  "saveAsNewPreset": "新しいプリセットとして保存する",
+  "savePreset": "プリセットを保存する",
+  "enterPresetName": "プリセット名を入力してください (例: 私のバス)",
+  "presetSaved": "プリセットを保存しました！",
+  "miniPlayer": "ミニプレイヤー",
+  "listeningParty": "リスニングパーティー",
+  "audioOutput": "オーディオ出力",
+  "lyricsTooltip": "歌詞",
+  "queueTooltip": "キュー",
+  "moreOptionsTooltip": "その他のオプション",
+  "muteTooltip": "ミュート",
+  "unmuteTooltip": "ミュート解除",
+  "fullScreenPlayerTooltip": "全画面プレイヤー",
+  "importLyricsTooltip": "歌詞をインポート",
+  "saveLyricsTooltip": "歌詞を保存",
+  "refreshLyricsTooltip": "歌詞を更新",
+  "translateLyricsTooltip": "歌詞を翻訳"
+}

@@ -13,14 +13,15 @@ import '../../services/smart_download_service.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../services/spotify_service.dart';
 import '../../models/download_progress.dart';
-import '../../services/notification_service.dart'; // 🚀 IMPORT
+import '../../services/notification_service.dart';
 import 'music_notification.dart';
+import '../../l10n/app_localizations.dart';
 
 enum SongAction {
   playNext,
   addToQueue,
   addToPlaylist,
-  addToFavorites,
+  addToFavorite,
   goToArtist,
   download
 }
@@ -40,13 +41,15 @@ class SongContextMenuRegion extends ConsumerWidget {
   static Future<void> handleAction(BuildContext context, WidgetRef ref,
       SongAction action, SongModel song) async {
     final notifier = ref.read(playerProvider.notifier);
+    final l10n = AppLocalizations.of(context)!;
 
     switch (action) {
       case SongAction.playNext:
         notifier.insertSongNext(song);
+        if (!context.mounted) return;
         showCenterNotification(context,
-            label: "QUEUE UPDATED",
-            title: "Playing Next",
+            label: AppLocalizations.of(context)!.queueUpdated,
+            title: AppLocalizations.of(context)!.playingNext,
             subtitle: song.title,
             // Use artPath instead of artBytes
             artPath: song.filePath,
@@ -55,9 +58,10 @@ class SongContextMenuRegion extends ConsumerWidget {
 
       case SongAction.addToQueue:
         notifier.addToQueue(song);
+        if (!context.mounted) return;
         showCenterNotification(context,
-            label: "QUEUE UPDATED",
-            title: "Added to Queue",
+            label: AppLocalizations.of(context)!.queueUpdated,
+            title: AppLocalizations.of(context)!.addedToQueue,
             subtitle: song.title,
             // Use artPath instead of artBytes
             artPath: song.filePath,
@@ -70,16 +74,16 @@ class SongContextMenuRegion extends ConsumerWidget {
 
         if (playlists.isEmpty) {
           showCenterNotification(context,
-              label: "ERROR",
-              title: "No Playlists Found",
-              backgroundColor: Colors.orangeAccent.withOpacity(0.9));
+              label: AppLocalizations.of(context)!.error,
+              title: AppLocalizations.of(context)!.noPlaylistsFound,
+              backgroundColor: Colors.orangeAccent.withValues(alpha: 0.9));
           return;
         }
 
         showDialog(
           context: context,
           builder: (context) => SimpleDialog(
-            title: const Text("Add to Playlist"),
+            title: Text(AppLocalizations.of(context)!.addToPlaylist),
             backgroundColor: Theme.of(context).cardColor,
             children: playlists
                 .map((p) => SimpleDialogOption(
@@ -92,20 +96,22 @@ class SongContextMenuRegion extends ConsumerWidget {
                           Navigator.pop(context);
                           // 🔴 GLASS RED ERROR
                           showCenterNotification(context,
-                              label: "ERROR",
-                              title: "Song Already in Playlist",
+                              label: AppLocalizations.of(context)!.error,
+                              title: AppLocalizations.of(context)!
+                                  .songAlreadyInPlaylist,
                               subtitle: p.name,
                               // Use artPath instead of artBytes
                               artPath: song.filePath,
                               backgroundColor:
-                                  Colors.redAccent.withOpacity(0.85),
+                                  Colors.redAccent.withValues(alpha: 0.85),
                               onlineArtUrl: song.onlineArtUrl);
                         } else {
                           playlistNotifier.addSongToPlaylist(p.id, song);
                           Navigator.pop(context);
                           // 🟢 SUCCESS
                           showCenterNotification(context,
-                              label: "ADDED TO PLAYLIST",
+                              label: AppLocalizations.of(context)!
+                                  .addedToPlaylistSuccess,
                               title: p.name,
                               subtitle: song.title,
                               // Use artPath instead of artBytes
@@ -123,41 +129,41 @@ class SongContextMenuRegion extends ConsumerWidget {
         );
         break;
 
-      case SongAction.addToFavorites:
+      case SongAction.addToFavorite:
         final playlists = ref.read(playlistProvider);
         final playlistNotifier = ref.read(playlistProvider.notifier);
 
         // 🚀 CHECK IF ALREADY IN LIKED SONGS
-        final likedPlaylist = playlists.firstWhere(
-          (p) => p.name == "Liked Songs",
-          orElse: () => playlists.first, // Won't match if no playlists
-        );
+        // Safely find the Liked Songs playlist
+        final likedPlaylist =
+            playlists.where((p) => p.name == "Liked Songs").firstOrNull;
 
-        final alreadyExists = likedPlaylist.name == "Liked Songs" &&
-            likedPlaylist.entries
-                .any((e) => e.title == song.title && e.artist == song.artist);
+        final alreadyExists = likedPlaylist != null &&
+            likedPlaylist.entries.any((e) => e.path == song.filePath);
 
         if (alreadyExists) {
           // 🔴 ALREADY EXISTS - Show Error
+          if (!context.mounted) return;
           showCenterNotification(context,
-              label: "ALREADY IN LIKED SONGS",
+              label: AppLocalizations.of(context)!.alreadyInLikedSongs,
               title: song.title,
-              subtitle: "This song is already in your favorites",
+              subtitle: AppLocalizations.of(context)!.alreadyInLikedSongs,
               artPath: song.filePath,
               onlineArtUrl: song.onlineArtUrl,
               icon: Icons.favorite_rounded,
-              backgroundColor: Colors.orangeAccent.withOpacity(0.85));
+              backgroundColor: Colors.orangeAccent.withValues(alpha: 0.85));
         } else {
           // ✅ ADD TO LIKED SONGS
           playlistNotifier.addToLikedSongs(song);
+          if (!context.mounted) return;
           showCenterNotification(context,
-              label: "LIKED SONGS",
-              title: "Added to Liked Songs",
+              label: AppLocalizations.of(context)!.likedSongs,
+              title: AppLocalizations.of(context)!.addedToLikedSongs,
               subtitle: song.title,
               artPath: song.filePath,
               onlineArtUrl: song.onlineArtUrl,
               icon: Icons.favorite_rounded,
-              backgroundColor: Colors.pinkAccent.withOpacity(0.85));
+              backgroundColor: Colors.pinkAccent.withValues(alpha: 0.85));
         }
         break;
 
@@ -198,10 +204,11 @@ class SongContextMenuRegion extends ConsumerWidget {
           String? isrc = song.isrc;
 
           debugPrint("🔍 Searching Spotify for metadata...");
+          if (!context.mounted) return;
           showCenterNotification(context,
-              label: "PREPARING DOWNLOAD",
+              label: AppLocalizations.of(context)!.preparingDownload,
               title: song.title,
-              subtitle: "Fetching metadata from Spotify...",
+              subtitle: AppLocalizations.of(context)!.fetchingMetadataSpotify,
               artPath: song.onlineArtUrl,
               onlineArtUrl: song.onlineArtUrl,
               icon: song.onlineArtUrl == null ? Icons.search_rounded : null);
@@ -211,7 +218,8 @@ class SongContextMenuRegion extends ConsumerWidget {
               id: notifId,
               progress: 0,
               max: 100,
-              title: "Preparing Download",
+              title:
+                  AppLocalizations.of(context)!.preparingDownloadNotification,
               body: song.title);
 
           final spotifyResults = await SpotifyService.searchMetadata(
@@ -242,9 +250,10 @@ class SongContextMenuRegion extends ConsumerWidget {
           );
 
           showCenterNotification(context,
-              label: "DOWNLOAD STARTED",
+              label: AppLocalizations.of(context)!.downloadStarted,
               title: song.title,
-              subtitle: "Preparing download ($preferredFormat)...",
+              subtitle: AppLocalizations.of(context)!
+                  .preparingDownloadFormat(preferredFormat),
               artPath: spotifyArtUrl,
               onlineArtUrl: spotifyArtUrl);
 
@@ -253,17 +262,18 @@ class SongContextMenuRegion extends ConsumerWidget {
             receivedMB: 0,
             totalMB: 0,
             progress: 0.0,
-            status: "Downloading: ${song.title}",
-            details: "Searching...",
+            status: "${l10n.downloading}: ${song.title}",
+            details: "${l10n.searching}...",
           );
 
           // 1. Get YouTube URL (use existing sourceUrl or search)
           String? youtubeUrl = song.sourceUrl;
           if (youtubeUrl == null || youtubeUrl.isEmpty) {
+            if (!context.mounted) return;
             showCenterNotification(context,
-                label: "SEARCHING",
+                label: AppLocalizations.of(context)!.searching,
                 title: song.title,
-                subtitle: "Finding best match on YouTube...",
+                subtitle: AppLocalizations.of(context)!.findingBestMatchYoutube,
                 artPath: spotifyArtUrl,
                 onlineArtUrl: spotifyArtUrl);
 
@@ -284,9 +294,9 @@ class SongContextMenuRegion extends ConsumerWidget {
                   (meta.isrc != null && meta.isrc!.isNotEmpty))) {
             try {
               showCenterNotification(context,
-                  label: "DOWNLOADING FLAC",
+                  label: AppLocalizations.of(context)!.downloadingFlac,
                   title: song.title,
-                  subtitle: "Fetching lossless audio...",
+                  subtitle: AppLocalizations.of(context)!.fetchingLosslessAudio,
                   artPath: spotifyArtUrl,
                   onlineArtUrl: spotifyArtUrl);
 
@@ -294,7 +304,7 @@ class SongContextMenuRegion extends ConsumerWidget {
                   id: notifId,
                   progress: 0,
                   max: 100,
-                  title: "Downloading FLAC",
+                  title: AppLocalizations.of(context)!.downloadingFlac,
                   body: song.title);
 
               final flacResult = await smartService.downloadFlac(
@@ -306,7 +316,7 @@ class SongContextMenuRegion extends ConsumerWidget {
                     receivedMB: p * 30, // FLAC is larger
                     totalMB: 30,
                     progress: p,
-                    status: "Downloading: ${song.title}",
+                    status: "${l10n.downloading}: ${song.title}",
                     details: "${(p * 100).toInt()}% - FLAC",
                   );
                   // 🚀 NOTIF
@@ -314,7 +324,7 @@ class SongContextMenuRegion extends ConsumerWidget {
                       id: notifId,
                       progress: (p * 100).toInt(),
                       max: 100,
-                      title: "Downloading FLAC",
+                      title: l10n.downloadingFlac,
                       body: song.title);
                 },
                 isStreaming: false,
@@ -324,38 +334,42 @@ class SongContextMenuRegion extends ConsumerWidget {
                 // 🚀 CLEAR SIDEBAR PROGRESS
                 SmartDownloadService.progressNotifier.value = null;
 
+                if (!context.mounted) return;
                 showCenterNotification(context,
-                    label: "DOWNLOAD COMPLETE",
+                    label: AppLocalizations.of(context)!.downloadComplete,
                     title: song.title,
-                    subtitle: "FLAC saved to Downloads",
+                    subtitle:
+                        AppLocalizations.of(context)!.flacSavedToDownloads,
                     artPath: flacResult.filePath,
                     onlineArtUrl: spotifyArtUrl,
-                    backgroundColor: Colors.green.withOpacity(0.85));
+                    backgroundColor: Colors.green.withValues(alpha: 0.85));
 
                 notif.showComplete(
                     id: notifId,
-                    title: "Download Complete",
+                    title: AppLocalizations.of(context)!
+                        .downloadCompleteNotification,
                     body: "${song.title} (FLAC)");
                 return; // SUCCESS!
               }
 
               // 🚀 FLAC UNAVAILABLE - Notify user instead of crashing
               SmartDownloadService.progressNotifier.value = null;
+              if (!context.mounted) return;
               showCenterNotification(context,
-                  label: "FLAC UNAVAILABLE",
+                  label: AppLocalizations.of(context)!.flacUnavailable,
                   title: song.title,
-                  subtitle:
-                      "FLAC not available, download failed. Try changing settings.",
+                  subtitle: AppLocalizations.of(context)!.flacUnavailableDesc,
                   artPath: spotifyArtUrl,
                   onlineArtUrl: spotifyArtUrl,
                   icon: Icons.info_outline_rounded,
-                  backgroundColor: Colors.orange.withOpacity(0.85));
+                  backgroundColor: Colors.orange.withValues(alpha: 0.85));
 
               notif.showComplete(
                   id: notifId,
-                  title: "FLAC Unavailable",
+                  title:
+                      AppLocalizations.of(context)!.flacUnavailableNotification,
                   body:
-                      "${song.title} - Please change output format in Settings");
+                      "${song.title} - ${AppLocalizations.of(context)!.changeFormatInSettings}");
 
               return; // Stop here, don't fallback silently to avoid confusion
             } catch (e) {
@@ -365,16 +379,16 @@ class SongContextMenuRegion extends ConsumerWidget {
               // or just handle here. Let's handle here to be specific.
               SmartDownloadService.progressNotifier.value = null;
               showCenterNotification(context,
-                  label: "FLAC ERROR",
+                  label: AppLocalizations.of(context)!.flacError,
                   title: song.title,
-                  subtitle: "Could not download FLAC.",
+                  subtitle: AppLocalizations.of(context)!.couldNotDownloadFlac,
                   artPath: spotifyArtUrl,
                   onlineArtUrl: spotifyArtUrl,
-                  backgroundColor: Colors.red.withOpacity(0.85));
+                  backgroundColor: Colors.red.withValues(alpha: 0.85));
 
               notif.showComplete(
                   id: notifId,
-                  title: "Download Failed",
+                  title: AppLocalizations.of(context)!.downloadFailed,
                   body: "${song.title} (FLAC Error)");
               return;
             }
@@ -390,10 +404,11 @@ class SongContextMenuRegion extends ConsumerWidget {
             throw Exception("Storage permission denied or path error");
           }
 
+          if (!context.mounted) return;
           showCenterNotification(context,
-              label: "DOWNLOADING",
+              label: l10n.downloading,
               title: song.title,
-              subtitle: "Downloading $actualFormat...",
+              subtitle: l10n.downloadingFormat(actualFormat),
               artPath: spotifyArtUrl,
               onlineArtUrl: spotifyArtUrl);
 
@@ -401,7 +416,7 @@ class SongContextMenuRegion extends ConsumerWidget {
               id: notifId,
               progress: 0,
               max: 100,
-              title: "Downloading $actualFormat",
+              title: l10n.downloadingFormat(actualFormat),
               body: song.title);
 
           await ytService.startDownloadFromUrl(
@@ -414,7 +429,7 @@ class SongContextMenuRegion extends ConsumerWidget {
                 receivedMB: p * 10, // Estimated
                 totalMB: 10,
                 progress: p,
-                status: "Downloading: ${song.title}",
+                status: "${l10n.downloading}: ${song.title}",
                 details: "${(p * 100).toInt()}% - $actualFormat",
               );
               // 🚀 NOTIF
@@ -422,7 +437,8 @@ class SongContextMenuRegion extends ConsumerWidget {
                   id: notifId,
                   progress: (p * 100).toInt(),
                   max: 100,
-                  title: "Downloading Audio",
+                  title: AppLocalizations.of(context)!
+                      .downloadingFormat(actualFormat),
                   body: song.title);
             },
             onComplete: (success) async {
@@ -435,28 +451,32 @@ class SongContextMenuRegion extends ConsumerWidget {
                 } catch (e) {
                   debugPrint("Tagging warning: $e");
                 }
+                if (!context.mounted) return;
                 showCenterNotification(context,
-                    label: "DOWNLOAD COMPLETE",
+                    label: AppLocalizations.of(context)!.downloadComplete,
                     title: song.title,
-                    subtitle: "Saved as $actualFormat",
+                    subtitle: AppLocalizations.of(context)!
+                        .savedAsFormat(actualFormat),
                     artPath: outputPath,
                     onlineArtUrl: spotifyArtUrl,
-                    backgroundColor: Colors.green.withOpacity(0.85));
+                    backgroundColor: Colors.green.withValues(alpha: 0.85));
 
                 notif.showComplete(
                     id: notifId,
-                    title: "Download Complete",
+                    title: AppLocalizations.of(context)!
+                        .downloadCompleteNotification,
                     body: "${song.title} ($actualFormat)");
               } else {
                 // Handled by outer catch if we throw? No, onComplete is async callback.
                 // We must handle failure here.
+                if (!context.mounted) return;
                 showCenterNotification(context,
-                    label: "DOWNLOAD FAILED",
+                    label: AppLocalizations.of(context)!.downloadFailed,
                     title: song.title,
-                    subtitle: "Download error",
+                    subtitle: AppLocalizations.of(context)!.downloadError,
                     artPath: spotifyArtUrl,
                     onlineArtUrl: spotifyArtUrl,
-                    backgroundColor: Colors.red.withOpacity(0.85));
+                    backgroundColor: Colors.red.withValues(alpha: 0.85));
                 notif.cancel(notifId);
               }
             },
@@ -465,17 +485,18 @@ class SongContextMenuRegion extends ConsumerWidget {
           debugPrint("❌ Download Error: $e");
           SmartDownloadService.progressNotifier.value = null;
 
+          if (!context.mounted) return;
           showCenterNotification(context,
-              label: "DOWNLOAD FAILED",
+              label: AppLocalizations.of(context)!.downloadFailed,
               title: song.title,
               subtitle: e.toString().replaceAll("Exception:", "").trim(),
               onlineArtUrl: song.onlineArtUrl,
               icon: Icons.error_rounded,
-              backgroundColor: Colors.red.withOpacity(0.85));
+              backgroundColor: Colors.red.withValues(alpha: 0.85));
 
           notif.showComplete(
               id: notifId,
-              title: "Download Failed",
+              title: AppLocalizations.of(context)!.downloadFailed,
               body:
                   "${song.title} - ${e.toString().replaceAll("Exception:", "").trim()}");
         }
@@ -490,47 +511,47 @@ class SongContextMenuRegion extends ConsumerWidget {
       position:
           RelativeRect.fromLTRB(offset.dx, offset.dy, offset.dx, offset.dy),
       items: [
-        const PopupMenuItem(
+        PopupMenuItem(
             value: SongAction.playNext,
             child: Row(children: [
-              Icon(Icons.playlist_play),
-              SizedBox(width: 12),
-              Text('Play Next')
+              const Icon(Icons.playlist_play),
+              const SizedBox(width: 12),
+              Text(AppLocalizations.of(context)!.playNext)
             ])),
-        const PopupMenuItem(
+        PopupMenuItem(
             value: SongAction.addToQueue,
             child: Row(children: [
-              Icon(Icons.queue_music),
-              SizedBox(width: 12),
-              Text('Add to Queue')
+              const Icon(Icons.queue_music),
+              const SizedBox(width: 12),
+              Text(AppLocalizations.of(context)!.addToQueue)
             ])),
-        const PopupMenuItem(
+        PopupMenuItem(
             value: SongAction.addToPlaylist,
             child: Row(children: [
-              Icon(Icons.playlist_add),
-              SizedBox(width: 12),
-              Text('Add to Playlist')
+              const Icon(Icons.playlist_add),
+              const SizedBox(width: 12),
+              Text(AppLocalizations.of(context)!.addToPlaylist)
             ])),
-        const PopupMenuItem(
-            value: SongAction.addToFavorites,
+        PopupMenuItem(
+            value: SongAction.addToFavorite,
             child: Row(children: [
-              Icon(Icons.favorite_border),
-              SizedBox(width: 12),
-              Text('Add to Favorites')
+              const Icon(Icons.favorite_border),
+              const SizedBox(width: 12),
+              Text(AppLocalizations.of(context)!.addToFavorite)
             ])),
-        const PopupMenuItem(
+        PopupMenuItem(
             value: SongAction.goToArtist,
             child: Row(children: [
-              Icon(Icons.person_search),
-              SizedBox(width: 12),
-              Text('Go to Artist')
+              const Icon(Icons.person_search),
+              const SizedBox(width: 12),
+              Text(AppLocalizations.of(context)!.goToArtist)
             ])),
-        const PopupMenuItem(
+        PopupMenuItem(
             value: SongAction.download,
             child: Row(children: [
-              Icon(Icons.download_rounded),
-              SizedBox(width: 12),
-              Text('Download')
+              const Icon(Icons.download_rounded),
+              const SizedBox(width: 12),
+              Text(AppLocalizations.of(context)!.download)
             ])),
       ],
       elevation: 8.0,
@@ -538,7 +559,7 @@ class SongContextMenuRegion extends ConsumerWidget {
       color: Theme.of(context).cardColor,
     );
 
-    if (selected != null) {
+    if (selected != null && context.mounted) {
       handleAction(context, ref, selected, song);
     }
   }

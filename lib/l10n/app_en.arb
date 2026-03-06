@@ -1,0 +1,808 @@
+{
+  "browse": "Browse",
+  "search": "Search",
+  "history": "History",
+  "stats": "Stats",
+  "library": "LIBRARY",
+  "playlists": "Playlists",
+  "artists": "Artists",
+  "albums": "Albums",
+  "local_library": "Local Library",
+  "downloads": "Downloads",
+  "metadata_editor": "Metadata Editor",
+  "toggleLyrics": "Toggle Lyrics",
+  "settings": "Settings",
+  "navigation": "Navigation",
+  "system": "System",
+  "language": "Language",
+  "english": "English",
+  "indonesian": "Indonesian",
+  "korean": "Korean",
+  "japanese": "Japanese",
+  "chinese": "Chinese",
+  "spanish": "Spanish",
+  "french": "French",
+  "german": "German",
+  "portuguese": "Portuguese",
+  "thai": "Thai",
+  "vietnamese": "Vietnamese",
+  "arabic": "Arabic",
+  "russian": "Russian",
+  "hindi": "Hindi",
+  "appearance": "Appearance",
+  "atmospheres": "Atmospheres",
+  "none": "None",
+  "winter": "Winter",
+  "autumn": "Autumn",
+  "rainyCity": "Rainy City",
+  "sakura": "Sakura",
+  "lunarNewYear": "Lunar New Year",
+  "cyberpunk": "Cyberpunk",
+  "underwater": "Underwater",
+  "nordicAurora": "Nordic Aurora",
+  "galacticSpace": "Galactic Space",
+  "desertMirage": "Desert Mirage",
+  "general": "General",
+  "darkMode": "Dark Mode",
+  "lockedAtmosphere": "Locked while an Atmosphere is active",
+  "useDarkTheme": "Use dark theme",
+  "syncThemeAlbumArt": "Sync Theme with Album Art",
+  "tintBackground": "Tint background and visualizer with song color",
+  "accentColor": "Accent Color",
+  "chooseAccentColor": "Choose your preferred static color",
+  "contentRegion": "Content Region",
+  "setCountryReleases": "Set country for new releases & charts",
+  "unitedStates": "United States",
+  "indonesia": "Indonesia",
+  "southKorea": "South Korea",
+  "japan": "Japan",
+  "unitedKingdom": "United Kingdom",
+  "brazil": "Brazil",
+  "visualizer": "Visualizer",
+  "enableBarVisualizer": "Enable Bar Visualizer",
+  "showAnimatedWaves": "Show animated waves in player bar",
+  "opacity": "Opacity",
+  "visualizerStyle": "Visualizer Style",
+  "chooseAnimationType": "Choose animation type",
+  "spectrumBars": "Spectrum Bars",
+  "fluidWave": "Fluid Wave",
+  "circularPulse": "Circular Pulse",
+  "rainbowMode": "Rainbow Mode",
+  "useMixedColors": "Use mixed colors (Overrides sync)",
+  "integration": "Integration",
+  "discordRPC": "Discord Rich Presence",
+  "showStatusDiscord": "Show status on Discord",
+  "library": "Library",
+  "musicFolderLocation": "Music Folder Location",
+  "noFolderSelected": "No folder selected",
+  "change": "Change",
+  "expand": "Expand",
+  "ignoreSubfolderScan": "Ignore Subfolder Scan",
+  "onlyScanSelected": "Only scan selected folder (Default: On)",
+  "importAdditionalPaths": "Import Additional Paths",
+  "addFoldersScan": "Add more folders to scan",
+  "add": "Add",
+  "downloads": "Downloads",
+  "singleTracks": "Single Tracks",
+  "unsavedChanges": "You have unsaved changes",
+  "playlistAlbumTracks": "Playlist / Album Tracks",
+  "audioFormat": "Audio Format",
+  "preferredOutputFormat": "Preferred output format for downloads",
+  "flacNote": "Note: FLAC is available for single track downloads only. Bulk playlist downloads use M4A format.",
+  "downloadLocation": "Download Location",
+  "resetToDefault": "Reset to Default",
+  "changeFolder": "Change Folder",
+  "streaming": "Streaming",
+  "streamingQuality": "Streaming Quality",
+  "standardQuality": "Standard (MP3)",
+  "highQuality": "High (M4A)",
+  "losslessQuality": "Lossless (Auto)",
+  "standardDesc": "MP3 - Smaller files, faster buffering",
+  "highDesc": "M4A - Better quality, balanced",
+  "losslessDesc": "FLAC - Lossless quality from Deezer/Tidal",
+  "selectStreamingQuality": "Select streaming quality",
+  "losslessNote": "Streams lossless FLAC from Deezer/Tidal when available. Falls back to M4A if unavailable.",
+  "playback": "Playback",
+  "endlessQueue": "Endless Queue",
+  "autoAddSimilar": "Auto-add similar songs when queue is nearly empty",
+  "disableRomanization": "Disable Romanization",
+  "hideRomajiPinyin": "Hide romaji/pinyin below Korean, Japanese, and Chinese lyrics",
+  "translationLanguage": "Translation Language",
+  "targetLanguageLyrics": "Target language for lyrics translation",
+  "disableCanvas": "Disable Canvas",
+  "hideCanvas": "Hide Spotify Canvas video, show album art instead",
+  "wasapiExclusive": "WASAPI Exclusive Mode",
+  "bitPerfectWindows": "Bit-perfect audio with auto sample rate (Restart required)",
+  "audiophileDAC": "Enable for audiophile DAC playback (Restart required)",
+  "android14BitPerfect": "Android 14+ Bit-Perfect",
+  "bypassSystemMixer": "Bypass system mixer for USB DACs",
+  "requiresAndroid14": "Requires Android 14+ and USB DAC",
+  "bitPerfectEnabled": "Bit-Perfect Mode Enabled. Volume control may be disabled.",
+  "audioOutputDevice": "Audio Output Device",
+  "loadingDevices": "Loading devices...",
+  "systemDefault": "System Default",
+  "exclusiveWarning": "Warning: Exclusive Mode works best when a specific device is selected above, rather than System Default.",
+  "dataCleanup": "Data & Cleanup",
+  "resetLibraryPath": "Reset Library Path",
+  "unlinkFolder": "Unlink folder and clear song list",
+  "resetLibraryTitle": "Reset Library?",
+  "resetLibraryContent": "This will remove the current folder from the player. Your actual files will NOT be deleted.",
+  "resetPath": "Reset Path",
+  "clearStreamingCache": "Clear Streaming Cache",
+  "freeUpSpace": "Free up space",
+  "resetStatistics": "Reset Statistics",
+  "clearPlayHistory": "Clear play history and listening time",
+  "resetStatsTitle": "Reset Stats?",
+  "resetStatsContent": "This action cannot be undone.\\nAll play counts and listening time will be lost forever.",
+  "resetEverything": "Reset Everything",
+  "debugging": "Debugging",
+  "showDebugButton": "Show Floating Debug Button",
+  "toggleDebugButton": "Toggle visibility of the floating debug console",
+  "community": "Community",
+  "donate": "Donate",
+  "joinUs": "Join Us",
+  "usbAudioBypass": "USB Audio Bypass (Beta) - Direct DAC output for Android 13 and below",
+  "comingSoon": "Coming Soon",
+  "underDevelopment": "This feature is under development",
+  "version": "Version",
+  "restartRequired": "Restart Required",
+  "restartContent": "Changing the audio output device requires a restart application to take effect.\\n\\nWould you like to restart now?",
+  "later": "Later",
+  "restartNow": "Restart Now",
+  "applyOnRestart": "Changes will apply on next restart.",
+  "autoRestartNotSupported": "Auto-restart not supported. Please restart manually.",
+  "enterAdminCode": "Enter Admin Access Code",
+  "accessCode": "Access Code",
+  "cancel": "Cancel",
+  "access": "Access",
+  "invalidCode": "Invalid Access Code",
+  "formatSaved": "Format saved!",
+  "addedFolder": "Added folder: {folder}",
+  "removedFolder": "Removed folder: {folder}",
+  "downloadPathUpdated": "Download path updated: {path}",
+  "downloadPathReset": "Download path reset to default.",
+  "libraryPathReset": "Library path reset.",
+  "cacheCleared": "Cache cleared successfully!",
+  "changesApplyRestart": "Changes will apply on next restart.",
+  "changeLanguage": "Change application language",
+  "unlinkFolderClear": "Unlink folder and clear song list",
+  "enterAdminAccessCode": "Enter Admin Access Code",
+  "accessCode": "Access Code",
+  "invalidAccessCode": "Invalid Access Code",
+  "androidBitPerfect": "Android 14+ Bit-Perfect",
+  "bypassSystemMixer": "Bypass system mixer for USB DACs",
+  "requiresAndroid14": "Requires Android 14+ and USB DAC",
+  "bitPerfectEnabled": "Bit-Perfect Mode Enabled. Volume control may be disabled.",
+  "audioOutputDevice": "Audio Output Device",
+  "loadingDevices": "Loading devices...",
+  "systemDefault": "System Default",
+  "customDevice": "Custom Device",
+  "exclusiveModeWarning": "Warning: Exclusive Mode works best when a specific device is selected above, rather than System Default.",
+  "dataCleanup": "Data & Cleanup",
+  "resetLibraryPath": "Reset Library Path",
+  "unlinkFolderClear": "Unlink folder and clear song list",
+  "resetLibraryTitle": "Reset Library?",
+  "resetLibraryContent": "This will remove the current folder from the player. Your actual files will NOT be deleted.",
+  "resetPath": "Reset Path",
+  "clearStreamingCache": "Clear Streaming Cache",
+  "freeUpSpace": "Free up space (Current: {size})",
+  "@freeUpSpace": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "resetStatistics": "Reset Statistics",
+  "clearPlayHistory": "Clear play history and listening time",
+  "resetStatsTitle": "Reset Stats?",
+  "resetStatsContent": "This action cannot be undone.\nAll play counts and listening time will be lost forever.",
+  "resetEverything": "Reset Everything",
+  "statisticsReset": "Statistics have been reset.",
+  "debugging": "Debugging",
+  "showDebugButton": "Show Floating Debug Button",
+  "toggleDebugConsole": "Toggle visibility of the floating debug console",
+  "community": "Community",
+  "joinUs": "Join Us",
+  "donate": "Donate",
+  "usbAudioBypassBeta": "USB Audio Bypass (Beta) - Direct DAC output for Android 13 and below",
+  "underDevelopment": "This feature is under development",
+  "connectedUsbDacs": "Connected USB DACs:",
+  "scanning": "Scanning...",
+  "scan": "Scan",
+  "noUsbDacDetected": "No USB DAC detected. Connect a USB audio device and tap Scan.",
+  "connected": "Connected",
+  "connect": "Connect",
+  "failedToConnectDac": "Failed to connect to DAC. Check USB permissions.",
+  "connectedToDac": "Connected to {deviceName} - USB Bypass Active",
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "restartRequired": "Restart Required",
+  "changingAudioDeviceRestart": "Changing the audio output device requires a restart application to take effect.\n\nWould you like to restart now?",
+  "later": "Later",
+  "restartNow": "Restart Now",
+  "autoRestartNotSupported": "Auto-restart not supported. Please restart manually.",
+  "translateLyrics": "Translate Lyrics",
+  "viewQueue": "View Queue",
+  "loadingLyrics": "Loading lyrics...",
+  "noLyricsAvailable": "No lyrics available",
+  "noSyncedLyricsFound": "No Synced Lyrics Found",
+  "justEnjoyVibes": "Just enjoy the vibes.",
+  "scrollForLyrics": "Scroll for lyrics",
+  "switchingTo": "Switching to",
+  "metadataEditorInfo": "Fix your metadata editor in a second and just search it.",
+  "metadataEditorNote": "Note: Album art is changing after state \"Saved Successfully\", you don't need to worries its not saved, it's just caching problem in app and I currently fix it. You can verify with file manager or else.",
+  "close": "Close",
+  "permissionRequired": "Permission Required",
+  "permissionRequiredDesc": "To edit tags, we need 'All Files Access' permission. This allows us to modify your music files directly.",
+  "grantPermission": "Grant Permission",
+  "files": "Files",
+  "editor": "Editor",
+  "clearImported": "Clear Imported",
+  "libraryData": "Library Data",
+  "externalFiles": "External Files",
+  "addFiles": "Add Files",
+  "addFolder": "Add Folder",
+  "selectSongToEdit": "Select a song from the list to edit",
+  "fixAll": "Fix All",
+  "autoTagTitle": "⚠️ Auto-Tag {sourceName}?",
+  "@autoTagTitle": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "autoTagContent": "This will search Spotify for all {count} songs in '{sourceName}' and overwrite their tags automatically.\n\nThis process cannot be undone.",
+  "@autoTagContent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "startBulkProcess": "Start Bulk Process",
+  "title": "Title",
+  "artist": "Artist",
+  "album": "Album",
+  "genre": "Genre",
+  "year": "Year",
+  "trackNumber": "Track #",
+  "discNumber": "Disc #",
+  "autoFixComingSoon": "Auto-Fix (Coming Soon)",
+  "manualSearch": "Manual Search",
+  "revert": "Revert",
+  "saveChangesToFile": "Save Changes to File",
+  "searchSpotify": "Search Spotify",
+  "searchHint": "Search...",
+  "selectMatch": "Select Match",
+  "upNext": "UP NEXT",
+  "fetchingLossless": "FETCHING LOSSLESS...",
+  "noMusicPlaying": "No music playing",
+  "refreshList": "Refresh List",
+  "noDownloadsFound": "No downloads found",
+  "play": "Play",
+  "showInFolder": "Show in Folder",
+  "delete": "Delete",
+  "deleteFileTitle": "Delete File?",
+  "deleteFileContent": "Delete '{filename}'?\nThis cannot be undone.",
+  "downloadedTo": "Downloaded to: {path}",
+  "folderPath": "Folder: {path}",
+  "errorDeleting": "Error deleting: {error}",
+  "ok": "OK",
+  "cancel": "Cancel",
+  "searchSongs": "Search songs...",
+  "noResultsFound": "No results found",
+  "refreshLibrary": "Refresh Library",
+  "shuffleAll": "Shuffle All",
+  "switchToListView": "Switch to List View",
+  "switchToGridView": "Switch to Grid View",
+  "songsLoadedCount": "{count} songs loaded...",
+  "grantAccess": "Grant Access",
+  "selectDifferentFolder": "Select Different Folder",
+  "selectFolder": "Select Folder",
+  "noSongsInFolder": "No songs found in this folder.",
+  "queueUpdated": "QUEUE UPDATED",
+  "playingNext": "Playing Next",
+  "addedToQueue": "Added to Queue",
+  "playingTrack": "PLAYING TRACK",
+  "error": "ERROR",
+  "noPlaylistsFound": "No Playlists Found",
+  "addToPlaylist": "Add to Playlist",
+  "songAlreadyInPlaylist": "Song Already in Playlist",
+  "addedToPlaylistSuccess": "ADDED TO PLAYLIST",
+  "alreadyInLikedSongs": "ALREADY IN LIKED SONGS",
+  "addedToLikedSongs": "Added to Liked Songs",
+  "likedSongs": "LIKED SONGS",
+  "preparingDownload": "PREPARING DOWNLOAD",
+  "fetchingMetadataSpotify": "Fetching metadata from Spotify...",
+  "preparingDownloadNotification": "Preparing Download",
+  "downloadStarted": "DOWNLOAD STARTED",
+  "downloading": "DOWNLOADING",
+  "preparingDownloadFormat": "Preparing download ({format})...",
+  "searching": "Searching...",
+  "findingBestMatchYoutube": "Finding best match on YouTube...",
+  "downloadingFlac": "DOWNLOADING FLAC",
+  "fetchingLosslessAudio": "Fetching lossless audio...",
+  "downloadComplete": "DOWNLOAD COMPLETE",
+  "flacSavedToDownloads": "FLAC saved to Downloads",
+  "downloadCompleteNotification": "Download Complete",
+  "flacUnavailable": "FLAC UNAVAILABLE",
+  "flacUnavailableDesc": "FLAC not available, download failed. Try changing settings.",
+  "flacUnavailableNotification": "FLAC Unavailable",
+  "changeFormatInSettings": "Please change output format in Settings",
+  "flacError": "FLAC ERROR",
+  "couldNotDownloadFlac": "Could not download FLAC.",
+  "downloadingFormat": "Downloading {format}",
+  "savedAsFormat": "Saved as {format}",
+  "downloadFailed": "DOWNLOAD FAILED",
+  "downloadError": "Download error",
+  "playNext": "Play Next",
+  "addToQueue": "Add to Queue",
+  "addToFavorite": "Add to Favorite",
+  "goToArtist": "Go to Artist",
+  "download": "Download",
+  "noAlbumsFound": "No albums found",
+  "moreOptions": "More Options",
+  "titleLabel": "Title",
+  "artistLabel": "Artist",
+  "albumLabel": "Album",
+  "downloadAll": "Download All",
+  "albumRemovedFromPlaylists": "Album removed from playlists",
+  "albumAddedToPlaylists": "Album added to playlists",
+  "startedDownloadingAll": "Started downloading all songs...",
+  "playingFromAlbum": "PLAYING FROM ALBUM",
+  "unknownArtist": "Unknown Artist",
+  "songsCount": "{count} songs",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@deleteFileContent": {
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@folderPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@errorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadingFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryNotLoaded": "Library not loaded.",
+  "noArtistsFound": "No artists found.",
+  "goToLocalLibraryToSelect": "Go to 'Local Library' to select your music folder.",
+  "artistLabel": "ARTIST",
+  "popularOnSpotify": "Popular on Spotify",
+  "songsInLibrary": "{count} songs in library",
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shuffle": "Shuffle",
+  "shufflingArtist": "Shuffling {artistName}...",
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "showMore": "Show More",
+  "showLess": "Show Less",
+  "discography": "Discography",
+  "seeAll": "See All",
+  "newPlaylist": "New Playlist",
+  "noPlaylistsYet": "No playlists yet",
+  "createPlaylist": "Create Playlist",
+  "emptyPlaylist": "Empty Playlist",
+  "emptyPlaylistSubtitle": "Create a new empty playlist",
+  "importFromSpotify": "Import from Spotify",
+  "importFromSpotifySubtitle": "Paste a Spotify playlist URL",
+  "playlistNameHint": "Playlist Name",
+  "importSpotifyPlaylist": "Import Spotify Playlist",
+  "deletePlaylistTitle": "Delete Playlist?",
+  "deletePlaylistConfirm": "Delete '{name}'?",
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistNotFound": "Playlist not found",
+  "noSongsAdded": "No songs added yet",
+  "deleteDownloadsTitle": "Delete Downloads?",
+  "deleteDownloadsConfirm": "This will remove all downloaded songs for this playlist from your device.",
+  "allDownloadsRemoved": "All downloads removed",
+  "rename": "Rename",
+  "removeFromPlaylist": "Remove from Playlist",
+  "renamePlaylist": "Rename Playlist",
+  "listeningStats": "Listening Stats",
+  "topArtist": "Top Artist",
+  "mostListened": "Most Listened",
+  "timeListened": "Time Listened",
+  "totalPlays": "Total Plays",
+  "minutes": "Minutes",
+  "tracks": "Tracks",
+  "songs": "Songs",
+  "artists": "Artists",
+  "noStatsYet": "No stats yet.",
+  "noArtistStatsYet": "No artist stats yet.",
+  "play": "play",
+  "plays": "plays",
+  "min": "min",
+  "share": "Share",
+  "close": "Close",
+  "savedTo": "Saved to \"{path}\"",
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "myTopTrackOn": "My {header} on Simple Player! 🎵",
+  "@myTopTrackOn": {
+    "placeholders": {
+      "header": {
+        "type": "String"
+      }
+    }
+  },
+  "fileMissingHistory": "File missing and not found in history.",
+  "restoring": "RESTORING",
+  "reBuffering": "Re-buffering...",
+  "nowPlaying": "NOW PLAYING",
+  "recentlyPlayed": "Recently Played",
+  "clearHistory": "Clear History",
+  "noHistoryYet": "No history yet",
+  "cloud": "Cloud",
+  "cached": "Cached",
+  "searchingStatus": "SEARCHING",
+  "findingStream": "Finding stream source...",
+  "noStreamMatch": "Could not find a matching stream.",
+  "errorSearchingStream": "Error searching for stream.",
+  "rebufferingFromCloud": "Re-buffering from cloud...",
+  "musicSearch": "Music Search",
+  "songTitleKeyword": "Song Title or Keyword",
+  "searchSpotifyHint": "Search Spotify...",
+  "readySearchSong": "Ready. Search for a song.",
+  "searchingSpotifyFor": "Searching Spotify for \"{keyword}\"...",
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "offline": "Offline",
+  "foundResults": "Found {songCount} songs, {albumCount} albums, {artistCount} artists.",
+  "@foundResults": {
+    "placeholders": {
+      "songCount": {
+        "type": "int"
+      },
+      "albumCount": {
+        "type": "int"
+      },
+      "artistCount": {
+        "type": "int"
+      }
+    }
+  },
+  "noSpotifyResults": "No Spotify results found.",
+  "searchFailedStatus": "Search failed: {error}",
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noInternetConnection": "No Internet Connection",
+  "checkNetworkTryAgain": "Please check your network and try again",
+  "noSuggestionsFound": "No suggestions found.",
+  "statusWithText": "Status: {status}",
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "goodMorning": "Good Morning",
+  "goodAfternoon": "Good Afternoon",
+  "goodEvening": "Good Evening",
+  "shuffleAll": "Shuffle All",
+  "jumpBackIn": "Jump Back In",
+  "yourTopMix": "Your Top Mix",
+  "youMayLike": "You May Like",
+  "yourPlaylists": "Your Playlists",
+  "quickMix": "Quick Mix",
+  "madeForYou": "Made For You",
+  "rediscover": "Rediscover",
+  "doYouRemember": "Do you remember?",
+  "countSongs": "{count, plural, =1{1 Song} other{{count} Songs}}",
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savePlaylistTitle": "Save {title}?",
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savePlaylistContent": "This will create a new playlist with these songs.",
+  "savedAs": "Saved as \"{name}\"!",
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Save",
+  "searchSongsOrAlbumsAndArtistsHint": "Search Songs, Albums or Artists...",
+  "playQueue": "Play Queue",
+  "downloadSong": "Download Song",
+  "sleepTimer": "Sleep Timer",
+  "minutesDuration": "{count, plural, =1{1 Minute} other{{count} Minutes}}",
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursDuration": "{count, plural, =1{1 Hour} other{{count} Hours}}",
+  "@hoursDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "customTime": "Custom Time",
+  "turnOffTimer": "Turn Off Timer",
+  "musicWillStopIn": "Music will stop in {label}",
+  "stopTimer": "Stop Timer ({time})",
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@musicWillStopIn": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "setCustomTimer": "Set Custom Timer",
+  "enterDuration": "Enter duration...",
+  "hourShort": "Hr",
+  "minuteShort": "Min",
+  "secondShort": "Sec",
+  "timerSetForHours": "Timer set for {count} hours",
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSetForMinutes": "Timer set for {count} minutes",
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSetForSeconds": "Timer set for {count} seconds",
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "start": "Start",
+  "switchingTo": "Switching to: {title}",
+  "@switchingTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCouldNotCreateSession": "Error: Could not create session.",
+  "scanToControlPlayback": "Scan with your phone to control playback.",
+  "session": "Session: {id}",
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "close": "Close",
+  "cancel": "Cancel",
+  "loadingCanvas": "Loading canvas...",
+  "searchingSpotify": "Searching Spotify...",
+  "fetchingCanvas": "Fetching Canvas...",
+  "nowPlayingHeader": "Now Playing",
+  "nowPlayingSection": "NOW PLAYING",
+  "upNextSection": "UP NEXT",
+  "recommendationsSection": "RECOMMENDATIONS",
+  "fromLibrarySection": "FROM LIBRARY",
+  "queueIsEmpty": "Queue is empty",
+  "historySection": "HISTORY",
+  "upNextCount": "UP NEXT ({count})",
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fromLibrarySection": "FROM LIBRARY",
+  "fromLibraryCount": "FROM LIBRARY ({count})",
+  "@fromLibraryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recommendationsSection": "RECOMMENDATIONS",
+  "recommendationsCount": "RECOMMENDATIONS ({count})",
+  "@recommendationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "queueIsEmpty": "Queue is empty",
+  "noSongPlaying": "No Song Playing",
+  "selectTrackToStart": "Select a track to start",
+  "importLabel": "Import",
+  "saveLabel": "Save",
+  "refreshLabel": "Refresh",
+  "hideTranslation": "Hide Translation",
+  "translateLabel": "Translate",
+  "lyricsByLRCLIB": "Lyrics by LRCLIB",
+  "importLyricsFile": "Import Lyrics File",
+  "overwriteLrcWarning": "This song already has a local .lrc file.\nDo you want to overwrite it?",
+  "saveLrcPrompt": "Save current lyrics next to the audio file?",
+  "overwrite": "Overwrite",
+  "lyricsSavedSuccess": "Lyrics saved as .lrc file",
+  "lyricsSaveError": "Failed to save lyrics",
+  "equalizer": "Equalizer",
+  "trackDetails": "Track Details",
+  "audioQuality": "Audio Quality",
+  "formatLabel": "Format",
+  "codecLabel": "Codec",
+  "bitrateLabel": "Bitrate",
+  "sampleRateLabel": "Sample Rate",
+  "bitDepthLabel": "Bit Depth",
+  "channelsLabel": "Channels",
+  "fileSizeLabel": "File Size",
+  "fileLocation": "File Location",
+  "audioSource": "Audio Source",
+  "pathLabel": "Path",
+  "inputLabel": "Input",
+  "engineLabel": "Engine",
+  "eqLabel": "EQ",
+  "dspLabel": "DSP",
+  "androidMixer": "Android Mixer",
+  "bypassedBitPerfect": "Bypassed (Bit-Perfect)",
+  "resamplingLabel": "Resampling",
+  "activeNoResampling": "Active (No resampling needed)",
+  "nativeRate": "Native rate",
+  "signalOutput": "Signal Output",
+  "outputLabel": "Output",
+  "samplingRateLabel": "Sampling Rate",
+  "bitsLabel": "Bits",
+  "statusLabel": "Status",
+  "unknown": "Unknown",
+  "unknownDevice": "Unknown Device",
+  "systemDefault": "System Default",
+  "customDevice": "Custom Device",
+  "sharedMode": "Shared",
+  "exclusiveMode": "Exclusive",
+  "androidAudioTrack": "Android AudioTrack",
+  "songInformation": "Song Information",
+  "selectVersion": "Select Version",
+  "searchYoutubeHint": "Search YouTube...",
+  "androidAudioEffectsNote": "Note: Audio effects are only audible on Android devices.",
+  "deletePreset": "Delete Preset",
+  "saveAsNewPreset": "Save as New Preset",
+  "savePreset": "Save Preset",
+  "enterPresetName": "Enter preset name (e.g. My Bass)",
+  "presetSaved": "Preset saved!",
+  "selectVersion": "Select Version",
+  "miniPlayer": "Mini Player",
+  "listeningParty": "Listening Party",
+  "songInformation": "Song Information",
+  "audioOutput": "Audio Output",
+  "lyricsTooltip": "Lyrics",
+  "queueTooltip": "Queue",
+  "moreOptionsTooltip": "More Options",
+  "muteTooltip": "Mute",
+  "unmuteTooltip": "Unmute",
+  "fullScreenPlayerTooltip": "Full Screen Player",
+  "importLyricsTooltip": "Import Lyrics",
+  "saveLyricsTooltip": "Save Lyrics",
+  "refreshLyricsTooltip": "Refresh Lyrics",
+  "translateLyricsTooltip": "Translate Lyrics"
+}

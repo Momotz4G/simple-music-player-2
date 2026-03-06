@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/grouped_albums_provider.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/album_model.dart';
 import '../components/album_card.dart';
 
@@ -20,12 +21,12 @@ class AlbumsPage extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.album_outlined,
-                size: 64, color: textColor.withOpacity(0.3)),
+                size: 64, color: textColor.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             Text(
-              "No albums found",
+              AppLocalizations.of(context)!.noAlbumsFound,
               style: TextStyle(
-                color: textColor.withOpacity(0.5),
+                color: textColor.withValues(alpha: 0.5),
                 fontSize: 16,
               ),
             ),
@@ -44,7 +45,7 @@ class AlbumsPage extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.only(top: 24, bottom: 16),
               child: Text(
-                "Albums",
+                AppLocalizations.of(context)!.albums,
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -65,14 +66,21 @@ class AlbumsPage extends ConsumerWidget {
               (context, index) {
                 final albumName = groupedAlbums.keys.elementAt(index);
                 final songs = groupedAlbums[albumName]!;
-                final artistName =
-                    songs.isNotEmpty ? songs.first.artist : "Unknown Artist";
+                final artistName = songs.isNotEmpty
+                    ? songs.first.artist
+                    : AppLocalizations.of(context)!.unknownArtist;
+
+                final year = songs
+                        .firstWhere((s) => s.year != null && s.year!.isNotEmpty,
+                            orElse: () => songs.first)
+                        .year ??
+                    "Unknown";
 
                 return AlbumCard(
                   albumName: albumName,
                   artistName: artistName,
                   songs: songs,
-                  year: "Unknown", // Placeholder for local albums
+                  year: year,
                   onTap: () {
                     // Create a local AlbumModel
                     final album = AlbumModel(
@@ -80,7 +88,7 @@ class AlbumsPage extends ConsumerWidget {
                       title: albumName,
                       artist: artistName,
                       imageUrl: "", // Detail page will fetch/find it
-                      releaseDate: "2023",
+                      releaseDate: year,
                       localSongs: songs, // PASS LOCAL SONGS
                     );
 

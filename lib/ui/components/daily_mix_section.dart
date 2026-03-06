@@ -5,6 +5,7 @@ import '../../models/daily_mix_model.dart';
 import '../../models/song_model.dart';
 import '../../providers/playlist_provider.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Displays Daily Mix playlist cards in a horizontal scroll
 class DailyMixSection extends ConsumerWidget {
@@ -21,14 +22,16 @@ class DailyMixSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (mixes.isEmpty) return const SizedBox.shrink();
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
           child: Text(
-            "Made For You",
-            style: TextStyle(
+            l10n.madeForYou,
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
@@ -40,6 +43,7 @@ class DailyMixSection extends ConsumerWidget {
           child: Listener(
             onPointerDown: (_) => onScrollFocus?.call(true),
             onPointerUp: (_) => onScrollFocus?.call(false),
+            onPointerCancel: (_) => onScrollFocus?.call(false),
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 32.0),
               scrollDirection: Axis.horizontal,
@@ -90,7 +94,7 @@ class _DailyMixCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -117,7 +121,7 @@ class _DailyMixCard extends ConsumerWidget {
 
               // Song count
               Text(
-                "${mix.songs.length} Songs",
+                AppLocalizations.of(context)!.countSongs(mix.songs.length),
                 style: TextStyle(
                   color: Colors.grey[400],
                   fontSize: 12,
@@ -160,23 +164,23 @@ class _DailyMixCard extends ConsumerWidget {
   }
 
   void _showSaveDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text("Save ${mix.title}?"),
-        content:
-            const Text("This will create a new playlist with these songs."),
+        title: Text(l10n.savePlaylistTitle(mix.title)),
+        content: Text(l10n.savePlaylistContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               _saveAsPlaylist(ref, context);
             },
-            child: const Text("Save"),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -229,7 +233,8 @@ class _DailyMixCard extends ConsumerWidget {
         .addSongsToPlaylist(newPlaylist.id, songs);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Saved as '$playlistName'!")),
+      SnackBar(
+          content: Text(AppLocalizations.of(context)!.savedAs(playlistName))),
     );
   }
 }

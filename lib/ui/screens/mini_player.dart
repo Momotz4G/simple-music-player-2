@@ -13,6 +13,7 @@ import '../../utils/chinese_romanizer.dart';
 import '../../utils/japanese_romanizer.dart';
 import '../../utils/korean_romanizer.dart';
 import '../../utils/translation_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key});
@@ -312,7 +313,10 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                                                       padding: EdgeInsets.zero,
                                                       constraints:
                                                           const BoxConstraints(),
-                                                      tooltip: "Toggle Lyrics",
+                                                      tooltip:
+                                                          AppLocalizations.of(
+                                                                  context)!
+                                                              .toggleLyrics,
                                                     ),
                                                   ],
                                                 ),
@@ -367,7 +371,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                       child: IconButton(
                         icon: const Icon(Icons.open_in_full_rounded,
                             color: Colors.white54, size: 20),
-                        tooltip: "Expand",
+                        tooltip: AppLocalizations.of(context)!.expand,
                         onPressed: () {
                           ref.read(interfaceProvider.notifier).exitMiniPlayer();
                         },
@@ -429,6 +433,8 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
       }
     }
 
+    final accentColor = Theme.of(context).colorScheme.primary;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -443,8 +449,8 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
               key: ValueKey(currentText),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: currentIndex >= 0 ? accentColor : Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -456,14 +462,17 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
               currentRoman,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white54,
+              style: TextStyle(
+                color: currentIndex >= 0
+                    ? accentColor.withOpacity(0.8)
+                    : Colors.white54,
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
               ),
             ),
-          // Translation (if cached)
-          if (currentIndex >= 0) ...{
+          // Translation (if cached AND translation toggle is on)
+          if (currentIndex >= 0 &&
+              ref.watch(lyricsProvider).showTranslation) ...{
             Builder(builder: (context) {
               final song = ref.read(playerProvider).currentSong;
               if (song == null) return const SizedBox.shrink();
@@ -478,8 +487,10 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                 '(${translations[currentIndex]})',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white38,
+                style: TextStyle(
+                  color: currentIndex >= 0
+                      ? accentColor.withOpacity(0.6)
+                      : Colors.white38,
                   fontSize: 11,
                 ),
               );

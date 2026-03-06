@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart' as ja;
 
 import '../../providers/player_provider.dart';
 import '../../models/song_model.dart';
+import '../../l10n/app_localizations.dart';
 import 'smart_art.dart';
 
 class QueueDrawer extends ConsumerWidget {
@@ -55,12 +56,13 @@ class QueueDrawer extends ConsumerWidget {
     // Theme Colors
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark
-        ? const Color(0xFF1E1E1E).withOpacity(0.9)
-        : Colors.white.withOpacity(0.95);
+        ? const Color(0xFF1E1E1E).withValues(alpha: 0.9)
+        : Colors.white.withValues(alpha: 0.95);
     final textColor = isDark ? Colors.white : Colors.black;
     final subTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
     final dividerColor = isDark ? Colors.white12 : Colors.black12;
     final accentColor = Theme.of(context).colorScheme.primary;
+    final l10n = AppLocalizations.of(context)!;
 
     final screenWidth = MediaQuery.of(context).size.width;
     final drawerWidth = (screenWidth * 0.5).clamp(320.0, double.infinity);
@@ -84,7 +86,7 @@ class QueueDrawer extends ConsumerWidget {
                       Icon(Icons.queue_music, color: accentColor),
                       const SizedBox(width: 12),
                       Text(
-                        "Play Queue",
+                        l10n.playQueue,
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -110,7 +112,7 @@ class QueueDrawer extends ConsumerWidget {
                       if (currentSong != null) ...[
                         SliverToBoxAdapter(
                           child: _buildSectionHeader(
-                              "NOW PLAYING", subTextColor, context),
+                              l10n.nowPlayingSection, subTextColor, context),
                         ),
                         SliverToBoxAdapter(
                           child: _buildQueueTile(
@@ -133,7 +135,7 @@ class QueueDrawer extends ConsumerWidget {
                           child: Padding(
                             padding: const EdgeInsets.only(top: 16),
                             child: _buildSectionHeader(
-                                "UP NEXT (${userQueue.length})",
+                                l10n.upNextCount(userQueue.length),
                                 subTextColor,
                                 context),
                           ),
@@ -167,7 +169,7 @@ class QueueDrawer extends ConsumerWidget {
                           child: Padding(
                             padding: const EdgeInsets.only(top: 16),
                             child: _buildSectionHeader(
-                                "FROM LIBRARY (${totalLibraryCount})",
+                                l10n.fromLibraryCount(totalLibraryCount),
                                 subTextColor,
                                 context),
                           ),
@@ -208,7 +210,8 @@ class QueueDrawer extends ConsumerWidget {
                           child: Padding(
                             padding: const EdgeInsets.only(top: 16),
                             child: _buildSectionHeader(
-                                "RECOMMENDATIONS (${playerState.recommendationQueue.length})",
+                                l10n.recommendationsCount(
+                                    playerState.recommendationQueue.length),
                                 Colors.purple[300],
                                 context),
                           ),
@@ -241,10 +244,10 @@ class QueueDrawer extends ConsumerWidget {
                           upNextFromLibrary.isEmpty &&
                           playerState.recommendationQueue.isEmpty &&
                           currentSong == null) ...[
-                        const SliverToBoxAdapter(
+                        SliverToBoxAdapter(
                           child: Padding(
-                            padding: EdgeInsets.all(40.0),
-                            child: Center(child: Text("Queue is empty")),
+                            padding: const EdgeInsets.all(40.0),
+                            child: Center(child: Text(l10n.queueIsEmpty)),
                           ),
                         )
                       ],
@@ -299,7 +302,7 @@ class QueueDrawer extends ConsumerWidget {
       // ... (Keep existing BoxDecoration logic)
       decoration: isNowPlaying
           ? BoxDecoration(
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               border: Border(
                 left: BorderSide(color: accentColor, width: 4),
               ),
@@ -415,7 +418,7 @@ class QueueDrawer extends ConsumerWidget {
         background: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 20),
-          color: Colors.red.withOpacity(0.8),
+          color: Colors.red.withValues(alpha: 0.8),
           child: const Icon(Icons.delete, color: Colors.white),
         ),
         child: interactiveTile,

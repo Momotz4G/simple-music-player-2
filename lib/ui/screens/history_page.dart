@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:metadata_god/metadata_god.dart';
+import '../../l10n/app_localizations.dart';
 
 import '../../data/schemas.dart'; // Required for HistoryEntry
 import '../../providers/history_provider.dart';
@@ -30,6 +30,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   Future<void> _handleSongTap(HistoryEntry entry) async {
     if (_isRestoring) return;
 
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+
     final file = File(entry.originalFilePath);
 
     // CASE 1: File still exists (Local or Cached) -> PLAY
@@ -50,13 +53,15 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 
     // CASE 2: File Deleted/Cleared (Restore Logic)
     if (entry.youtubeUrl.isEmpty) {
-      // 🚀 FIX: Perform Just-In-Time Search if URL is missing
-      showCenterNotification(context,
-          label: "SEARCHING",
-          title: entry.title,
-          subtitle: "Finding stream source...",
-          artPath: entry.albumArtUrl,
-          onlineArtUrl: entry.albumArtUrl);
+      if (mounted) {
+        // 🚀 FIX: Perform Just-In-Time Search if URL is missing
+        showCenterNotification(context,
+            label: l10n.searchingStatus,
+            title: entry.title,
+            subtitle: l10n.findingStream,
+            artPath: entry.albumArtUrl,
+            onlineArtUrl: entry.albumArtUrl);
+      }
 
       try {
         final meta = SongMetadata(
@@ -84,31 +89,32 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           await ref.read(historyProvider.notifier).updateHistoryEntry(entry);
         } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text("Could not find a matching stream.")),
+            messenger.showSnackBar(
+              SnackBar(content: Text(l10n.noStreamMatch)),
             );
           }
           return;
         }
       } catch (e) {
-        print("Search failed: $e");
+        debugPrint("Search failed: $e");
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Error searching for stream.")),
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.errorSearchingStream)),
           );
         }
         return;
       }
     }
 
-    setState(() => _isRestoring = true);
-    showCenterNotification(context,
-        label: "RESTORING",
-        title: entry.title,
-        subtitle: "Re-buffering from cloud...",
-        artPath: entry.albumArtUrl,
-        onlineArtUrl: entry.albumArtUrl);
+    if (mounted) {
+      setState(() => _isRestoring = true);
+      showCenterNotification(context,
+          label: l10n.restoring,
+          title: entry.title,
+          subtitle: l10n.rebufferingFromCloud,
+          artPath: entry.albumArtUrl,
+          onlineArtUrl: entry.albumArtUrl);
+    }
 
     try {
       // Reconstruct Metadata object
@@ -144,7 +150,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         ref.read(playerProvider.notifier).playSong(song);
       }
     } catch (e) {
-      print("Restore failed: $e");
+      debugPrint("Restore failed: $e");
     } finally {
       if (mounted) setState(() => _isRestoring = false);
     }
@@ -171,7 +177,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                "Recently Played",
+                AppLocalizations.of(context)!.recentlyPlayed,
                 style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
               ),
               centerTitle: false,
@@ -182,7 +188,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 IconButton(
                   icon: const Icon(Icons.delete_outline),
                   color: Colors.redAccent,
-                  tooltip: "Clear History",
+                  tooltip: AppLocalizations.of(context)!.clearHistory,
                   onPressed: () => historyNotifier.clearHistory(),
                 ),
               const SizedBox(width: 8),
@@ -193,7 +199,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           if (historyEntries.isEmpty)
             SliverFillRemaining(
               child: Center(
-                  child: Text("No history yet",
+                  child: Text(AppLocalizations.of(context)!.noHistoryYet,
                       style: TextStyle(color: subTextColor))),
             )
           else
@@ -258,15 +264,15 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.2),
+                                color: Colors.orange.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4)),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(Icons.cloud_download,
+                                const Icon(Icons.cloud_download,
                                     size: 10, color: Colors.orange),
-                                SizedBox(width: 4),
-                                Text("Cloud",
-                                    style: TextStyle(
+                                const SizedBox(width: 4),
+                                Text(AppLocalizations.of(context)!.cloud,
+                                    style: const TextStyle(
                                         fontSize: 9,
                                         color: Colors.orange,
                                         fontWeight: FontWeight.bold))
@@ -278,9 +284,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                              color: accentColor.withOpacity(0.2),
+                              color: accentColor.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4)),
-                          child: Text("Cached",
+                          child: Text(AppLocalizations.of(context)!.cached,
                               style: TextStyle(
                                   fontSize: 9,
                                   color: accentColor,
@@ -298,7 +304,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     ],
                   ),
                   trailing: Icon(Icons.play_circle_outline,
-                      size: 24, color: accentColor.withOpacity(0.7)),
+                      size: 24, color: accentColor.withValues(alpha: 0.7)),
                   onTap: () => _handleSongTap(entry),
                 );
               }, childCount: historyEntries.length),

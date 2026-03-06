@@ -10,6 +10,7 @@ import 'package:open_filex/open_filex.dart';
 import '../../models/song_model.dart';
 import '../../providers/player_provider.dart';
 import '../components/smart_art.dart';
+import '../../l10n/app_localizations.dart';
 
 class DownloadsPage extends ConsumerStatefulWidget {
   const DownloadsPage({super.key});
@@ -57,7 +58,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
               }
             }
           } catch (e) {
-            print("Error accessing public directory: $e");
+            debugPrint("Error accessing public directory: $e");
             // 🚀 Hardcoded fallback for offline mode
             path = "/storage/emulated/0/Download/SimpleMusicDownloads";
           }
@@ -100,7 +101,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
         }
       }
     } catch (e) {
-      print("Error loading downloads: $e");
+      debugPrint("Error loading downloads: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -131,19 +132,22 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
         if (!result && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Downloaded to: ${file.parent.path}"),
+              content: Text(
+                  AppLocalizations.of(context)!.downloadedTo(file.parent.path)),
               action: SnackBarAction(
-                label: "OK",
+                label: AppLocalizations.of(context)!.ok,
                 onPressed: () {},
               ),
             ),
           );
         }
       } catch (e) {
-        print("Error opening folder on Android: $e");
+        debugPrint("Error opening folder on Android: $e");
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Folder: ${file.parent.path}")),
+            SnackBar(
+                content: Text(AppLocalizations.of(context)!
+                    .folderPath(file.parent.path))),
           );
         }
       }
@@ -154,10 +158,10 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
   Future<bool> _openFolderOnAndroid(String folderPath) async {
     try {
       final result = await OpenFilex.open(folderPath);
-      print("OpenFilex folder result: ${result.type} - ${result.message}");
+      debugPrint("OpenFilex folder result: ${result.type} - ${result.message}");
       return result.type == ResultType.done;
     } catch (e) {
-      print("open_filex error: $e");
+      debugPrint("open_filex error: $e");
       return false;
     }
   }
@@ -178,6 +182,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
     }
 
     double duration = 0.0;
+    String album = "Downloads";
 
     // 2. Try to read real metadata (overwrites smart fallback if successful)
     try {
@@ -190,17 +195,22 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
       if (metadata.artist != null && metadata.artist!.isNotEmpty) {
         artist = metadata.artist!;
       }
+      if (metadata.album != null && metadata.album!.isNotEmpty) {
+        album = metadata.album!;
+      }
 
       duration = (metadata.durationMs ?? 0) / 1000.0;
     } catch (e) {
-      print("Error reading metadata for play: $e");
+      debugPrint("Error reading metadata for play: $e");
     }
+
+    if (!mounted) return;
 
     // 3. Create SongModel
     final song = SongModel(
       title: title,
       artist: artist,
-      album: "Downloads",
+      album: album,
       filePath: file.path,
       duration: duration,
       fileExtension: p.extension(file.path),
@@ -213,6 +223,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
       final fName = p.basenameWithoutExtension(f.path);
       String qTitle = fName;
       String qArtist = "Unknown Artist";
+      String qAlbum = "Downloads";
 
       // Apply same smart parsing to queue items so they look good too
       if (fName.contains(' - ')) {
@@ -226,7 +237,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
       return SongModel(
         title: qTitle,
         artist: qArtist,
-        album: "Downloads",
+        album: qAlbum,
         filePath: f.path,
         duration: 0,
         fileExtension: p.extension(f.path),
@@ -242,16 +253,17 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Delete File?"),
-        content:
-            Text("Delete '${p.basename(file.path)}'?\nThis cannot be undone."),
+        title: Text(AppLocalizations.of(context)!.deleteFileTitle),
+        content: Text(AppLocalizations.of(context)!
+            .deleteFileContent(p.basename(file.path))),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text("Cancel")),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)!.delete,
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -263,8 +275,9 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
         _loadFiles();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text("Error deleting: $e")));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  AppLocalizations.of(context)!.errorDeleting(e.toString()))));
         }
       }
     }
@@ -306,7 +319,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Downloads',
+                        AppLocalizations.of(context)!.downloads,
                         style: Theme.of(context)
                             .textTheme
                             .headlineMedium
@@ -328,7 +341,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                   IconButton(
                     icon: const Icon(Icons.refresh),
                     onPressed: _loadFiles,
-                    tooltip: "Refresh List",
+                    tooltip: AppLocalizations.of(context)!.refreshList,
                   ),
                 ],
               ),
@@ -346,9 +359,11 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                             children: [
                               Icon(Icons.folder_off,
                                   size: 64,
-                                  color: Colors.grey.withOpacity(0.5)),
+                                  color: Colors.grey.withValues(alpha: 0.5)),
                               const SizedBox(height: 16),
-                              Text("No downloads found",
+                              Text(
+                                  AppLocalizations.of(context)!
+                                      .noDownloadsFound,
                                   style: TextStyle(color: subTextColor)),
                             ],
                           ),
@@ -390,7 +405,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .primary),
-                                    tooltip: "Play",
+                                    tooltip: AppLocalizations.of(context)!.play,
                                     onPressed: () => _playFile(file),
                                   ),
 
@@ -398,7 +413,8 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                                   IconButton(
                                     icon: const Icon(Icons.folder_open,
                                         color: Colors.blueAccent),
-                                    tooltip: "Show in Folder",
+                                    tooltip: AppLocalizations.of(context)!
+                                        .showInFolder,
                                     onPressed: () =>
                                         _openFileLocation(file.path),
                                   ),
@@ -407,7 +423,8 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                                   IconButton(
                                     icon: const Icon(Icons.delete_outline,
                                         color: Colors.redAccent),
-                                    tooltip: "Delete",
+                                    tooltip:
+                                        AppLocalizations.of(context)!.delete,
                                     onPressed: () => _confirmDelete(file),
                                   ),
                                 ],

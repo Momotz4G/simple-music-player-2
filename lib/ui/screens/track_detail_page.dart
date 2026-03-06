@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:palette_generator/palette_generator.dart';
 import '../../models/song_metadata.dart';
 import '../../models/song_model.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/spotify_service.dart';
 import '../../services/smart_download_service.dart';
 import '../../providers/player_provider.dart';
@@ -110,7 +111,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
         );
 
         showCenterNotification(context,
-            label: "PLAYING TRACK",
+            label: AppLocalizations.of(context)!.playingTrack,
             title: song.title,
             subtitle: song.artist,
             artPath: song.filePath,
@@ -171,8 +172,8 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
             end: Alignment.bottomCenter,
             stops: const [0.0, 0.7],
             colors: [
-              _dominantColor.withOpacity(0.7),
-              baseBg.withOpacity(0.8),
+              _dominantColor.withValues(alpha: 0.7),
+              baseBg.withValues(alpha: 0.8),
             ],
           ),
         ),
@@ -205,7 +206,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.4),
+                                  color: Colors.black.withValues(alpha: 0.4),
                                   blurRadius: 30,
                                   offset: const Offset(0, 15),
                                 )
@@ -286,7 +287,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                           Text(
                             "${song.year?.split('-').first ?? "Unknown"} • ${song.duration.toInt() ~/ 60}:${(song.duration.toInt() % 60).toString().padLeft(2, '0')}",
                             style: TextStyle(
-                                color: textColor.withOpacity(0.6),
+                                color: textColor.withValues(alpha: 0.6),
                                 fontSize: 13),
                           ),
                         ],
@@ -303,7 +304,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                               borderRadius: BorderRadius.circular(4),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.4),
+                                  color: Colors.black.withValues(alpha: 0.4),
                                   blurRadius: 40,
                                   offset: const Offset(0, 20),
                                 )
@@ -387,7 +388,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                                   Text(
                                     "${song.year?.split('-').first ?? "Unknown"} • ${song.duration.toInt() ~/ 60}:${(song.duration.toInt() % 60).toString().padLeft(2, '0')}",
                                     style: TextStyle(
-                                        color: textColor.withOpacity(0.7),
+                                        color: textColor.withValues(alpha: 0.7),
                                         fontSize: 13),
                                   ),
                                 ],
@@ -431,47 +432,47 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                     const SizedBox(width: 24),
                     PopupMenuButton<SongAction>(
                       icon: Icon(Icons.more_horiz,
-                          color: textColor.withOpacity(0.7), size: 32),
-                      tooltip: "More Options",
+                          color: textColor.withValues(alpha: 0.7), size: 32),
+                      tooltip: AppLocalizations.of(context)!.moreOptions,
                       onSelected: (action) {
                         SongContextMenuRegion.handleAction(
                             context, ref, action, song);
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                             value: SongAction.download,
                             child: Row(children: [
-                              Icon(Icons.download_rounded),
-                              SizedBox(width: 12),
-                              Text('Download')
+                              const Icon(Icons.download_rounded),
+                              const SizedBox(width: 12),
+                              Text(AppLocalizations.of(context)!.download)
                             ])),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                             value: SongAction.playNext,
                             child: Row(children: [
-                              Icon(Icons.playlist_play),
-                              SizedBox(width: 12),
-                              Text('Play Next')
+                              const Icon(Icons.playlist_play),
+                              const SizedBox(width: 12),
+                              Text(AppLocalizations.of(context)!.playNext)
                             ])),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                             value: SongAction.addToPlaylist,
                             child: Row(children: [
-                              Icon(Icons.playlist_add),
-                              SizedBox(width: 12),
-                              Text('Add to Playlist')
+                              const Icon(Icons.playlist_add),
+                              const SizedBox(width: 12),
+                              Text(AppLocalizations.of(context)!.addToPlaylist)
                             ])),
-                        const PopupMenuItem(
-                            value: SongAction.addToFavorites,
+                        PopupMenuItem(
+                            value: SongAction.addToFavorite,
                             child: Row(children: [
-                              Icon(Icons.favorite_border),
-                              SizedBox(width: 12),
-                              Text('Add to Favorites')
+                              const Icon(Icons.favorite_border),
+                              const SizedBox(width: 12),
+                              Text(AppLocalizations.of(context)!.addToFavorite)
                             ])),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                             value: SongAction.goToArtist,
                             child: Row(children: [
-                              Icon(Icons.person_search),
-                              SizedBox(width: 12),
-                              Text('Go to Artist')
+                              const Icon(Icons.person_search),
+                              const SizedBox(width: 12),
+                              Text(AppLocalizations.of(context)!.goToArtist)
                             ])),
                       ],
                     ),
@@ -519,7 +520,8 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                         overflow: TextOverflow.ellipsis),
                     subtitle: Text(song.artist,
                         style: TextStyle(
-                            color: textColor.withOpacity(0.6), fontSize: 13),
+                            color: textColor.withValues(alpha: 0.6),
+                            fontSize: 13),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                     trailing: Row(
@@ -528,52 +530,55 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                         Text(
                           "${song.duration.toInt() ~/ 60}:${(song.duration.toInt() % 60).toString().padLeft(2, '0')}",
                           style: TextStyle(
-                              color: textColor.withOpacity(0.6), fontSize: 13),
+                              color: textColor.withValues(alpha: 0.6),
+                              fontSize: 13),
                         ),
                         const SizedBox(width: 16),
                         PopupMenuButton<SongAction>(
                           icon: Icon(Icons.more_horiz,
-                              color: textColor.withOpacity(0.6)),
-                          tooltip: "More Options",
+                              color: textColor.withValues(alpha: 0.6)),
+                          tooltip: AppLocalizations.of(context)!.moreOptions,
                           onSelected: (action) {
                             SongContextMenuRegion.handleAction(
                                 context, ref, action, song);
                           },
                           itemBuilder: (context) => [
-                            const PopupMenuItem(
+                            PopupMenuItem(
                                 value: SongAction.download,
                                 child: Row(children: [
-                                  Icon(Icons.download_rounded),
-                                  SizedBox(width: 12),
-                                  Text('Download')
+                                  const Icon(Icons.download_rounded),
+                                  const SizedBox(width: 12),
+                                  Text(AppLocalizations.of(context)!.download)
                                 ])),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                                 value: SongAction.playNext,
                                 child: Row(children: [
-                                  Icon(Icons.playlist_play),
-                                  SizedBox(width: 12),
-                                  Text('Play Next')
+                                  const Icon(Icons.playlist_play),
+                                  const SizedBox(width: 12),
+                                  Text(AppLocalizations.of(context)!.playNext)
                                 ])),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                                 value: SongAction.addToPlaylist,
                                 child: Row(children: [
-                                  Icon(Icons.playlist_add),
-                                  SizedBox(width: 12),
-                                  Text('Add to Playlist')
+                                  const Icon(Icons.playlist_add),
+                                  const SizedBox(width: 12),
+                                  Text(AppLocalizations.of(context)!
+                                      .addToPlaylist)
                                 ])),
-                            const PopupMenuItem(
-                                value: SongAction.addToFavorites,
+                            PopupMenuItem(
+                                value: SongAction.addToFavorite,
                                 child: Row(children: [
-                                  Icon(Icons.favorite_border),
-                                  SizedBox(width: 12),
-                                  Text('Add to Favorites')
+                                  const Icon(Icons.favorite_border),
+                                  const SizedBox(width: 12),
+                                  Text(AppLocalizations.of(context)!
+                                      .addToFavorite)
                                 ])),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                                 value: SongAction.goToArtist,
                                 child: Row(children: [
-                                  Icon(Icons.person_search),
-                                  SizedBox(width: 12),
-                                  Text('Go to Artist')
+                                  const Icon(Icons.person_search),
+                                  const SizedBox(width: 12),
+                                  Text(AppLocalizations.of(context)!.goToArtist)
                                 ])),
                           ],
                         ),

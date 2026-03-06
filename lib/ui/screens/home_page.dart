@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
@@ -20,6 +20,7 @@ import '../../data/schemas.dart';
 // --- SERVICES ---
 // Keep for some stats/legacy if needed, or remove?
 import '../../services/hybrid_service.dart';
+import '../../l10n/app_localizations.dart';
 
 // --- COMPONENTS ---
 import '../components/horizontal_section.dart';
@@ -50,6 +51,14 @@ class _HomePageState extends ConsumerState<HomePage> {
   List<Map<String, dynamic>> _newReleases = [];
 
   ScrollPhysics _pageScrollPhysics = const BouncingScrollPhysics();
+
+  late AppLocalizations _l10n;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _l10n = AppLocalizations.of(context)!;
+  }
 
   @override
   void initState() {
@@ -135,9 +144,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return _l10n.goodMorning;
+    if (hour < 17) return _l10n.goodAfternoon;
+    return _l10n.goodEvening;
   }
 
   List<SongModel> _mapHistoryToSongs(
@@ -218,6 +227,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _setScrollLock(bool isLocked) {
+    if (!mounted) return;
     setState(() {
       _pageScrollPhysics = isLocked
           ? const NeverScrollableScrollPhysics()
@@ -234,7 +244,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     final statsState = ref.watch(statsProvider);
     final historyEntries = ref.watch(historyProvider);
     final playlists = ref.watch(playlistProvider);
-    final settings = ref.watch(settingsProvider); // 🚀 WATCH SETTINGS
 
     // 🚀 AUTO-RELOAD BANNER WHEN MARKET CHANGES
     ref.listen<String>(settingsProvider.select((s) => s.spotifyMarket),
@@ -283,140 +292,151 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: SingleChildScrollView(
-        physics: _pageScrollPhysics,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🚀 FIX: Align with Floating Menu Button (Status Bar + ~12px padding)
-            // Button in MainShell is at: padding.top + 16
-            // We give slightly less top padding here so the localized text centers vertically with the button icon.
-            SizedBox(height: MediaQuery.of(context).padding.top + 12),
-            Padding(
-              padding: EdgeInsets.only(
-                  left: (Platform.isAndroid || Platform.isIOS) ? 72.0 : 32.0,
-                  right: 32.0),
-              child: Row(
-                children: [
-                  Text(
-                    _getGreeting(),
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      color: textColor,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const Spacer(),
-                  // 🚀 REMOTE BUTTON MOVED TO PLAYER BAR
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    onPressed: () {
-                      if (allSongs.isNotEmpty) {
-                        ref.read(playerProvider.notifier).playRandom(allSongs);
-                      }
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: accentColor,
-                      foregroundColor: Colors.white,
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                    ),
-                    icon: const Icon(Icons.shuffle, size: 18),
-                    label: const Text("Shuffle All"),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            if (_newReleases.isNotEmpty)
-              HeroBanner(
-                items: _newReleases,
-                onTap: _onBannerTap,
-              ),
-            const SizedBox(height: 40),
-            if (recentSongs.isNotEmpty)
-              AutoScrollSection(
-                title: "Jump Back In",
-                songs: recentSongs,
-                onScrollFocus: _setScrollLock,
-              ),
-            if (topPlayedSongs.isNotEmpty)
-              AutoScrollSection(
-                title: "Your Top Mix",
-                songs: topPlayedSongs,
-                onScrollFocus: _setScrollLock,
-              ),
-            // 🎵 YOU MAY LIKE + DAILY MIXES
-            Builder(
-              builder: (context) {
-                final dailyMixState = ref.watch(dailyMixProvider);
-                final mixes = dailyMixState.mixes;
-
-                // DEBUG
-                print(
-                    "🏠 HomePage: Daily Mixes - loading: ${dailyMixState.isLoading}, count: ${mixes.length}");
-
-                if (mixes.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-
-                // First mix also used for "You May Like" horizontal song scroll
-                final firstMix = mixes.first;
-                final mixSongs = firstMix.songs
-                    .map((meta) => SongModel(
-                          title: meta.title,
-                          artist: meta.artist,
-                          album: meta.album,
-                          filePath: '',
-                          duration: meta.durationSeconds.toDouble(),
-                          fileExtension: '.mp3',
-                          onlineArtUrl: meta.albumArtUrl,
-                          spotifyId: meta.spotifyId,
-                          isrc: meta.isrc,
-                          deezerId: meta.deezerId,
-                        ))
-                    .toList();
-
-                return Column(
+      body: Listener(
+        onPointerDown: (_) {
+          // 🚀 SAFETY FALLBACK: If user touches the page, ensure scroll is unlocked
+          // unless they are actively dragging a horizontal section (which is handled by children)
+          if (_pageScrollPhysics is NeverScrollableScrollPhysics) {
+            _setScrollLock(false);
+          }
+        },
+        child: SingleChildScrollView(
+          physics: _pageScrollPhysics,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 🚀 FIX: Align with Floating Menu Button (Status Bar + ~12px padding)
+              // Button in MainShell is at: padding.top + 16
+              // We give slightly less top padding here so the localized text centers vertically with the button icon.
+              SizedBox(height: MediaQuery.of(context).padding.top + 12),
+              Padding(
+                padding: EdgeInsets.only(
+                    left: (Platform.isAndroid || Platform.isIOS) ? 72.0 : 32.0,
+                    right: 32.0),
+                child: Row(
                   children: [
-                    // You May Like - horizontal song scroll
-                    AutoScrollSection(
-                      title: "You May Like",
-                      subtitle: firstMix.description,
-                      songs: mixSongs,
-                      onScrollFocus: _setScrollLock,
+                    Text(
+                      _getGreeting(),
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: textColor,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                    // ALL Daily Mixes as playlist cards (Daily Mix 1, 2, 3)
-                    DailyMixSection(
-                      mixes: mixes, // Show ALL mixes
-                      onScrollFocus: _setScrollLock,
+                    const Spacer(),
+                    // 🚀 REMOTE BUTTON MOVED TO PLAYER BAR
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      onPressed: () {
+                        if (allSongs.isNotEmpty) {
+                          ref
+                              .read(playerProvider.notifier)
+                              .playRandom(allSongs);
+                        }
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: accentColor,
+                        foregroundColor: Colors.white,
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                      ),
+                      icon: const Icon(Icons.shuffle, size: 18),
+                      label: Text(_l10n.shuffleAll),
                     ),
                   ],
-                );
-              },
-            ),
-            if (_cachedDeepCuts.isNotEmpty)
-              RediscoverFeed(
-                initialPool: _cachedDeepCuts,
-                allLibrarySongs: allSongs,
+                ),
               ),
-            if (playlists.isNotEmpty)
-              HorizontalPlaylistSection(
-                title: "Your Playlists",
-                playlists: playlists,
-                allLibrarySongs: allSongs,
-                onScrollFocus: _setScrollLock,
+              const SizedBox(height: 24),
+              if (_newReleases.isNotEmpty)
+                HeroBanner(
+                  items: _newReleases,
+                  onTap: _onBannerTap,
+                ),
+              const SizedBox(height: 40),
+              if (recentSongs.isNotEmpty)
+                AutoScrollSection(
+                  title: _l10n.jumpBackIn,
+                  songs: recentSongs,
+                  onScrollFocus: _setScrollLock,
+                ),
+              if (topPlayedSongs.isNotEmpty)
+                AutoScrollSection(
+                  title: _l10n.yourTopMix,
+                  songs: topPlayedSongs,
+                  onScrollFocus: _setScrollLock,
+                ),
+              // 🎵 YOU MAY LIKE + DAILY MIXES
+              Builder(
+                builder: (context) {
+                  final dailyMixState = ref.watch(dailyMixProvider);
+                  final mixes = dailyMixState.mixes;
+
+                  // DEBUG
+                  print(
+                      "🏠 HomePage: Daily Mixes - loading: ${dailyMixState.isLoading}, count: ${mixes.length}");
+
+                  if (mixes.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  // First mix also used for "You May Like" horizontal song scroll
+                  final firstMix = mixes.first;
+                  final mixSongs = firstMix.songs
+                      .map((meta) => SongModel(
+                            title: meta.title,
+                            artist: meta.artist,
+                            album: meta.album,
+                            filePath: '',
+                            duration: meta.durationSeconds.toDouble(),
+                            fileExtension: '.mp3',
+                            onlineArtUrl: meta.albumArtUrl,
+                            spotifyId: meta.spotifyId,
+                            isrc: meta.isrc,
+                            deezerId: meta.deezerId,
+                          ))
+                      .toList();
+
+                  return Column(
+                    children: [
+                      // You May Like - horizontal song scroll
+                      AutoScrollSection(
+                        title: _l10n.youMayLike,
+                        subtitle: firstMix.description,
+                        songs: mixSongs,
+                        onScrollFocus: _setScrollLock,
+                      ),
+                      // ALL Daily Mixes as playlist cards (Daily Mix 1, 2, 3)
+                      DailyMixSection(
+                        mixes: mixes, // Show ALL mixes
+                        onScrollFocus: _setScrollLock,
+                      ),
+                    ],
+                  );
+                },
               ),
-            if (_quickMix.isNotEmpty)
-              HorizontalSection(
-                title: "Quick Mix",
-                songs: _quickMix,
-                onScrollFocus: _setScrollLock,
-              ),
-            const SizedBox(height: 120),
-          ],
+              if (_cachedDeepCuts.isNotEmpty)
+                RediscoverFeed(
+                  initialPool: _cachedDeepCuts,
+                  allLibrarySongs: allSongs,
+                ),
+              if (playlists.isNotEmpty)
+                HorizontalPlaylistSection(
+                  title: _l10n.yourPlaylists,
+                  playlists: playlists,
+                  allLibrarySongs: allSongs,
+                  onScrollFocus: _setScrollLock,
+                ),
+              if (_quickMix.isNotEmpty)
+                HorizontalSection(
+                  title: _l10n.quickMix,
+                  songs: _quickMix,
+                  onScrollFocus: _setScrollLock,
+                ),
+              const SizedBox(height: 120),
+            ],
+          ),
         ),
       ),
     );

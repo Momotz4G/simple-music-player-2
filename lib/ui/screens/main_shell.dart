@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart'; // 🚀 IMPORT
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,6 +23,64 @@ import '../components/player_bar.dart';
 import '../components/queue_drawer.dart';
 import '../components/ambient_background.dart';
 import '../components/top_search_bar.dart';
+import '../components/themes/winter/snow_fall_widget.dart';
+import '../components/themes/winter/santa_sleigh_widget.dart';
+import '../components/themes/winter/animated_tree_widget.dart';
+import '../components/themes/winter/hanging_lights_widget.dart';
+import '../components/themes/winter/snow_pack_widget.dart';
+
+import '../components/themes/autumn/falling_leaves_widget.dart';
+import '../components/themes/autumn/autumn_tree_widget.dart';
+import '../components/themes/autumn/pumpkin_pack_widget.dart';
+import '../components/themes/autumn/autumn_lights_widget.dart';
+
+import '../components/themes/rainy_city/rain_fall_widget.dart';
+import '../components/themes/rainy_city/city_skyline_widget.dart';
+import '../components/themes/rainy_city/wet_ground_widget.dart';
+import '../components/themes/rainy_city/neon_signs_widget.dart';
+import '../components/themes/rainy_city/lightning_widget.dart';
+
+import '../components/themes/sakura/sakura_petals_widget.dart';
+import '../components/themes/sakura/sakura_tree_widget.dart';
+import '../components/themes/sakura/petal_pack_widget.dart';
+import '../components/themes/sakura/sakura_lanterns_widget.dart';
+import '../components/themes/sakura/sakura_pagoda_widget.dart';
+import '../components/themes/sakura/mount_fuji_widget.dart';
+
+import '../components/themes/lunar/falling_hongbao_widget.dart';
+import '../components/themes/lunar/firecrackers_widget.dart';
+import '../components/themes/lunar/lunar_lanterns_widget.dart';
+import '../components/themes/lunar/hongbao_pack_widget.dart';
+import '../components/themes/lunar/lunar_gateway_widget.dart';
+import '../components/themes/lunar/fireworks_widget.dart';
+
+import '../components/themes/cyberpunk/retro_sun_widget.dart';
+import '../components/themes/cyberpunk/cyber_grid_widget.dart';
+import '../components/themes/cyberpunk/neon_skyscrapers_widget.dart';
+import '../components/themes/cyberpunk/flying_vehicles_widget.dart';
+import '../components/themes/cyberpunk/digital_glitch_widget.dart';
+
+import '../components/themes/underwater/ocean_rays_widget.dart';
+import '../components/themes/underwater/bubbles_widget.dart';
+import '../components/themes/underwater/seaweed_widget.dart';
+import '../components/themes/underwater/realistic_whale_widget.dart';
+import '../components/themes/underwater/fish_swarm_widget.dart';
+import '../components/themes/nordic/aurora_borealis_widget.dart';
+import '../components/themes/nordic/starry_sky_widget.dart';
+import '../components/themes/nordic/winter_forest_widget.dart';
+import '../components/themes/nordic/cozy_cabin_widget.dart';
+import '../components/themes/nordic/milky_way_effect_widget.dart';
+import '../components/themes/nordic/boreal_lodge_widget.dart';
+import '../components/themes/galactic/deep_space_nebula_widget.dart';
+import '../components/themes/galactic/cosmic_stars_widget.dart';
+import '../components/themes/galactic/earth_view_widget.dart';
+import '../components/themes/galactic/satellite_widget.dart';
+import '../components/themes/galactic/rocket_widget.dart';
+
+import '../components/themes/desert/desert_sun_widget.dart';
+import '../components/themes/desert/rolling_dunes_widget.dart';
+import '../components/themes/desert/camel_caravan_widget.dart';
+import '../components/themes/desert/heat_distortion_widget.dart';
 
 // --- SCREEN IMPORTS ---
 import 'library_page.dart';
@@ -54,6 +113,7 @@ import '../../providers/interface_provider.dart';
 import 'mini_player.dart';
 import '../../models/download_progress.dart';
 import '../components/debug_panel.dart';
+import '../components/whats_new_dialog.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
@@ -112,9 +172,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       // 🚀 Show toast when transitioning from offline to online
       if (_wasOffline && isOnline && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Row(
-              children: const [
+              children: [
                 Icon(Icons.wifi, color: Colors.white),
                 SizedBox(width: 12),
                 Text('Connected to Internet'),
@@ -196,7 +256,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
         title: Row(
-          children: const [
+          children: [
             Icon(Icons.system_update_rounded, color: Colors.blue),
             SizedBox(width: 8),
             Text("Binaries Update Required"),
@@ -224,7 +284,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               "This update is required for YouTube downloads to work correctly.",
               style: TextStyle(fontSize: 13),
             ),
@@ -270,7 +330,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           return AlertDialog(
             backgroundColor: Theme.of(context).cardColor,
             title: Row(
-              children: const [
+              children: [
                 Icon(Icons.download_rounded, color: Colors.blue),
                 SizedBox(width: 8),
                 Text("Updating yt-dlp"),
@@ -332,58 +392,30 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Future<void> _checkWhatsNew() async {
-    final prefs = await SharedPreferences.getInstance();
     final info = await PackageInfo.fromPlatform();
     final currentVersion = info.version;
-    final lastVersion = prefs.getString('last_start_version');
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastVersion = prefs.getString('last_seen_whats_new_version');
 
     if (lastVersion != currentVersion) {
-      // New version detected!
+      // New version detected or first time!
       final release = await _updateService.getLatestRelease();
-      if (release != null && mounted) {
-        // Only show if the tag matches or contains the current version (approx)
-        // or just show it anyway as "What's New in the invalid latest"
-        // Better: Show it if we updated.
-        _showWhatsNewDialog(release, currentVersion);
-        await prefs.setString('last_start_version', currentVersion);
+      if (mounted && release != null) {
+        _showWhatsNewDialog(
+            release['tag_name'] ?? currentVersion, release['body'] ?? "");
+        await prefs.setString('last_seen_whats_new_version', currentVersion);
       }
     }
   }
 
-  void _showWhatsNewDialog(Map<String, dynamic> release, String version) {
+  void _showWhatsNewDialog(String version, String changelog) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).cardColor,
-        title: Row(
-          children: [
-            const Icon(Icons.celebration, color: Colors.orange),
-            const SizedBox(width: 8),
-            Text("What's New in v$version"),
-          ],
-        ),
-        content: SizedBox(
-          width: 500,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  release['body'] ?? "No changelog available.",
-                  style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyMedium?.color),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Awesome!"),
-          ),
-        ],
+      barrierDismissible: true,
+      builder: (context) => WhatsNewDialog(
+        version: version,
+        changelog: changelog,
       ),
     );
   }
@@ -655,14 +687,18 @@ class _MainShellState extends ConsumerState<MainShell> {
     final playerState = ref.watch(playerProvider);
     final isLyricsVisible = playerState.isLyricsVisible;
 
-    // 🚀 WATCH NAVIGATION STACK
     final navigationStack = ref.watch(navigationStackProvider);
 
+    final settings = ref.watch(settingsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final glassBgColor = isDark
-        ? const Color(0xFF121212).withOpacity(0.7)
-        : Colors.white.withOpacity(0.7);
+    final glassBgColor = settings.atmosphereTheme == AtmosphereTheme.winter
+        ? const Color(0xFF0F172A).withValues(alpha: 0.7) // Snowy night color
+        : settings.atmosphereTheme == AtmosphereTheme.autumn
+            ? const Color(0xFF2D1B0D).withValues(alpha: 0.7) // Autumn sunset
+            : isDark
+                ? const Color(0xFF121212).withValues(alpha: 0.7)
+                : Colors.white.withValues(alpha: 0.7);
 
     return Focus(
       autofocus: true,
@@ -696,6 +732,19 @@ class _MainShellState extends ConsumerState<MainShell> {
         onPopInvokedWithResult: (didPop, result) {
           if (didPop) return; // Already popped, nothing to do
 
+          // 0. If any drawer is open (sidebar menu or queue), close it first
+          final scaffoldState = _scaffoldKey.currentState;
+          if (scaffoldState != null) {
+            if (scaffoldState.isDrawerOpen) {
+              scaffoldState.closeDrawer();
+              return;
+            }
+            if (scaffoldState.isEndDrawerOpen) {
+              scaffoldState.closeEndDrawer();
+              return;
+            }
+          }
+
           // 1. If navigation stack has items, pop the last one
           if (navigationStack.isNotEmpty) {
             ref.read(navigationStackProvider.notifier).pop();
@@ -716,13 +765,13 @@ class _MainShellState extends ConsumerState<MainShell> {
             builder: (ctx) => AlertDialog(
               backgroundColor: Theme.of(context).cardColor,
               title: Text(
-                'Exit App?',
+                'Keluar Aplikasi?',
                 style: TextStyle(
                   color: isDark ? Colors.white : Colors.black,
                 ),
               ),
               content: Text(
-                'Are you sure you want to exit?',
+                'Apakah Anda yakin ingin keluar?',
                 style: TextStyle(
                   color: isDark ? Colors.grey[300] : Colors.grey[700],
                 ),
@@ -731,7 +780,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(),
                   child: Text(
-                    'Cancel',
+                    'Batal',
                     style: TextStyle(
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
@@ -740,7 +789,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 TextButton(
                   onPressed: () => SystemNavigator.pop(),
                   child: const Text(
-                    'Exit',
+                    'Keluar',
                     style: TextStyle(color: Colors.redAccent),
                   ),
                 ),
@@ -753,7 +802,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           endDrawer: const QueueDrawer(),
           // 🚀 MOBILE: Navigation Drawer (Hamburger Menu)
           drawer: !isDesktop
-              ? _buildMobileDrawer(context, currentView, isDark)
+              ? _buildMobileDrawer(context, currentView, isDark, settings)
               : null,
           body: Stack(
             children: [
@@ -761,6 +810,57 @@ class _MainShellState extends ConsumerState<MainShell> {
               const Positioned.fill(
                 child: AmbientBackground(),
               ),
+              // --- BACKGROUND ATMOSPHERE LAYERS ---
+              if (settings.atmosphereTheme == AtmosphereTheme.winter) ...[
+                const Positioned.fill(child: SnowFallWidget()),
+                const Positioned.fill(child: SantaSleighWidget()),
+              ] else if (settings.atmosphereTheme ==
+                  AtmosphereTheme.autumn) ...[
+                const Positioned.fill(child: FallingLeavesWidget()),
+              ] else if (settings.atmosphereTheme ==
+                  AtmosphereTheme.rainyCity) ...[
+                const Positioned.fill(child: LightningWidget()),
+                const Positioned.fill(child: RainFallWidget()),
+              ] else if (settings.atmosphereTheme ==
+                  AtmosphereTheme.sakura) ...[
+                const Positioned.fill(child: SakuraPetalsWidget()),
+              ] else if (settings.atmosphereTheme ==
+                  AtmosphereTheme.lunarNewYear) ...[
+                const Positioned.fill(child: FireworksWidget()),
+                const Positioned.fill(child: FallingHongbaoWidget()),
+              ] else if (settings.atmosphereTheme ==
+                  AtmosphereTheme.cyberpunk) ...[
+                const Positioned.fill(child: RetroSunWidget()),
+                const Positioned.fill(child: NeonSkyscrapersWidget()),
+                const Positioned.fill(child: CyberGridWidget()),
+                const Positioned.fill(child: FlyingVehiclesWidget()),
+              ] else if (settings.atmosphereTheme ==
+                  AtmosphereTheme.underwater) ...[
+                const Positioned.fill(child: OceanRaysWidget()),
+                const Positioned.fill(child: RealisticWhaleWidget()),
+                const Positioned.fill(child: FishSwarmWidget()),
+                const Positioned.fill(child: BubblesWidget()),
+              ] else if (settings.atmosphereTheme ==
+                  AtmosphereTheme.nordicAurora) ...[
+                const Positioned.fill(child: StarrySkyWidget()),
+                const Positioned.fill(child: MilkyWayEffectWidget()),
+                const Positioned.fill(child: AuroraBorealisWidget()),
+                const Positioned.fill(child: BorealLodgeWidget()),
+                const Positioned.fill(child: WinterForestWidget()),
+              ] else if (settings.atmosphereTheme ==
+                  AtmosphereTheme.galactic) ...[
+                const Positioned.fill(child: CosmicStarsWidget()),
+                const Positioned.fill(child: DeepSpaceNebulaWidget()),
+                const Positioned.fill(child: EarthViewWidget()),
+                const Positioned.fill(child: SatelliteWidget()),
+                const Positioned.fill(child: RocketWidget()),
+              ] else if (settings.atmosphereTheme ==
+                  AtmosphereTheme.desertMirage) ...[
+                const Positioned.fill(child: DesertSunWidget()),
+                const Positioned.fill(child: HeatDistortionWidget()),
+                const Positioned.fill(child: RollingDunesWidget()),
+                const Positioned.fill(child: CamelCaravanWidget()),
+              ],
 
               // 2. MAIN CONTENT AREA (Sidebar + Page)
               Positioned.fill(
@@ -773,27 +873,119 @@ class _MainShellState extends ConsumerState<MainShell> {
                     if (isDesktop)
                       _buildSidebar(context, currentView, isDark, glassBgColor),
                     Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: Container(
-                          key: ValueKey(navigationStack.isNotEmpty
-                              ? 'stack_${navigationStack.length}_${navigationStack.last.type}'
-                              : currentView),
-                          padding: navigationStack.isNotEmpty
-                              ? (isDesktop
-                                  ? EdgeInsets.zero
-                                  : const EdgeInsets.only(bottom: 140))
-                              : EdgeInsets.only(bottom: isDesktop ? 105 : 140),
-                          child:
-                              _buildMainContent(navigationStack, currentView),
-                        ),
+                      child: Stack(
+                        children: [
+                          if (settings.atmosphereTheme ==
+                              AtmosphereTheme.winter)
+                            const Positioned(
+                              bottom: 83, // Just above player bar
+                              left: 0,
+                              right: 0,
+                              height: 40,
+                              child: IgnorePointer(child: SnowPackWidget()),
+                            )
+                          else if (settings.atmosphereTheme ==
+                              AtmosphereTheme.autumn)
+                            const Positioned(
+                              bottom: 83,
+                              left: 0,
+                              right: 0,
+                              height: 40,
+                              child: IgnorePointer(child: PumpkinPackWidget()),
+                            )
+                          else if (settings.atmosphereTheme ==
+                              AtmosphereTheme.rainyCity) ...[
+                            Positioned(
+                              bottom: 83,
+                              left: 0,
+                              right: 0,
+                              height: 300, // 2x taller than sidebar
+                              child: IgnorePointer(
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) =>
+                                      CitySkylineWidget(
+                                    height: 300,
+                                    width: constraints.maxWidth,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Positioned(
+                              bottom: 83,
+                              left: 0,
+                              right: 0,
+                              height: 40,
+                              child: IgnorePointer(child: WetGroundWidget()),
+                            ),
+                          ] else if (settings.atmosphereTheme ==
+                              AtmosphereTheme.sakura) ...[
+                            const Positioned(
+                              bottom: 83,
+                              left: 0,
+                              right: 0,
+                              height: 400, // Grand distant mountain
+                              child: IgnorePointer(child: MountFujiWidget()),
+                            ),
+                            Positioned(
+                              bottom: 83,
+                              right: 120, // More center
+                              height: 350, // Much bigger
+                              width: 220, // Much bigger
+                              child: const IgnorePointer(
+                                child:
+                                    SakuraPagodaWidget(height: 350, width: 220),
+                              ),
+                            ),
+                            const Positioned(
+                              bottom: 83,
+                              left: 0,
+                              right: 0,
+                              height: 40,
+                              child: IgnorePointer(child: PetalPackWidget()),
+                            ),
+                          ] else if (settings.atmosphereTheme ==
+                              AtmosphereTheme.lunarNewYear) ...[
+                            const Positioned(
+                              bottom: 83,
+                              left: 0,
+                              right: 0,
+                              height: 300,
+                              child: IgnorePointer(
+                                  child: LunarGatewayWidget(
+                                      height: 300, width: 400)),
+                            ),
+                            const Positioned(
+                              bottom: 83,
+                              left: 0,
+                              right: 0,
+                              height: 40,
+                              child: IgnorePointer(child: HongbaoPackWidget()),
+                            ),
+                          ],
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: Container(
+                              key: ValueKey(navigationStack.isNotEmpty
+                                  ? 'stack_${navigationStack.length}_${navigationStack.last.type}'
+                                  : currentView),
+                              padding: navigationStack.isNotEmpty
+                                  ? (isDesktop
+                                      ? const EdgeInsets.only(bottom: 90)
+                                      : const EdgeInsets.only(bottom: 140))
+                                  : EdgeInsets.only(
+                                      bottom: isDesktop ? 90 : 140),
+                              child: _buildMainContent(
+                                  navigationStack, currentView),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // 3. CUSTOM TITLE BAR (Top Layer - Desktop Only)
+              // 4. CUSTOM TITLE BAR (Top Layer - Desktop Only)
               if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
                 Positioned(
                   top: 0,
@@ -822,6 +1014,36 @@ class _MainShellState extends ConsumerState<MainShell> {
 
               // 4. LYRICS PANEL OVERLAY
               // 4. LYRICS PANEL OVERLAY (Desktop Only)
+
+              // 5. HANGING OVERLAYS (pinned at top, above content)
+              if (settings.atmosphereTheme != AtmosphereTheme.none &&
+                  settings.atmosphereTheme != AtmosphereTheme.underwater &&
+                  settings.atmosphereTheme != AtmosphereTheme.cyberpunk &&
+                  settings.atmosphereTheme != AtmosphereTheme.nordicAurora &&
+                  settings.atmosphereTheme != AtmosphereTheme.galactic &&
+                  settings.atmosphereTheme != AtmosphereTheme.desertMirage)
+                Positioned(
+                  top: (Platform.isWindows ||
+                          Platform.isLinux ||
+                          Platform.isMacOS)
+                      ? 33
+                      : 0,
+                  left: 0,
+                  right: 0,
+                  height: 60,
+                  child: IgnorePointer(
+                    child: settings.atmosphereTheme == AtmosphereTheme.winter
+                        ? const HangingLightsWidget()
+                        : settings.atmosphereTheme == AtmosphereTheme.autumn
+                            ? const AutumnLightsWidget()
+                            : settings.atmosphereTheme == AtmosphereTheme.sakura
+                                ? const SakuraLanternsWidget()
+                                : settings.atmosphereTheme ==
+                                        AtmosphereTheme.lunarNewYear
+                                    ? const LunarLanternsWidget()
+                                    : const NeonSignsWidget(),
+                  ),
+                ),
               if (isDesktop)
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 350),
@@ -848,12 +1070,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                     builder: (scaffoldContext) => Container(
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.black.withOpacity(0.7)
-                            : Colors.white.withOpacity(0.9),
+                            ? Colors.black.withValues(alpha: 0.7)
+                            : Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -884,13 +1106,15 @@ class _MainShellState extends ConsumerState<MainShell> {
   Widget _buildSidebar(BuildContext context, LibraryView currentView,
       bool isDark, Color glassBgColor) {
     final notifier = ref.read(libraryPresentationProvider.notifier);
+    final settings = ref.watch(settingsProvider);
 
     // Check if we are in album mode (or any detail mode)
     final navigationStack = ref.watch(navigationStackProvider);
     final hasSelection = navigationStack.isNotEmpty;
 
-    final separatorColor =
-        isDark ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.2);
+    final separatorColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.grey.withValues(alpha: 0.2);
     final headerTextColor = isDark ? Colors.grey[400] : Colors.grey[700];
 
     return ClipRRect(
@@ -904,173 +1128,261 @@ class _MainShellState extends ConsumerState<MainShell> {
               right: BorderSide(color: separatorColor, width: 1.0),
             ),
           ),
-          child: ListView(
-            padding: const EdgeInsets.only(top: 0),
+          child: Stack(
             children: [
-              _buildNavItem(
-                  context,
-                  'Browse',
-                  Icons.home_rounded,
-                  LibraryView.browse,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              _buildNavItem(
-                  context,
-                  'Search',
-                  Icons.search_rounded,
-                  LibraryView.search,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              _buildNavItem(
-                  context,
-                  'History',
-                  Icons.history_rounded,
-                  LibraryView.history,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              _buildNavItem(
-                  context,
-                  'Stats',
-                  Icons.bar_chart_rounded,
-                  LibraryView.stats,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Divider(
-                    height: 1,
-                    indent: 24,
-                    endIndent: 24,
-                    color: separatorColor),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 24, bottom: 12),
-                child: Text('LIBRARY',
-                    style: TextStyle(
-                        color: headerTextColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        letterSpacing: 1.0)),
-              ),
-              _buildNavItem(
-                  context,
-                  'Playlists',
-                  Icons.playlist_play_rounded,
-                  LibraryView.playlists,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              _buildNavItem(
-                  context,
-                  'Artists',
-                  Icons.person_rounded,
-                  LibraryView.artists,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              _buildNavItem(
-                  context,
-                  'Albums',
-                  Icons.album_rounded,
-                  LibraryView.albums,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              _buildNavItem(
-                  context,
-                  'Local Library',
-                  Icons.folder_rounded,
-                  LibraryView.localLibrary,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Divider(
-                    height: 1,
-                    indent: 24,
-                    endIndent: 24,
-                    color: separatorColor),
-              ),
-              _buildNavItem(
-                  context,
-                  'Downloads',
-                  Icons.download_rounded,
-                  LibraryView.downloads,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              _buildNavItem(
-                  context,
-                  'Metadata Editor',
-                  Icons.build_circle_rounded,
-                  LibraryView.tools,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
-              _buildNavItem(
-                  context,
-                  'Settings',
-                  Icons.settings_rounded,
-                  LibraryView.settings,
-                  currentView,
-                  notifier,
-                  isDark,
-                  hasSelection),
+              if (settings.atmosphereTheme == AtmosphereTheme.cyberpunk)
+                const Positioned.fill(child: DigitalGlitchWidget()),
+              if (settings.atmosphereTheme == AtmosphereTheme.underwater)
+                const Positioned(
+                  bottom: -10,
+                  left: 0,
+                  right: 0,
+                  child: SeaweedWidget(height: 200, width: 250),
+                ),
+              if (settings.atmosphereTheme == AtmosphereTheme.nordicAurora)
+                const Positioned(
+                  bottom: -10,
+                  left: 0,
+                  right: 0,
+                  height: 100,
+                  child: CozyCabinWidget(),
+                ),
+              // Add underlying tree widgets directly in stack before Column
+              if (settings.atmosphereTheme == AtmosphereTheme.winter)
+                const Positioned(
+                  bottom: 83,
+                  left: 0,
+                  right: 0,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: AnimatedTreeWidget(height: 150, width: 250),
+                  ),
+                )
+              else if (settings.atmosphereTheme == AtmosphereTheme.autumn)
+                const Positioned(
+                  bottom: 83,
+                  left: 0,
+                  right: 0,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: AutumnTreeWidget(height: 150, width: 250),
+                  ),
+                )
+              else if (settings.atmosphereTheme == AtmosphereTheme.rainyCity)
+                const Positioned(
+                  bottom: 83,
+                  left: 0,
+                  right: 0,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: CitySkylineWidget(height: 150, width: 250),
+                  ),
+                )
+              else if (settings.atmosphereTheme == AtmosphereTheme.sakura)
+                const Positioned(
+                  bottom: 83,
+                  left: 0,
+                  right: 0,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SakuraTreeWidget(height: 100, width: 250),
+                  ),
+                )
+              else if (settings.atmosphereTheme == AtmosphereTheme.lunarNewYear)
+                const Positioned(
+                  bottom: 83,
+                  left: 0,
+                  right: 0,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: FirecrackersWidget(height: 140, width: 60),
+                  ),
+                ),
+              Column(
+                children: [
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.only(top: 0),
+                      physics: const ClampingScrollPhysics(),
+                      children: [
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.browse,
+                            Icons.home_rounded,
+                            LibraryView.browse,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.search,
+                            Icons.search_rounded,
+                            LibraryView.search,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.history,
+                            Icons.history_rounded,
+                            LibraryView.history,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.stats,
+                            Icons.bar_chart_rounded,
+                            LibraryView.stats,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Divider(
+                              height: 1,
+                              indent: 24,
+                              endIndent: 24,
+                              color: separatorColor),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 24, bottom: 12),
+                          child: Text(AppLocalizations.of(context)!.library,
+                              style: TextStyle(
+                                  color: headerTextColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  letterSpacing: 1.0)),
+                        ),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.playlists,
+                            Icons.playlist_play_rounded,
+                            LibraryView.playlists,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.artists,
+                            Icons.person_rounded,
+                            LibraryView.artists,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.albums,
+                            Icons.album_rounded,
+                            LibraryView.albums,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.local_library,
+                            Icons.folder_rounded,
+                            LibraryView.localLibrary,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Divider(
+                              height: 1,
+                              indent: 24,
+                              endIndent: 24,
+                              color: separatorColor),
+                        ),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.downloads,
+                            Icons.download_rounded,
+                            LibraryView.downloads,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.metadata_editor,
+                            Icons.build_circle_rounded,
+                            LibraryView.tools,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
+                        _buildNavItem(
+                            context,
+                            AppLocalizations.of(context)!.settings,
+                            Icons.settings_rounded,
+                            LibraryView.settings,
+                            currentView,
+                            notifier,
+                            isDark,
+                            hasSelection),
 
-              // 🚀 DOWNLOAD PROGRESS WIDGET
-              ValueListenableBuilder<DownloadProgress?>(
-                valueListenable: _updateService.progressNotifier,
-                builder: (context, progress, child) {
-                  if (progress == null) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: DownloadProgressWidget(progress: progress),
-                  );
-                },
-              ),
+                        // 🚀 DOWNLOAD PROGRESS WIDGET
+                        ValueListenableBuilder<DownloadProgress?>(
+                          valueListenable: _updateService.progressNotifier,
+                          builder: (context, progress, child) {
+                            if (progress == null) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: DownloadProgressWidget(progress: progress),
+                            );
+                          },
+                        ),
 
-              // 🚀 BULK DOWNLOAD PROGRESS WIDGET
-              ValueListenableBuilder<DownloadProgress?>(
-                valueListenable: BulkDownloadService().progressNotifier,
-                builder: (context, progress, child) {
-                  if (progress == null) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: DownloadProgressWidget(
-                      progress: progress,
-                      onCancel: () {
-                        BulkDownloadService().cancelDownload();
-                      },
+                        // 🚀 BULK DOWNLOAD PROGRESS WIDGET
+                        ValueListenableBuilder<DownloadProgress?>(
+                          valueListenable:
+                              BulkDownloadService().progressNotifier,
+                          builder: (context, progress, child) {
+                            if (progress == null) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: DownloadProgressWidget(
+                                progress: progress,
+                                onCancel: () {
+                                  BulkDownloadService().cancelDownload();
+                                },
+                              ),
+                            );
+                          },
+                        ),
+
+                        // 🚀 SINGLE SONG DOWNLOAD PROGRESS WIDGET (from context menu)
+                        ValueListenableBuilder<DownloadProgress?>(
+                          valueListenable:
+                              SmartDownloadService.progressNotifier,
+                          builder: (context, progress, child) {
+                            if (progress == null) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: DownloadProgressWidget(progress: progress),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  );
-                },
-              ),
-
-              // 🚀 SINGLE SONG DOWNLOAD PROGRESS WIDGET (from context menu)
-              ValueListenableBuilder<DownloadProgress?>(
-                valueListenable: SmartDownloadService.progressNotifier,
-                builder: (context, progress, child) {
-                  if (progress == null) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: DownloadProgressWidget(progress: progress),
-                  );
-                },
+                  ),
+                  const SizedBox(height: 83),
+                ],
               ),
             ],
           ),
@@ -1106,7 +1418,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         leading: Icon(icon,
             size: 22, color: isSelected ? selectedTextColor : defaultColor),
         selected: isSelected,
-        selectedTileColor: accentColor.withOpacity(0.1),
+        selectedTileColor: accentColor.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         dense: true,
         onTap: () {
@@ -1119,8 +1431,8 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   // 🚀 MOBILE NAVIGATION DRAWER
-  Widget _buildMobileDrawer(
-      BuildContext context, LibraryView currentView, bool isDark) {
+  Widget _buildMobileDrawer(BuildContext context, LibraryView currentView,
+      bool isDark, SettingsState settings) {
     final notifier = ref.read(libraryPresentationProvider.notifier);
     final navigationStack = ref.watch(navigationStackProvider);
     final hasSelection = navigationStack.isNotEmpty;
@@ -1136,7 +1448,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             Container(
               padding: const EdgeInsets.all(20),
               child: Text(
-                'Navigation',
+                AppLocalizations.of(context)!.navigation,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -1149,7 +1461,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             // Navigation Items
             _buildMobileNavItem(
                 context,
-                'Browse',
+                AppLocalizations.of(context)!.browse,
                 Icons.home_rounded,
                 LibraryView.browse,
                 currentView,
@@ -1159,7 +1471,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 accentColor),
             _buildMobileNavItem(
                 context,
-                'Search',
+                AppLocalizations.of(context)!.search,
                 Icons.search_rounded,
                 LibraryView.search,
                 currentView,
@@ -1169,7 +1481,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 accentColor),
             _buildMobileNavItem(
                 context,
-                'History',
+                AppLocalizations.of(context)!.history,
                 Icons.history_rounded,
                 LibraryView.history,
                 currentView,
@@ -1179,7 +1491,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 accentColor),
             _buildMobileNavItem(
                 context,
-                'Stats',
+                AppLocalizations.of(context)!.stats,
                 Icons.bar_chart_rounded,
                 LibraryView.stats,
                 currentView,
@@ -1191,7 +1503,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             const Divider(height: 16),
             Padding(
               padding: const EdgeInsets.only(left: 20, bottom: 8),
-              child: Text('LIBRARY',
+              child: Text(AppLocalizations.of(context)!.library,
                   style: TextStyle(
                       color: Colors.grey[600],
                       fontWeight: FontWeight.bold,
@@ -1200,7 +1512,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
             _buildMobileNavItem(
                 context,
-                'Playlists',
+                AppLocalizations.of(context)!.playlists,
                 Icons.playlist_play_rounded,
                 LibraryView.playlists,
                 currentView,
@@ -1210,7 +1522,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 accentColor),
             _buildMobileNavItem(
                 context,
-                'Artists',
+                AppLocalizations.of(context)!.artists,
                 Icons.person_rounded,
                 LibraryView.artists,
                 currentView,
@@ -1220,7 +1532,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 accentColor),
             _buildMobileNavItem(
                 context,
-                'Albums',
+                AppLocalizations.of(context)!.albums,
                 Icons.album_rounded,
                 LibraryView.albums,
                 currentView,
@@ -1230,7 +1542,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 accentColor),
             _buildMobileNavItem(
                 context,
-                'Local Library',
+                AppLocalizations.of(context)!.local_library,
                 Icons.folder_rounded,
                 LibraryView.localLibrary,
                 currentView,
@@ -1243,7 +1555,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
             _buildMobileNavItem(
                 context,
-                'Downloads',
+                AppLocalizations.of(context)!.downloads,
                 Icons.download_rounded,
                 LibraryView.downloads,
                 currentView,
@@ -1253,7 +1565,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 accentColor),
             _buildMobileNavItem(
                 context,
-                'Metadata Editor',
+                AppLocalizations.of(context)!.metadata_editor,
                 Icons.build_circle_rounded,
                 LibraryView.tools,
                 currentView,
@@ -1263,7 +1575,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 accentColor),
             _buildMobileNavItem(
                 context,
-                'Settings',
+                AppLocalizations.of(context)!.settings,
                 Icons.settings_rounded,
                 LibraryView.settings,
                 currentView,
@@ -1310,6 +1622,53 @@ class _MainShellState extends ConsumerState<MainShell> {
                 );
               },
             ),
+
+            // 🎄 MOBILE SEASONAL TREE
+            if (settings.atmosphereTheme == AtmosphereTheme.winter) ...[
+              const SizedBox(height: 20),
+              LayoutBuilder(builder: (context, constraints) {
+                return AnimatedTreeWidget(
+                  height: 150,
+                  width: constraints.maxWidth,
+                );
+              }),
+            ] else if (settings.atmosphereTheme == AtmosphereTheme.autumn) ...[
+              const SizedBox(height: 20),
+              LayoutBuilder(builder: (context, constraints) {
+                return AutumnTreeWidget(
+                  height: 150,
+                  width: constraints.maxWidth,
+                );
+              }),
+            ] else if (settings.atmosphereTheme ==
+                AtmosphereTheme.rainyCity) ...[
+              const SizedBox(height: 20),
+              LayoutBuilder(builder: (context, constraints) {
+                return CitySkylineWidget(
+                  height: 150,
+                  width: constraints.maxWidth,
+                );
+              }),
+            ] else if (settings.atmosphereTheme == AtmosphereTheme.sakura) ...[
+              const SizedBox(height: 20),
+              LayoutBuilder(builder: (context, constraints) {
+                return SakuraTreeWidget(
+                  height: 150,
+                  width: constraints.maxWidth,
+                );
+              }),
+            ] else if (settings.atmosphereTheme ==
+                AtmosphereTheme.lunarNewYear) ...[
+              const SizedBox(height: 20),
+              LayoutBuilder(builder: (context, constraints) {
+                return FirecrackersWidget(
+                  height: 180,
+                  width: constraints.maxWidth,
+                );
+              }),
+            ],
+
+            const SizedBox(height: 30), // Padding at the very bottom
           ],
         ),
       ),
@@ -1342,7 +1701,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         ),
       ),
       selected: isSelected,
-      selectedTileColor: accentColor.withOpacity(0.1),
+      selectedTileColor: accentColor.withValues(alpha: 0.1),
       onTap: () {
         // Close drawer first
         Navigator.of(context).pop();
@@ -1429,13 +1788,14 @@ class WindowButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final iconColor = isDark ? Colors.white : Colors.black;
-    final hoverColor =
-        isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
+    final hoverColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.1);
 
     final buttonColors = WindowButtonColors(
         iconNormal: iconColor,
         mouseOver: hoverColor,
-        mouseDown: iconColor.withOpacity(0.2),
+        mouseDown: iconColor.withValues(alpha: 0.2),
         iconMouseOver: iconColor,
         iconMouseDown: iconColor);
 
@@ -1458,7 +1818,7 @@ class WindowButtons extends StatelessWidget {
                 width: 46, // Standard Windows button width
                 height: 32,
                 child: Icon(Icons.info_outline_rounded,
-                    size: 18, color: iconColor.withOpacity(0.7)),
+                    size: 18, color: iconColor.withValues(alpha: 0.7)),
               ),
             ),
           ),

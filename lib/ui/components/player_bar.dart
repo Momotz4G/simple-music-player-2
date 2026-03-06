@@ -15,6 +15,7 @@ import '../../providers/library_presentation_provider.dart';
 import '../../models/song_model.dart';
 import '../screens/full_screen_player.dart';
 import '../screens/mobile_full_player.dart';
+import '../../l10n/app_localizations.dart';
 import 'smart_art.dart';
 import 'timer_display.dart';
 import 'audio_wave_visualizer.dart';
@@ -86,13 +87,15 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
       return const SizedBox.shrink();
     }
 
+    final primaryColor = isDark ? Colors.white : Colors.black;
+
     return Container(
       margin: const EdgeInsets.only(left: 8),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       decoration: BoxDecoration(
         border: Border.all(color: color.withOpacity(0.5), width: 1),
         borderRadius: BorderRadius.circular(4),
-        color: color.withOpacity(0.05),
+        color: primaryColor.withValues(alpha: 0.1),
       ),
       child: Text(
         text,
@@ -154,12 +157,13 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? Colors.white : Colors.black;
+    final l10n = AppLocalizations.of(context)!;
 
     // 🚀 MOBILE: Show simplified mini player bar
     final isMobile = Platform.isAndroid || Platform.isIOS;
     if (isMobile) {
-      return _buildMobilePlayerBar(
-          context, playerState, notifier, song, hasSong, isDark, settings);
+      return _buildMobilePlayerBar(context, playerState, notifier, song,
+          hasSong, isDark, settings, l10n);
     }
 
     // DYNAMIC COLOR LOGIC (Desktop only)
@@ -230,25 +234,29 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                   child: Row(
                     children: [
                       // HERO WRAPPER
-                      Hero(
-                        tag: 'current_artwork',
-                        // ✅ FIX: Use SmartArt here
-                        child: hasSong
-                            ? SmartArt(
-                                path: song.filePath,
-                                size: 56,
-                                borderRadius: 4,
-                                onlineArtUrl: song.onlineArtUrl,
-                              )
-                            : Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                    color: Colors.grey[800],
-                                    borderRadius: BorderRadius.circular(4)),
-                                child: const Icon(Icons.music_note,
-                                    color: Colors.white24),
-                              ),
+                      Tooltip(
+                        message: l10n.lyricsTooltip,
+                        child: Hero(
+                          tag: 'current_artwork',
+                          // ✅ FIX: Use SmartArt here
+                          child: hasSong
+                              ? SmartArt(
+                                  path: song.filePath,
+                                  size: 56,
+                                  borderRadius: 4,
+                                  onlineArtUrl: song.onlineArtUrl,
+                                )
+                              : Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                      color: Colors.grey[800],
+                                      borderRadius: BorderRadius.circular(4)),
+                                  child: Icon(Icons.music_note,
+                                      color:
+                                          primaryColor.withValues(alpha: 0.5)),
+                                ),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -268,7 +276,10 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                               child: GestureDetector(
                                 onSecondaryTapUp: hasSong
                                     ? (details) => _showTitleContextMenu(
-                                        context, details.globalPosition, song)
+                                        context,
+                                        details.globalPosition,
+                                        song,
+                                        l10n)
                                     : null,
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -277,7 +288,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                       child: MarqueeText(
                                         text: hasSong
                                             ? song.title
-                                            : "No Song Playing",
+                                            : l10n.noSongPlaying,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14,
@@ -328,7 +339,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                 child: Text(
                                   hasSong
                                       ? song.artist
-                                      : "Select a track to start",
+                                      : l10n.selectTrackToStart,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -534,7 +545,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
 
                             return IconButton(
                               icon: const Icon(Icons.lyrics_outlined),
-                              tooltip: "Lyrics",
+                              tooltip: l10n.lyricsTooltip,
                               iconSize: 20,
                               color: !hasSong
                                   ? disabledColor
@@ -550,198 +561,210 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
 
                       IconButton(
                         icon: const Icon(Icons.queue_music),
-                        tooltip: "Queue",
+                        tooltip: l10n.queueTooltip,
                         iconSize: 20,
                         color: Colors.grey,
                         onPressed: () => Scaffold.of(context).openEndDrawer(),
                       ),
 
                       // --- MENU BUTTON ---
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert_rounded,
-                            color: Colors.grey, size: 20),
-                        tooltip: "More Options",
-                        color: Theme.of(context).cardColor,
-                        onSelected: (value) {
-                          if (value == 'timer') {
-                            _showTimerDialog(context, ref);
-                          } else if (value == 'equalizer') {
-                            // LAUNCH EQUALIZER SHEET
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) => const EqualizerSheet(),
-                            );
-                          } else if (value == 'version') {
-                            // SELECT VERSION
-                            if (hasSong) {
-                              _showVersionSelector(context, ref, song);
-                            }
-                          } else if (value == 'remote') {
-                            _showRemotePairingDialog();
-                          } else if (value == 'mini') {
-                            ref
-                                .read(interfaceProvider.notifier)
-                                .enterMiniPlayer();
-                          } else if (value == 'song_info') {
-                            // SHOW SONG INFORMATION DIALOG
-                            if (hasSong) {
-                              SongInfoDialog.show(context, song);
-                            }
-                          } else if (value == 'audio_output') {
-                            if (hasSong) {
-                              showDialog(
+                      Tooltip(
+                        message: l10n.moreOptionsTooltip,
+                        child: PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert_rounded,
+                              color: Colors.grey, size: 20),
+                          color: Theme.of(context).cardColor,
+                          onSelected: (value) {
+                            if (value == 'timer') {
+                              _showTimerDialog(context, ref, l10n);
+                            } else if (value == 'equalizer') {
+                              // LAUNCH EQUALIZER SHEET
+                              showModalBottomSheet(
                                 context: context,
-                                builder: (context) => AudioOutputDialog(
-                                  audioInfo: _audioInfo,
-                                  filePath: song.filePath,
-                                ),
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) => const EqualizerSheet(),
                               );
-                            }
-                          }
-                        },
-                        itemBuilder: (context) {
-                          final isTimerActive =
-                              ref.read(timerProvider).isActive;
-                          return [
-                            // 1. SLEEP TIMER OPTION
-                            PopupMenuItem(
-                              value: 'timer',
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    isTimerActive
-                                        ? Icons.timer_rounded
-                                        : Icons.timer_outlined,
-                                    color: isTimerActive
-                                        ? settings.accentColor
-                                        : primaryColor,
-                                    size: 20,
+                            } else if (value == 'version') {
+                              // SELECT VERSION
+                              if (hasSong) {
+                                _showVersionSelector(context, ref, song);
+                              }
+                            } else if (value == 'remote') {
+                              _showRemotePairingDialog(l10n);
+                            } else if (value == 'mini') {
+                              ref
+                                  .read(interfaceProvider.notifier)
+                                  .enterMiniPlayer();
+                            } else if (value == 'song_info') {
+                              // SHOW SONG INFORMATION DIALOG
+                              if (hasSong) {
+                                SongInfoDialog.show(context, song);
+                              }
+                            } else if (value == 'audio_output') {
+                              if (hasSong) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AudioOutputDialog(
+                                    audioInfo: _audioInfo,
+                                    filePath: song.filePath,
                                   ),
-                                  const SizedBox(width: 12),
-                                  const TimerDisplay(),
-                                ],
-                              ),
-                            ),
-                            // 2. EQUALIZER OPTION
-                            PopupMenuItem(
-                              value: 'equalizer',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.equalizer_rounded,
-                                      color: primaryColor, size: 20),
-                                  const SizedBox(width: 12),
-                                  Text("Equalizer",
-                                      style: TextStyle(color: primaryColor)),
-                                ],
-                              ),
-                            ),
-                            // 3. SELECT VERSION OPTION
-                            if (hasSong)
+                                );
+                              }
+                            }
+                          },
+                          itemBuilder: (context) {
+                            final isTimerActive =
+                                ref.read(timerProvider).isActive;
+                            return [
+                              // 1. SLEEP TIMER OPTION
                               PopupMenuItem(
-                                value: 'version',
+                                value: 'timer',
                                 child: Row(
                                   children: [
-                                    Icon(Icons.switch_video_rounded,
+                                    Icon(
+                                      isTimerActive
+                                          ? Icons.timer_rounded
+                                          : Icons.timer_outlined,
+                                      color: isTimerActive
+                                          ? settings.accentColor
+                                          : primaryColor,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const TimerDisplay(),
+                                  ],
+                                ),
+                              ),
+                              // 2. EQUALIZER OPTION
+                              PopupMenuItem(
+                                value: 'equalizer',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.equalizer_rounded,
                                         color: primaryColor, size: 20),
                                     const SizedBox(width: 12),
-                                    Text("Select Version",
+                                    Text(l10n.equalizer,
+                                        style: TextStyle(color: primaryColor)),
+                                  ],
+                                ),
+                              ),
+                              // 3. SELECT VERSION OPTION
+                              if (hasSong)
+                                PopupMenuItem(
+                                  value: 'version',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.switch_video_rounded,
+                                          color: primaryColor, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(l10n.selectVersion,
+                                          style:
+                                              TextStyle(color: primaryColor)),
+                                    ],
+                                  ),
+                                ),
+
+                              // 4. MINI PLAYER OPTION (Desktop Only)
+                              if (Platform.isWindows || Platform.isMacOS)
+                                PopupMenuItem(
+                                  value: 'mini',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.picture_in_picture_alt_rounded,
+                                          color: primaryColor, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(l10n.miniPlayer,
+                                          style:
+                                              TextStyle(color: primaryColor)),
+                                    ],
+                                  ),
+                                ),
+
+                              // 5. REMOTE CONTROL OPTION
+                              PopupMenuItem(
+                                value: 'remote',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.qr_code_2_rounded,
+                                        color: primaryColor, size: 20),
+                                    const SizedBox(width: 12),
+                                    Text(l10n.listeningParty,
                                         style: TextStyle(color: primaryColor)),
                                   ],
                                 ),
                               ),
 
-                            // 4. MINI PLAYER OPTION (Desktop Only)
-                            if (Platform.isWindows || Platform.isMacOS)
-                              PopupMenuItem(
-                                value: 'mini',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.picture_in_picture_alt_rounded,
-                                        color: primaryColor, size: 20),
-                                    const SizedBox(width: 12),
-                                    Text("Mini Player",
-                                        style: TextStyle(color: primaryColor)),
-                                  ],
+                              // 6. SONG INFORMATION OPTION
+                              if (hasSong)
+                                PopupMenuItem(
+                                  value: 'song_info',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.info_outline_rounded,
+                                          color: primaryColor, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(l10n.songInformation,
+                                          style:
+                                              TextStyle(color: primaryColor)),
+                                    ],
+                                  ),
                                 ),
-                              ),
 
-                            // 5. REMOTE CONTROL OPTION
-                            PopupMenuItem(
-                              value: 'remote',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.qr_code_2_rounded,
-                                      color: primaryColor, size: 20),
-                                  const SizedBox(width: 12),
-                                  Text("Listening Party",
-                                      style: TextStyle(color: primaryColor)),
-                                ],
-                              ),
-                            ),
-
-                            // 6. SONG INFORMATION OPTION
-                            if (hasSong)
-                              PopupMenuItem(
-                                value: 'song_info',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.info_outline_rounded,
-                                        color: primaryColor, size: 20),
-                                    const SizedBox(width: 12),
-                                    Text("Song Information",
-                                        style: TextStyle(color: primaryColor)),
-                                  ],
+                              // 7. AUDIO OUTPUT OPTION
+                              if (hasSong)
+                                PopupMenuItem(
+                                  value: 'audio_output',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.output_rounded,
+                                          color: primaryColor, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(l10n.audioOutput,
+                                          style:
+                                              TextStyle(color: primaryColor)),
+                                    ],
+                                  ),
                                 ),
-                              ),
-
-                            // 7. AUDIO OUTPUT OPTION
-                            if (hasSong)
-                              PopupMenuItem(
-                                value: 'audio_output',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.output_rounded,
-                                        color: primaryColor, size: 20),
-                                    const SizedBox(width: 12),
-                                    Text("Audio Output",
-                                        style: TextStyle(color: primaryColor)),
-                                  ],
-                                ),
-                              ),
-                          ];
-                        },
+                            ];
+                          },
+                        ),
                       ),
 
                       const SizedBox(width: 8),
 
                       // Volume
-                      IconButton(
-                        icon: Icon(
-                          playerState.volume == 0
-                              ? Icons.volume_off_rounded
-                              : playerState.volume < 0.5
-                                  ? Icons.volume_down_rounded
-                                  : Icons.volume_up_rounded,
-                          size: 20,
-                          color: Colors.grey,
+                      Tooltip(
+                        message: playerState.volume == 0
+                            ? l10n.unmuteTooltip
+                            : l10n.muteTooltip,
+                        child: IconButton(
+                          icon: Icon(
+                            playerState.volume == 0
+                                ? Icons.volume_off_rounded
+                                : playerState.volume < 0.5
+                                    ? Icons.volume_down_rounded
+                                    : Icons.volume_up_rounded,
+                            size: 20,
+                            color: Colors.grey,
+                          ),
+                          onPressed: notifier.toggleMute,
                         ),
-                        tooltip: "Mute",
-                        onPressed: notifier.toggleMute,
                       ),
 
                       SizedBox(
                         width: 70,
+                        height: 20,
                         child: SliderTheme(
                           data: SliderTheme.of(context).copyWith(
                             trackHeight: 2,
                             thumbShape: const RoundSliderThumbShape(
                                 enabledThumbRadius: 4),
                             overlayShape:
-                                const RoundSliderOverlayShape(overlayRadius: 8),
+                                const RoundSliderOverlayShape(overlayRadius: 6),
                             activeTrackColor: Colors.grey,
-                            inactiveTrackColor: Colors.grey.withOpacity(0.3),
+                            inactiveTrackColor:
+                                Colors.grey.withValues(alpha: 0.3),
                             thumbColor: Colors.grey,
                           ),
                           child: Slider(
@@ -768,37 +791,39 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                       const SizedBox(width: 8),
 
                       // Full Screen Button
-                      IconButton(
-                        icon: Image.asset(
-                          'assets/win_icon_fullscreen.png',
-                          width: 20,
-                          height: 20,
+                      Tooltip(
+                        message: l10n.fullScreenPlayerTooltip,
+                        child: IconButton(
+                          icon: Image.asset(
+                            'assets/win_icon_fullscreen.png',
+                            width: 20,
+                            height: 20,
+                            color: hasSong ? Colors.grey : disabledColor,
+                          ),
                           color: hasSong ? Colors.grey : disabledColor,
+                          onPressed: hasSong
+                              ? () {
+                                  Navigator.of(context).push(
+                                    PageRouteBuilder(
+                                      transitionDuration:
+                                          const Duration(milliseconds: 800),
+                                      reverseTransitionDuration:
+                                          const Duration(milliseconds: 500),
+                                      pageBuilder: (context, animation,
+                                              secondaryAnimation) =>
+                                          const FullScreenPlayer(),
+                                      transitionsBuilder: (context, animation,
+                                          secondaryAnimation, child) {
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: child,
+                                        );
+                                      },
+                                    ),
+                                  );
+                                }
+                              : null,
                         ),
-                        color: hasSong ? Colors.grey : disabledColor,
-                        tooltip: "Full Screen Player",
-                        onPressed: hasSong
-                            ? () {
-                                Navigator.of(context).push(
-                                  PageRouteBuilder(
-                                    transitionDuration:
-                                        const Duration(milliseconds: 800),
-                                    reverseTransitionDuration:
-                                        const Duration(milliseconds: 500),
-                                    pageBuilder: (context, animation,
-                                            secondaryAnimation) =>
-                                        const FullScreenPlayer(),
-                                    transitionsBuilder: (context, animation,
-                                        secondaryAnimation, child) {
-                                      return FadeTransition(
-                                        opacity: animation,
-                                        child: child,
-                                      );
-                                    },
-                                  ),
-                                );
-                              }
-                            : null,
                       ),
                     ],
                   ),
@@ -812,8 +837,8 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   }
 
   // --- SONG TITLE CONTEXT MENU ---
-  void _showTitleContextMenu(
-      BuildContext context, Offset position, SongModel song) {
+  void _showTitleContextMenu(BuildContext context, Offset position,
+      SongModel song, AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
     final accentColor = Theme.of(context).colorScheme.primary;
@@ -834,7 +859,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
             children: [
               Icon(Icons.playlist_add, color: textColor, size: 20),
               const SizedBox(width: 12),
-              Text("Add to Playlist", style: TextStyle(color: textColor)),
+              Text(l10n.addToPlaylist, style: TextStyle(color: textColor)),
             ],
           ),
         ),
@@ -844,7 +869,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
             children: [
               Icon(Icons.favorite_border, color: Colors.redAccent, size: 20),
               const SizedBox(width: 12),
-              Text("Add to Favorite", style: TextStyle(color: textColor)),
+              Text(l10n.addToFavorite, style: TextStyle(color: textColor)),
             ],
           ),
         ),
@@ -854,7 +879,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
             children: [
               Icon(Icons.download_rounded, color: accentColor, size: 20),
               const SizedBox(width: 12),
-              Text("Download Song", style: TextStyle(color: textColor)),
+              Text(l10n.downloadSong, style: TextStyle(color: textColor)),
             ],
           ),
         ),
@@ -867,7 +892,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
       } else if (value == 'add_to_favorite') {
         // Add to favorites
         SongContextMenuRegion.handleAction(
-            context, ref, SongAction.addToFavorites, song);
+            context, ref, SongAction.addToFavorite, song);
       } else if (value == 'download') {
         // Download song
         SongContextMenuRegion.handleAction(
@@ -877,7 +902,8 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   }
 
   // --- TIMER DIALOG METHODS (Kept as is) ---
-  void _showTimerDialog(BuildContext context, WidgetRef ref) {
+  void _showTimerDialog(
+      BuildContext context, WidgetRef ref, AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
     final dialogColor = Theme.of(context).cardColor;
@@ -886,28 +912,32 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: dialogColor,
-        title: Text("Sleep Timer", style: TextStyle(color: textColor)),
+        title: Text(l10n.sleepTimer, style: TextStyle(color: textColor)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _timerOption(context, ref, 15, "15 Minutes", textColor),
-            _timerOption(context, ref, 30, "30 Minutes", textColor),
-            _timerOption(context, ref, 45, "45 Minutes", textColor),
-            _timerOption(context, ref, 60, "1 Hour", textColor),
+            _timerOption(
+                context, ref, 15, l10n.minutesDuration(15), textColor, l10n),
+            _timerOption(
+                context, ref, 30, l10n.minutesDuration(30), textColor, l10n),
+            _timerOption(
+                context, ref, 45, l10n.minutesDuration(45), textColor, l10n),
+            _timerOption(
+                context, ref, 60, l10n.hoursDuration(1), textColor, l10n),
             ListTile(
               leading: Icon(Icons.edit, color: textColor),
-              title: Text("Custom Time", style: TextStyle(color: textColor)),
+              title: Text(l10n.customTime, style: TextStyle(color: textColor)),
               onTap: () {
                 Navigator.pop(context);
-                _showCustomTimerInput(context, ref);
+                _showCustomTimerInput(context, ref, l10n);
               },
             ),
             const Divider(),
             ListTile(
               leading:
                   const Icon(Icons.timer_off_rounded, color: Colors.redAccent),
-              title: const Text("Turn Off Timer",
-                  style: TextStyle(color: Colors.redAccent)),
+              title: Text(l10n.turnOffTimer,
+                  style: const TextStyle(color: Colors.redAccent)),
               onTap: () {
                 ref.read(timerProvider.notifier).cancelTimer();
                 Navigator.pop(context);
@@ -920,19 +950,20 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   }
 
   Widget _timerOption(BuildContext context, WidgetRef ref, int minutes,
-      String label, Color textColor) {
+      String label, Color textColor, AppLocalizations l10n) {
     return ListTile(
       title: Text(label, style: TextStyle(color: textColor)),
       onTap: () {
         ref.read(timerProvider.notifier).startTimer(Duration(minutes: minutes));
         Navigator.pop(context);
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Music will stop in $label")));
+            .showSnackBar(SnackBar(content: Text(l10n.musicWillStopIn(label))));
       },
     );
   }
 
-  void _showCustomTimerInput(BuildContext context, WidgetRef ref) {
+  void _showCustomTimerInput(
+      BuildContext context, WidgetRef ref, AppLocalizations l10n) {
     final TextEditingController controller = TextEditingController();
     TimeUnit unit = TimeUnit.minute;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -947,7 +978,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
             return AlertDialog(
               backgroundColor: Theme.of(context).cardColor,
               title:
-                  Text("Set Custom Timer", style: TextStyle(color: textColor)),
+                  Text(l10n.setCustomTimer, style: TextStyle(color: textColor)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -956,8 +987,9 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                     keyboardType: TextInputType.number,
                     style: TextStyle(color: textColor),
                     decoration: InputDecoration(
-                      hintText: "Enter duration...",
-                      hintStyle: TextStyle(color: textColor.withOpacity(0.5)),
+                      hintText: l10n.enterDuration,
+                      hintStyle:
+                          TextStyle(color: textColor.withValues(alpha: 0.5)),
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -979,16 +1011,16 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                     selectedColor: Colors.white,
                     fillColor: accentColor,
                     color: textColor,
-                    children: const [
+                    children: [
                       Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Hr")),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(l10n.hourShort)),
                       Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Min")),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(l10n.minuteShort)),
                       Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Sec")),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(l10n.secondShort)),
                     ],
                   ),
                 ],
@@ -996,7 +1028,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Cancel", style: TextStyle(color: textColor)),
+                  child: Text(l10n.cancel, style: TextStyle(color: textColor)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: accentColor),
@@ -1004,22 +1036,26 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                     final value = int.tryParse(controller.text);
                     if (value != null && value > 0) {
                       Duration duration;
+                      String message;
                       if (unit == TimeUnit.hour) {
                         duration = Duration(hours: value);
+                        message = l10n.timerSetForHours(value);
                       } else if (unit == TimeUnit.minute) {
                         duration = Duration(minutes: value);
+                        message = l10n.timerSetForMinutes(value);
                       } else {
                         duration = Duration(seconds: value);
+                        message = l10n.timerSetForSeconds(value);
                       }
 
                       ref.read(timerProvider.notifier).startTimer(duration);
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Timer set for $value ${unit.name}s")));
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text(message)));
                     }
                   },
-                  child: const Text("Start",
-                      style: TextStyle(color: Colors.white)),
+                  child: Text(l10n.start,
+                      style: const TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -1046,7 +1082,9 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
       final newVersion = result; // as YoutubeSearchResult
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Switching to: ${newVersion.title}")),
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context)!.switchingTo(newVersion.title))),
       );
 
       ref.read(playerProvider.notifier).swapCurrentSongVersion(
@@ -1056,13 +1094,13 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   }
 
   // REMOTE CONTROL DIALOG
-  void _showRemotePairingDialog() async {
+  void _showRemotePairingDialog(AppLocalizations l10n) async {
     // Get the session record ID (not user_id) for security
     final sessionId = await PocketBaseService().getUniqueSessionId();
     if (sessionId == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error: Could not create session.")),
+          SnackBar(content: Text(l10n.errorCouldNotCreateSession)),
         );
       }
       return;
@@ -1076,7 +1114,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Listening Party"),
+        title: Text(l10n.listeningParty),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1099,21 +1137,20 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              "Scan with your phone to control playback.",
+            Text(
+              l10n.scanToControlPlayback,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             SelectableText(
-              "Session: $sessionId",
+              l10n.session(sessionId),
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close")),
+              onPressed: () => Navigator.pop(context), child: Text(l10n.close)),
         ],
       ),
     );
@@ -1128,6 +1165,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     bool hasSong,
     bool isDark,
     SettingsState settings,
+    AppLocalizations l10n,
   ) {
     // Progress calculation
     double progress = 0.0;
@@ -1139,6 +1177,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
 
     final presentationNotifier = ref.read(libraryPresentationProvider.notifier);
     final currentView = ref.watch(libraryPresentationProvider).currentView;
+    final primaryColor = isDark ? Colors.white : Colors.black;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1222,7 +1261,8 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                   decoration: BoxDecoration(
                     // 🚀 Use dominant album color with reduced opacity
                     color: hasCustomColor
-                        ? animatedColor!.withOpacity(0.25) // Much more subtle!
+                        ? primaryColor.withValues(
+                            alpha: 0.1) // Much more subtle!
                         : animatedColor,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
@@ -1270,8 +1310,9 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                               borderRadius:
                                                   BorderRadius.circular(6),
                                             ),
-                                            child: const Icon(Icons.music_note,
-                                                color: Colors.white24,
+                                            child: Icon(Icons.music_note,
+                                                color: primaryColor.withValues(
+                                                    alpha: 0.5),
                                                 size: 20),
                                           ),
                                   ),
@@ -1290,7 +1331,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                               child: MarqueeText(
                                                   text: hasSong
                                                       ? song!.title
-                                                      : "No Song Playing",
+                                                      : l10n.noSongPlaying,
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.w600,
                                                     fontSize: 13,
@@ -1311,7 +1352,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                         Text(
                                           hasSong
                                               ? song!.artist
-                                              : "Select a track",
+                                              : l10n.selectTrackToStart,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
@@ -1333,7 +1374,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                           ? (isDark
                                               ? Colors.white
                                               : Colors.black)
-                                          : Colors.grey.withOpacity(0.3),
+                                          : Colors.grey.withValues(alpha: 0.3),
                                       shape: BoxShape.circle,
                                     ),
                                     child: IconButton(

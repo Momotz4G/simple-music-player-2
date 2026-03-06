@@ -4,6 +4,7 @@ import 'dart:io';
 import '../../providers/equalizer_provider.dart';
 import '../../providers/player_provider.dart';
 import '../../models/eq_preset.dart';
+import '../../l10n/app_localizations.dart';
 
 class EqualizerSheet extends ConsumerStatefulWidget {
   const EqualizerSheet({super.key});
@@ -33,6 +34,7 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
     final notifier = ref.read(equalizerProvider.notifier);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
     final accentColor = Theme.of(context).colorScheme.primary;
     final textColor = isDark ? Colors.white : Colors.black;
 
@@ -62,7 +64,7 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Equalizer",
+              Text(l10n.equalizer,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold, color: textColor)),
               Switch(
@@ -74,11 +76,10 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
           ),
 
           if (!Platform.isAndroid)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8.0),
-              child: Text(
-                  "Note: Audio effects are only audible on Android devices.",
-                  style: TextStyle(color: Colors.orange, fontSize: 12)),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(l10n.androidAudioEffectsNote,
+                  style: const TextStyle(color: Colors.orange, fontSize: 12)),
             ),
 
           const SizedBox(height: 16),
@@ -120,7 +121,7 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
                 const SizedBox(width: 12),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  tooltip: "Delete Preset",
+                  tooltip: l10n.deletePreset,
                   onPressed: () {
                     if (dropdownValue != null) {
                       notifier.deletePreset(dropdownValue.id);
@@ -219,8 +220,8 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
                       _showSaveDialog(context, notifier);
                     }
                   : null,
-              child: const Text("Save as New Preset",
-                  style: TextStyle(
+              child: Text(l10n.saveAsNewPreset,
+                  style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.bold)),
@@ -233,34 +234,35 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
 
   void _showSaveDialog(BuildContext context, EqualizerProvider notifier) {
     final controller = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
-        title: const Text("Save Preset"),
+        title: Text(l10n.savePreset),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: "Enter preset name (e.g. My Bass)",
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: l10n.enterPresetName,
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
                 notifier.saveCurrentAsNew(controller.text);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Preset saved!")));
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(l10n.presetSaved)));
               }
             },
-            child: const Text("Save"),
+            child: Text(l10n.save),
           )
         ],
       ),

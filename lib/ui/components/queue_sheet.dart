@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart' as ja;
 
 import '../../providers/player_provider.dart';
 import '../../models/song_model.dart';
+import '../../l10n/app_localizations.dart';
 import 'smart_art.dart';
 
 class QueueSheet extends ConsumerWidget {
@@ -14,6 +15,7 @@ class QueueSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playerState = ref.watch(playerProvider);
     final notifier = ref.read(playerProvider.notifier);
+    final l10n = AppLocalizations.of(context)!;
 
     final currentSong = playerState.currentSong;
     final userQueue = playerState.userQueue;
@@ -113,7 +115,7 @@ class QueueSheet extends ConsumerWidget {
                                 Icon(Icons.queue_music, color: accentColor),
                                 const SizedBox(width: 12),
                                 Text(
-                                  "Play Queue",
+                                  l10n.playQueue,
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -132,7 +134,7 @@ class QueueSheet extends ConsumerWidget {
                     if (currentSong != null) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionHeader(
-                            "NOW PLAYING", subTextColor, context),
+                            l10n.nowPlayingSection, subTextColor, context),
                       ),
                       SliverToBoxAdapter(
                         child: _buildQueueTile(
@@ -154,7 +156,7 @@ class QueueSheet extends ConsumerWidget {
                         child: Padding(
                           padding: const EdgeInsets.only(top: 16),
                           child: _buildSectionHeader(
-                              "UP NEXT (${userQueue.length})",
+                              "${l10n.upNextSection} (${userQueue.length})",
                               subTextColor,
                               context),
                         ),
@@ -206,7 +208,7 @@ class QueueSheet extends ConsumerWidget {
                         child: Padding(
                           padding: const EdgeInsets.only(top: 16),
                           child: _buildSectionHeader(
-                              "FROM LIBRARY (${totalLibraryCount})",
+                              "${l10n.fromLibrarySection} (${totalLibraryCount})",
                               subTextColor,
                               context),
                         ),
@@ -245,7 +247,7 @@ class QueueSheet extends ConsumerWidget {
                         child: Padding(
                           padding: const EdgeInsets.only(top: 16),
                           child: _buildSectionHeader(
-                              "RECOMMENDATIONS (${playerState.recommendationQueue.length})",
+                              "${l10n.recommendationsSection} (${playerState.recommendationQueue.length})",
                               Colors.purple[300],
                               context),
                         ),
@@ -277,10 +279,10 @@ class QueueSheet extends ConsumerWidget {
                         upNextFromLibrary.isEmpty &&
                         playerState.recommendationQueue.isEmpty &&
                         currentSong == null) ...[
-                      const SliverToBoxAdapter(
+                      SliverToBoxAdapter(
                         child: Padding(
-                          padding: EdgeInsets.all(40.0),
-                          child: Center(child: Text("Queue is empty")),
+                          padding: const EdgeInsets.all(40.0),
+                          child: Center(child: Text(l10n.queueIsEmpty)),
                         ),
                       )
                     ],

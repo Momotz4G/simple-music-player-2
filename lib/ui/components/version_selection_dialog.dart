@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../models/youtube_search_result.dart';
+import '../../l10n/app_localizations.dart';
 import '../components/smart_art.dart';
 
 import '../../models/song_model.dart';
@@ -72,6 +73,7 @@ class _VersionSelectionDialogState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
     final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final l10n = AppLocalizations.of(context)!;
 
     return Dialog(
       backgroundColor: Theme.of(context).cardColor,
@@ -88,7 +90,7 @@ class _VersionSelectionDialogState
                 Icon(Icons.switch_video_rounded,
                     color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 12),
-                Text("Select Version",
+                Text(l10n.selectVersion,
                     style: TextStyle(
                         color: textColor,
                         fontSize: 18,
@@ -107,7 +109,7 @@ class _VersionSelectionDialogState
               controller: _searchController,
               style: TextStyle(color: textColor),
               decoration: InputDecoration(
-                hintText: "Search YouTube...",
+                hintText: l10n.searchYoutubeHint,
                 hintStyle: TextStyle(color: subtitleColor),
                 prefixIcon: Icon(Icons.search, color: subtitleColor),
                 suffixIcon: IconButton(
@@ -135,7 +137,7 @@ class _VersionSelectionDialogState
                               style: const TextStyle(color: Colors.red)))
                       : _results.isEmpty
                           ? Center(
-                              child: Text("No results found",
+                              child: Text(l10n.noResultsFound,
                                   style: TextStyle(color: subtitleColor)))
                           : ListView.separated(
                               itemCount: _results.length,

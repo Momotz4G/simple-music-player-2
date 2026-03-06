@@ -11,6 +11,7 @@ import '../components/smart_art.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:device_info_plus/device_info_plus.dart'; // 🚀 IMPORT
+import '../../l10n/app_localizations.dart';
 
 class ToolsPage extends ConsumerStatefulWidget {
   const ToolsPage({super.key});
@@ -119,18 +120,17 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
         title: Row(
-          children: const [
-            Icon(Icons.info_outline, color: Colors.orangeAccent),
-            SizedBox(width: 8),
-            Text("Metadata Editor"),
+          children: [
+            const Icon(Icons.info_outline, color: Colors.orangeAccent),
+            const SizedBox(width: 8),
+            Text(AppLocalizations.of(context)!.metadata_editor),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-                "Fix your metadata editor in a second and just search it."),
+            Text(AppLocalizations.of(context)!.metadataEditorInfo),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -139,9 +139,10 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.orangeAccent.withOpacity(0.3)),
               ),
-              child: const Text(
-                "Note: Album art is changing after state \"Saved Successfully\", you don't need to worries its not saved, it's just caching problem in app and I currently fix it. You can verify with file manager or else.",
-                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              child: Text(
+                AppLocalizations.of(context)!.metadataEditorNote,
+                style:
+                    const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ),
           ],
@@ -149,7 +150,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Close"),
+            child: Text(AppLocalizations.of(context)!.close),
           ),
         ],
       ),
@@ -163,24 +164,24 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
         children: [
           const Icon(Icons.folder_off, size: 64, color: Colors.orange),
           const SizedBox(height: 16),
-          const Text(
-            "Permission Required",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Text(
+            AppLocalizations.of(context)!.permissionRequired,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              "To edit tags, we need 'All Files Access' permission. This allows us to modify your music files directly.",
+              AppLocalizations.of(context)!.permissionRequiredDesc,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+              style: const TextStyle(color: Colors.grey),
             ),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: _requestPermission,
             icon: const Icon(Icons.check),
-            label: const Text("Grant Permission"),
+            label: Text(AppLocalizations.of(context)!.grantPermission),
           )
         ],
       ),
@@ -199,14 +200,15 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
       appBar: AppBar(
         // 🚀 Reserve space for the floating hamburger menu (MainShell)
         leading: const SizedBox(width: 56),
-        title: const Text("Metadata Editor", style: TextStyle(fontSize: 18)),
+        title: Text(AppLocalizations.of(context)!.metadata_editor,
+            style: const TextStyle(fontSize: 18)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: "Files"),
-            Tab(text: "Editor"),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.files),
+            Tab(text: AppLocalizations.of(context)!.editor),
           ],
         ),
         actions: [
@@ -216,7 +218,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
           ),
           if (metadataState.importedSongs.isNotEmpty)
             IconButton(
-                tooltip: "Clear Imported",
+                tooltip: AppLocalizations.of(context)!.clearImported,
                 icon: const Icon(Icons.delete_sweep),
                 onPressed: () {
                   ref.read(metadataProvider.notifier).clearImported();
@@ -254,7 +256,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Metadata Editor",
+                      Text(AppLocalizations.of(context)!.metadata_editor,
                           style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -271,7 +273,8 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                           ),
                           if (metadataState.importedSongs.isNotEmpty)
                             IconButton(
-                              tooltip: "Clear Imported",
+                              tooltip:
+                                  AppLocalizations.of(context)!.clearImported,
                               icon: const Icon(Icons.delete_sweep,
                                   color: Colors.grey),
                               onPressed: ref
@@ -315,7 +318,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
         SliverToBoxAdapter(
           child: _buildSectionHeader(
             context,
-            "Library Data (${library.songs.length})",
+            "${AppLocalizations.of(context)!.libraryData} (${library.songs.length})",
             sectionColor!,
             textColor,
             isExpanded: _isLibraryExpanded,
@@ -341,7 +344,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
             padding: const EdgeInsets.only(top: 20),
             child: _buildSectionHeader(
               context,
-              "External Files (${metadataState.importedSongs.length})",
+              "${AppLocalizations.of(context)!.externalFiles} (${metadataState.importedSongs.length})",
               sectionColor,
               textColor,
               isExpanded: _isExternalExpanded,
@@ -364,7 +367,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                     onPressed: () =>
                         metadataNotifier.pickExternalFiles(folder: false),
                     icon: const Icon(Icons.insert_drive_file),
-                    label: const Text("Add Files"),
+                    label: Text(AppLocalizations.of(context)!.addFiles),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -373,7 +376,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                     onPressed: () =>
                         metadataNotifier.pickExternalFiles(folder: true),
                     icon: const Icon(Icons.create_new_folder),
-                    label: const Text("Add Folder"),
+                    label: Text(AppLocalizations.of(context)!.addFolder),
                   ),
                 ),
               ],
@@ -462,8 +465,8 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                       Icon(Icons.edit_note,
                           size: 64, color: Colors.grey.withOpacity(0.5)),
                       const SizedBox(height: 16),
-                      const Text("Select a song from the list to edit",
-                          style: TextStyle(color: Colors.grey)),
+                      Text(AppLocalizations.of(context)!.selectSongToEdit,
+                          style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
                 )
@@ -524,8 +527,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                         padding: const EdgeInsets.symmetric(horizontal: 8)),
                     icon: const Icon(Icons.auto_fix_high,
                         size: 14, color: Colors.white38),
-                    label: const Text("Fix All",
-                        style: TextStyle(fontSize: 10, color: Colors.white38)),
+                    label: Text(AppLocalizations.of(context)!.fixAll,
+                        style: const TextStyle(
+                            fontSize: 10, color: Colors.white38)),
                   ),
                 )
             ],
@@ -576,19 +580,20 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text("⚠️ Auto-Tag $sourceName?"),
-        content: Text(
-            "This will search Spotify for all ${songs.length} songs in '$sourceName' and overwrite their tags automatically.\n\nThis process cannot be undone."),
+        title: Text(AppLocalizations.of(context)!.autoTagTitle(sourceName)),
+        content: Text(AppLocalizations.of(context)!
+            .autoTagContent(songs.length, sourceName)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
               Navigator.pop(ctx);
               ref.read(metadataProvider.notifier).autoMatchAll(songs);
             },
-            child: const Text("Start Bulk Process"),
+            child: Text(AppLocalizations.of(context)!.startBulkProcess),
           ),
         ],
       ),
@@ -696,30 +701,36 @@ class _EditorPanelState extends State<_EditorPanel> {
             Expanded(
               child: Column(
                 children: [
-                  _buildField("Title", _titleCtrl,
+                  _buildField(AppLocalizations.of(context)!.title, _titleCtrl,
                       (v) => widget.notifier.updateField(title: v)),
                   const SizedBox(height: 12),
-                  _buildField("Artist", _artistCtrl,
+                  _buildField(AppLocalizations.of(context)!.artist, _artistCtrl,
                       (v) => widget.notifier.updateField(artist: v)),
                   const SizedBox(height: 12),
-                  _buildField("Album", _albumCtrl,
+                  _buildField(AppLocalizations.of(context)!.album, _albumCtrl,
                       (v) => widget.notifier.updateField(album: v)),
                   const SizedBox(height: 12),
-                  _buildField("Genre", _genreCtrl,
+                  _buildField(AppLocalizations.of(context)!.genre, _genreCtrl,
                       (v) => widget.notifier.updateField(genre: v)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
-                          child: _buildField("Year", _yearCtrl,
+                          child: _buildField(
+                              AppLocalizations.of(context)!.year,
+                              _yearCtrl,
                               (v) => widget.notifier.updateField(year: v))),
                       const SizedBox(width: 12),
                       Expanded(
-                          child: _buildField("Track #", _trackCtrl,
+                          child: _buildField(
+                              AppLocalizations.of(context)!.trackNumber,
+                              _trackCtrl,
                               (v) => widget.notifier.updateField(track: v))),
                       const SizedBox(width: 12),
                       Expanded(
-                          child: _buildField("Disc #", _discCtrl,
+                          child: _buildField(
+                              AppLocalizations.of(context)!.discNumber,
+                              _discCtrl,
                               (v) => widget.notifier.updateField(disc: v))),
                     ],
                   )
@@ -734,7 +745,7 @@ class _EditorPanelState extends State<_EditorPanel> {
             Expanded(
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.auto_awesome, color: Colors.white),
-                label: const Text("Auto-Fix (Coming Soon)"),
+                label: Text(AppLocalizations.of(context)!.autoFixComingSoon),
                 onPressed: null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purpleAccent.withOpacity(0.5),
@@ -748,7 +759,7 @@ class _EditorPanelState extends State<_EditorPanel> {
             Expanded(
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.search),
-                label: const Text("Manual Search"),
+                label: Text(AppLocalizations.of(context)!.manualSearch),
                 onPressed: () => _showSearchDialog(context),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
@@ -766,14 +777,14 @@ class _EditorPanelState extends State<_EditorPanel> {
             TextButton(
               onPressed: () =>
                   widget.notifier.selectSong(widget.state.selectedSong!),
-              child: const Text("Revert"),
+              child: Text(AppLocalizations.of(context)!.revert),
             ),
             const SizedBox(width: 16),
             FilledButton.icon(
               onPressed:
                   widget.state.isSaving ? null : widget.notifier.saveChanges,
               icon: const Icon(Icons.save),
-              label: const Text("Save Changes to File"),
+              label: Text(AppLocalizations.of(context)!.saveChangesToFile),
               style: FilledButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -809,14 +820,14 @@ class _EditorPanelState extends State<_EditorPanel> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
-        title: const Text("Search Spotify"),
+        title: Text(AppLocalizations.of(context)!.searchSpotify),
         content: SizedBox(
           width: 500,
           child: TextField(
             controller: searchCtrl,
             autofocus: true,
             decoration: InputDecoration(
-              hintText: "Search...",
+              hintText: AppLocalizations.of(context)!.searchHint,
               suffixIcon: IconButton(
                 icon: const Icon(Icons.search),
                 onPressed: () async {
@@ -836,7 +847,8 @@ class _EditorPanelState extends State<_EditorPanel> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text("Cancel"))
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppLocalizations.of(context)!.cancel))
         ],
       ),
     );
@@ -848,7 +860,7 @@ class _EditorPanelState extends State<_EditorPanel> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
-        title: const Text("Select Match"),
+        title: Text(AppLocalizations.of(context)!.selectMatch),
         content: SizedBox(
           width: 500,
           height: 400,

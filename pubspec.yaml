@@ -1,7 +1,7 @@
 name: simple_music_player_2
 description: "A new modern Flutter music player."
 publish_to: 'none'
-version: 2.4.0+1
+version: 2.5.0+1
 
 environment:
   sdk: '>=3.2.3 <4.0.0'
@@ -123,6 +123,7 @@ flutter_launcher_icons:
     image_path: "assets/icon_source.png"
 
 flutter:
+  generate: true
   uses-material-design: true
 
   assets:

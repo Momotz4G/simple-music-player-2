@@ -76,6 +76,9 @@ class _HorizontalSectionState extends ConsumerState<HorizontalSection> {
             onEnter: (_) => widget.onScrollFocus?.call(true),
             onExit: (_) => widget.onScrollFocus?.call(false),
             child: Listener(
+              onPointerDown: (_) => widget.onScrollFocus?.call(true),
+              onPointerUp: (_) => widget.onScrollFocus?.call(false),
+              onPointerCancel: (_) => widget.onScrollFocus?.call(false),
               onPointerSignal: (pointerSignal) {
                 if (pointerSignal is PointerScrollEvent) {
                   final offset = pointerSignal.scrollDelta.dy;
@@ -174,7 +177,7 @@ class _SimpleSongTileState extends ConsumerState<_SimpleSongTile> {
                       boxShadow: _isHovering
                           ? [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.3),
                                 blurRadius: 15,
                                 offset: const Offset(0, 8),
                               )
@@ -196,7 +199,7 @@ class _SimpleSongTileState extends ConsumerState<_SimpleSongTile> {
                           Positioned.fill(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),

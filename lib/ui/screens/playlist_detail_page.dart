@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:provider/provider.dart' as p;
 
 import '../../providers/library_provider.dart';
@@ -208,7 +209,9 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     final playlistIndex =
         playlists.indexWhere((p) => p.id == widget.playlistId);
     if (playlistIndex == -1) {
-      return const Scaffold(body: Center(child: Text("Playlist not found")));
+      return Scaffold(
+          body: Center(
+              child: Text(AppLocalizations.of(context)!.playlistNotFound)));
     }
 
     final playlist = playlists[playlistIndex];
@@ -382,7 +385,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                     ? const Icon(Icons.download_done_rounded,
                         color: Colors.greenAccent, size: 28)
                     : Icon(Icons.download_rounded, color: textColor, size: 28),
-                tooltip: "Download All",
+                tooltip: AppLocalizations.of(context)!.downloadAll,
                 onPressed: () async {
                   if (rowData.isEmpty) return;
 
@@ -392,23 +395,24 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
 
                   if (allDownloaded) {
                     // 🚀 DELETE MODE
+                    final l10n = AppLocalizations.of(context)!;
+                    final messenger = ScaffoldMessenger.of(context);
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
                         backgroundColor: Theme.of(context).cardColor,
-                        title: Text("Delete Downloads?",
+                        title: Text(l10n.deleteDownloadsTitle,
                             style: TextStyle(color: textColor)),
-                        content: Text(
-                            "This will remove all downloaded songs for this playlist from your device.",
+                        content: Text(l10n.deleteDownloadsConfirm,
                             style: TextStyle(color: textColor)),
                         actions: [
                           TextButton(
                               onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancel")),
+                              child: Text(l10n.cancel)),
                           TextButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: const Text("Delete",
-                                  style: TextStyle(color: Colors.red))),
+                              child: Text(l10n.delete,
+                                  style: const TextStyle(color: Colors.red))),
                         ],
                       ),
                     );
@@ -427,9 +431,9 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                               _downloadStatus[r.song.filePath] = false;
                             }
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("All downloads removed"),
+                          messenger.showSnackBar(
+                            SnackBar(
+                                content: Text(l10n.allDownloadsRemoved),
                                 backgroundColor: Colors.red),
                           );
                           // Force re-check just in case
@@ -446,9 +450,10 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                     BulkDownloadService()
                         .downloadAlbum(playlist.name, songsToDownload);
 
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Started downloading all songs..."),
-                      duration: Duration(seconds: 2),
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                          AppLocalizations.of(context)!.startedDownloadingAll),
+                      duration: const Duration(seconds: 2),
                     ));
 
                     // 🚀 Wait and check status (Poor man's refresh, better to listen to service in future)
@@ -469,11 +474,13 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'rename', child: Text("Rename")),
-                  const PopupMenuItem(
+                  PopupMenuItem(
+                      value: 'rename',
+                      child: Text(AppLocalizations.of(context)!.rename)),
+                  PopupMenuItem(
                       value: 'delete',
-                      child: Text("Delete Playlist",
-                          style: TextStyle(color: Colors.red))),
+                      child: Text(AppLocalizations.of(context)!.renamePlaylist,
+                          style: const TextStyle(color: Colors.red))),
                 ],
               ),
               const SizedBox(width: 16),
@@ -482,7 +489,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
           if (rowData.isEmpty)
             SliverFillRemaining(
               child: Center(
-                  child: Text("No songs added yet",
+                  child: Text(AppLocalizations.of(context)!.noSongsAdded,
                       style: TextStyle(color: subtitleColor))),
             )
           else
@@ -578,7 +585,8 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                         IconButton(
                           icon: Icon(Icons.remove_circle_outline,
                               color: subtitleColor),
-                          tooltip: "Remove from Playlist",
+                          tooltip:
+                              AppLocalizations.of(context)!.removeFromPlaylist,
                           onPressed: () => notifier.removeSongFromPlaylist(
                               widget.playlistId, data.song.filePath),
                         ),
@@ -609,7 +617,8 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
-        title: Text("Rename Playlist", style: TextStyle(color: textColor)),
+        title: Text(AppLocalizations.of(context)!.renamePlaylist,
+            style: TextStyle(color: textColor)),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -618,7 +627,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel")),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
@@ -628,7 +637,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text("Save"),
+            child: Text(AppLocalizations.of(context)!.saveChangesToFile),
           )
         ],
       ),

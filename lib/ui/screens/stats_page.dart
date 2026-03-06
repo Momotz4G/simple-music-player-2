@@ -14,6 +14,7 @@ import '../../providers/player_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/history_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/search_bridge_provider.dart';
 import '../../services/smart_download_service.dart';
 import '../../models/song_model.dart';
 import '../../models/song_metadata.dart';
@@ -23,6 +24,8 @@ import '../../services/spotify_service.dart';
 import '../components/smart_art.dart';
 import '../components/shareable_stats_card.dart';
 import '../components/music_notification.dart';
+import 'artists_page.dart';
+import '../../l10n/app_localizations.dart';
 
 class _SlideData {
   final String label;
@@ -39,6 +42,10 @@ class _SlideData {
     this.sourceSong,
   });
 }
+
+// 🚀 Persist selected tab across widget rebuilds (survives navigation stack push/pop)
+final statsTabProvider =
+    StateProvider<int>((ref) => 0); // 0 = Songs, 1 = Artists
 
 class StatsPage extends ConsumerStatefulWidget {
   const StatsPage({super.key});
@@ -63,6 +70,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
   @override
   void initState() {
     super.initState();
+    // Reset tab to Songs whenever stats page is freshly opened
+    Future.microtask(() => ref.read(statsTabProvider.notifier).state = 0);
     _slideTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       if (_slides.length > 1 && mounted) {
         setState(() {
@@ -110,16 +119,17 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
     if (restoreUrl == null || restoreUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("File missing and not found in history.")),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.fileMissingHistory)),
       );
       return;
     }
 
     setState(() => _isRestoring = true);
     showCenterNotification(context,
-        label: "RESTORING",
+        label: AppLocalizations.of(context)!.restoring,
         title: song.title,
-        subtitle: "Re-buffering...",
+        subtitle: AppLocalizations.of(context)!.reBuffering,
         artPath: restoreArt);
 
     try {
@@ -166,7 +176,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       if (restoredSong != null && mounted) {
         ref.read(playerProvider.notifier).playSong(restoredSong);
         showCenterNotification(context,
-            label: "NOW PLAYING",
+            label: AppLocalizations.of(context)!.nowPlaying,
             title: restoredSong.title,
             subtitle: restoredSong.artist,
             artPath: restoredSong.filePath,
@@ -201,7 +211,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
           ],
         ),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFFE53935).withOpacity(0.95),
+        backgroundColor: const Color(0xFFE53935).withValues(alpha: 0.95),
         elevation: 6,
         margin: const EdgeInsets.only(bottom: 300, left: 80, right: 80),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -239,7 +249,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
   }
 
   Future<void> _shareStats(SongModel song, int count,
-      {String header = "MY TOP TRACK", ImageProvider? overrideImage}) async {
+      {String header = "", ImageProvider? overrideImage}) async {
     final cardWidget = ShareableStatsCard(
       song: song,
       playCount: count,
@@ -275,14 +285,14 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                     FloatingActionButton.extended(
                       heroTag: "close_share",
                       onPressed: () => Navigator.pop(context),
-                      label: const Text("Close"),
+                      label: Text(AppLocalizations.of(context)!.close),
                       icon: const Icon(Icons.close),
                       backgroundColor: Colors.grey[800],
                     ),
                     const SizedBox(width: 16),
                     FloatingActionButton.extended(
                       heroTag: "share_action",
-                      label: const Text("Share"),
+                      label: Text(AppLocalizations.of(context)!.share),
                       icon: const Icon(Icons.ios_share),
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       onPressed: () async {
@@ -315,13 +325,16 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                             await file.writeAsBytes(image, flush: true);
 
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Saved to "$filePath"')),
+                              final l10n = AppLocalizations.of(context)!;
+                              final messenger = ScaffoldMessenger.of(context);
+                              final navigator = Navigator.of(context);
+                              messenger.showSnackBar(
+                                SnackBar(content: Text(l10n.savedTo(filePath))),
                               );
-                              Navigator.pop(context);
+                              navigator.pop();
                               await Share.shareXFiles(
                                 [XFile(filePath, mimeType: 'image/png')],
-                                text: "My $header on Simple Player! 🎵",
+                                text: l10n.myTopTrackOn(header),
                               );
                             }
                           }
@@ -368,9 +381,10 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                   fileExtension: ""));
 
       newSlides.add(_SlideData(
-        label: "Top Artist",
+        label: AppLocalizations.of(context)!.topArtist,
         mainText: artist,
-        subText: "$plays plays",
+        subText:
+            "$plays ${plays == 1 ? AppLocalizations.of(context)!.play : AppLocalizations.of(context)!.plays}",
         artistName: artist,
         sourceSong:
             artistFallbackSong.filePath.isNotEmpty ? artistFallbackSong : null,
@@ -384,9 +398,10 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       final count = statsState.entries[id]?.playCount ?? 0;
 
       newSlides.add(_SlideData(
-        label: "Most Listened",
+        label: AppLocalizations.of(context)!.mostListened,
         mainText: song.title,
-        subText: "$count plays",
+        subText:
+            "$count ${count == 1 ? AppLocalizations.of(context)!.play : AppLocalizations.of(context)!.plays}",
         artistName: song.artist,
         sourceSong: song,
       ));
@@ -425,7 +440,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             pinned: true,
             expandedHeight: 320.0,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text("Listening Stats"),
+              title: Text(AppLocalizations.of(context)!.listeningStats),
               centerTitle: false,
               titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
               background: Stack(
@@ -456,63 +471,38 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                           Colors.transparent,
                           Theme.of(context)
                               .scaffoldBackgroundColor
-                              .withOpacity(0.8),
+                              .withValues(alpha: 0.8),
                           Theme.of(context).scaffoldBackgroundColor,
                         ],
                         stops: const [0.0, 0.6, 1.0],
                       ),
                     ),
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.only(right: 32, bottom: 70, top: 100),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (currentSlide != null)
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  currentSlide.label.toUpperCase(),
-                                  style: TextStyle(
-                                    color: Colors.grey[400],
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2,
-                                    shadows: const [
-                                      Shadow(blurRadius: 4, color: Colors.black)
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  currentSlide.mainText,
-                                  textAlign: TextAlign.end,
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color.fromRGBO(255, 215, 0, 1),
-                                    shadows: [
-                                      Shadow(
-                                          blurRadius: 10, color: Colors.black)
-                                    ],
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  mainAxisSize: MainAxisSize.min,
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final screenW = constraints.maxWidth;
+                      final gap = screenW < 400 ? 12.0 : 32.0;
+                      final hPad = screenW < 400 ? 16.0 : 32.0;
+                      return Container(
+                        padding: EdgeInsets.only(
+                            right: hPad, left: hPad, bottom: 70, top: 100),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            if (currentSlide != null)
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      currentSlide.subText,
+                                      currentSlide.label.toUpperCase(),
                                       style: TextStyle(
-                                        color: accentColor,
+                                        color: Colors.grey[400],
+                                        fontSize: 12,
                                         fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.2,
                                         shadows: const [
                                           Shadow(
                                               blurRadius: 4,
@@ -520,158 +510,409 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                                         ],
                                       ),
                                     ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 8.0),
-                                      child: IconButton(
-                                        icon: const Icon(Icons.share,
-                                            color: Colors.white, size: 20),
-                                        onPressed: () {
-                                          if (currentSlide!.label ==
-                                              "Top Artist") {
-                                            final artistShareObj = SongModel(
-                                              title: result.topArtistEntry!.key,
-                                              artist: "Most Listened Artist",
-                                              album: "All Time",
-                                              filePath: artistFallbackSong
-                                                      ?.filePath ??
-                                                  "",
-                                              duration: 0,
-                                              fileExtension: "",
-                                            );
-                                            _shareStats(artistShareObj,
-                                                result.topArtistEntry!.value,
-                                                header: "TOP ARTIST",
-                                                overrideImage: bgImageProvider);
-                                          } else {
-                                            final song = result.mostPlayed[0];
-                                            final id = StatEntry.generateId(
-                                                song.title,
-                                                song.artist,
-                                                song.album);
-                                            final count = statsState
-                                                    .entries[id]?.playCount ??
-                                                0;
-                                            _shareStats(song, count,
-                                                header: "TOP TRACK");
-                                          }
-                                        },
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      currentSlide.mainText,
+                                      textAlign: TextAlign.end,
+                                      style: TextStyle(
+                                        fontSize: screenW < 400 ? 22 : 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color.fromRGBO(
+                                            255, 215, 0, 1),
+                                        shadows: const [
+                                          Shadow(
+                                              blurRadius: 10,
+                                              color: Colors.black)
+                                        ],
                                       ),
-                                    )
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            currentSlide.subText,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: accentColor,
+                                              fontWeight: FontWeight.bold,
+                                              shadows: const [
+                                                Shadow(
+                                                    blurRadius: 4,
+                                                    color: Colors.black)
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 8.0),
+                                          child: IconButton(
+                                            icon: const Icon(Icons.share,
+                                                color: Colors.white, size: 20),
+                                            onPressed: () {
+                                              if (currentSlide!.label ==
+                                                  "Top Artist") {
+                                                final artistShareObj =
+                                                    SongModel(
+                                                  title: result
+                                                      .topArtistEntry!.key,
+                                                  artist:
+                                                      "Most Listened Artist",
+                                                  album: "All Time",
+                                                  filePath: artistFallbackSong
+                                                          ?.filePath ??
+                                                      "",
+                                                  duration: 0,
+                                                  fileExtension: "",
+                                                );
+                                                _shareStats(
+                                                    artistShareObj,
+                                                    result
+                                                        .topArtistEntry!.value,
+                                                    header: AppLocalizations.of(
+                                                            context)!
+                                                        .topArtist,
+                                                    overrideImage:
+                                                        bgImageProvider);
+                                              } else {
+                                                final song =
+                                                    result.mostPlayed[0];
+                                                final id = StatEntry.generateId(
+                                                    song.title,
+                                                    song.artist,
+                                                    song.album);
+                                                final count = statsState
+                                                        .entries[id]
+                                                        ?.playCount ??
+                                                    0;
+                                                _shareStats(song, count,
+                                                    header: AppLocalizations.of(
+                                                            context)!
+                                                        .mostListened);
+                                              }
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                        const SizedBox(width: 32),
-                        _buildStatColumn("Time Listened",
-                            "${result.totalMinutes}", "Minutes", accentColor),
-                        const SizedBox(width: 32),
-                        _buildStatColumn("Total Plays", "${result.totalPlays}",
-                            "Tracks", Colors.white),
-                      ],
-                    ),
+                              ),
+                            SizedBox(width: gap),
+                            _buildStatColumn(
+                                AppLocalizations.of(context)!.timeListened,
+                                "${result.totalMinutes}",
+                                AppLocalizations.of(context)!.minutes,
+                                accentColor),
+                            SizedBox(width: gap),
+                            _buildStatColumn(
+                                AppLocalizations.of(context)!.totalPlays,
+                                "${result.totalPlays}",
+                                AppLocalizations.of(context)!.tracks,
+                                Colors.white),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
           ),
-          if (result.mostPlayed.isEmpty)
-            const SliverFillRemaining(
-              child: Center(
-                  child: Text("No stats yet.",
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold))),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final song = result.mostPlayed[index];
-                final id =
-                    StatEntry.generateId(song.title, song.artist, song.album);
-                final count = statsState.entries[id]?.playCount ?? 0;
-
-                // Check History for fallback URL if file missing
-                // Note: We rely on _handleSongTap to do the actual restoration lookup
-
-                Color? rankColor;
-                if (index == 0) rankColor = const Color(0xFFFFD700);
-                if (index == 1) rankColor = const Color(0xFFC0C0C0);
-                if (index == 2) rankColor = const Color(0xFFCD7F32);
-
-                return ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                  leading: SizedBox(
-                    width: 100,
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 40,
-                          child: Text("#${index + 1}",
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: rankColor ?? Colors.grey),
-                              textAlign: TextAlign.center),
-                        ),
-                        const SizedBox(width: 8),
-
-                        // 🚀 HYBRID ART: SmartArt handles fallback internally now
-                        SmartArt(
-                          path: song.filePath,
-                          size: 40,
-                          borderRadius: 4,
-                          onlineArtUrl: song.onlineArtUrl,
-                        ),
-                      ],
-                    ),
-                  ),
-                  title: Text(song.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-
-                  // 🚀 CLEAN SUBTITLE: No Badges, just Artist
-                  subtitle: Text(song.artist,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          color: Theme.of(context).textTheme.bodySmall?.color,
-                          fontSize: 12)),
-
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                            color: accentColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20)),
-                        child: Text("$count plays",
-                            style: TextStyle(
-                                color: accentColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12)),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: Icon(Icons.ios_share,
-                            size: 18, color: Colors.grey[600]),
-                        tooltip: "Share",
-                        onPressed: () =>
-                            _shareStats(song, count, header: "TOP TRACK"),
-                      )
-                    ],
-                  ),
-                  // SMART TAP: Plays if exists, Restores if missing
-                  onTap: () => _handleSongTap(song),
-                );
-              }, childCount: result.mostPlayed.length),
+          // 🚀 TAB SWITCHER (Songs / Artists) - Unified n-shape design
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: _buildUnifiedTabs(accentColor),
             ),
+          ),
+          // 🚀 CONDITIONAL CONTENT: Songs tab vs Artists tab
+          if (ref.watch(statsTabProvider) == 0) ...[
+            // --- SONGS TAB ---
+            if (result.mostPlayed.isEmpty)
+              SliverFillRemaining(
+                child: Center(
+                    child: Text(AppLocalizations.of(context)!.noStatsYet,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold))),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final song = result.mostPlayed[index];
+                  final id =
+                      StatEntry.generateId(song.title, song.artist, song.album);
+                  final count = statsState.entries[id]?.playCount ?? 0;
+
+                  Color? rankColor;
+                  if (index == 0) rankColor = const Color(0xFFFFD700);
+                  if (index == 1) rankColor = const Color(0xFFC0C0C0);
+                  if (index == 2) rankColor = const Color(0xFFCD7F32);
+
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final leadingW = screenWidth < 400 ? 80.0 : 100.0;
+                  return ListTile(
+                    contentPadding: EdgeInsets.symmetric(
+                        horizontal: screenWidth < 400 ? 16 : 24, vertical: 4),
+                    leading: SizedBox(
+                      width: leadingW,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: screenWidth < 400 ? 28 : 40,
+                            child: Text("#${index + 1}",
+                                style: TextStyle(
+                                    fontSize: screenWidth < 400 ? 14 : 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: rankColor ?? Colors.grey),
+                                textAlign: TextAlign.center),
+                          ),
+                          const SizedBox(width: 8),
+                          SmartArt(
+                            path: song.filePath,
+                            size: 40,
+                            borderRadius: 4,
+                            onlineArtUrl: song.onlineArtUrl,
+                          ),
+                        ],
+                      ),
+                    ),
+                    title: Text(song.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(song.artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                            fontSize: 12)),
+                    trailing: ConstrainedBox(
+                      constraints: BoxConstraints(
+                          maxWidth: screenWidth < 400 ? 120 : 160),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                  color: accentColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20)),
+                              child: Text(
+                                  "$count ${count == 1 ? AppLocalizations.of(context)!.play : AppLocalizations.of(context)!.plays}",
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      color: accentColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12)),
+                            ),
+                          ),
+                          SizedBox(width: screenWidth < 400 ? 2 : 8),
+                          IconButton(
+                            icon: Icon(Icons.ios_share,
+                                size: 18, color: Colors.grey[600]),
+                            tooltip: AppLocalizations.of(context)!.share,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                                minWidth: 32, minHeight: 32),
+                            onPressed: () => _shareStats(song, count,
+                                header: AppLocalizations.of(context)!
+                                    .mostListened
+                                    .toUpperCase()),
+                          )
+                        ],
+                      ),
+                    ),
+                    onTap: () => _handleSongTap(song),
+                  );
+                }, childCount: result.mostPlayed.length),
+              ),
+          ] else ...[
+            // --- ARTISTS TAB ---
+            if (result.sortedArtists.isEmpty)
+              SliverFillRemaining(
+                child: Center(
+                    child: Text(AppLocalizations.of(context)!.noArtistStatsYet,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold))),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final entry = result.sortedArtists[index];
+                  final artistName = entry.key;
+                  final playCount = entry.value;
+
+                  Color? rankColor;
+                  if (index == 0) rankColor = const Color(0xFFFFD700);
+                  if (index == 1) rankColor = const Color(0xFFC0C0C0);
+                  if (index == 2) rankColor = const Color(0xFFCD7F32);
+
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final leadingW = screenWidth < 400 ? 80.0 : 100.0;
+                  return ListTile(
+                    contentPadding: EdgeInsets.symmetric(
+                        horizontal: screenWidth < 400 ? 16 : 24, vertical: 4),
+                    leading: SizedBox(
+                      width: leadingW,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: screenWidth < 400 ? 28 : 40,
+                            child: Text("#${index + 1}",
+                                style: TextStyle(
+                                    fontSize: screenWidth < 400 ? 14 : 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: rankColor ?? Colors.grey),
+                                textAlign: TextAlign.center),
+                          ),
+                          const SizedBox(width: 8),
+                          // Artist avatar with Spotify image
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: ArtistAvatar(
+                              artistName: artistName,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    title: Text(artistName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                        "$playCount ${playCount == 1 ? AppLocalizations.of(context)!.play : AppLocalizations.of(context)!.plays}",
+                        style: TextStyle(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                            fontSize: 12)),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Text(
+                          "${result.artistMinutes[artistName] ?? 0} ${AppLocalizations.of(context)!.min}",
+                          style: TextStyle(
+                              color: accentColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12)),
+                    ),
+                    onTap: () {
+                      ref.read(navigationStackProvider.notifier).push(
+                            NavigationItem(
+                              type: NavigationType.artist,
+                              data: ArtistSelection(artistName: artistName),
+                            ),
+                          );
+                    },
+                  );
+                }, childCount: result.sortedArtists.length),
+              ),
+          ],
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
       ),
+    );
+  }
+
+  // 🚀 UNIFIED TAB SWITCHER (animated)
+  Widget _buildUnifiedTabs(Color accentColor) {
+    final selectedTab = ref.watch(statsTabProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.2)
+        : Colors.black.withValues(alpha: 0.15);
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final highlightColor = Colors.white.withValues(alpha: isDark ? 0.07 : 0.5);
+
+    Widget buildTab(int index, String label) {
+      final isSelected = selectedTab == index;
+      final radius = BorderRadius.only(
+        topLeft: index == 0 ? const Radius.circular(11) : Radius.zero,
+        topRight: index == 1 ? const Radius.circular(11) : Radius.zero,
+      );
+
+      return Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: () => ref.read(statsTabProvider.notifier).state = index,
+          hoverColor: Colors.white.withValues(alpha: isDark ? 0.05 : 0.15),
+          splashColor: Colors.white.withValues(alpha: isDark ? 0.1 : 0.2),
+          borderRadius: radius,
+          mouseCursor: SystemMouseCursors.click,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? highlightColor : Colors.transparent,
+              borderRadius: radius,
+            ),
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? accentColor
+                    : (isDark ? Colors.grey[500]! : Colors.grey[500]!),
+              ),
+              child: Text(label),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: borderColor, width: 1.0),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    buildTab(0, AppLocalizations.of(context)!.songs),
+                    // Middle divider
+                    VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: borderColor,
+                    ),
+                    buildTab(1, AppLocalizations.of(context)!.artists),
+                  ],
+                ),
+              ),
+            ),
+            // Cover bottom border
+            Positioned(
+              bottom: 0,
+              left: 1,
+              right: 1,
+              child: Container(height: 1.5, color: bgColor),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -717,6 +958,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     int totalPlays = 0;
     int totalSeconds = 0;
     Map<String, int> artistCounts = {};
+    Map<String, int> artistSeconds = {};
 
     // We need to read history to get metadata for missing files
     // But we can't read provider asynchronously inside this synchronous method.
@@ -730,6 +972,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       if (entry.playCount > 0) {
         final artist = entry.artist.isEmpty ? "Unknown" : entry.artist;
         artistCounts[artist] = (artistCounts[artist] ?? 0) + entry.playCount;
+        artistSeconds[artist] =
+            (artistSeconds[artist] ?? 0) + entry.totalSeconds;
 
         if (libraryMap.containsKey(entry.id)) {
           displayList.add(libraryMap[entry.id]!);
@@ -761,21 +1005,37 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       displayList = displayList.sublist(0, 100);
     }
 
+    // Sort all artists by minutes listened (descending)
+    final sortedArtistList = artistCounts.entries.toList()
+      ..sort((a, b) {
+        final secA = artistSeconds[a.key] ?? 0;
+        final secB = artistSeconds[b.key] ?? 0;
+        return secB.compareTo(secA);
+      });
+
     MapEntry<String, int>? topArtist;
-    if (artistCounts.isNotEmpty) {
-      final sorted = artistCounts.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
-      topArtist = sorted.first;
+    if (sortedArtistList.isNotEmpty) {
+      topArtist = sortedArtistList.first;
     }
 
     // BACKFILL METADATA (If missing)
     _backfillMetadata(displayList);
+
+    // Convert artist seconds to minutes
+    final Map<String, int> artistMinMap = {};
+    for (final e in artistSeconds.entries) {
+      artistMinMap[e.key] = (e.value / 60).floor();
+    }
 
     return _StatsResult(
       mostPlayed: displayList,
       totalMinutes: (totalSeconds / 60).floor(),
       totalPlays: totalPlays,
       topArtistEntry: topArtist,
+      sortedArtists: sortedArtistList.length > 50
+          ? sortedArtistList.sublist(0, 50)
+          : sortedArtistList,
+      artistMinutes: artistMinMap,
     );
   }
 
@@ -804,22 +1064,13 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         try {
           // 1. Fetch Art
           String? artUrl = song.onlineArtUrl;
-          if (artUrl == null) {
-            artUrl =
-                await SpotifyService.getTrackImage(song.title, song.artist);
-          }
+          artUrl ??=
+              await SpotifyService.getTrackImage(song.title, song.artist);
 
           // 2. Fetch URL
           String? youtubeUrl = song.sourceUrl;
-          if (youtubeUrl == null) {
-            // We can use Spotify Link or search YouTube.
-            // For now, let's just get Spotify Link as a placeholder or leave null
-            // The 'SmartDownloadService' usually needs a YouTube URL.
-            // But 'SpotifyService' gives us Spotify Metadata.
-            // We can try to get the Spotify Track URL.
-            youtubeUrl =
-                await SpotifyService.getTrackLink(song.title, song.artist);
-          }
+          youtubeUrl ??=
+              await SpotifyService.getTrackLink(song.title, song.artist);
 
           if (artUrl != null || youtubeUrl != null) {
             if (mounted) {
@@ -829,7 +1080,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             }
           }
         } catch (e) {
-          print("Backfill failed for ${song.title}: $e");
+          debugPrint("Backfill failed for ${song.title}: $e");
         }
       });
     }
@@ -841,12 +1092,21 @@ class _StatsResult {
   final int totalMinutes;
   final int totalPlays;
   final MapEntry<String, int>? topArtistEntry;
+  final List<MapEntry<String, int>> sortedArtists;
+  final Map<String, int> artistMinutes;
 
   _StatsResult(
       {required this.mostPlayed,
       required this.totalMinutes,
       required this.totalPlays,
-      this.topArtistEntry});
+      this.topArtistEntry,
+      this.sortedArtists = const [],
+      this.artistMinutes = const {}});
   factory _StatsResult.empty() => _StatsResult(
-      mostPlayed: [], totalMinutes: 0, totalPlays: 0, topArtistEntry: null);
+      mostPlayed: [],
+      totalMinutes: 0,
+      totalPlays: 0,
+      topArtistEntry: null,
+      sortedArtists: [],
+      artistMinutes: {});
 }

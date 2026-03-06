@@ -1,13 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart' as p;
-
 import '../../providers/playlist_provider.dart';
-import '../../providers/library_provider.dart';
 import '../../models/playlist_model.dart';
 import '../components/playlist_collage.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 class PlaylistsPage extends ConsumerWidget {
   const PlaylistsPage({super.key});
@@ -16,19 +15,22 @@ class PlaylistsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playlists = ref.watch(playlistProvider);
     final notifier = ref.read(playlistProvider.notifier);
-    // We don't strictly need library provider anymore for paths,
-    // but keeping it if you use it elsewhere.
-    final library = p.Provider.of<LibraryProvider>(context);
+    final settings = ref.watch(settingsProvider);
+    final hasTheme = settings.atmosphereTheme != AtmosphereTheme.none;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
-    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final cardColor = hasTheme
+        ? (isDark
+            ? Colors.black.withValues(alpha: 0.15)
+            : Colors.white.withValues(alpha: 0.15))
+        : (isDark ? const Color(0xFF1E1E1E) : Colors.white);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateDialog(context, notifier),
-        label: const Text("New Playlist"),
+        label: Text(AppLocalizations.of(context)!.newPlaylist),
         icon: const Icon(Icons.add),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
@@ -44,7 +46,7 @@ class PlaylistsPage extends ConsumerWidget {
               padding: EdgeInsets.only(
                   left: (Platform.isAndroid || Platform.isIOS) ? 40.0 : 0.0),
               child: Text(
-                'Playlists',
+                AppLocalizations.of(context)!.playlists,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: textColor,
@@ -59,10 +61,10 @@ class PlaylistsPage extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.queue_music,
-                          size: 64, color: Colors.grey.withOpacity(0.5)),
+                          size: 64, color: Colors.grey.withValues(alpha: 0.5)),
                       const SizedBox(height: 16),
                       Text(
-                        "No playlists yet",
+                        AppLocalizations.of(context)!.noPlaylistsYet,
                         style: TextStyle(color: Colors.grey[600], fontSize: 16),
                       ),
                     ],
@@ -139,7 +141,7 @@ class PlaylistsPage extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               )
@@ -208,7 +210,8 @@ class PlaylistsPage extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "${playlist.entries.length} songs",
+                      AppLocalizations.of(context)!
+                          .songsCount(playlist.entries.length),
                       style: TextStyle(
                         color: Colors.grey[500],
                         fontSize: 12,
@@ -230,7 +233,7 @@ class PlaylistsPage extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
-        title: Text("Create Playlist",
+        title: Text(AppLocalizations.of(context)!.createPlaylist,
             style: TextStyle(color: isDark ? Colors.white : Colors.black)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -238,8 +241,9 @@ class PlaylistsPage extends ConsumerWidget {
             // Option 1: Create Empty Playlist
             ListTile(
               leading: const Icon(Icons.add_box_outlined),
-              title: const Text("Empty Playlist"),
-              subtitle: const Text("Create a new empty playlist"),
+              title: Text(AppLocalizations.of(context)!.emptyPlaylist),
+              subtitle:
+                  Text(AppLocalizations.of(context)!.emptyPlaylistSubtitle),
               onTap: () {
                 Navigator.pop(context);
                 _showNameDialog(context, notifier);
@@ -250,8 +254,9 @@ class PlaylistsPage extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.cloud_download_outlined,
                   color: Colors.green),
-              title: const Text("Import from Spotify"),
-              subtitle: const Text("Paste a Spotify playlist URL"),
+              title: Text(AppLocalizations.of(context)!.importFromSpotify),
+              subtitle:
+                  Text(AppLocalizations.of(context)!.importFromSpotifySubtitle),
               onTap: () {
                 Navigator.pop(context);
                 _showSpotifyImportDialog(context, notifier);
@@ -262,7 +267,7 @@ class PlaylistsPage extends ConsumerWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel")),
+              child: Text(AppLocalizations.of(context)!.cancel)),
         ],
       ),
     );
@@ -275,18 +280,19 @@ class PlaylistsPage extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
-        title: Text("New Playlist",
+        title: Text(AppLocalizations.of(context)!.newPlaylist,
             style: TextStyle(color: isDark ? Colors.white : Colors.black)),
         content: TextField(
           controller: controller,
           autofocus: true,
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
-          decoration: const InputDecoration(hintText: "Playlist Name"),
+          decoration: InputDecoration(
+              hintText: AppLocalizations.of(context)!.playlistNameHint),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel")),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
@@ -294,7 +300,7 @@ class PlaylistsPage extends ConsumerWidget {
                 Navigator.pop(context);
               }
             },
-            child: const Text("Create"),
+            child: Text(AppLocalizations.of(context)!.createPlaylist),
           ),
         ],
       ),
@@ -318,7 +324,7 @@ class PlaylistsPage extends ConsumerWidget {
             children: [
               Icon(Icons.music_note, color: Colors.green[400]),
               const SizedBox(width: 8),
-              Text("Import Spotify Playlist",
+              Text(AppLocalizations.of(context)!.importSpotifyPlaylist,
                   style:
                       TextStyle(color: isDark ? Colors.white : Colors.black)),
             ],
@@ -381,7 +387,7 @@ class PlaylistsPage extends ConsumerWidget {
                     TextButton(
                       onPressed:
                           isLoading ? null : () => Navigator.pop(context),
-                      child: const Text("Cancel"),
+                      child: Text(AppLocalizations.of(context)!.cancel),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
@@ -409,7 +415,7 @@ class PlaylistsPage extends ConsumerWidget {
                               }
                             },
                       icon: const Icon(Icons.download),
-                      label: const Text("Import"),
+                      label: Text(AppLocalizations.of(context)!.download),
                     ),
                   ],
                 );
@@ -426,19 +432,20 @@ class PlaylistsPage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Delete Playlist?"),
-        content: Text("Delete '${playlist.name}'?"),
+        title: Text(AppLocalizations.of(context)!.deletePlaylistTitle),
+        content: Text(
+            AppLocalizations.of(context)!.deletePlaylistConfirm(playlist.name)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel")),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             onPressed: () {
               notifier.deletePlaylist(playlist.id);
               Navigator.pop(context);
             },
-            child: const Text("Delete"),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),

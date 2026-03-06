@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../models/song_model.dart';
 import 'smart_art.dart';
+import '../../l10n/app_localizations.dart';
 
 class ShareableStatsCard extends StatelessWidget {
   final SongModel song;
@@ -15,7 +16,7 @@ class ShareableStatsCard extends StatelessWidget {
     super.key,
     required this.song,
     required this.playCount,
-    this.title = "MY TOP TRACK",
+    this.title = "", // Default handled in build
     this.appName = "Simple Music Player",
     this.imageOverride,
   });
@@ -69,7 +70,7 @@ class ShareableStatsCard extends StatelessWidget {
           ),
 
           // 2. TEXTURE OVERLAY
-          Container(color: Colors.black.withOpacity(0.2)),
+          Container(color: Colors.black.withValues(alpha: 0.2)),
 
           // 3. CONTENT
           Padding(
@@ -88,7 +89,11 @@ class ShareableStatsCard extends StatelessWidget {
                     color: Colors.black26,
                   ),
                   child: Text(
-                    title,
+                    title.isEmpty
+                        ? AppLocalizations.of(context)!
+                            .mostListened
+                            .toUpperCase()
+                        : title,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -108,7 +113,7 @@ class ShareableStatsCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         blurRadius: 30,
                         spreadRadius: 5,
                         offset: const Offset(0, 10),
@@ -171,9 +176,9 @@ class ShareableStatsCard extends StatelessWidget {
                     height: 1.0,
                   ),
                 ),
-                const Text(
-                  "TOTAL PLAYS",
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.totalPlays.toUpperCase(),
+                  style: const TextStyle(
                     color: Colors.white54,
                     fontSize: 12,
                     letterSpacing: 1.5,

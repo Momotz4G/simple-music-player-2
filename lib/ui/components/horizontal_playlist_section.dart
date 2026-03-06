@@ -8,6 +8,7 @@ import '../../models/song_model.dart';
 import 'playlist_collage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 class HorizontalPlaylistSection extends StatefulWidget {
   final String title;
@@ -90,6 +91,9 @@ class _HorizontalPlaylistSectionState extends State<HorizontalPlaylistSection> {
               onEnter: (_) => widget.onScrollFocus?.call(true),
               onExit: (_) => widget.onScrollFocus?.call(false),
               child: Listener(
+                onPointerDown: (_) => widget.onScrollFocus?.call(true),
+                onPointerUp: (_) => widget.onScrollFocus?.call(false),
+                onPointerCancel: (_) => widget.onScrollFocus?.call(false),
                 onPointerSignal: (pointerSignal) {
                   if (pointerSignal is PointerScrollEvent) {
                     final offset = pointerSignal.scrollDelta.dy;
@@ -216,7 +220,7 @@ class _PlaylistTileState extends ConsumerState<_PlaylistTile> {
                     boxShadow: _isHovering
                         ? [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               blurRadius: 15,
                               offset: const Offset(0, 8),
                             )
@@ -249,7 +253,8 @@ class _PlaylistTileState extends ConsumerState<_PlaylistTile> {
           ),
           const SizedBox(height: 4),
           Text(
-            "${widget.playlist.entries.length} Songs",
+            AppLocalizations.of(context)!
+                .countSongs(widget.playlist.entries.length),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/timer_provider.dart';
 
+import '../../l10n/app_localizations.dart';
+
 class TimerDisplay extends ConsumerWidget {
   const TimerDisplay({super.key});
 
@@ -19,6 +21,7 @@ class TimerDisplay extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the timer state (this will cause this small widget to rebuild every second)
     final timerState = ref.watch(timerProvider);
+    final l10n = AppLocalizations.of(context)!;
     final accentColor = Theme.of(context).colorScheme.primary;
 
     final textColor = Theme.of(context).brightness == Brightness.dark
@@ -26,7 +29,7 @@ class TimerDisplay extends ConsumerWidget {
         : Colors.black87;
 
     if (!timerState.isActive) {
-      return Text("Sleep Timer", style: TextStyle(color: textColor));
+      return Text(l10n.sleepTimer, style: TextStyle(color: textColor));
     }
 
     // Active State Display
@@ -36,7 +39,7 @@ class TimerDisplay extends ConsumerWidget {
         // The icon is handled by the parent PopupMenuItem, so we just handle the text/spacing
         // const SizedBox(width: 12), // Optional: Removed to prevent double spacing in menu
         Text(
-          "Stop Timer (${_formatTimer(timerState.remaining)})",
+          l10n.stopTimer(_formatTimer(timerState.remaining)),
           style: TextStyle(color: accentColor, fontWeight: FontWeight.bold),
         ),
       ],

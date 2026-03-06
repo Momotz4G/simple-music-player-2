@@ -158,6 +158,10 @@ class LibraryProvider extends ChangeNotifier {
       duration: dbSong.duration,
       filePath: dbSong.path,
       fileExtension: p.extension(dbSong.path),
+      year: dbSong.year,
+      trackNumber: dbSong.trackNumber,
+      discNumber: dbSong.discNumber,
+      genre: dbSong.genre,
       // artwork: null, // Removed as per your SongModel
     );
   }
@@ -264,6 +268,10 @@ class LibraryProvider extends ChangeNotifier {
         ..artist = metadata.artist ?? "Unknown Artist"
         ..album = metadata.album ?? "Unknown Album"
         ..duration = (metadata.durationMs ?? 0) / 1000.0
+        ..year = metadata.year?.toString()
+        ..trackNumber = metadata.trackNumber
+        ..discNumber = metadata.discNumber
+        ..genre = metadata.genre
         ..dateAdded = DateTime.now();
 
       return song;
@@ -307,7 +315,6 @@ class LibraryProvider extends ChangeNotifier {
     final isar = await dbService.db;
 
     await isar.writeTxn(() async {
-      // Updated to use the standard 'filter' syntax which is safer
       final existingSong =
           await isar.songs.filter().pathEqualTo(newSong.filePath).findFirst();
 
@@ -316,6 +323,10 @@ class LibraryProvider extends ChangeNotifier {
         existingSong.artist = newSong.artist;
         existingSong.album = newSong.album;
         existingSong.duration = newSong.duration;
+        existingSong.year = newSong.year;
+        existingSong.trackNumber = newSong.trackNumber;
+        existingSong.discNumber = newSong.discNumber;
+        existingSong.genre = newSong.genre;
 
         await isar.songs.put(existingSong);
       }

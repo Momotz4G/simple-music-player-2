@@ -6,8 +6,7 @@ import '../../models/song_metadata.dart';
 import '../../models/album_model.dart';
 import '../../models/artist_model.dart';
 import '../../providers/search_bridge_provider.dart';
-import '../../providers/library_presentation_provider.dart';
-import '../screens/album_detail_page.dart';
+import '../../l10n/app_localizations.dart';
 
 class TopSearchBar extends ConsumerStatefulWidget {
   const TopSearchBar({super.key});
@@ -184,10 +183,10 @@ class _TopSearchBarState extends ConsumerState<TopSearchBar> {
       children: [
         // --- SONGS SECTION ---
         if (_songSuggestions.isNotEmpty) ...[
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text("Songs",
-                style: TextStyle(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(AppLocalizations.of(context)!.songs,
+                style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey,
@@ -216,10 +215,10 @@ class _TopSearchBarState extends ConsumerState<TopSearchBar> {
         if (_albumSuggestions.isNotEmpty) ...[
           if (_songSuggestions.isNotEmpty)
             const Divider(height: 1), // Separator
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text("Albums",
-                style: TextStyle(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(AppLocalizations.of(context)!.albums,
+                style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey,
@@ -248,11 +247,11 @@ class _TopSearchBarState extends ConsumerState<TopSearchBar> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.2),
+                        color: Colors.grey.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text("ALBUM",
-                          style: TextStyle(
+                      child: Text(AppLocalizations.of(context)!.albumLabel,
+                          style: const TextStyle(
                               fontSize: 8,
                               fontWeight: FontWeight.bold,
                               color: Colors.grey)),
@@ -267,10 +266,10 @@ class _TopSearchBarState extends ConsumerState<TopSearchBar> {
         if (_artistSuggestions.isNotEmpty) ...[
           if (_songSuggestions.isNotEmpty || _albumSuggestions.isNotEmpty)
             const Divider(height: 1), // Separator
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text("Artists",
-                style: TextStyle(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(AppLocalizations.of(context)!.artists,
+                style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey,
@@ -290,8 +289,8 @@ class _TopSearchBarState extends ConsumerState<TopSearchBar> {
                 ),
                 title: Text(artist.name,
                     maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: const Text("Artist",
-                    style: TextStyle(fontSize: 12, color: Colors.grey)),
+                subtitle: Text(AppLocalizations.of(context)!.artistLabel,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 onTap: () => _onArtistSelected(artist),
               )),
         ],
@@ -323,15 +322,16 @@ class _TopSearchBarState extends ConsumerState<TopSearchBar> {
           style: TextStyle(
               fontSize: 13, color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
-            hintText: "Search Songs or Albums...",
+            hintText:
+                AppLocalizations.of(context)!.searchSongsOrAlbumsAndArtistsHint,
             hintStyle: TextStyle(
                 fontSize: 13, color: isDark ? Colors.white38 : Colors.black38),
             prefixIcon: Icon(Icons.search,
                 size: 18, color: isDark ? Colors.white54 : Colors.black54),
             filled: true,
             fillColor: isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.05),
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
             border: OutlineInputBorder(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'dart:async';
@@ -11,6 +10,7 @@ import '../../models/artist_model.dart';
 import '../../models/song_metadata.dart';
 
 import '../../services/hybrid_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -29,11 +29,23 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   List<ArtistModel> _artistSuggestions = [];
   bool _isSuggesting = false;
   bool _isLoadingSuggestions = false;
-  String _currentStatus = 'Ready. Search for a song.';
+  String _currentStatus = '';
 
   // 🚀 NETWORK STATE
   bool _isOnline = true;
   Timer? _connectivityTimer;
+
+  late AppLocalizations _l10n;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _l10n = AppLocalizations.of(context)!;
+    if (_currentStatus.isEmpty ||
+        _currentStatus == 'Ready. Search for a song.') {
+      _currentStatus = _l10n.readySearchSong;
+    }
+  }
 
   @override
   void initState() {
@@ -59,10 +71,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       if (mounted) {
         setState(() {
           _isOnline = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-          if (_isOnline && _currentStatus == 'Offline') {
-            _currentStatus = 'Ready. Search for a song.';
+          if (_isOnline &&
+              (_currentStatus == _l10n.offline ||
+                  _currentStatus == 'Offline')) {
+            _currentStatus = _l10n.readySearchSong;
           } else if (!_isOnline) {
-            _currentStatus = 'Offline';
+            _currentStatus = _l10n.offline;
           }
         });
       }
@@ -71,7 +85,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       if (mounted) {
         setState(() {
           _isOnline = false;
-          _currentStatus = 'Offline';
+          _currentStatus = _l10n.offline;
         });
       }
     }
@@ -175,14 +189,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         _albumSuggestions = [];
         _artistSuggestions = [];
         _isSuggesting = false;
-        _currentStatus = 'Ready. Search for a song.';
+        _currentStatus = _l10n.readySearchSong;
       });
       return;
     }
 
     // 🚀 Show loading state
     setState(() {
-      _currentStatus = 'Searching Spotify for "$keyword"...';
+      _currentStatus = _l10n.searchingSpotifyFor(keyword);
       _isLoadingSuggestions = true;
       _isSuggesting = true; // Keep suggestion list visible
     });
@@ -204,9 +218,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
           if (songCount + albumCount + artistCount > 0) {
             _currentStatus =
-                'Found $songCount songs, $albumCount albums, $artistCount artists.';
+                _l10n.foundResults(songCount, albumCount, artistCount);
           } else {
-            _currentStatus = 'No Spotify results found.';
+            _currentStatus = _l10n.noSpotifyResults;
           }
         });
       }
@@ -214,7 +228,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       if (mounted) {
         setState(() {
           _isLoadingSuggestions = false;
-          _currentStatus = 'Search failed: $e';
+          _currentStatus = _l10n.searchFailedStatus(e.toString());
         });
       }
     }
@@ -268,7 +282,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             Padding(
               padding: EdgeInsets.only(
                   left: (Platform.isAndroid || Platform.isIOS) ? 40.0 : 0.0),
-              child: Text('Music Search',
+              child: Text(_l10n.musicSearch,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold, color: textColor)),
             ),
@@ -281,18 +295,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               onChanged: _onSearchQueryChanged, // 🚀 Trigger suggestions
               onSubmitted: (_) => _runSearch(),
               decoration: InputDecoration(
-                labelText: 'Song Title or Keyword',
-                hintText: 'Search Spotify...',
+                labelText: _l10n.songTitleKeyword,
+                hintText: _l10n.searchSpotifyHint,
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(Icons.search, color: textColor.withOpacity(0.7)),
+                  icon: Icon(Icons.search,
+                      color: textColor.withValues(alpha: 0.7)),
                   onPressed: _runSearch,
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            Text('Status: $_currentStatus',
-                style: TextStyle(color: textColor.withOpacity(0.6))),
+            Text(_l10n.statusWithText(_currentStatus),
+                style: TextStyle(color: textColor.withValues(alpha: 0.6))),
             const SizedBox(height: 10),
 
             // 🚀 NO INTERNET CONNECTION MESSAGE
@@ -305,22 +320,22 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       Icon(
                         Icons.wifi_off_rounded,
                         size: 64,
-                        color: textColor.withOpacity(0.3),
+                        color: textColor.withValues(alpha: 0.3),
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No Internet Connection',
+                        _l10n.noInternetConnection,
                         style: TextStyle(
-                          color: textColor.withOpacity(0.6),
+                          color: textColor.withValues(alpha: 0.6),
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Please check your network and try again',
+                        _l10n.checkNetworkTryAgain,
                         style: TextStyle(
-                          color: textColor.withOpacity(0.4),
+                          color: textColor.withValues(alpha: 0.4),
                           fontSize: 14,
                         ),
                       ),
@@ -343,7 +358,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     final durationDisplay =
                         '${(result.durationSeconds ~/ 60)}:${(result.durationSeconds % 60).toString().padLeft(2, '0')}';
                     return Card(
-                      color: textColor.withOpacity(0.05),
+                      color: textColor.withValues(alpha: 0.05),
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       child: ListTile(
                         leading: Image.network(result.albumArtUrl,
@@ -355,8 +370,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         title: Text(result.title,
                             style: TextStyle(color: textColor)),
                         subtitle: Text('${result.artist} • $durationDisplay',
-                            style:
-                                TextStyle(color: textColor.withOpacity(0.7))),
+                            style: TextStyle(
+                                color: textColor.withValues(alpha: 0.7))),
                         trailing: Icon(Icons.chevron_right, color: accentColor),
                         onTap: () => _viewMatchResults(result),
                       ),
@@ -379,15 +394,15 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         _albumSuggestions.isEmpty &&
         _artistSuggestions.isEmpty) {
       return Center(
-        child: Text("No suggestions found.",
-            style: TextStyle(color: textColor.withOpacity(0.5))),
+        child: Text(_l10n.noSuggestionsFound,
+            style: TextStyle(color: textColor.withValues(alpha: 0.5))),
       );
     }
 
     return ListView(
       children: [
         if (_songSuggestions.isNotEmpty) ...[
-          _buildHeader("Songs", textColor),
+          _buildHeader(_l10n.songs, textColor),
           ..._songSuggestions.map((s) => ListTile(
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(4),
@@ -402,14 +417,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 subtitle: Text(s.artist,
-                    style: TextStyle(color: textColor.withOpacity(0.7)),
+                    style: TextStyle(color: textColor.withValues(alpha: 0.7)),
                     maxLines: 1),
                 onTap: () => _onSuggestionSelected(s),
                 dense: true,
               )),
         ],
         if (_albumSuggestions.isNotEmpty) ...[
-          _buildHeader("Albums", textColor),
+          _buildHeader(_l10n.albums, textColor),
           ..._albumSuggestions.map((a) => ListTile(
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(4),
@@ -424,14 +439,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 subtitle: Text(a.artist,
-                    style: TextStyle(color: textColor.withOpacity(0.7)),
+                    style: TextStyle(color: textColor.withValues(alpha: 0.7)),
                     maxLines: 1),
                 onTap: () => _onSuggestionSelected(a),
                 dense: true,
               )),
         ],
         if (_artistSuggestions.isNotEmpty) ...[
-          _buildHeader("Artists", textColor),
+          _buildHeader(_l10n.artists, textColor),
           ..._artistSuggestions.map((a) => ListTile(
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(a.imageUrl),
@@ -452,7 +467,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       padding: const EdgeInsets.only(top: 12, bottom: 4, left: 16),
       child: Text(title,
           style: TextStyle(
-              color: textColor.withOpacity(0.5),
+              color: textColor.withValues(alpha: 0.5),
               fontWeight: FontWeight.bold,
               fontSize: 12)),
     );

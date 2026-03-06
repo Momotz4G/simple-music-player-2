@@ -5,6 +5,7 @@ import '../../providers/library_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../services/spotify_service.dart';
 import '../../services/deezer_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class ArtistsPage extends ConsumerWidget {
   const ArtistsPage({super.key});
@@ -26,19 +27,19 @@ class ArtistsPage extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.library_music,
-                size: 64, color: Colors.grey.withOpacity(0.5)),
+                size: 64, color: Colors.grey.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
             Text(
               libraryProviderInstance.selectedFolder == null
-                  ? 'Library not loaded.'
-                  : 'No artists found.',
+                  ? AppLocalizations.of(context)!.libraryNotLoaded
+                  : AppLocalizations.of(context)!.noArtistsFound,
               style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
-              "Go to 'Local Library' to select your music folder.",
-              style:
-                  TextStyle(color: Colors.grey.withOpacity(0.7), fontSize: 14),
+              AppLocalizations.of(context)!.goToLocalLibraryToSelect,
+              style: TextStyle(
+                  color: Colors.grey.withValues(alpha: 0.7), fontSize: 14),
             ),
           ],
         ),
@@ -104,7 +105,7 @@ class ArtistsPage extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  songCount == 1 ? '1 Song' : '$songCount Songs',
+                  AppLocalizations.of(context)!.songsCount(songCount),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Theme.of(context).textTheme.bodySmall?.color,
@@ -214,7 +215,7 @@ class _ArtistAvatarState extends State<ArtistAvatar> {
         color: isDark ? Colors.grey[850] : Colors.grey[200],
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),

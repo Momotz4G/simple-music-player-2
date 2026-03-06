@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:metadata_god/metadata_god.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/album_model.dart';
 
 import '../../models/song_model.dart';
@@ -13,7 +14,6 @@ import '../../services/youtube_downloader_service.dart';
 import '../../services/bulk_download_service.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/search_bridge_provider.dart';
-import '../../providers/library_presentation_provider.dart';
 import '../../providers/playlist_provider.dart';
 import '../components/music_notification.dart';
 import '../components/song_context_menu.dart';
@@ -153,7 +153,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
           }
         }
       } catch (e) {
-        print("Error reading local metadata: $e");
+        debugPrint("Error reading local metadata: $e");
       }
     }
 
@@ -173,7 +173,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
         }
       }
     } catch (e) {
-      print("Error fetching album image: $e");
+      debugPrint("Error fetching album image: $e");
     }
   }
 
@@ -227,16 +227,20 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
               song,
               newQueue: queue,
             );
+      }
 
+      if (mounted) {
         showCenterNotification(context,
-            label: "PLAYING FROM ALBUM",
+            label: AppLocalizations.of(context)!.playingFromAlbum,
             title: song.title,
             subtitle: song.artist,
             artPath: song.filePath,
             onlineArtUrl: song.onlineArtUrl);
       }
     } catch (e) {
-      _showError("Playback error: $e");
+      if (mounted) {
+        _showError("${AppLocalizations.of(context)!.error}: $e");
+      }
     } finally {
       if (mounted) setState(() => _loadingSongTitle = null);
     }
@@ -291,8 +295,8 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                   end: Alignment.bottomCenter,
                   stops: const [0.0, 0.7],
                   colors: [
-                    _dominantColor.withOpacity(0.7),
-                    baseBg.withOpacity(0.8),
+                    _dominantColor.withValues(alpha: 0.7),
+                    baseBg.withValues(alpha: 0.8),
                   ],
                 ),
               ),
@@ -323,7 +327,8 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                     borderRadius: BorderRadius.circular(8),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.4),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.4),
                                         blurRadius: 30,
                                         offset: const Offset(0, 15),
                                       )
@@ -404,9 +409,12 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                 const SizedBox(height: 8),
                                 // Year & Track Count
                                 Text(
-                                  "${widget.album.releaseDate.split('-').first} • ${_tracks.length} songs",
+                                  widget.album.releaseDate != "Unknown"
+                                      ? "${widget.album.releaseDate.split('-').first} • ${AppLocalizations.of(context)!.songsCount(_tracks.length)}"
+                                      : AppLocalizations.of(context)!
+                                          .songsCount(_tracks.length),
                                   style: TextStyle(
-                                      color: textColor.withOpacity(0.6),
+                                      color: textColor.withValues(alpha: 0.6),
                                       fontSize: 13),
                                 ),
                               ],
@@ -423,7 +431,8 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                     borderRadius: BorderRadius.circular(4),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.4),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.4),
                                         blurRadius: 40,
                                         offset: const Offset(0, 20),
                                       )
@@ -441,8 +450,10 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                         CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      const Text("ALBUM",
-                                          style: TextStyle(
+                                      Text(
+                                          AppLocalizations.of(context)!
+                                              .albumLabel,
+                                          style: const TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold,
                                               letterSpacing: 1)),
@@ -512,10 +523,13 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                             ),
                                           ),
                                           Text(
-                                            " • ${widget.album.releaseDate.split('-').first} • ${_tracks.length} songs",
+                                            widget.album.releaseDate !=
+                                                    "Unknown"
+                                                ? " • ${widget.album.releaseDate.split('-').first} • ${AppLocalizations.of(context)!.songsCount(_tracks.length)}"
+                                                : " • ${AppLocalizations.of(context)!.songsCount(_tracks.length)}",
                                             style: TextStyle(
-                                                color:
-                                                    textColor.withOpacity(0.7)),
+                                                color: textColor.withValues(
+                                                    alpha: 0.7)),
                                           ),
                                         ],
                                       ),
@@ -545,7 +559,8 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.3),
                                       blurRadius: 8,
                                       offset: const Offset(0, 4))
                                 ]),
@@ -573,7 +588,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                       : Icons.favorite_border,
                                   color: isFavorite
                                       ? Colors.redAccent
-                                      : textColor.withOpacity(0.7),
+                                      : textColor.withValues(alpha: 0.7),
                                   size: 32,
                                 ),
                                 onPressed: () {
@@ -585,10 +600,11 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                         (p) => p.name == widget.album.title);
                                     notifier.deletePlaylist(playlist.id);
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
+                                      SnackBar(
                                           content: Text(
-                                              "Album removed from playlists"),
-                                          duration: Duration(seconds: 1)),
+                                              AppLocalizations.of(context)!
+                                                  .albumRemovedFromPlaylists),
+                                          duration: const Duration(seconds: 1)),
                                     );
                                   } else {
                                     // Add
@@ -604,10 +620,11 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                         newPlaylist.id, _tracks);
 
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content:
-                                              Text("Album added to playlists"),
-                                          duration: Duration(seconds: 1)),
+                                      SnackBar(
+                                          content: Text(
+                                              AppLocalizations.of(context)!
+                                                  .albumAddedToPlaylists),
+                                          duration: const Duration(seconds: 1)),
                                     );
                                   }
                                 },
@@ -620,23 +637,25 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                           // 🚀 DOWNLOAD ALL BUTTON
                           IconButton(
                             icon: Icon(Icons.download_rounded,
-                                color: textColor.withOpacity(0.7), size: 32),
-                            tooltip: "Download All",
+                                color: textColor.withValues(alpha: 0.7),
+                                size: 32),
+                            tooltip: AppLocalizations.of(context)!.downloadAll,
                             onPressed: () {
                               BulkDownloadService()
                                   .downloadAlbum(widget.album.title, _tracks);
                               ScaffoldMessenger.of(context)
-                                  .showSnackBar(const SnackBar(
-                                content:
-                                    Text("Started downloading all songs..."),
-                                duration: Duration(seconds: 2),
+                                  .showSnackBar(SnackBar(
+                                content: Text(AppLocalizations.of(context)!
+                                    .startedDownloadingAll),
+                                duration: const Duration(seconds: 2),
                               ));
                             },
                           ),
 
                           const SizedBox(width: 24),
                           Icon(Icons.more_horiz,
-                              color: textColor.withOpacity(0.7), size: 32),
+                              color: textColor.withValues(alpha: 0.7),
+                              size: 32),
                         ],
                       ),
                     ),
@@ -680,7 +699,8 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                           style: TextStyle(
                                             color: isNowPlaying
                                                 ? accentColor
-                                                : textColor.withOpacity(0.5),
+                                                : textColor.withValues(
+                                                    alpha: 0.5),
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -710,8 +730,8 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                             subtitle: Text(song.artist,
                                 style: TextStyle(
                                     color: isNowPlaying
-                                        ? accentColor.withOpacity(0.7)
-                                        : textColor.withOpacity(0.6),
+                                        ? accentColor.withValues(alpha: 0.7)
+                                        : textColor.withValues(alpha: 0.6),
                                     fontSize: 13),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis),
@@ -721,46 +741,51 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                 Text(
                                   "${song.duration.toInt() ~/ 60}:${(song.duration.toInt() % 60).toString().padLeft(2, '0')}",
                                   style: TextStyle(
-                                      color: textColor.withOpacity(0.6),
+                                      color: textColor.withValues(alpha: 0.6),
                                       fontSize: 13),
                                 ),
                                 const SizedBox(width: 16),
                                 PopupMenuButton<SongAction>(
                                   icon: Icon(Icons.more_horiz,
-                                      color: textColor.withOpacity(0.6)),
-                                  tooltip: "More Options",
+                                      color: textColor.withValues(alpha: 0.6)),
+                                  tooltip:
+                                      AppLocalizations.of(context)!.moreOptions,
                                   onSelected: (action) {
                                     SongContextMenuRegion.handleAction(
                                         context, ref, action, song);
                                   },
                                   itemBuilder: (context) => [
-                                    const PopupMenuItem(
+                                    PopupMenuItem(
                                         value: SongAction.playNext,
                                         child: Row(children: [
-                                          Icon(Icons.playlist_play),
-                                          SizedBox(width: 12),
-                                          Text('Play Next')
+                                          const Icon(Icons.playlist_play),
+                                          const SizedBox(width: 12),
+                                          Text(AppLocalizations.of(context)!
+                                              .playNext)
                                         ])),
-                                    const PopupMenuItem(
+                                    PopupMenuItem(
                                         value: SongAction.addToPlaylist,
                                         child: Row(children: [
-                                          Icon(Icons.playlist_add),
-                                          SizedBox(width: 12),
-                                          Text('Add to Playlist')
+                                          const Icon(Icons.playlist_add),
+                                          const SizedBox(width: 12),
+                                          Text(AppLocalizations.of(context)!
+                                              .addToPlaylist)
                                         ])),
-                                    const PopupMenuItem(
-                                        value: SongAction.addToFavorites,
+                                    PopupMenuItem(
+                                        value: SongAction.addToFavorite,
                                         child: Row(children: [
-                                          Icon(Icons.favorite_border),
-                                          SizedBox(width: 12),
-                                          Text('Add to Favorites')
+                                          const Icon(Icons.favorite_border),
+                                          const SizedBox(width: 12),
+                                          Text(AppLocalizations.of(context)!
+                                              .addToFavorite)
                                         ])),
-                                    const PopupMenuItem(
+                                    PopupMenuItem(
                                         value: SongAction.goToArtist,
                                         child: Row(children: [
-                                          Icon(Icons.person_search),
-                                          SizedBox(width: 12),
-                                          Text('Go to Artist')
+                                          const Icon(Icons.person_search),
+                                          const SizedBox(width: 12),
+                                          Text(AppLocalizations.of(context)!
+                                              .goToArtist)
                                         ])),
                                   ],
                                 ),

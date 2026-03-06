@@ -170,7 +170,9 @@ class _AlbumCardState extends State<AlbumCard>
               const SizedBox(height: 4),
               // Artist • Year
               Text(
-                "${widget.artistName} • ${widget.year}",
+                widget.year != "Unknown"
+                    ? "${widget.artistName} • ${widget.year}"
+                    : widget.artistName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

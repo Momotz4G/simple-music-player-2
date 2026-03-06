@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/song_model.dart';
 import '../../providers/player_provider.dart';
+import '../../l10n/app_localizations.dart';
 import 'smart_art.dart';
 
 class RediscoverFeed extends ConsumerStatefulWidget {
@@ -108,14 +109,16 @@ class _RediscoverFeedState extends ConsumerState<RediscoverFeed> {
       return const SizedBox.shrink();
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
           child: Text(
-            "Rediscover",
-            style: TextStyle(
+            l10n.rediscover,
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
@@ -222,7 +225,7 @@ class _RediscoverFeedState extends ConsumerState<RediscoverFeed> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Do you remember?",
+                              AppLocalizations.of(context)!.doYouRemember,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.bold,

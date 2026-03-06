@@ -4,6 +4,7 @@ import '../../services/audio_info_service.dart';
 import '../../services/android_audio_service.dart';
 import '../../providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 
 import 'package:just_audio_media_kit/just_audio_media_kit.dart'; // Import for listAudioDevices
 
@@ -75,6 +76,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
   Widget build(BuildContext context) {
     // 1. Read Settings
     final settings = ref.watch(settingsProvider);
+    final l10n = AppLocalizations.of(context)!;
     final isExclusive = settings.wasapiExclusive;
     final String? currentDeviceId = settings.audioDeviceId;
 
@@ -117,25 +119,25 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
     }
 
     // Logic for "Output" text
-    String outputStatus = "System Default";
+    String outputStatus = l10n.systemDefault;
     if (Platform.isWindows) {
       if (currentDeviceId != null) {
         final device = _devices.firstWhere((d) => d['name'] == currentDeviceId,
             orElse: () => {});
         if (device.isNotEmpty) {
-          outputStatus = device['description'] ?? "Unknown Device";
+          outputStatus = device['description'] ?? l10n.unknownDevice;
         } else {
           outputStatus =
-              "Custom Device (${currentDeviceId.substring(0, 5)}...)";
+              "${l10n.customDevice} (${currentDeviceId.substring(0, 5)}...)";
         }
       } else {
-        outputStatus = "System Default (Shared)";
+        outputStatus = "${l10n.systemDefault} (${l10n.sharedMode})";
       }
 
       if (isExclusive) {
-        outputStatus += " [Exclusive]";
+        outputStatus += " [${l10n.exclusiveMode}]";
       } else {
-        outputStatus += " [Shared]";
+        outputStatus += " [${l10n.sharedMode}]";
       }
     } else if (Platform.isAndroid) {
       if (_deviceType != null) {
@@ -146,7 +148,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
           outputStatus += " ($_deviceName)";
         }
       } else {
-        outputStatus = "Android AudioTrack";
+        outputStatus = l10n.androidAudioTrack;
       }
     }
 
@@ -160,9 +162,9 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Audio output",
-              style: TextStyle(
+            Text(
+              l10n.audioOutput,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -189,13 +191,13 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                     _buildNode(
                       icon: Icons.music_note,
                       iconColor: Colors.amber,
-                      title: "Audio Source",
+                      title: l10n.audioSource,
                       isActive: true,
                       content: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Path: ${widget.filePath ?? 'Unknown'}",
+                            "${l10n.pathLabel}: ${widget.filePath ?? l10n.unknown}",
                             style: TextStyle(
                                 color: Colors.grey[500], fontSize: 11),
                             maxLines: 2,
@@ -203,7 +205,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "Input: $sampleRate / $bitDepth / $format",
+                            "${l10n.inputLabel}: $sampleRate / $bitDepth / $format",
                             style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 11,
@@ -215,27 +217,28 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                     _buildNode(
                       icon: Icons.speaker_group_outlined,
                       iconColor: Colors.grey,
-                      title: "Engine",
+                      title: l10n.engineLabel,
                       isActive: false,
                       content: _buildStateText(
                         _bitPerfectEnabled || isExclusive
                             ? "Disabled (Bit-Perfect)"
                             : "Disabled",
+                        l10n,
                       ),
                     ),
                     _buildNode(
                       icon: Icons.tune,
                       iconColor: Colors.grey,
-                      title: "EQ",
+                      title: l10n.eqLabel,
                       isActive: false,
-                      content: _buildStateText("Disabled"),
+                      content: _buildStateText("Disabled", l10n),
                     ),
                     _buildNode(
                       icon: Icons.graphic_eq,
                       iconColor: Colors.grey,
-                      title: "DSP",
+                      title: l10n.dspLabel,
                       isActive: false,
-                      content: _buildStateText("Disabled"),
+                      content: _buildStateText("Disabled", l10n),
                     ),
 
                     // Android Mixer node (only show on Android)
@@ -243,20 +246,20 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                       _buildNode(
                         icon: Icons.merge_type_rounded,
                         iconColor: isResampled ? Colors.amber : Colors.green,
-                        title: "Android Mixer",
+                        title: l10n.androidMixer,
                         isActive: true,
                         content: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (_bitPerfectEnabled)
-                              const Row(
+                              Row(
                                 children: [
-                                  Icon(Icons.check_circle,
+                                  const Icon(Icons.check_circle,
                                       color: Colors.green, size: 14),
-                                  SizedBox(width: 6),
+                                  const SizedBox(width: 6),
                                   Text(
-                                    "Bypassed (Bit-Perfect)",
-                                    style: TextStyle(
+                                    l10n.bypassedBitPerfect,
+                                    style: const TextStyle(
                                       color: Colors.green,
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -280,8 +283,8 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                                   Expanded(
                                     child: Text(
                                       isResampled
-                                          ? "Resampling: $sampleRate → $outputSampleRate"
-                                          : "Active (No resampling needed)",
+                                          ? "${l10n.resamplingLabel}: $sampleRate → $outputSampleRate"
+                                          : l10n.activeNoResampling,
                                       style: TextStyle(
                                         color: isResampled
                                             ? Colors.amber
@@ -296,7 +299,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                               if (_nativeSampleRate != null) ...[
                                 const SizedBox(height: 2),
                                 Text(
-                                  "Native rate: ${(_nativeSampleRate! / 1000.0).toStringAsFixed(1)} kHz",
+                                  "${l10n.nativeRate}: ${(_nativeSampleRate! / 1000.0).toStringAsFixed(1)} kHz",
                                   style: TextStyle(
                                       color: Colors.grey[600], fontSize: 10),
                                 ),
@@ -309,7 +312,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                     _buildNode(
                       icon: Icons.output,
                       iconColor: Colors.amber,
-                      title: "Signal Output",
+                      title: l10n.signalOutput,
                       isActive: true,
                       isLast: true,
                       content: Column(
@@ -319,7 +322,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  "Output: $outputStatus",
+                                  "${l10n.outputLabel}: $outputStatus",
                                   style: const TextStyle(
                                       color: Colors.white70,
                                       fontSize: 12,
@@ -339,17 +342,17 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                                       strokeWidth: 2)),
                             ),
                           Text(
-                            "Sampling Rate: $outputSampleRate",
+                            "${l10n.samplingRateLabel}: $outputSampleRate",
                             style: TextStyle(
                                 color: Colors.grey[500], fontSize: 11),
                           ),
                           Text(
-                            "Bits: $outputBitDepth",
+                            "${l10n.bitsLabel}: $outputBitDepth",
                             style: TextStyle(
                                 color: Colors.grey[500], fontSize: 11),
                           ),
                           Text(
-                            "Format: PCM",
+                            "${l10n.formatLabel}: PCM",
                             style: TextStyle(
                                 color: Colors.grey[500], fontSize: 11),
                           ),
@@ -366,9 +369,9 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
     );
   }
 
-  Widget _buildStateText(String state) {
+  Widget _buildStateText(String state, AppLocalizations l10n) {
     return Text(
-      "State: $state",
+      "${l10n.statusLabel}: $state",
       style: TextStyle(color: Colors.grey[600], fontSize: 12),
     );
   }

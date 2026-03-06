@@ -47,7 +47,11 @@ class NativeMusicService {
     WidgetsBinding.instance.addObserver(observer);
 
     // 2. Check initial state (in case we are already resumed)
-    if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+    // 🚀 ON DESKTOP: We don't need to wait for resumed state. Claim immediately.
+    if (Platform.isWindows ||
+        Platform.isLinux ||
+        Platform.isMacOS ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
       _tryClaimMutex();
     }
   }
@@ -55,8 +59,8 @@ class NativeMusicService {
   void _tryClaimMutex() {
     if (_hasClaimedMutex) return; // Already King
 
-    DebugLogService().info(
-        "NativeMusicService: App RESUMED. Claiming Mutex/Audio Throne...");
+    DebugLogService()
+        .info("NativeMusicService: App READY. Claiming Mutex/Audio Throne...");
 
     // Kill existing holder
     final existingPort = IsolateNameServer.lookupPortByName(_mutexName);

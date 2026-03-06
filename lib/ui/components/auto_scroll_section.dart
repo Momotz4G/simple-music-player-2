@@ -94,6 +94,7 @@ class _AutoScrollSectionState extends ConsumerState<AutoScrollSection> {
     setState(() => _isRestoring = true);
 
     // Show Glass Notification so user knows something is happening
+    if (!mounted) return;
     showCenterNotification(context,
         label: "RESTORING",
         title: song.title,
@@ -218,6 +219,15 @@ class _AutoScrollSectionState extends ConsumerState<AutoScrollSection> {
                 }
               });
             },
+            onPointerCancel: (_) {
+              setState(() => _isUserInteracting = false);
+              widget.onScrollFocus?.call(false);
+              Future.delayed(const Duration(seconds: 2), () {
+                if (mounted && !_isUserInteracting) {
+                  _startAutoScroll();
+                }
+              });
+            },
             child: ListView.separated(
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -321,7 +331,7 @@ class _SongCardItemState extends State<_SongCardItem> {
                           color: Colors.grey[900],
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             )
@@ -343,7 +353,7 @@ class _SongCardItemState extends State<_SongCardItem> {
                               Positioned.fill(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),

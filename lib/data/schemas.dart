@@ -30,6 +30,12 @@ class Song {
 
   // Store the dominant color (int) for UI theming
   int? accentColor;
+
+  // --- New Metadata Fields ---
+  String? year;
+  int? trackNumber;
+  int? discNumber;
+  String? genre;
 }
 
 @collection

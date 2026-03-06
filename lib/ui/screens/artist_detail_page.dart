@@ -5,6 +5,7 @@ import 'package:palette_generator/palette_generator.dart';
 import '../../models/song_model.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 import '../../services/hybrid_service.dart';
 import '../../services/wikipedia_service.dart';
@@ -30,7 +31,6 @@ class ArtistDetailPage extends ConsumerStatefulWidget {
 
 class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
   String? _headerImageUrl;
-  bool _isLoadingImage = true;
   Color _dominantColor = const Color(0xFF121212);
   String? _loadingSongTitle;
 
@@ -62,7 +62,6 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
       // RESET STATE
       setState(() {
         _headerImageUrl = null;
-        _isLoadingImage = true;
         _topTracks = [];
         _albums = [];
         _isLoadingTracks = true;
@@ -150,7 +149,6 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
     if (mounted) {
       setState(() {
         _headerImageUrl = url;
-        _isLoadingImage = false;
       });
       if (url != null) {
         _extractColors(url);
@@ -194,9 +192,11 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
             );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loadingSongTitle = null);
     }
@@ -225,7 +225,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
             end: Alignment.bottomCenter,
             stops: const [0.0, 0.6],
             colors: [
-              _dominantColor.withOpacity(0.6),
+              _dominantColor.withValues(alpha: 0.6),
               baseBg,
             ],
           ),
@@ -263,8 +263,8 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.3),
-                            baseBg.withOpacity(0.9), // Blend to body
+                            Colors.black.withValues(alpha: 0.3),
+                            baseBg.withValues(alpha: 0.9), // Blend to body
                           ],
                           stops: const [0.4, 0.7, 1.0],
                         ),
@@ -279,9 +279,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "ARTIST",
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.artistLabel,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -314,8 +314,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                           const SizedBox(height: 16),
                           Text(
                             _isSpotifyMode
-                                ? "Popular on Spotify"
-                                : "${widget.songs.length} songs in library",
+                                ? AppLocalizations.of(context)!.popularOnSpotify
+                                : AppLocalizations.of(context)!
+                                    .songsInLibrary(widget.songs.length),
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
@@ -352,7 +353,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           )
@@ -374,8 +375,8 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                     // SHUFFLE BUTTON
                     IconButton(
                       icon: Icon(Icons.shuffle,
-                          color: textColor.withOpacity(0.7), size: 28),
-                      tooltip: "Shuffle",
+                          color: textColor.withValues(alpha: 0.7), size: 28),
+                      tooltip: AppLocalizations.of(context)!.shuffle,
                       onPressed: () {
                         if (currentList.isNotEmpty) {
                           // SHOW FEEDBACK
@@ -388,7 +389,8 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
-                                      "Shuffling ${widget.artistName}...",
+                                      AppLocalizations.of(context)!
+                                          .shufflingArtist(widget.artistName),
                                       style:
                                           const TextStyle(color: Colors.white),
                                     ),
@@ -408,7 +410,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                     ),
                     const SizedBox(width: 24),
                     Icon(Icons.more_horiz,
-                        color: textColor.withOpacity(0.7), size: 32),
+                        color: textColor.withValues(alpha: 0.7), size: 32),
                   ],
                 ),
               ),
@@ -448,7 +450,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                                       "${index + 1}",
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        color: textColor.withOpacity(0.5),
+                                        color: textColor.withValues(alpha: 0.5),
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -479,7 +481,8 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                              fontSize: 13, color: textColor.withOpacity(0.6)),
+                              fontSize: 13,
+                              color: textColor.withValues(alpha: 0.6)),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -488,38 +491,42 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                               _formatDuration(song.duration),
                               style: TextStyle(
                                   fontSize: 13,
-                                  color: textColor.withOpacity(0.6)),
+                                  color: textColor.withValues(alpha: 0.6)),
                             ),
                             const SizedBox(width: 16),
                             PopupMenuButton<SongAction>(
                               icon: Icon(Icons.more_horiz,
-                                  color: textColor.withOpacity(0.6)),
-                              tooltip: "More Options",
+                                  color: textColor.withValues(alpha: 0.6)),
+                              tooltip:
+                                  AppLocalizations.of(context)!.moreOptions,
                               onSelected: (action) {
                                 SongContextMenuRegion.handleAction(
                                     context, ref, action, song);
                               },
                               itemBuilder: (context) => [
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                     value: SongAction.playNext,
                                     child: Row(children: [
                                       Icon(Icons.playlist_play),
                                       SizedBox(width: 12),
-                                      Text('Play Next')
+                                      Text(AppLocalizations.of(context)!
+                                          .playNext)
                                     ])),
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                     value: SongAction.addToPlaylist,
                                     child: Row(children: [
                                       Icon(Icons.playlist_add),
                                       SizedBox(width: 12),
-                                      Text('Add to Playlist')
+                                      Text(AppLocalizations.of(context)!
+                                          .addToPlaylist)
                                     ])),
-                                const PopupMenuItem(
-                                    value: SongAction.addToFavorites,
+                                PopupMenuItem(
+                                    value: SongAction.addToFavorite,
                                     child: Row(children: [
-                                      Icon(Icons.favorite_border),
-                                      SizedBox(width: 12),
-                                      Text('Add to Favorites')
+                                      const Icon(Icons.favorite_border),
+                                      const SizedBox(width: 12),
+                                      Text(AppLocalizations.of(context)!
+                                          .addToFavorite)
                                     ])),
                               ],
                             ),
@@ -555,7 +562,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                         });
                       },
                       child: Text(
-                        _displayLimit == 5 ? "Show More" : "Show Less",
+                        _displayLimit == 5
+                            ? AppLocalizations.of(context)!.showMore
+                            : AppLocalizations.of(context)!.showLess,
                         style: TextStyle(color: accentColor),
                       ),
                     ),
@@ -570,7 +579,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                   child: Text(
-                    "Discography",
+                    AppLocalizations.of(context)!.discography,
                     style: TextStyle(
                       color: textColor,
                       fontSize: 20,
@@ -686,7 +695,7 @@ class _DiscographySectionState extends State<DiscographySection> {
   Widget build(BuildContext context) {
     final isDesktop =
         MediaQuery.of(context).size.width > 800; // 🚀 Define Desktop
-    final limit = 10;
+    const limit = 10;
     final showExpandButton = !_showAll && widget.albums.length > limit;
     final itemCount = _showAll
         ? widget.albums.length
@@ -731,7 +740,7 @@ class _DiscographySectionState extends State<DiscographySection> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: Colors.grey.withOpacity(0.5)),
+                                  color: Colors.grey.withValues(alpha: 0.5)),
                             ),
                             child: IconButton(
                               icon: const Icon(Icons.arrow_forward, size: 30),
@@ -746,8 +755,9 @@ class _DiscographySectionState extends State<DiscographySection> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text("See All",
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(AppLocalizations.of(context)!.seeAll,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -816,8 +826,8 @@ class _DiscographySectionState extends State<DiscographySection> {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color:
-            const Color(0xFF282828).withOpacity(0.9), // Dark semi-transparent
+        color: const Color(0xFF282828)
+            .withValues(alpha: 0.9), // Dark semi-transparent
         shape: BoxShape.circle,
         boxShadow: const [
           BoxShadow(

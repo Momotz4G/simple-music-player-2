@@ -18,6 +18,7 @@ import 'core/theme/app_theme.dart';
 import 'ui/screens/main_shell.dart';
 import 'services/metrics_service.dart';
 import 'services/db_service.dart';
+import 'l10n/app_localizations.dart';
 
 // late final Future<void> dotEnvFuture;
 
@@ -159,6 +160,9 @@ class MyApp extends ConsumerWidget {
             themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             theme: AppTheme.lightTheme(accentColor),
             darkTheme: AppTheme.darkTheme(accentColor),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale(settings.appLocale),
             home: const MainShell(),
           ),
         );
