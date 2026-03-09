@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import '../models/download_progress.dart';
 
 class UpdateService {
@@ -91,7 +92,8 @@ class UpdateService {
 
   /// Gets the correct asset for the current platform from the release
   /// Returns {downloadUrl, fileName} or null if no matching asset found
-  Map<String, String>? getAssetForPlatform(Map<String, dynamic> release) {
+  Future<Map<String, String>?> getAssetForPlatform(
+      Map<String, dynamic> release) async {
     final assets = release['assets'] as List?;
     if (assets == null || assets.isEmpty) return null;
 
@@ -99,7 +101,60 @@ class UpdateService {
     List<String> fallbackExtensions = [];
 
     if (Platform.isAndroid) {
-      extension = '.apk';
+      // 🚀 Android ABI-specific APK selection
+      final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      final List<String> supportedAbis = androidInfo.supportedAbis;
+
+      print("Device supported ABIs: $supportedAbis");
+
+      // Naming convention:
+      // Universal: Simple.Music.Player.apk
+      // ABI-specific: Simple.Music.Player-[ABI].apk
+
+      Map<String, dynamic>? bestAsset;
+
+      // 1. Try to find an exact ABI match (e.g. Simple.Music.Player-arm64-v8a.apk)
+      for (final abi in supportedAbis) {
+        final targetName = "simple.music.player-$abi.apk".toLowerCase();
+        bestAsset = assets.firstWhere(
+          (a) => a['name'].toString().toLowerCase() == targetName,
+          orElse: () => null,
+        );
+        if (bestAsset != null) {
+          print("Found exact ABI match: ${bestAsset['name']}");
+          break;
+        }
+      }
+
+      // 2. Try universal APK (Simple.Music.Player.apk)
+      if (bestAsset == null) {
+        bestAsset = assets.firstWhere(
+          (a) =>
+              a['name'].toString().toLowerCase() == "simple.music.player.apk",
+          orElse: () => null,
+        );
+        if (bestAsset != null) print("Using universal APK");
+      }
+
+      // 3. Fallback to any .apk if still no match
+      if (bestAsset == null) {
+        bestAsset = assets.firstWhere(
+          (a) => a['name'].toString().toLowerCase().endsWith(".apk"),
+          orElse: () => null,
+        );
+        if (bestAsset != null) print("Falling back to first available APK");
+      }
+
+      if (bestAsset != null) {
+        return {
+          'downloadUrl': bestAsset['browser_download_url'] as String,
+          'fileName': bestAsset['name'] as String,
+          'size': (bestAsset['size'] ?? 0).toString(),
+        };
+      }
+
+      return null;
     } else if (Platform.isWindows) {
       extension = '.exe';
     } else if (Platform.isMacOS) {
@@ -109,7 +164,6 @@ class UpdateService {
       extension = '.AppImage';
       fallbackExtensions = ['.tar.gz', '.deb'];
     } else if (Platform.isIOS) {
-      // iOS sideloading - users need to re-sign with their own Apple ID
       extension = '.ipa';
     } else {
       return null;

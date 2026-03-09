@@ -6,7 +6,7 @@
   <video src="https://github.com/user-attachments/assets/d903a7d1-2afb-43c5-a852-c3f34d31753e" width="100%" controls muted autoplay></video>
 </div>
 
-> A stunning, modern, and feature-rich music player built with Flutter. Experience your music with a beautiful Glassmorphism UI and powerful tools. Available on Windows, macOS, Android, and iOS.
+> A stunning, modern, and feature-rich music player built with Flutter. Experience your local music collection and high-resolution tracks with a beautiful Glassmorphism UI and powerful tools. Available on Windows, macOS, Android, and iOS.
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
@@ -42,6 +42,7 @@
 - **Remove Song in Queue**: Swipe left from a song in queue to remove it
 - **Multiple Audio Versions**: Choose between different versions of a song (original, acoustic, live, etc.)
 - **Wide Format Support**: Plays MP3, FLAC, WAV, AAC, M4A, OGG, and **Opus** files
+- **Native DSD Support**: High-fidelity playback for **DSF** and **DFF** files with detailed metadata extraction
 
 ### 🎤 **Lyrics & Metadata**
 - **Synced Lyrics**: Sing along with time-synced lyrics (LRC) fetched automatically from LRCLIB.net
@@ -71,6 +72,7 @@
 
 ### 📚 **Library Management**
 - **Smart Library**: Browse by Songs, Albums, Artists, or Playlists
+- **Local Music Player**: Full support for reading and managing your local song library with fast indexing
 - **Custom Playlists**: Create and manage your own playlists
 - **Search**: Powerful search across your entire library
 - **Folder Import**: Import music from any folder on your computer

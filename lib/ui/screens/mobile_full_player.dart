@@ -1360,7 +1360,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
 
   // 🚀 LISTENING PARTY DIALOG
   void _showListeningPartyDialog() async {
-    final sessionId = await PocketBaseService().getUniqueSessionId();
+    String? sessionId = await PocketBaseService().getUniqueSessionId();
     if (sessionId == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1370,51 +1370,82 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       return;
     }
 
-    final url = "${Env.remoteControlUrl}/?sid=$sessionId";
-
     if (!mounted) return;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text("Listening Party",
-            style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: SizedBox(
-                width: 200,
-                height: 200,
-                child: QrImageView(
-                  data: url,
-                  version: QrVersions.auto,
-                  size: 200.0,
-                  backgroundColor: Colors.white,
-                  padding: EdgeInsets.zero,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final url = "${Env.remoteControlUrl}/?sid=$sessionId";
+
+          return AlertDialog(
+            backgroundColor: Colors.grey[900],
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Listening Party",
+                    style: TextStyle(color: Colors.white)),
+                IconButton(
+                  icon:
+                      const Icon(Icons.refresh_rounded, color: Colors.white70),
+                  onPressed: () async {
+                    // Start refreshing animation if needed, but for now just regenerate
+                    final newId = await PocketBaseService()
+                        .getUniqueSessionId(forceRegenerate: true);
+                    if (newId != null) {
+                      setDialogState(() {
+                        sessionId = newId;
+                      });
+                    }
+                  },
                 ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: QrImageView(
+                      data: url,
+                      version: QrVersions.auto,
+                      size: 200.0,
+                      backgroundColor: Colors.white,
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Scan with another phone to control playback.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Code: $sessionId",
+                  style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 10,
+                      fontFamily: 'monospace'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Close"),
               ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              "Scan with another phone to control playback.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Close"),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

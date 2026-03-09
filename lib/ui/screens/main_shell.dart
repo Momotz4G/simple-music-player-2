@@ -443,22 +443,25 @@ class _MainShellState extends ConsumerState<MainShell> {
             // 🚀 Show Size if available
             if (release['assets'] != null &&
                 (release['assets'] as List).isNotEmpty)
-              Builder(
-                builder: (context) {
-                  final assets = release['assets'] as List;
-                  final exeAsset = assets.firstWhere(
-                    (asset) => asset['name'].toString().endsWith('.exe'),
-                    orElse: () => assets.first,
-                  );
-                  final sizeBytes = exeAsset['size'] as int;
-                  final sizeMB = (sizeBytes / (1024 * 1024)).toStringAsFixed(1);
-                  return Text(
-                    "Size: $sizeMB MB",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                    ),
-                  );
+              FutureBuilder<Map<String, String>?>(
+                future: _updateService.getAssetForPlatform(release),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data != null) {
+                    final asset = snapshot.data!;
+                    final sizeBytes = int.tryParse(asset['size'] ?? '0') ?? 0;
+                    if (sizeBytes == 0) return const SizedBox.shrink();
+
+                    final sizeMB =
+                        (sizeBytes / (1024 * 1024)).toStringAsFixed(1);
+                    return Text(
+                      "Size: $sizeMB MB",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
                 },
               ),
             const SizedBox(height: 12),
@@ -484,7 +487,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   Future<void> _downloadAndInstall(Map<String, dynamic> release) async {
     // 🚀 Platform-aware asset selection
-    final asset = _updateService.getAssetForPlatform(release);
+    final asset = await _updateService.getAssetForPlatform(release);
 
     if (asset != null) {
       final downloadUrl = asset['downloadUrl']!;

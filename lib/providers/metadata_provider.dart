@@ -12,6 +12,7 @@ import '../services/spotify_service.dart';
 import '../services/debug_log_service.dart';
 import '../ui/components/smart_art.dart';
 import 'library_provider.dart';
+import '../services/audio_info_service.dart';
 
 class MetadataState {
   final SongModel? selectedSong;
@@ -145,7 +146,9 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
             'wav',
             'ogg',
             'aac',
-            'opus'
+            'opus',
+            'dsf',
+            'dff'
           ],
         );
         if (result != null) {
@@ -162,8 +165,17 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
       for (var file in filesToProcess) {
         try {
           final ext = p.extension(file.path).toLowerCase();
-          if (!['.mp3', '.flac', '.m4a', '.wav', '.ogg', '.aac', '.opus']
-              .contains(ext)) continue;
+          if (![
+            '.mp3',
+            '.flac',
+            '.m4a',
+            '.wav',
+            '.ogg',
+            '.aac',
+            '.opus',
+            '.dsf',
+            '.dff'
+          ].contains(ext)) continue;
 
           final metadata = await MetadataGod.readMetadata(file: file.path);
           final song = SongModel.fromFile(
@@ -174,8 +186,45 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
               (metadata.durationMs ?? 0) / 1000,
               ext,
               shouldLoadImages ? metadata.picture?.data : null);
+
+          // 🚀 DSD/DSF FALLBACK
+          if (ext == '.dsf' || ext == '.dff') {
+            if (song.artist == "Unknown Artist" ||
+                song.album == "Unknown Album") {
+              final tags = await AudioInfoService().getTags(file.path);
+              if (tags.isNotEmpty) {
+                final updatedSong = song.copyWith(
+                  title: tags['title'] ?? tags['TITLE'] ?? song.title,
+                  artist: tags['artist'] ?? tags['ARTIST'] ?? song.artist,
+                  album: tags['album'] ?? tags['ALBUM'] ?? song.album,
+                );
+                newSongs.add(updatedSong);
+                continue; // Skip the regular add below
+              }
+            }
+          }
           newSongs.add(song);
-        } catch (e) {}
+        } catch (e) {
+          // 🚀 CRITICAL FAIL FALLBACK
+          final ext = p.extension(file.path).toLowerCase();
+          if (ext == '.dsf' || ext == '.dff') {
+            try {
+              final tags = await AudioInfoService().getTags(file.path);
+              if (tags.isNotEmpty) {
+                newSongs.add(SongModel.fromFile(
+                    file.path,
+                    tags['title'] ??
+                        tags['TITLE'] ??
+                        p.basenameWithoutExtension(file.path),
+                    tags['artist'] ?? tags['ARTIST'] ?? "Unknown Artist",
+                    tags['album'] ?? tags['ALBUM'] ?? "Unknown Album",
+                    0.0,
+                    ext,
+                    null));
+              }
+            } catch (_) {}
+          }
+        }
       }
 
       state = state.copyWith(

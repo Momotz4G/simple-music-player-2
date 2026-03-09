@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'Albums'**
   String get albums;
 
+  /// No description provided for @folders.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get folders;
+
   /// No description provided for @local_library.
   ///
   /// In en, this message translates to:

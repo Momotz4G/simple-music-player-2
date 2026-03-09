@@ -46,6 +46,14 @@ class AudioInfo {
       return 'Lossless';
     }
 
+    // Special case for DSD: Even if it's not detected as lossless yet,
+    // if the codec starts with DSD, it is definitely lossless.
+    if (codec.toLowerCase().startsWith('dsd') ||
+        format.toUpperCase() == 'DSF' ||
+        format.toUpperCase() == 'DFF') {
+      return 'Hi-Res Lossless (DSD)';
+    }
+
     // Lossy quality based on bitrate
     if (bitrate != null) {
       if (bitrate! >= 256) return 'High Quality';
@@ -58,8 +66,31 @@ class AudioInfo {
 
   /// Check if format is lossless
   bool get isLossless {
-    final losslessCodecs = ['flac', 'alac', 'wav', 'aiff', 'ape'];
-    return losslessCodecs.contains(codec.toLowerCase());
+    final lowerCodec = codec.toLowerCase().trim();
+    final lowerFormat = format.toLowerCase().trim();
+    final losslessCodecs = [
+      'flac',
+      'alac',
+      'wav',
+      'aiff',
+      'ape',
+      'pcm_s16le',
+      'pcm_s24le',
+      'pcm_s32le',
+      'pcm_f32le'
+    ];
+    if (losslessCodecs.any((c) => lowerCodec.contains(c))) return true;
+
+    // DSD variants (dsd_lsbf, dsd_msbf, dsd_lsbf_planar, etc.)
+    if (lowerCodec.contains('dsd') ||
+        lowerCodec == 'dsf' ||
+        lowerCodec == 'dff' ||
+        lowerFormat == 'dsf' ||
+        lowerFormat == 'dff') {
+      return true;
+    }
+
+    return false;
   }
 
   /// Format bitrate for display
@@ -149,6 +180,48 @@ class AudioInfoService {
 
     // 3. Fallback to basic info from song metadata
     return _getBasicInfo(song.filePath, 0, _getFormatFromPath(song.filePath));
+  }
+
+  /// Get metadata tags for a file using ffprobe (useful for DSD/DSF)
+  Future<Map<String, String>> getTags(String filePath) async {
+    try {
+      if (Platform.isAndroid || Platform.isIOS) {
+        final session = await FFprobeKit.getMediaInformation(filePath);
+        final mediaInfo = session.getMediaInformation();
+        if (mediaInfo == null) return {};
+        final tags = mediaInfo.getTags();
+        return Map<String, String>.from(tags ?? {});
+      }
+
+      if (_ffprobePath == null) await initialize();
+      if (_ffprobePath == null) return {};
+
+      final result = await Process.run(
+        _ffprobePath!,
+        [
+          '-v',
+          'quiet',
+          '-print_format',
+          'json',
+          '-show_format',
+          filePath,
+        ],
+        runInShell: false,
+      );
+
+      if (result.exitCode != 0) return {};
+
+      final json = jsonDecode(result.stdout as String);
+      final formatInfo = json['format'] as Map?;
+      final tags = formatInfo?['tags'] as Map?;
+
+      if (tags == null) return {};
+      return tags
+          .map((key, value) => MapEntry(key.toString(), value.toString()));
+    } catch (e) {
+      if (kDebugMode) print('AudioInfoService getTags error: $e');
+      return {};
+    }
   }
 
   /// Get audio info for a file or URL
@@ -289,6 +362,10 @@ class AudioInfoService {
         return 'OGG';
       case 'opus':
         return 'Opus';
+      case 'dsf':
+        return 'DSF';
+      case 'dff':
+        return 'DFF';
       default:
         return ext.toUpperCase();
     }
@@ -311,6 +388,10 @@ class AudioInfoService {
         return 'vorbis';
       case 'Opus':
         return 'opus';
+      case 'DSF':
+        return 'dsf';
+      case 'DFF':
+        return 'dff';
       default:
         return format.toLowerCase();
     }

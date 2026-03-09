@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../services/audio_info_service.dart';
 import '../../services/android_audio_service.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/player_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -85,18 +86,36 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
     final bitDepth = widget.audioInfo?.bitDepthDisplay ?? "16-bit";
     final format = widget.audioInfo?.format ?? "PCM";
 
-    // Determine actual output based on platform
+    // Check if source is DSD format
+    final isDsdSource = format.toUpperCase() == 'DSF' ||
+        format.toUpperCase() == 'DFF' ||
+        (widget.audioInfo?.codec.toLowerCase().contains('dsd') ?? false);
+
+    // Check if USB DAC bypass is active (from player provider)
+    final isUsbBypassActive =
+        ref.read(playerProvider.notifier).isUsbAudioBypassActive;
+
+    // Determine actual output based on platform and USB DAC state
     String outputSampleRate;
     String outputBitDepth;
+    String outputFormat;
     bool isResampled = false;
 
     if (Platform.isAndroid) {
-      if (_bitPerfectEnabled) {
-        // Exclusive mode: signal passes through as-is
+      if (isUsbBypassActive) {
+        // USB DAC: Bit-perfect passthrough — no conversion
+        outputSampleRate = sampleRate;
+        outputBitDepth = isDsdSource ? "1-bit" : bitDepth;
+        outputFormat = isDsdSource ? "DSD" : "PCM";
+      } else if (_bitPerfectEnabled) {
+        // Android Bit-Perfect mode (API 34+): signal passes through as-is
         outputSampleRate = sampleRate;
         outputBitDepth = bitDepth;
+        outputFormat =
+            isDsdSource ? "PCM" : "PCM"; // ExoPlayer still converts DSD→PCM
       } else {
         // Non-exclusive: Android resamples to native rate
+        outputFormat = "PCM";
         if (_nativeSampleRate != null) {
           final nativeKhz = _nativeSampleRate! / 1000.0;
           outputSampleRate = "${nativeKhz.toStringAsFixed(1)} kHz";
@@ -116,6 +135,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
       // Desktop: mirror source (WASAPI handles it)
       outputSampleRate = sampleRate;
       outputBitDepth = bitDepth;
+      outputFormat = isDsdSource && isExclusive ? "DSD" : "PCM";
     }
 
     // Logic for "Output" text
@@ -245,13 +265,33 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                     if (Platform.isAndroid)
                       _buildNode(
                         icon: Icons.merge_type_rounded,
-                        iconColor: isResampled ? Colors.amber : Colors.green,
+                        iconColor: (isUsbBypassActive || _bitPerfectEnabled)
+                            ? Colors.green
+                            : (isResampled ? Colors.amber : Colors.green),
                         title: l10n.androidMixer,
                         isActive: true,
                         content: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (_bitPerfectEnabled)
+                            if (isUsbBypassActive)
+                              Row(
+                                children: [
+                                  const Icon(Icons.usb_rounded,
+                                      color: Colors.green, size: 14),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      "${l10n.bypassedBitPerfect} (USB DAC)",
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else if (_bitPerfectEnabled)
                               Row(
                                 children: [
                                   const Icon(Icons.check_circle,
@@ -352,9 +392,15 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                                 color: Colors.grey[500], fontSize: 11),
                           ),
                           Text(
-                            "${l10n.formatLabel}: PCM",
+                            "${l10n.formatLabel}: $outputFormat",
                             style: TextStyle(
-                                color: Colors.grey[500], fontSize: 11),
+                                color: outputFormat == 'DSD'
+                                    ? Colors.amber
+                                    : Colors.grey[500],
+                                fontSize: 11,
+                                fontWeight: outputFormat == 'DSD'
+                                    ? FontWeight.bold
+                                    : FontWeight.normal),
                           ),
                         ],
                       ),

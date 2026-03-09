@@ -100,13 +100,13 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
       }
     });
 
-    // Find current lyric
+    // Find current lyric (must match lyrics_panel._syncLyrics formula)
     final lyrics = lyricsState.parsedLyrics;
-    final currentPosition =
-        playerState.currentPosition + lyricsState.syncOffset;
+    final effectiveTime =
+        playerState.currentPosition - lyricsState.syncOffset + 0.5;
     int currentIndex = -1;
     for (int i = lyrics.length - 1; i >= 0; i--) {
-      if (currentPosition >= lyrics[i].time) {
+      if (effectiveTime >= lyrics[i].time) {
         currentIndex = i;
         break;
       }

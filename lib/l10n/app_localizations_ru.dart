@@ -33,6 +33,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get albums => 'Альбомы';
 
   @override
+  String get folders => 'Folders';
+
+  @override
   String get local_library => 'Локальная библиотека';
 
   @override

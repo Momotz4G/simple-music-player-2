@@ -964,8 +964,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               style:
                   TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
 
-          // Streaming Quality Selector
           const SizedBox(height: 8),
+
+          // Streaming Quality Selector
           ListTile(
             title: Text(AppLocalizations.of(context)!.streamingQuality,
                 style: TextStyle(color: textColor)),

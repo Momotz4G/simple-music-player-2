@@ -386,19 +386,21 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     _musicService.player.durationStream.listen((duration) {
       if (duration != null) {
-        state = state.copyWith(totalDuration: duration.inSeconds.toDouble());
+        // 🚀 Use millisecond precision to avoid truncation artifacts
+        state = state.copyWith(totalDuration: duration.inMilliseconds / 1000.0);
       }
     });
 
     _musicService.player.positionStream.listen((position) {
-      final currentSecs = position.inSeconds.toDouble();
+      // 🚀 Use millisecond precision to prevent 2-3s early skip appearance
+      final currentSecs = position.inMilliseconds / 1000.0;
       final duration = state.totalDuration;
 
       state = state.copyWith(currentPosition: currentSecs);
 
       // Manual Loop One Logic
       if (state.loopMode == ja.LoopMode.one && duration > 0) {
-        if (currentSecs >= (duration - 0.5)) {
+        if (currentSecs >= (duration - 0.3)) {
           _forceLoopOne();
         }
       }

@@ -33,6 +33,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get albums => 'Album';
 
   @override
+  String get folders => 'Folders';
+
+  @override
   String get local_library => 'Thư viện cục bộ';
 
   @override

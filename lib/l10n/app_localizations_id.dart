@@ -33,6 +33,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get albums => 'Album';
 
   @override
+  String get folders => 'Folder';
+
+  @override
   String get local_library => 'Perpustakaan Lokal';
 
   @override

@@ -33,6 +33,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get albums => 'อัลบั้ม';
 
   @override
+  String get folders => 'Folders';
+
+  @override
   String get local_library => 'คลังเพลงในเครื่อง';
 
   @override

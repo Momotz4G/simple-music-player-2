@@ -33,6 +33,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get albums => 'एल्बम';
 
   @override
+  String get folders => 'Folders';
+
+  @override
   String get local_library => 'स्थानीय लाइब्रेरी';
 
   @override

@@ -1,9 +1,6 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:metadata_god/metadata_god.dart';
 import '../../models/song_model.dart';
-import '../../services/spotify_service.dart';
+import '../components/smart_art.dart';
 
 class AlbumCard extends StatefulWidget {
   final String albumName;
@@ -29,83 +26,10 @@ class AlbumCard extends StatefulWidget {
 
 class _AlbumCardState extends State<AlbumCard>
     with AutomaticKeepAliveClientMixin {
-  Uint8List? _localBytes;
-  String? _networkUrl;
-  bool _isLoading = true;
   bool _isHovered = false;
 
   @override
   bool get wantKeepAlive => true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadAlbumArt();
-  }
-
-  Future<void> _loadAlbumArt() async {
-    // 0. Use provided Image URL (Priority)
-    if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) {
-      if (mounted) {
-        setState(() {
-          _networkUrl = widget.imageUrl;
-          _isLoading = false;
-        });
-      }
-      return;
-    }
-
-    if (widget.songs.isEmpty) {
-      if (mounted) setState(() => _isLoading = false);
-      return;
-    }
-
-    // 1. Try Local Metadata (from first song)
-    try {
-      final firstSongPath = widget.songs.first.filePath;
-      final file = File(firstSongPath);
-      if (await file.exists()) {
-        final metadata = await MetadataGod.readMetadata(file: firstSongPath);
-        if (metadata.picture != null) {
-          if (mounted) {
-            setState(() {
-              _localBytes = metadata.picture!.data;
-              _isLoading = false;
-            });
-          }
-          return; // Found local, done.
-        }
-      }
-    } catch (e) {
-      // Ignore local read error
-    }
-
-    // 2. Try Spotify Fallback
-    try {
-      final query = "${widget.albumName} ${widget.artistName}";
-      final albums = await SpotifyService.searchAlbums(query);
-
-      if (albums.isNotEmpty) {
-        if (albums.first.imageUrl.isNotEmpty) {
-          if (mounted) {
-            setState(() {
-              _networkUrl = albums.first.imageUrl;
-              _isLoading = false;
-            });
-          }
-          return;
-        }
-      }
-    } catch (e) {
-      // Ignore network error
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,39 +112,11 @@ class _AlbumCardState extends State<AlbumCard>
   }
 
   Widget _buildImage() {
-    if (_isLoading) {
-      return const Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
-    }
-
-    if (_localBytes != null) {
-      return Image.memory(_localBytes!, fit: BoxFit.cover);
-    }
-
-    if (_networkUrl != null) {
-      return Image.network(
-        _networkUrl!,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildPlaceholder(),
-      );
-    }
-
-    return _buildPlaceholder();
-  }
-
-  Widget _buildPlaceholder() {
-    return Container(
-      color: Colors.grey.withOpacity(0.1),
-      child: Icon(
-        Icons.album,
-        color: Colors.grey.withOpacity(0.3),
-        size: 48,
-      ),
+    return SmartArt(
+      path: widget.songs.isNotEmpty ? widget.songs.first.filePath : "",
+      size: 200, // Grid size reference
+      onlineArtUrl: widget.imageUrl,
+      borderRadius: 8,
     );
   }
 }

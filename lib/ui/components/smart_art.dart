@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:metadata_god/metadata_god.dart';
+import '../../services/art_cache_service.dart';
 
 class SmartArt extends StatelessWidget {
   final String path;
@@ -12,17 +13,22 @@ class SmartArt extends StatelessWidget {
   // 1. STATIC CACHE (Moved inside the class)
   static final Map<String, Uint8List?> _cache = {};
 
+  // 🚀 DISK CACHE MAP: Track which paths we ALREADY know have cache files
+  // This avoids calling ArtCacheService().getCachedArt() every rebuild.
+  static final Map<String, File> _knownDiskCache = {};
+
   // Track paths that don't exist to avoid repeated file checks
   static final Set<String> _nonExistentPaths = {};
 
   // 2. HELPER TO CHECK CACHE
   static bool isCached(String path) {
-    return _cache.containsKey(path) && _cache[path] != null;
+    return _cache.containsKey(path) || _knownDiskCache.containsKey(path);
   }
 
   // 3. INVALIDATE CACHE
   static void invalidateCache(String path) {
     _cache.remove(path);
+    _knownDiskCache.remove(path);
     _nonExistentPaths.remove(path);
   }
 
@@ -45,14 +51,20 @@ class SmartArt extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.cover,
+          cacheWidth: (size * 2).toInt(),
           errorBuilder: (_, __, ___) => _buildFileArt(),
         ),
       );
     }
 
-    // Check internal static cache
+    // 🚀 CHECK IN-MEMORY BYTES FIRST
     if (_cache.containsKey(path)) {
       return _buildImage(_cache[path]);
+    }
+
+    // 🚀 CHECK KNOWN DISK CACHE NEXT (Zero-Latency Rendering)
+    if (_knownDiskCache.containsKey(path)) {
+      return _buildFileImage(_knownDiskCache[path]!);
     }
 
     // 🚀 SKIP: If path is known to not exist (e.g., Spotify imports)
@@ -64,34 +76,65 @@ class SmartArt extends StatelessWidget {
   }
 
   Widget _buildFileArt() {
-    // 🚀 CHECK FILE EXISTS FIRST (Avoids freeze on Spotify imports)
-    return FutureBuilder<bool>(
-      future: File(path).exists(),
-      builder: (context, existsSnapshot) {
-        if (existsSnapshot.connectionState != ConnectionState.done) {
+    return FutureBuilder<File?>(
+      future: ArtCacheService().getCachedArt(path),
+      builder: (context, cacheSnapshot) {
+        // If we just found it in this builder, save it to the known map for next time
+        if (cacheSnapshot.hasData && cacheSnapshot.data != null) {
+          _knownDiskCache[path] = cacheSnapshot.data!;
+          return _buildFileImage(cacheSnapshot.data!);
+        }
+
+        if (cacheSnapshot.connectionState != ConnectionState.done) {
           return _buildPlaceholder();
         }
 
-        if (existsSnapshot.data != true) {
-          // Cache the fact that this file doesn't exist
-          _nonExistentPaths.add(path);
-          return _buildPlaceholder();
-        }
-
-        // File exists, now read metadata
-        return FutureBuilder<Metadata?>(
-          future: MetadataGod.readMetadata(file: path),
-          builder: (context, snapshot) {
-            if (snapshot.hasData && snapshot.data?.picture != null) {
-              final bytes = snapshot.data!.picture!.data;
-              // Save to static cache
-              _cache[path] = bytes;
-              return _buildImage(bytes);
+        // 🚀 DISK CACHE MISS: Original fallback logic
+        return FutureBuilder<bool>(
+          future: File(path).exists(),
+          builder: (context, existsSnapshot) {
+            if (existsSnapshot.connectionState != ConnectionState.done) {
+              return _buildPlaceholder();
             }
-            return _buildPlaceholder();
+
+            if (existsSnapshot.data != true) {
+              _nonExistentPaths.add(path);
+              return _buildPlaceholder();
+            }
+
+            // Still read metadata if no cache exists (e.g. first scan)
+            return FutureBuilder<Metadata?>(
+              future: MetadataGod.readMetadata(file: path),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data?.picture != null) {
+                  final bytes = snapshot.data!.picture!.data;
+                  _cache[path] = bytes;
+                  // Save to disk cache for NEXT time
+                  ArtCacheService().saveArt(path, bytes);
+                  return _buildImage(bytes);
+                }
+                return _buildPlaceholder();
+              },
+            );
           },
         );
       },
+    );
+  }
+
+  // 🚀 Helper for Rendering from Disk Cache File
+  Widget _buildFileImage(File file) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius ?? 8),
+      child: Image.file(
+        file,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        cacheWidth: (size * 2).toInt(), // Optimize memory usage
+        gaplessPlayback: true, // 🚀 PREVENTS FLICKERING on rebuild
+        errorBuilder: (_, __, ___) => _buildPlaceholder(),
+      ),
     );
   }
 
@@ -106,6 +149,7 @@ class SmartArt extends StatelessWidget {
             width: size,
             height: size,
             fit: BoxFit.cover,
+            cacheWidth: (size * 2).toInt(),
             errorBuilder: (_, __, ___) => _buildPlaceholder(),
           ),
         );
@@ -120,7 +164,8 @@ class SmartArt extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        gaplessPlayback: true,
+        cacheWidth: (size * 2).toInt(),
+        gaplessPlayback: true, // 🚀 PREVENTS FLICKERING
       ),
     );
   }

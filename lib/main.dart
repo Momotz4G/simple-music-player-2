@@ -15,6 +15,8 @@ import 'providers/settings_provider.dart';
 import 'providers/library_provider.dart';
 // import 'providers/library_presentation_provider.dart'; // Unused
 import 'core/theme/app_theme.dart';
+import 'package:logging/logging.dart';
+import 'services/debug_log_service.dart';
 import 'ui/screens/main_shell.dart';
 import 'services/metrics_service.dart';
 import 'services/db_service.dart';
@@ -46,11 +48,63 @@ Future<void> main() async {
 
     final audioDeviceId = prefs.getString('audioDeviceId');
     if (audioDeviceId != null) {
-      JustAudioMediaKit.audioDeviceId = audioDeviceId;
-      debugPrint("🎵 [Main] Audio Device Override: $audioDeviceId");
+      // 🚀 JustAudioMediaKit.audioDeviceId = audioDeviceId;
+      // 🚀 SANITY CHECK: Verify the device still exists before applying it
+      () async {
+        try {
+          final devices = await JustAudioMediaKit.listAudioDevices();
+          final exists = devices.any((d) => d['name'] == audioDeviceId);
+
+          if (exists) {
+            JustAudioMediaKit.audioDeviceId = audioDeviceId;
+            debugPrint("🎵 [Main] Audio Device Override: $audioDeviceId");
+          } else {
+            debugPrint(
+                "⚠️ [Main] Saved audio device '$audioDeviceId' not found. Falling back to default.");
+            await prefs.remove('audioDeviceId');
+            JustAudioMediaKit.audioDeviceId = null;
+          }
+        } catch (e) {
+          debugPrint("⚠️ [Main] Error validating audio device: $e");
+        }
+      }();
     }
   }
+  // 🚀 OPTIMIZE FOR DSD/HI-RES (Desktop Only - media_kit backend)
+  // These settings only apply when media_kit is the active backend (Windows/Linux/macOS).
+  // On Android/iOS, just_audio uses the native ExoPlayer backend which handles buffering internally.
+  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    JustAudioMediaKit.bufferSize = 128 * 1024 * 1024; // 128MB Cache
+    JustAudioMediaKit.demuxerMaxBackBytes =
+        64 * 1024 * 1024; // 64MB Back buffer
+    JustAudioMediaKit.demuxerReadaheadSecs = 15.0; // 15 seconds readahead
+    JustAudioMediaKit.audioBuffer = 2.0; // 2 seconds audio buffer
+    JustAudioMediaKit.audioPitchCorrection = false; // Save CPU for DSD
+    JustAudioMediaKit.audioResampleMaxOutputSampleRate =
+        192000; // Cap to 192kHz if hardware/CPU is struggling
+  }
+  // 🚀 FIX: Do NOT pass android: true — this would replace the native ExoPlayer
+  // backend with media_kit (FFmpeg/mpv), which causes playback hangs on Android.
+  // DSD on Android is handled separately via USB Audio bypass.
   JustAudioMediaKit.ensureInitialized();
+
+  // 🚀 LOGGING SYSTEM BRIDGE
+  // Connect hierarchical 'logging' package (used by MediaKit fork) to our internal DebugLogService
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) {
+    final service = DebugLogService();
+    final logMsg = "[${record.loggerName}] ${record.message}";
+
+    if (record.level >= Level.SEVERE) {
+      service.error(logMsg);
+    } else if (record.level >= Level.WARNING) {
+      service.warning(logMsg);
+    } else if (record.level >= Level.INFO) {
+      service.info(logMsg);
+    }
+  });
+
+  DebugLogService().info("🚀 App Lifecycle Start");
 
   // Initialize Analytics (Startup)
   // 🚀 Reduced timeout for faster offline startup

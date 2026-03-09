@@ -89,7 +89,7 @@ class NativeMusicService {
       }
     });
 
-    _initSession();
+    _ensureSessionInitialized();
   }
 
   void _becomeZombie() {
@@ -99,14 +99,26 @@ class NativeMusicService {
     DebugLogService().info("NativeMusicService: Downgraded to ZOMBIE.");
   }
 
-  Future<void> _initSession() async {
-    final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration.music());
-    // Ensure proper Android attributes
-    await _player.setAndroidAudioAttributes(const AndroidAudioAttributes(
-      contentType: AndroidAudioContentType.music,
-      usage: AndroidAudioUsage.media,
-    ));
+  final Completer<void> _sessionReady = Completer<void>();
+  bool _sessionInitialized = false;
+
+  Future<void> _ensureSessionInitialized() async {
+    if (_sessionInitialized) return;
+    _sessionInitialized = true;
+
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
+      // Ensure proper Android attributes
+      await _player.setAndroidAudioAttributes(const AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.music,
+        usage: AndroidAudioUsage.media,
+      ));
+      DebugLogService().info("NativeMusicService: Audio Session Configured");
+    } catch (e) {
+      DebugLogService().error("NativeMusicService: Session Init Error: $e");
+    }
+    if (!_sessionReady.isCompleted) _sessionReady.complete();
   }
 
   // Side-Car Handler
@@ -125,6 +137,19 @@ class NativeMusicService {
           androidStopForegroundOnPause: true,
         ),
       );
+
+      // 🚀 ERROR & STATE LOGGING
+      _player.playbackEventStream.listen((event) {
+        // Log if there's a problem
+      }, onError: (Object e, StackTrace stackTrace) {
+        DebugLogService().error("NativeMusicService: Playback Event Error: $e");
+      });
+
+      _player.playerStateStream.listen((state) {
+        DebugLogService().info(
+            "NativeMusicService: PlayerState [processing=${state.processingState}, playing=${state.playing}]");
+      });
+
       // Register pending callbacks if any
       if (_onNext != null) _audioHandler!.onSkipNext = _onNext;
       if (_onPrev != null) _audioHandler!.onSkipPrevious = _onPrev;
@@ -161,9 +186,8 @@ class NativeMusicService {
         "[Native] resume() called. ServiceHash=${this.hashCode}, PlayerHash=${_player.hashCode}, Pos=${positionBefore.inSeconds}s");
 
     // 3. PLAY.
-    // This eliminates the "Zombie Buffer" issue where Android plays from 0:00 briefly.
+    // 🚀 FIX: Removed aggressive stop() on Android which caused playback failures.
     if (Platform.isAndroid) {
-      await _player.stop();
       await _player.seek(positionBefore);
     }
 
@@ -291,7 +315,7 @@ class NativeMusicService {
         return;
       }
 
-      await _player.stop();
+      // 🚀 FIX: Removed redundant stop() in load. Already handled by setAudioSource.
 
       // Use Uri.parse for better cross-platform compatibility
       final uri = Uri.file(song.filePath);
@@ -510,7 +534,7 @@ class NativeMusicService {
       }
 
       // STOP previous playback immediately (Fixes Ghost Song)
-      await _player.stop();
+      // 🚀 FIX: Removed redundant stop() which caused buffer resets on Android.
 
       // 1. Check if file exists first
       // 1. CLOUD STREAM HANDLING (Party Mode)

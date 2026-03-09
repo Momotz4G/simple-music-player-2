@@ -307,15 +307,35 @@ class PocketBaseService {
   String? _cachedSessionId; // Cache session ID in memory
 
   // HELPER: ENSURE SINGLE SESSION (No List permission needed)
-  Future<String?> getUniqueSessionId() async {
-    return _ensureUniqueSession();
+  Future<String?> getUniqueSessionId({bool forceRegenerate = false}) async {
+    return _ensureUniqueSession(forceRegenerate: forceRegenerate);
   }
 
-  Future<String?> _ensureUniqueSession() async {
+  Future<String?> _ensureUniqueSession({bool forceRegenerate = false}) async {
     if (!_initialized || _userId == null) return null;
 
-    // 1. Try cached session ID first
-    if (_cachedSessionId != null) {
+    // 1. Force Regenerate: Delete existing records and start fresh
+    if (forceRegenerate) {
+      try {
+        final existingRecords = await pb.collection('sessions').getList(
+              page: 1,
+              perPage: 50,
+              filter: 'user_id = "$_userId"',
+            );
+        for (final item in existingRecords.items) {
+          await pb.collection('sessions').delete(item.id);
+        }
+        _cachedSessionId = null;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('pb_session_id');
+        debugPrint("📡 Force Regenerated: Deleted old sessions for $_userId");
+      } catch (e) {
+        debugPrint("⚠️ Force Regenerate Error: $e");
+      }
+    }
+
+    // 2. Try cached session ID first
+    if (!forceRegenerate && _cachedSessionId != null) {
       try {
         // Verify it still exists (only needs View permission)
         await pb.collection('sessions').getOne(_cachedSessionId!);
@@ -326,25 +346,68 @@ class PocketBaseService {
       }
     }
 
-    // 2. Try to load from local storage
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final storedId = prefs.getString('pb_session_id');
-      if (storedId != null) {
-        try {
-          await pb.collection('sessions').getOne(storedId);
-          _cachedSessionId = storedId;
-          return storedId;
-        } catch (e) {
-          // Stored session no longer exists
-          await prefs.remove('pb_session_id');
+    // 3. Try to load from local storage
+    if (!forceRegenerate) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final storedId = prefs.getString('pb_session_id');
+        if (storedId != null) {
+          try {
+            await pb.collection('sessions').getOne(storedId);
+            _cachedSessionId = storedId;
+            return storedId;
+          } catch (e) {
+            // Stored session no longer exists
+            await prefs.remove('pb_session_id');
+          }
         }
+      } catch (e) {
+        debugPrint("⚠️ Session storage error: $e");
       }
-    } catch (e) {
-      debugPrint("⚠️ Session storage error: $e");
     }
 
-    // 3. Create new session (only needs Create permission)
+    // 4. 🚀 SEARCH for existing session by user_id BEFORE creating new one
+    // Also handles AUTOMATIC CLEANUP of duplicates
+    try {
+      final existingRecords = await pb.collection('sessions').getList(
+            page: 1,
+            perPage: 50,
+            filter: 'user_id = "$_userId"',
+            sort: '-updated',
+          );
+
+      if (existingRecords.items.isNotEmpty) {
+        // Found existing session(s)
+        final newest = existingRecords.items.first;
+
+        // Cleanup: Delete any extra records foundbeyond the first one
+        if (existingRecords.items.length > 1) {
+          debugPrint(
+              "📡 Multi-session detected for $_userId. Cleaning ${existingRecords.items.length - 1} duplicates...");
+          for (int i = 1; i < existingRecords.items.length; i++) {
+            try {
+              await pb
+                  .collection('sessions')
+                  .delete(existingRecords.items[i].id);
+            } catch (_) {}
+          }
+        }
+
+        _cachedSessionId = newest.id;
+
+        // Save to local storage
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('pb_session_id', newest.id);
+
+        debugPrint("📡 Found and merged into existing session: ${newest.id}");
+        return newest.id;
+      }
+    } catch (e) {
+      debugPrint("⚠️ Search existing session error: $e");
+      // Continue to create new session if search fails
+    }
+
+    // 5. Create new session (only if no existing session found)
     try {
       final rec =
           await pb.collection('sessions').create(body: {'user_id': _userId});

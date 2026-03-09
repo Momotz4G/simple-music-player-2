@@ -33,6 +33,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get albums => '专辑';
 
   @override
+  String get folders => 'Folders';
+
+  @override
   String get local_library => '本地库';
 
   @override

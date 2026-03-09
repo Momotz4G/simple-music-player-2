@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/grouped_albums_provider.dart';
+import '../../providers/library_presentation_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/album_model.dart';

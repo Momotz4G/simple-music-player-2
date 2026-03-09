@@ -59,6 +59,9 @@ class LyricsState {
 class LyricsNotifier extends StateNotifier<LyricsState> {
   LyricsNotifier() : super(LyricsState());
 
+  /// Track the current song to avoid resetting syncOffset on same-song reload
+  String? _currentSongKey;
+
   void setShowTranslation(bool value) {
     state = state.copyWith(showTranslation: value);
   }
@@ -109,6 +112,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
   /// Force re-fetch lyrics from LRCLib API (skips local .lrc check).
   Future<void> refreshLyricsFromApi(
       String title, String artist, double durationSecs) async {
+    _currentSongKey = null; // Allow loadLyrics to reload after refresh
     state = state.copyWith(
         isLoading: true,
         rawLyrics: '',
@@ -127,6 +131,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
   /// Load lyrics from imported file content. Synced if timestamps detected, plain if not.
   void loadLyricsFromContent(String content) {
+    _currentSongKey = null; // Imported content replaces current lyrics
     final parsed = _parseLrc(content);
     if (parsed.isNotEmpty) {
       // Has synced timestamps
@@ -153,6 +158,15 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
   Future<void> loadLyrics(
       String filePath, String title, String artist, double durationSecs) async {
+    // 🚀 Same-song guard: preserve syncOffset if lyrics already loaded for this song
+    final songKey = '$filePath|$title';
+    if (songKey == _currentSongKey &&
+        !state.isLoading &&
+        (state.parsedLyrics.isNotEmpty || state.rawLyrics.isNotEmpty)) {
+      return; // Already loaded — keep existing lyrics & syncOffset
+    }
+
+    _currentSongKey = songKey;
     state = state.copyWith(
         isLoading: true,
         rawLyrics: '',
@@ -393,6 +407,6 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 }
 
 final lyricsProvider =
-    StateNotifierProvider.autoDispose<LyricsNotifier, LyricsState>((ref) {
+    StateNotifierProvider<LyricsNotifier, LyricsState>((ref) {
   return LyricsNotifier();
 });

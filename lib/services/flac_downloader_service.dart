@@ -269,20 +269,20 @@ class FlacDownloaderService {
 
   Future<List<String>> _getTidalApiServers() async {
     final logger = DebugLogService();
-    // Updated servers from SpotiFLAC v7.1.0 + Monochrome Music (Feb 2026)
-    // Old servers (qqdl.site, binimum.org, kinoplus.online) are all dead (403/503)
-    // Note: spotisaver.net servers use HTTP only (no SSL)
+
+    // 🚀 NEW: Standardized public hifi-api servers
+    // Previouly supported custom self-hosted API, now deprecated.
     final fallbackServers = [
-      'https://triton.squid.wtf',
-      'https://eu-central.monochrome.tf',
-      'https://us-west.monochrome.tf',
-      'https://arran.monochrome.tf',
-      'http://hifi-one.spotisaver.net',
-      'http://hifi-two.spotisaver.net',
+      'https://arran.monochrome.tf', // New monochrome node
+      'https://tidal-api.binimum.org', // hifi-api author's instance
+      'https://tidal.squid.wtf', // squid.wtf hifi-api instance
+      'https://api.monochrome.tf', // Original monochrome
+      'https://eu-central.monochrome.tf', // EU fallback
+      'https://triton.squid.wtf', // ⚠️ Last resort: often returns previews
     ];
 
-    logger.info(
-        'TIDAL: Using updated server list (${fallbackServers.length} servers)');
+    logger.info('TIDAL: Using ${fallbackServers.length} public servers');
+
     return fallbackServers;
   }
 
@@ -320,7 +320,9 @@ class FlacDownloaderService {
           final apiUrl = '$server/track/?id=$trackId&quality=$quality';
           final response = await _client.get(Uri.parse(apiUrl), headers: {
             'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+            'Origin': 'https://monochrome.tf',
+            'Referer': 'https://monochrome.tf/',
           }).timeout(const Duration(seconds: 30));
 
           if (response.statusCode != 200) continue;
@@ -363,7 +365,8 @@ class FlacDownloaderService {
           );
 
           if (file != null) {
-            debugPrint('✓ Downloaded from Tidal ($quality): ${file.path}');
+            debugPrint(
+                '✓ Downloaded from Tidal ($quality) via $server: ${file.path}');
             return file;
           }
         } catch (e) {
@@ -434,10 +437,43 @@ class FlacDownloaderService {
 
     File? file;
 
-    // === STEP 1: Try Deezer first (most reliable as of 2026) ===
+    // === STEP 1: Try Tidal HI_RES_LOSSLESS first ===
+    if (urls.tidalUrl != null) {
+      debugPrint('🎧 Step 1: Trying Tidal HI_RES_LOSSLESS...');
+      logger.info('FLAC: Step 1 - Trying Tidal HI_RES_LOSSLESS...');
+      file = await _downloadFromTidalWithQuality(
+        tidalUrl: urls.tidalUrl!,
+        outputPath: outputPath,
+        quality: 'HI_RES_LOSSLESS',
+        onProgress: onProgress,
+      );
+      if (file != null) {
+        logger.success('FLAC: Tidal Hi-Res success');
+        return FlacDownloadResult.success(file, 'tidal-hires');
+      }
+      logger.warning('FLAC: Tidal Hi-Res failed');
+    }
+
+    // === STEP 2: Try Qobuz FLAC/Hi-Res ===
+    if (urls.qobuzUrl != null) {
+      debugPrint('🎧 Step 2: Trying Qobuz FLAC...');
+      logger.info('FLAC: Step 2 - Trying Qobuz FLAC...');
+      file = await _downloadFromQobuz(
+        qobuzUrl: urls.qobuzUrl!,
+        outputPath: outputPath,
+        onProgress: onProgress,
+      );
+      if (file != null) {
+        logger.success('FLAC: Qobuz download success');
+        return FlacDownloadResult.success(file, 'qobuz');
+      }
+      logger.warning('FLAC: Qobuz failed');
+    }
+
+    // === STEP 3: Try Deezer (CD quality) ===
     if (urls.deezerUrl != null) {
-      debugPrint('🎧 Step 1: Trying Deezer FLAC...');
-      logger.info('FLAC: Step 1 - Trying Deezer FLAC...');
+      debugPrint('🎧 Step 3: Trying Deezer FLAC...');
+      logger.info('FLAC: Step 3 - Trying Deezer FLAC...');
       file = await downloadFromDeezer(
         deezerUrl: urls.deezerUrl!,
         outputPath: outputPath,
@@ -453,26 +489,9 @@ class FlacDownloaderService {
       logger.warning('FLAC: Deezer failed');
     }
 
-    // === STEP 2: Try Tidal HI_RES_LOSSLESS ===
+    // === STEP 4: Try Tidal LOSSLESS (CD quality fallback) ===
     if (urls.tidalUrl != null) {
-      debugPrint('🎧 Step 2: Trying Tidal HI_RES_LOSSLESS...');
-      logger.info('FLAC: Step 2 - Trying Tidal HI_RES_LOSSLESS...');
-      file = await _downloadFromTidalWithQuality(
-        tidalUrl: urls.tidalUrl!,
-        outputPath: outputPath,
-        quality: 'HI_RES_LOSSLESS',
-        onProgress: onProgress,
-      );
-      if (file != null) {
-        logger.success('FLAC: Tidal Hi-Res success');
-        return FlacDownloadResult.success(file, 'tidal-hires');
-      }
-      logger.warning('FLAC: Tidal Hi-Res failed');
-    }
-
-    // === STEP 3: Try Tidal LOSSLESS (CD quality fallback) ===
-    if (urls.tidalUrl != null) {
-      debugPrint('🎧 Step 3: Trying Tidal LOSSLESS (CD quality)...');
+      debugPrint('🎧 Step 4: Trying Tidal LOSSLESS (CD quality)...');
       file = await _downloadFromTidalWithQuality(
         tidalUrl: urls.tidalUrl!,
         outputPath: outputPath,
@@ -482,22 +501,6 @@ class FlacDownloaderService {
       if (file != null) {
         return FlacDownloadResult.success(file, 'tidal-lossless');
       }
-    }
-
-    // === STEP 4: Try Qobuz FLAC ===
-    if (urls.qobuzUrl != null) {
-      debugPrint('🎧 Step 4: Trying Qobuz FLAC...');
-      logger.info('FLAC: Step 4 - Trying Qobuz FLAC...');
-      file = await _downloadFromQobuz(
-        qobuzUrl: urls.qobuzUrl!,
-        outputPath: outputPath,
-        onProgress: onProgress,
-      );
-      if (file != null) {
-        logger.success('FLAC: Qobuz download success');
-        return FlacDownloadResult.success(file, 'qobuz');
-      }
-      logger.warning('FLAC: Qobuz failed');
     }
 
     return FlacDownloadResult.failed('Download failed on all services');
@@ -529,12 +532,36 @@ class FlacDownloaderService {
         final response = await _client.get(Uri.parse(apiUrl), headers: {
           'User-Agent':
               'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
-        }).timeout(const Duration(seconds: 10)); // Reduced timeout
+          'Origin': 'https://monochrome.tf',
+          'Referer': 'https://monochrome.tf/',
+        }).timeout(const Duration(seconds: 30));
 
         if (response.statusCode != 200) {
           logger
               .warning("TIDAL: Server $server returned ${response.statusCode}");
           continue;
+        }
+
+        // === DIRECT FLAC BINARY (Lucida self-hosted API) ===
+        final contentType = response.headers['content-type'] ?? '';
+        if (contentType.contains('audio/flac') ||
+            contentType.contains('audio/x-flac')) {
+          logger.info(
+              'TIDAL: Got direct FLAC binary from $server (${response.bodyBytes.length} bytes)');
+          final file = File(outputPath);
+          await file.writeAsBytes(response.bodyBytes);
+          final fileSize = await file.length();
+          if (fileSize < 1024 * 1024) {
+            logger.warning(
+                'TIDAL: Direct FLAC too small (${fileSize} bytes), likely preview');
+            try {
+              await file.delete();
+            } catch (_) {}
+            continue;
+          }
+          logger.success(
+              'TIDAL: Direct FLAC download success (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)');
+          return file;
         }
 
         final body = response.body.trim();
@@ -591,9 +618,10 @@ class FlacDownloaderService {
             );
             if (file != null) {
               debugPrint(
-                  '✓ Downloaded Hi-Res from embedded DASH: ${file.path}');
+                  '✓ Downloaded Hi-Res from embedded DASH via $server: ${file.path}');
               return file;
             }
+
             continue; // Try next server
           } else {
             // It's JSON with URLs
@@ -702,7 +730,7 @@ class FlacDownloaderService {
           Uri.parse(apiUrl),
           headers: {
             'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
           },
         ).timeout(const Duration(seconds: 15));
 
@@ -754,313 +782,339 @@ class FlacDownloaderService {
     required String outputPath,
     Function(double)? onProgress,
   }) async {
+    final logger = DebugLogService();
     try {
       final List<String> segmentUrls = [];
 
-      // Extract base URL for relative paths
-      String baseUrl = '';
-      final baseUrlMatch =
-          RegExp(r'<BaseURL>([^<]+)</BaseURL>').firstMatch(manifestXml);
-      if (baseUrlMatch != null) {
-        baseUrl = baseUrlMatch.group(1)!;
-        // If baseUrl is a complete file, just download it directly
-        if (baseUrl.contains('.flac') ||
-            baseUrl.contains('.m4a') ||
-            baseUrl.contains('audio')) {
-          debugPrint('📎 Found direct audio BaseURL');
-          segmentUrls.add(baseUrl);
-        }
+      // DUMP MANIFEST FOR DEBUGGING (Round 5)
+      final dumpLen = manifestXml.length > 2000 ? 2000 : manifestXml.length;
+      debugPrint(
+          '📄 DASH Manifest Dump (First $dumpLen chars):\n${manifestXml.substring(0, dumpLen)}');
+
+      // Helper to find attribute in a string/tag (handles namespaces)
+      String? getAttr(String source, String name) {
+        final regex = RegExp('(?:\\w+:)?$name="([^"]+)"');
+        return regex.firstMatch(source)?.group(1);
       }
 
-      // SegmentTemplate format (most common for Hi-Res)
-      if (segmentUrls.isEmpty) {
-        final initMatch =
-            RegExp(r'initialization="([^"]+)"').firstMatch(manifestXml);
-        final mediaMatch = RegExp(r'media="([^"]+)"').firstMatch(manifestXml);
+      // 0. Parse total duration (Round 5: Look at MPD and Period levels)
+      double totalDurationSeconds = 0;
 
-        if (initMatch != null && mediaMatch != null) {
-          debugPrint('📺 Parsing SegmentTemplate DASH format...');
+      // Try MPD level mediaPresentationDuration
+      final mpdDurationStr = getAttr(manifestXml, 'mediaPresentationDuration');
+      // Try Period level duration
+      final periodDurationStr = RegExp(r'<Period\s+[^>]*?duration="([^"]+)"')
+          .firstMatch(manifestXml)
+          ?.group(1);
 
-          final initTemplate = initMatch.group(1)!;
-          final mediaTemplate = mediaMatch.group(1)!;
+      final bestDurationStr = mpdDurationStr ?? periodDurationStr;
 
-          // Get base URL from manifest (for relative URLs)
-          if (baseUrl.isEmpty) {
-            // Try to extract domain from any URL in the manifest
-            final domainMatch =
-                RegExp(r'(https?://[^/\s<>"]+)').firstMatch(manifestXml);
-            if (domainMatch != null) {
-              baseUrl = domainMatch.group(1)!;
-            }
-          }
-
-          // Build initialization URL
-          final initUrl = initTemplate.startsWith('http')
-              ? initTemplate
-              : '$baseUrl$initTemplate';
-          segmentUrls.add(initUrl);
+      if (bestDurationStr != null) {
+        final match = RegExp(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?')
+            .firstMatch(bestDurationStr);
+        if (match != null) {
+          final h = double.tryParse(match.group(1) ?? '0') ?? 0;
+          final m = double.tryParse(match.group(2) ?? '0') ?? 0;
+          final s = double.tryParse(match.group(3) ?? '0') ?? 0;
+          totalDurationSeconds = (h * 3600) + (m * 60) + s;
           debugPrint(
-              '📎 Init segment: ${initUrl.substring(0, 50.clamp(0, initUrl.length))}...');
-
-          // Parse SegmentTimeline to get segment numbers/times
-          // Format: <S t="0" d="96000" r="44"/> means: start at t, duration d, repeat r times
-          final timelineMatches =
-              RegExp(r'<S\s+(?:t="(\d+)"\s+)?d="(\d+)"(?:\s+r="(\d+)")?')
-                  .allMatches(manifestXml);
-
-          int segmentNumber = 0;
-          for (final match in timelineMatches) {
-            final duration = int.parse(match.group(2)!);
-            final repeat = int.tryParse(match.group(3) ?? '0') ?? 0;
-
-            // Each timeline entry means (repeat + 1) segments
-            for (int i = 0; i <= repeat; i++) {
-              // Replace $Number$ template variable with actual segment number
-              String segmentUrl = mediaTemplate
-                  .replaceAll('\$Number\$', segmentNumber.toString())
-                  .replaceAll(
-                      '\$Time\$', (segmentNumber * duration).toString());
-
-              if (!segmentUrl.startsWith('http')) {
-                segmentUrl = '$baseUrl$segmentUrl';
-              }
-
-              segmentUrls.add(segmentUrl);
-              segmentNumber++;
-            }
-          }
-
-          // If no timeline found, might be simpler format
-          if (segmentUrls.length <= 1) {
-            // Try to find segment count from duration
-            final durationMatch =
-                RegExp(r'duration="(\d+)"').firstMatch(manifestXml);
-            final timescaleMatch =
-                RegExp(r'timescale="(\d+)"').firstMatch(manifestXml);
-
-            if (durationMatch != null && timescaleMatch != null) {
-              debugPrint('📊 Using duration-based segment calculation');
-              // Estimate ~200 segments for a 4-minute song (rough)
-              for (int i = 0; i < 200; i++) {
-                String segmentUrl =
-                    mediaTemplate.replaceAll('\$Number\$', i.toString());
-                if (!segmentUrl.startsWith('http')) {
-                  segmentUrl = '$baseUrl$segmentUrl';
-                }
-                segmentUrls.add(segmentUrl);
-              }
-            }
-          }
-
-          debugPrint('📋 Found ${segmentUrls.length} segments to download');
+              '⏱️ DASH: Duration parsed from ${mpdDurationStr != null ? "MPD" : "Period"} field: ${totalDurationSeconds.toStringAsFixed(1)}s');
         }
       }
 
-      // Fallback: Try to extract any audio URLs
-      if (segmentUrls.isEmpty) {
-        final urlMatches =
-            RegExp(r'(https?://[^\s<>"]+\.(?:flac|m4a|fLaC)[^\s<>"]*)')
-                .allMatches(manifestXml);
-        for (final match in urlMatches) {
-          segmentUrls.add(match.group(1)!);
+      // Fallback: If duration is still 0 or very small, search for any PT...S in the whole manifest
+      if (totalDurationSeconds < 10) {
+        final allDurations = RegExp(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?')
+            .allMatches(manifestXml);
+        for (final m in allDurations) {
+          final seconds = (double.tryParse(m.group(1) ?? '0') ?? 0) * 3600 +
+              (double.tryParse(m.group(2) ?? '0') ?? 0) * 60 +
+              (double.tryParse(m.group(3) ?? '0') ?? 0);
+          if (seconds > totalDurationSeconds) {
+            totalDurationSeconds = seconds;
+            debugPrint(
+                '⏱️ DASH: Duration updated from fallback PT scan: ${totalDurationSeconds.toStringAsFixed(1)}s');
+          }
         }
       }
 
-      if (segmentUrls.isEmpty) {
-        debugPrint('❌ Could not extract any segment URLs from manifest');
+      debugPrint(
+          '⏱️ DASH: Calculated total duration: ${totalDurationSeconds.toStringAsFixed(2)}s');
+
+      // PREVIEW REJECTION (Round 6)
+      // If duration is ~30s (±15s), it's almost certainly a Tidal preview.
+      // We reject it to allow fallback to other servers or LOSSLESS quality.
+      if (totalDurationSeconds > 0 && totalDurationSeconds < 45) {
+        logger.warning(
+            'DASH: Detected preview duration (${totalDurationSeconds.toStringAsFixed(1)}s). Rejecting to trigger fallback.');
+        return null;
+      }
+      // 1. Identify Representations and pick best
+      final representationRegex = RegExp(
+          r'<(?:\w+:)?Representation\s+([^>]+)>(.*?)</(?:\w+:)?Representation>',
+          dotAll: true);
+      final representations =
+          representationRegex.allMatches(manifestXml).toList();
+      if (representations.isEmpty) {
+        logger.error('DASH: No representations found');
         return null;
       }
 
-      debugPrint('📥 Downloading ${segmentUrls.length} segment(s)...');
+      int highestBandwidth = -1;
+      Match? bestRepMatch;
+      for (final match in representations) {
+        final bw =
+            int.tryParse(getAttr(match.group(1)!, 'bandwidth') ?? '0') ?? 0;
+        if (bw > highestBandwidth) {
+          highestBandwidth = bw;
+          bestRepMatch = match;
+        }
+      }
+      bestRepMatch ??= representations.first;
+      final bestRepAttr = bestRepMatch.group(1)!;
+      final bestRepContent = bestRepMatch.group(2)!;
 
-      // Download all segments
-      final List<List<int>> segments = [];
-      int totalBytes = 0;
+      // 2. Extract Template (Inherit attributes)
+      String? templateAttr;
+      String? timelineContent;
 
-      for (int i = 0; i < segmentUrls.length; i++) {
-        final url = segmentUrls[i];
-        debugPrint('📥 Downloading segment ${i + 1}/${segmentUrls.length}...');
+      final templateRegex = RegExp(
+          r'<(?:\w+:)?SegmentTemplate\s+([^>]*?)(?:/>|>(.*?)</(?:\w+:)?SegmentTemplate>)',
+          dotAll: true);
 
-        final segmentResponse = await _client.get(Uri.parse(url));
-        if (segmentResponse.statusCode != 200) {
-          debugPrint('❌ Failed to download segment ${i + 1}');
+      var tMatch = templateRegex.firstMatch(bestRepContent);
+      if (tMatch != null) {
+        templateAttr = tMatch.group(1);
+        timelineContent = tMatch.group(2);
+      } else {
+        tMatch = templateRegex.firstMatch(manifestXml);
+        if (tMatch != null) {
+          templateAttr = tMatch.group(1);
+          timelineContent = tMatch.group(2);
+        }
+      }
+
+      if (templateAttr == null) {
+        logger.error('DASH: No SegmentTemplate found');
+        return null;
+      }
+
+      final timescale = double.tryParse(getAttr(templateAttr, 'timescale') ??
+              getAttr(bestRepAttr, 'timescale') ??
+              getAttr(manifestXml, 'timescale') ??
+              '1') ??
+          1;
+      final startNumber =
+          int.tryParse(getAttr(templateAttr, 'startNumber') ?? '1') ?? 1;
+      final mediaTemplate = getAttr(templateAttr, 'media');
+      final initTemplate = getAttr(templateAttr, 'initialization');
+
+      if (mediaTemplate == null) {
+        logger.error('DASH: Missing media template');
+        return null;
+      }
+
+      // 3. BaseURL
+      final manifestBaseUrls =
+          RegExp(r'<(?:\w+:)?BaseURL>([^<]+)</(?:\w+:)?BaseURL>')
+              .allMatches(manifestXml)
+              .map((m) => m.group(1)!)
+              .toList();
+      String baseUrl =
+          manifestBaseUrls.isNotEmpty ? manifestBaseUrls.first : '';
+      if (!baseUrl.startsWith('http')) {
+        final domainMatch =
+            RegExp(r'(https?://[^/\s<>"]+)').firstMatch(manifestXml);
+        if (domainMatch != null) {
+          final domain = domainMatch.group(1)!;
+          baseUrl = baseUrl.startsWith('/')
+              ? domain + baseUrl
+              : domain + (baseUrl.isEmpty ? '/' : '/$baseUrl');
+        }
+      }
+
+      if (initTemplate != null) {
+        segmentUrls.add(initTemplate.startsWith('http')
+            ? initTemplate
+            : '$baseUrl$initTemplate');
+      }
+
+      // 4. Timeline
+      timelineContent ??= RegExp(
+              r'<(?:\w+:)?SegmentTimeline>(.*?)</(?:\w+:)?SegmentTimeline>',
+              dotAll: true)
+          .firstMatch(manifestXml)
+          ?.group(1);
+
+      if (timelineContent != null) {
+        final sTagRegex = RegExp(
+            r'<(?:\w+:)?S\s+([^>]*?)(?:/>|>(?:.*?)</(?:\w+:)?S>)',
+            dotAll: true);
+        final sMatches = sTagRegex.allMatches(timelineContent);
+        int currentNumber = startNumber;
+        int currentTime = 0;
+
+        for (final sMatch in sMatches) {
+          final attr = sMatch.group(1)!;
+          final t = getAttr(attr, 't');
+          final d = getAttr(attr, 'd');
+          final r = getAttr(attr, 'r');
+
+          if (d == null) continue;
+          final durationTicks = int.parse(d);
+          int repeat = int.tryParse(r ?? '0') ?? 0;
+
+          if (t != null) currentTime = int.parse(t);
+
+          if (repeat < 0) {
+            if (totalDurationSeconds > 0) {
+              final totalTicks = totalDurationSeconds * timescale;
+              final remainingTicks = totalTicks - currentTime;
+              if (remainingTicks > 0) {
+                repeat = (remainingTicks / durationTicks).floor() - 1;
+                if (repeat < 0) repeat = 0;
+                debugPrint(
+                    '🔄 Calculated r=$repeat for infinite segment (remainingTicks=$remainingTicks)');
+              }
+            } else {
+              // Final Fallback: If duration unknown, try to guess song is 4 mins
+              debugPrint(
+                  '⚠️ DASH: Duration unknown for r="-1", assuming 4min fallback');
+              final remainingTicks = (240 * timescale) - currentTime;
+              repeat = (remainingTicks / durationTicks).floor() - 1;
+              if (repeat < 0) repeat = 0;
+            }
+          }
+
+          for (int i = 0; i <= repeat; i++) {
+            String name = mediaTemplate;
+            final numRegex = RegExp(r'\$Number(%0(\d)d)?\$');
+            name = name.replaceAllMapped(
+                numRegex,
+                (m) => m.group(2) != null
+                    ? currentNumber
+                        .toString()
+                        .padLeft(int.parse(m.group(2)!), '0')
+                    : currentNumber.toString());
+            final timeRegex = RegExp(r'\$Time(%0(\d)d)?\$');
+            name = name.replaceAllMapped(
+                timeRegex,
+                (m) => m.group(2) != null
+                    ? currentTime
+                        .toString()
+                        .padLeft(int.parse(m.group(2)!), '0')
+                    : currentTime.toString());
+
+            final segmentUrl = name.startsWith('http') ? name : '$baseUrl$name';
+            segmentUrls.add(segmentUrl);
+
+            currentNumber++;
+            currentTime += durationTicks;
+
+            // Avoid infinite loops if something goes wrong
+            if (segmentUrls.length > 500) break;
+          }
+          if (segmentUrls.length > 500) break;
+        }
+      }
+
+      if (segmentUrls.isEmpty) return null;
+
+      debugPrint('📥 DASH: Downloading ${segmentUrls.length} segments...');
+
+      // USE SYSTEM TEMP DIRECTORY FOR INTERMEDIATE FILE
+      final tempDir = await getTemporaryDirectory();
+      final tempPath =
+          '${tempDir.path}/smp_dash_temp_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      final tempFile = File(tempPath);
+
+      try {
+        final sink = tempFile.openWrite();
+        int downloadedCount = 0;
+        int totalBytes = 0;
+
+        for (int i = 0; i < segmentUrls.length; i++) {
+          try {
+            final resp = await _client.get(Uri.parse(segmentUrls[i]), headers: {
+              'User-Agent':
+                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+            }).timeout(const Duration(seconds: 15));
+            if (resp.statusCode != 200) {
+              debugPrint(
+                  '⚠️ DASH: Failed segment $i (${resp.statusCode} ${resp.reasonPhrase})');
+              continue;
+            }
+            sink.add(resp.bodyBytes);
+            totalBytes += resp.bodyBytes.length;
+            downloadedCount++;
+            if (onProgress != null)
+              onProgress(downloadedCount / segmentUrls.length);
+          } catch (e) {
+            debugPrint('⚠️ DASH: Error downloading segment: $e');
+          }
+        }
+
+        await sink.flush();
+        await sink.close();
+
+        logger.info(
+            "DASH: Downloaded $totalBytes bytes ($downloadedCount/${segmentUrls.length} segments)");
+
+        if (downloadedCount == 0) return null;
+
+        // SIZE-BASED PREVIEW REJECTION
+        if (totalBytes < 10 * 1024 * 1024) {
+          logger.warning(
+              'DASH: Downloaded size too small (${(totalBytes / 1024 / 1024).toStringAsFixed(1)}MB). Rejecting as suspected preview.');
           return null;
         }
 
-        segments.add(segmentResponse.bodyBytes);
-        totalBytes += segmentResponse.bodyBytes.length;
-
-        if (onProgress != null) {
-          onProgress((i + 1) / segmentUrls.length);
-        }
-      }
-
-      // Concatenate all segments to a TEMP file first (fMP4 format)
-      final tempPath = outputPath.replaceAll('.flac', '_temp.m4a');
-      final tempFile = File(tempPath);
-      final sink = tempFile.openWrite();
-
-      for (final segment in segments) {
-        sink.add(segment);
-      }
-
-      await sink.flush();
-      await sink.close();
-
-      final logger = DebugLogService(); // Re-get logger
-      logger.info(
-          "DASH: Segments downloaded. Size: ${await tempFile.length()} bytes");
-
-      final tempSize = await tempFile.length();
-      debugPrint(
-          '📁 Temp Hi-Res: ${(tempSize / 1024 / 1024).toStringAsFixed(2)} MB');
-
-      // Use FFmpeg to convert fMP4 to proper FLAC container
-      debugPrint('🔄 Converting to FLAC container with FFmpeg...');
-
-      // 🚀 Platform-aware FFmpeg conversion
-      // 🚀 Platform-aware FFmpeg conversion
-      bool conversionSuccess = false;
-
-      if (Platform.isAndroid || Platform.isIOS) {
-        debugPrint('📱 Mobile FFmpeg - processing...');
-        logger.info(
-            'Starting Mobile FFmpeg conversion: $tempPath -> $outputPath');
-
-        // Execute FFmpeg command using ffmpeg_kit_flutter_new_audio
-        // -y : Overwrite output files without asking
-        // -i : Input file
-        // -c:a copy : Copy audio stream (fastest), fallback to re-encode if fails
-
-        final start = DateTime.now();
-        try {
-          logger.info('Executing FFmpeg command (copy)...');
+        // 5. FFmpeg
+        bool success = false;
+        final ffmpeg = await _getFFmpegPath();
+        if (!Platform.isAndroid && !Platform.isIOS && ffmpeg != null) {
+          final res = await Process.run(
+              ffmpeg, ['-y', '-i', tempPath, '-c:a', 'copy', outputPath]);
+          if (res.exitCode == 0)
+            success = true;
+          else {
+            final retry = await Process.run(
+                ffmpeg, ['-y', '-i', tempPath, '-c:a', 'flac', outputPath]);
+            if (retry.exitCode == 0) success = true;
+          }
+        } else if (Platform.isAndroid || Platform.isIOS) {
           final session = await FFmpegKit.execute(
               '-y -i "$tempPath" -c:a copy "$outputPath"');
-          final returnCode = await session.getReturnCode();
-          final logs = await session.getAllLogsAsString();
-          final duration = DateTime.now().difference(start).inMilliseconds;
-
-          logger.info('FFmpeg finished in ${duration}ms');
-          logger.info('Return Code: $returnCode');
-
-          if (logs != null && logs.isNotEmpty) {
-            // Log last 500 chars
-            logger.info(
-                'FFmpeg Logs: ${logs.length > 500 ? logs.substring(logs.length - 500) : logs}');
+          if (ReturnCode.isSuccess(await session.getReturnCode()))
+            success = true;
+          else {
+            final retry = await FFmpegKit.execute(
+                '-y -i "$tempPath" -c:a flac "$outputPath"');
+            if (ReturnCode.isSuccess(await retry.getReturnCode()))
+              success = true;
           }
+        }
 
-          if (ReturnCode.isSuccess(returnCode)) {
-            conversionSuccess = true;
-            debugPrint('✓ Mobile FFmpeg conversion successful');
-            logger.success('FFmpeg conversion successful');
-          } else {
-            debugPrint('⚠️ Mobile FFmpeg failed: $logs');
-            logger.warning('FFmpeg copy failed, retrying with re-encode...');
-
-            // Fallback: Try re-encoding if copy failed (sometimes containers disagree)
-            debugPrint('🔄 Retrying with re-encode...');
-            final retryStart = DateTime.now();
-            final retrySession =
-                await FFmpegKit.execute('-y -i "$tempPath" "$outputPath"');
-            final retryCode = await retrySession.getReturnCode();
-            final retryLogs = await retrySession.getAllLogsAsString();
-            final retryDuration =
-                DateTime.now().difference(retryStart).inMilliseconds;
-
-            logger.info('Retry finished in ${retryDuration}ms');
-
-            if (ReturnCode.isSuccess(retryCode)) {
-              conversionSuccess = true;
-              debugPrint('✓ Mobile FFmpeg re-encode successful');
-              logger.success('FFmpeg re-encode successful');
-            } else {
-              debugPrint('❌ Mobile FFmpeg re-encode failed: $retryLogs');
-              logger.error('FFmpeg re-encode failed: $retryLogs');
-            }
+        if (success) {
+          return File(outputPath);
+        } else {
+          logger
+              .error('DASH: FFmpeg conversion failed for both copy and encode');
+          return null;
+        }
+      } finally {
+        // ALWAYS CLEAN UP TEMP FILE
+        try {
+          if (await tempFile.exists()) {
+            await tempFile.delete();
+            debugPrint('🧹 DASH: Cleaned up temporary file: $tempPath');
           }
         } catch (e) {
-          logger.error('FFmpeg Exception: $e');
-          debugPrint('❌ FFmpeg Exception: $e');
+          debugPrint('⚠️ DASH: Failed to cleanup temp file: $e');
         }
-      } else {
-        // Use system FFmpeg for desktop
-        debugPrint('🖥️ Using system FFmpeg for desktop conversion...');
-        final ffmpegPath = await _getFFmpegPath();
-
-        if (ffmpegPath != null) {
-          try {
-            ProcessResult result;
-            if (Platform.isWindows) {
-              // 🚀 WINDOWS FIX: Run from the bin directory to avoid quoting issues with spaces in path
-              final ffmpegFile = File(ffmpegPath);
-              final workingDir = ffmpegFile.parent.path;
-              final exeName = ffmpegFile.uri.pathSegments.last;
-
-              result = await Process.run(
-                exeName,
-                [
-                  '-y',
-                  '-i',
-                  tempPath,
-                  '-c:a',
-                  'copy',
-                  outputPath,
-                ],
-                workingDirectory: workingDir, // Key Fix
-                runInShell: false,
-              );
-            } else {
-              result = await Process.run(
-                ffmpegPath,
-                [
-                  '-y',
-                  '-i',
-                  tempPath,
-                  '-c:a',
-                  'copy',
-                  outputPath,
-                ],
-                runInShell: false,
-              );
-            }
-
-            if (result.exitCode == 0 && await File(outputPath).exists()) {
-              conversionSuccess = true;
-              debugPrint('✓ FFmpeg conversion successful');
-            } else {
-              debugPrint('⚠️ FFmpeg conversion failed: ${result.stderr}');
-            }
-          } catch (e) {
-            debugPrint('⚠️ FFmpeg error: $e');
-          }
-        } else {
-          debugPrint('⚠️ FFmpeg not found on system');
-        }
-      }
-
-      // Handle conversion result
-      if (conversionSuccess) {
-        // Delete temp file
-        await tempFile.delete();
-
-        final file = File(outputPath);
-        final fileSize = await file.length();
-        debugPrint(
-            '📁 Hi-Res Downloaded: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
-        return file;
-      } else {
-        // Fall back to using temp file as FLAC (rename)
-        debugPrint('⚠️ FFmpeg unavailable, using raw segments');
-        await tempFile.rename(outputPath);
-        final file = File(outputPath);
-        final fileSize = await file.length();
-        debugPrint(
-            '📁 Hi-Res Downloaded (raw): ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
-        return file;
       }
     } catch (e) {
-      debugPrint('❌ DASH download error: $e');
+      logger.error('DASH fatal error: $e');
       return null;
     }
   }

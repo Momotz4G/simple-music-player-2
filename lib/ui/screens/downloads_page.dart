@@ -87,7 +87,8 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
 
           final audioFiles = entities.where((e) {
             final ext = p.extension(e.path).toLowerCase();
-            return ['.mp3', '.m4a', '.wav', '.flac', '.aac'].contains(ext);
+            return ['.mp3', '.m4a', '.wav', '.flac', '.aac', '.dsf', '.dff']
+                .contains(ext);
           }).toList();
 
           audioFiles.sort(

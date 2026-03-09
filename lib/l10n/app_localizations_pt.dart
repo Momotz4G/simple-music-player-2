@@ -33,6 +33,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get albums => 'Álbuns';
 
   @override
+  String get folders => 'Folders';
+
+  @override
   String get local_library => 'Biblioteca local';
 
   @override

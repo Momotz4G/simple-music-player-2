@@ -1,6 +1,7 @@
+import 'dart:io';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import 'package:path/path.dart' as p;
 import '../data/schemas.dart';
 
 class DBService {
@@ -63,9 +64,13 @@ class DBService {
     // Using a Transaction (Txn) ensures all data is saved safely at once.
     await isar.writeTxn(() async {
       for (final newSong in newSongs) {
+        // 🚀 Canonicalize path for consistent matching (especially on Windows)
+        final canonicalPath = p.canonicalize(newSong.path);
+        newSong.path = canonicalPath;
+
         // Check if this path already exists
         final existingSong =
-            await isar.songs.filter().pathEqualTo(newSong.path).findFirst();
+            await isar.songs.filter().pathEqualTo(canonicalPath).findFirst();
 
         if (existingSong != null) {
           // UPDATE: Keep ID, update fields
@@ -73,8 +78,13 @@ class DBService {
           existingSong.artist = newSong.artist;
           existingSong.album = newSong.album;
           existingSong.duration = newSong.duration;
-          // Don't overwrite playCount or dateAdded if we don't want to
-          // existingSong.dateAdded = newSong.dateAdded;
+          existingSong.year = newSong.year;
+          existingSong.trackNumber = newSong.trackNumber;
+          existingSong.discNumber = newSong.discNumber;
+          existingSong.genre = newSong.genre;
+          // Note: We keep existingSong.path as it might have different casing
+          // but canonicalize ensures we match it correctly.
+          existingSong.path = canonicalPath;
 
           await isar.songs.put(existingSong);
         } else {
@@ -112,18 +122,17 @@ class DBService {
   // New helper for PlayerProvider (which uses SongModel, not Isar Song)
   Future<void> updateSongPlayCountByPath(String filePath) async {
     final isar = await db;
+    final canonicalPath = p.canonicalize(filePath);
+
     await isar.writeTxn(() async {
-      // Find the song by path
-      final song = await isar.songs.filter().pathEqualTo(filePath).findFirst();
+      // Find the song by path (Canonicalized)
+      final song =
+          await isar.songs.filter().pathEqualTo(canonicalPath).findFirst();
 
       if (song != null) {
         song.playCount += 1;
         song.lastPlayed = DateTime.now();
         await isar.songs.put(song);
-
-        // Cloud tracking moved to StatsProvider
-      } else {
-        // print("⚠️ Warning: Could not find song in DB to update play count: $filePath");
       }
     });
   }
@@ -138,9 +147,25 @@ class DBService {
   // 6. Clean Database (Optional: Remove songs that no longer exist on disk)
   Future<void> cleanMissingSongs(List<String> existingPaths) async {
     final isar = await db;
+    // Convert to Set for O(1) lookups
+    final pathSet = existingPaths.map((e) => p.canonicalize(e)).toSet();
+
     await isar.writeTxn(() async {
-      // Advanced: Find songs in DB whose path is NOT in the existingPaths list
-      // and delete them. (We can implement this logic later if needed)
+      final allSongs = await isar.songs.where().findAll();
+      final idsToDelete = <int>[];
+
+      for (final song in allSongs) {
+        final canonicalPath = p.canonicalize(song.path);
+        if (!pathSet.contains(canonicalPath)) {
+          idsToDelete.add(song.id);
+        }
+      }
+
+      if (idsToDelete.isNotEmpty) {
+        await isar.songs.deleteAll(idsToDelete);
+        print(
+            "🧹 DBService: Cleaned ${idsToDelete.length} stale song entries.");
+      }
     });
   }
 

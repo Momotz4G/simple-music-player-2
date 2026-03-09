@@ -33,6 +33,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get albums => 'Álbumes';
 
   @override
+  String get folders => 'Folders';
+
+  @override
   String get local_library => 'Biblioteca local';
 
   @override

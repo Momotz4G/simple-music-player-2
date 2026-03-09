@@ -33,6 +33,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get albums => '앨범';
 
   @override
+  String get folders => 'Folders';
+
+  @override
   String get local_library => '로컬 라이브러리';
 
   @override
