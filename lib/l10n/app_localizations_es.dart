@@ -33,7 +33,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get albums => 'Álbumes';
 
   @override
-  String get folders => 'Folders';
+  String get folders => 'Carpetas';
 
   @override
   String get local_library => 'Biblioteca local';
@@ -43,6 +43,26 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get metadata_editor => 'Editor de metadatos';
+
+  @override
+  String get editMetadata => 'Editar metadatos';
+
+  @override
+  String get success => 'Éxito';
+
+  @override
+  String get enableAlphabetIndexer =>
+      'Activar indexador de desplazamiento alfabético';
+
+  @override
+  String get enableAlphabetIndexerSubtitle =>
+      'Mostrar indexación de barra lateral A-Z en la vista de lista móvil';
+
+  @override
+  String get metadataUpdated => 'Metadatos actualizados';
+
+  @override
+  String get failedToUpdateMetadata => 'Error al actualizar metadatos';
 
   @override
   String get toggleLyrics => 'Alternar Letras';
@@ -234,6 +254,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get showStatusDiscord => 'Mostrar estado en Discord';
 
   @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => 'En línea';
+
+  @override
+  String get unauthorize => 'No autorizado';
+
+  @override
+  String get offlineStatus => 'Fuera de línea';
+
+  @override
+  String get checkInternetConnection => 'Verifica tu conexión a internet';
+
+  @override
+  String get autoClearCache => 'Limpiar caché automáticamente';
+
+  @override
+  String get autoClearDisabled => 'Desactivado';
+
+  @override
+  String get autoClearOnClose => 'Al cerrar la app';
+
+  @override
+  String get autoClearAfter24h => 'Después de 24 horas';
+
+  @override
+  String get autoClearAfter7d => 'Después de 7 días';
+
+  @override
+  String get autoClearEvery30m => 'Cada 30 min (Solo al escuchar)';
+
+  @override
   String get musicFolderLocation => 'Ubicación de la carpeta de música';
 
   @override
@@ -331,6 +384,20 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get autoAddSimilar =>
       'Añadir canciones similares automáticamente cuando la cola esté terminando';
+
+  @override
+  String get gaplessPlayback => 'Reproducción sin Pausas';
+
+  @override
+  String get gaplessPlaybackDesc => 'Elimina el silencio entre las pistas';
+
+  @override
+  String get crossfade => 'Crossfade';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return 'Fundido entre pistas ($seconds s)';
+  }
 
   @override
   String get disableRomanization => 'Desactivar romanización';
@@ -1044,10 +1111,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get importFromSpotifySubtitle => 'Pega un enlace de lista de Spotify';
 
   @override
+  String get importFromYoutubeMusic => 'Importar de YouTube Music';
+
+  @override
+  String get importFromYoutubeMusicSubtitle =>
+      'Pega un enlace de lista de YouTube Music';
+
+  @override
   String get playlistNameHint => 'Nombre de la lista';
 
   @override
   String get importSpotifyPlaylist => 'Importar lista de Spotify';
+
+  @override
+  String get importYoutubeMusicPlaylist => 'Importar lista de YouTube Music';
 
   @override
   String get deletePlaylistTitle => '¿Eliminar lista de reproducción?';
@@ -1081,6 +1158,108 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get renamePlaylist => 'Renombrar lista de reproducción';
+
+  @override
+  String get deletePlaylist => 'Eliminar lista de reproducción';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      '¿Estás seguro de que quieres eliminar esta lista de reproducción? (Esta acción no se puede deshacer)';
+
+  @override
+  String get publicSharing => 'Compartir públicamente';
+
+  @override
+  String get publicSharingDesc =>
+      'Cualquiera con el código puede importar esta lista de reproducción.';
+
+  @override
+  String get publicSharingDisabledDesc =>
+      'Desactivado. Actívalo para compartir con otros.';
+
+  @override
+  String get failedEnableSharing =>
+      'Error al activar el uso compartido. Compruebe la conexión.';
+
+  @override
+  String get failedDisableSharing => 'Error al desactivar el uso compartido.';
+
+  @override
+  String get disablingSharingWarning =>
+      'Al desactivar el uso compartido se eliminarán permanentemente el código y los datos del servidor para ahorrar espacio.';
+
+  @override
+  String get invalidSpotifyUrl =>
+      'URL de lista de reproducción de Spotify no válida';
+
+  @override
+  String get invalidYoutubeMusicUrl =>
+      'URL de lista de reproducción de YouTube Music no válida';
+
+  @override
+  String get fetchingPlaylistInfo =>
+      'Obteniendo información de la lista de reproducción...';
+
+  @override
+  String get failedFetchPlaylistInfo =>
+      'No se pudo obtener la información de la lista de reproducción';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return 'Obteniendo pistas de \"$name\"...';
+  }
+
+  @override
+  String get noTracksFound =>
+      'No se encontraron pistas en la lista de reproducción';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return 'Creando lista de reproducción con $count pistas...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return '¡$count pistas importadas correctamente!';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'Error de importación: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist =>
+      'Obteniendo lista de reproducción compartida...';
+
+  @override
+  String get playlistNotFoundOrError =>
+      'Lista de reproducción no encontrada o error del servidor';
+
+  @override
+  String get parsingPlaylistData =>
+      'Analizando datos de la lista de reproducción...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return '¡\"$name\" importada correctamente!';
+  }
+
+  @override
+  String get codeMust6Digits => 'El código debe tener 6 dígitos';
+
+  @override
+  String get fetchingPlaylist => 'Obteniendo lista de reproducción...';
+
+  @override
+  String get importViaCode => 'Importar mediante código';
+
+  @override
+  String get enterShareCode =>
+      'Introduzca el código de uso compartido de 6 dígitos';
+
+  @override
+  String get importChoice => 'Importar';
 
   @override
   String get listeningStats => 'Estadísticas de escucha';
@@ -1630,4 +1809,61 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => 'Traducir letras';
+
+  @override
+  String get sharePlaylist => 'Compartir lista de reproducción';
+
+  @override
+  String get importViaCodeSubtitle =>
+      'Importar una lista de reproducción compartida por un amigo';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return 'Compartir \"$name\"';
+  }
+
+  @override
+  String get generatingShareCode => 'Generando código de uso compartido...';
+
+  @override
+  String get failedToGenerateCode =>
+      'Error al generar el código de uso compartido. Compruebe la conexión.';
+
+  @override
+  String get playlistReadyShare =>
+      '¡Tu lista de reproducción está lista para compartir!';
+
+  @override
+  String get copyCode => 'Copiar código';
+
+  @override
+  String get codeCopied => '¡Código copiado al portapapeles!';
+
+  @override
+  String get shareCodeUsage =>
+      'Dale este código de 6 dígitos a un amigo para que importe esta lista de reproducción.';
+
+  @override
+  String get filters => 'Filtros';
+
+  @override
+  String get fileName => 'Nombre de archivo';
+
+  @override
+  String get dataUsage => 'Uso de datos';
+
+  @override
+  String todayLabel(String size) {
+    return 'Hoy: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return 'Últimos 7 días: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return 'Últimos 30 días: $size';
+  }
 }

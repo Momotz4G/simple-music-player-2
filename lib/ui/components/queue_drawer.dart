@@ -25,8 +25,15 @@ class QueueDrawer extends ConsumerWidget {
     List<SongModel> upNextFromLibrary = [];
 
     if (currentSong != null && playlist.isNotEmpty) {
-      final currentIndex =
+      int currentIndex =
           playlist.indexWhere((s) => s.filePath == currentSong.filePath);
+      
+      if (currentIndex == -1) {
+        // Fallback for when filePath is changed by JIT streaming/caching
+        currentIndex =
+            playlist.indexWhere((s) => s.title == currentSong.title);
+      }
+
       final bool isLoopAll = playerState.loopMode == ja.LoopMode.all;
 
       if (currentIndex != -1) {

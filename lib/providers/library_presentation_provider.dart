@@ -24,16 +24,22 @@ enum LibraryView {
 
 enum LibraryFilter { songs, folders, artists, albums }
 
+enum LibrarySort { title, artist, fileName }
+
 class LibraryPresentationState {
   final LibraryView currentView;
   final bool isGridView;
   final LibraryFilter currentFilter;
+  final LibrarySort sortBy;
+  final bool isSortDescending;
   final String? selectedFolderPath; // 🚀 Use FULL PATH for precise filtering
 
   LibraryPresentationState({
     this.currentView = LibraryView.localLibrary,
     this.isGridView = true,
     this.currentFilter = LibraryFilter.songs,
+    this.sortBy = LibrarySort.title,
+    this.isSortDescending = false,
     this.selectedFolderPath,
   });
 
@@ -41,12 +47,16 @@ class LibraryPresentationState {
     LibraryView? currentView,
     bool? isGridView,
     LibraryFilter? currentFilter,
+    LibrarySort? sortBy,
+    bool? isSortDescending,
     String? Function()? selectedFolderPath,
   }) {
     return LibraryPresentationState(
       currentView: currentView ?? this.currentView,
       isGridView: isGridView ?? this.isGridView,
       currentFilter: currentFilter ?? this.currentFilter,
+      sortBy: sortBy ?? this.sortBy,
+      isSortDescending: isSortDescending ?? this.isSortDescending,
       selectedFolderPath: selectedFolderPath != null
           ? selectedFolderPath()
           : this.selectedFolderPath,
@@ -67,9 +77,28 @@ class LibraryPresentationNotifier
     state = state.copyWith(isGridView: !state.isGridView);
   }
 
+  void setSortBy(LibrarySort sort) {
+    if (state.sortBy == sort) {
+      state = state.copyWith(isSortDescending: !state.isSortDescending);
+    } else {
+      state = state.copyWith(sortBy: sort, isSortDescending: false);
+    }
+  }
+
   void setFilter(LibraryFilter filter) {
-    state =
-        state.copyWith(currentFilter: filter, selectedFolderPath: () => null);
+    if (filter == LibraryFilter.artists || filter == LibraryFilter.albums) {
+      state = state.copyWith(
+        currentFilter: filter,
+        sortBy: LibrarySort.title,
+        isSortDescending: false,
+        selectedFolderPath: () => null,
+      );
+    } else {
+      state = state.copyWith(
+        currentFilter: filter,
+        selectedFolderPath: () => null,
+      );
+    }
   }
 
   void selectFolder(String? folderPath) {
@@ -89,19 +118,43 @@ final libraryPresentationProvider = StateNotifierProvider<
   return LibraryPresentationNotifier();
 });
 
+/// Provides a list of songs sorted by the user's preference
+final sortedSongsProvider = Provider<List<SongModel>>((ref) {
+  final library = ref.watch(libraryProvider);
+  final presentationState = ref.watch(libraryPresentationProvider);
+  final songs = List<SongModel>.from(library.songs);
+
+  switch (presentationState.sortBy) {
+    case LibrarySort.title:
+      songs.sort(
+          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+      break;
+    case LibrarySort.artist:
+      songs.sort(
+          (a, b) => a.artist.toLowerCase().compareTo(b.artist.toLowerCase()));
+      break;
+    case LibrarySort.fileName:
+      songs.sort((a, b) {
+        final nameA = p.basename(a.filePath).toLowerCase();
+        final nameB = p.basename(b.filePath).toLowerCase();
+        return nameA.compareTo(nameB);
+      });
+      break;
+  }
+
+  if (presentationState.isSortDescending) {
+    return songs.reversed.toList();
+  }
+  return songs;
+});
+
 // -------------------------------------------------------------------
 // --- PROVIDER FOR ARTISTS PAGE ---
 // -------------------------------------------------------------------
 
 /// Provides a Map of Artist Name -> List of SongModel objects by that artist.
 final groupedArtistsProvider = Provider<Map<String, List<SongModel>>>((ref) {
-  final library = ref.watch(libraryProvider);
-
-  // 🚀 OPTIMIZATION:
-  // We no longer return empty during scan, so user can see partial data.
-  // But we watch 'libraryProvider' so it updates automatically.
-
-  final songs = library.songs;
+  final songs = ref.watch(sortedSongsProvider);
 
   // Return empty if no songs found
   if (songs.isEmpty) {
@@ -133,8 +186,7 @@ final groupedArtistsProvider = Provider<Map<String, List<SongModel>>>((ref) {
 
 /// Provides a Map of Album Name -> List of SongModel objects in that album.
 final groupedAlbumsProvider = Provider<Map<String, List<SongModel>>>((ref) {
-  final library = ref.watch(libraryProvider);
-  final songs = library.songs;
+  final songs = ref.watch(sortedSongsProvider);
 
   if (songs.isEmpty) return const {};
 
@@ -161,8 +213,7 @@ final groupedAlbumsProvider = Provider<Map<String, List<SongModel>>>((ref) {
 
 /// Provides a Map of Folder Name -> List of SongModel objects in that folder.
 final groupedFoldersProvider = Provider<Map<String, List<SongModel>>>((ref) {
-  final library = ref.watch(libraryProvider);
-  final songs = library.songs;
+  final songs = ref.watch(sortedSongsProvider);
 
   if (songs.isEmpty) return const {};
 

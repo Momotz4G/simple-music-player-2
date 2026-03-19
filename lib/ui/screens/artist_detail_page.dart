@@ -213,8 +213,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
     // Determine which list to show
     final currentList = _isSpotifyMode ? _topTracks : widget.songs;
     final int totalItems = currentList.length;
-    final int displayCount =
-        (totalItems > _displayLimit) ? _displayLimit : totalItems;
+    final int displayCount = _isSpotifyMode
+        ? ((totalItems > _displayLimit) ? _displayLimit : totalItems)
+        : totalItems;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -504,19 +505,36 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                                     context, ref, action, song);
                               },
                               itemBuilder: (context) => [
+                                if (_isSpotifyMode)
+                                  PopupMenuItem(
+                                      value: SongAction.download,
+                                      child: Row(children: [
+                                        const Icon(Icons.download_rounded),
+                                        const SizedBox(width: 12),
+                                        Text(AppLocalizations.of(context)!
+                                            .download)
+                                      ])),
                                 PopupMenuItem(
                                     value: SongAction.playNext,
                                     child: Row(children: [
-                                      Icon(Icons.playlist_play),
-                                      SizedBox(width: 12),
+                                      const Icon(Icons.playlist_play),
+                                      const SizedBox(width: 12),
                                       Text(AppLocalizations.of(context)!
                                           .playNext)
                                     ])),
                                 PopupMenuItem(
+                                    value: SongAction.addToQueue,
+                                    child: Row(children: [
+                                      const Icon(Icons.queue_music),
+                                      const SizedBox(width: 12),
+                                      Text(AppLocalizations.of(context)!
+                                          .addToQueue)
+                                    ])),
+                                PopupMenuItem(
                                     value: SongAction.addToPlaylist,
                                     child: Row(children: [
-                                      Icon(Icons.playlist_add),
-                                      SizedBox(width: 12),
+                                      const Icon(Icons.playlist_add),
+                                      const SizedBox(width: 12),
                                       Text(AppLocalizations.of(context)!
                                           .addToPlaylist)
                                     ])),
@@ -545,7 +563,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
               ),
 
             // SHOW MORE / SHOW LESS BUTTON
-            if (totalItems > 5)
+            if (_isSpotifyMode && totalItems > 5)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),

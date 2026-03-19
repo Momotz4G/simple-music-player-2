@@ -234,29 +234,26 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                   child: Row(
                     children: [
                       // HERO WRAPPER
-                      Tooltip(
-                        message: l10n.lyricsTooltip,
-                        child: Hero(
-                          tag: 'current_artwork',
-                          // ✅ FIX: Use SmartArt here
-                          child: hasSong
-                              ? SmartArt(
-                                  path: song.filePath,
-                                  size: 56,
-                                  borderRadius: 4,
-                                  onlineArtUrl: song.onlineArtUrl,
-                                )
-                              : Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                      color: Colors.grey[800],
-                                      borderRadius: BorderRadius.circular(4)),
-                                  child: Icon(Icons.music_note,
-                                      color:
-                                          primaryColor.withValues(alpha: 0.5)),
-                                ),
-                        ),
+                      Hero(
+                        tag: 'current_artwork',
+                        // ✅ FIX: Use SmartArt here
+                        child: hasSong
+                            ? SmartArt(
+                                path: song.filePath,
+                                size: 56,
+                                borderRadius: 4,
+                                onlineArtUrl: song.onlineArtUrl,
+                              )
+                            : Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                    color: Colors.grey[800],
+                                    borderRadius: BorderRadius.circular(4)),
+                                child: Icon(Icons.music_note,
+                                    color:
+                                        primaryColor.withValues(alpha: 0.5)),
+                              ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(

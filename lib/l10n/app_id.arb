@@ -3,7 +3,7 @@
   "search": "Cari",
   "history": "Riwayat",
   "stats": "Statistik",
-  "library": "PERPUSTAKAAN",
+  "library": "Perpustakaan",
   "playlists": "Daftar Putar",
   "artists": "Artis",
   "albums": "Album",
@@ -11,6 +11,12 @@
   "local_library": "Perpustakaan Lokal",
   "downloads": "Unduhan",
   "metadata_editor": "Pengubah Metadata",
+  "editMetadata": "Ubah Metadata",
+  "success": "Sukses",
+  "enableAlphabetIndexer": "Aktifkan Indeks Skrol Alfabet",
+  "enableAlphabetIndexerSubtitle": "Tampilkan indeks bilah samping A-Z di ponsel",
+  "metadataUpdated": "Metadata Diperbarui",
+  "failedToUpdateMetadata": "Gagal memperbarui metadata",
   "toggleLyrics": "Alihkan Lirik",
   "settings": "Pengaturan",
   "navigation": "Navigasi",
@@ -71,9 +77,19 @@
   "rainbowMode": "Mode Pelangi",
   "useMixedColors": "Gunakan warna campuran (Mengambil alih sinkronisasi)",
   "integration": "Integrasi",
-  "discordRPC": "Discord Rich Presence",
+  "discordRPC": "Kehadiran kaya Discord",
   "showStatusDiscord": "Tampilkan status di Discord",
-  "library": "Perpustakaan",
+  "tidalApiStatus": "Tidal API",
+  "online": "Online",
+  "unauthorize": "Tidak Berizin",
+  "offlineStatus": "Offline",
+  "checkInternetConnection": "Periksa koneksi internet Anda",
+  "autoClearCache": "Hapus Cache Otomatis",
+  "autoClearDisabled": "Dinonaktifkan",
+  "autoClearOnClose": "Saat aplikasi ditutup",
+  "autoClearAfter24h": "Setelah 24 jam",
+  "autoClearAfter7d": "Setelah 7 hari",
+  "autoClearEvery30m": "Tiap 30 menit (Hanya ketika mendengarkan)",
   "musicFolderLocation": "Lokasi Folder Musik",
   "noFolderSelected": "Tidak ada folder yang dipilih",
   "change": "Ubah",
@@ -83,7 +99,6 @@
   "importAdditionalPaths": "Impor Folder Tambahan",
   "addFoldersScan": "Tambahkan lebih banyak folder untuk dipindai",
   "add": "Tambah",
-  "downloads": "Unduhan",
   "singleTracks": "Lagu Tunggal",
   "unsavedChanges": "Anda memiliki perubahan yang belum disimpan",
   "playlistAlbumTracks": "Lagu Daftar Putar / Album",
@@ -106,6 +121,17 @@
   "playback": "Pemutaran",
   "endlessQueue": "Antrean Tanpa Akhir",
   "autoAddSimilar": "Tambah lagu serupa secara otomatis saat antrean hampir kosong",
+  "gaplessPlayback": "Pemutaran Tanpa Jeda",
+  "gaplessPlaybackDesc": "Menghilangkan keheningan antar trek",
+  "crossfade": "Crossfade",
+  "crossfadeDesc": "Memudarkan antar trek ({seconds} dtk)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "Nonaktifkan Romanisasi",
   "hideRomajiPinyin": "Sembunyikan romaji/pinyin di bawah lirik Korea, Jepang, dan Mandarin",
   "translationLanguage": "Bahasa Terjemahan",
@@ -116,8 +142,8 @@
   "bitPerfectWindows": "Audio bit-perfect dengan sample rate otomatis (Perlu restart)",
   "audiophileDAC": "Aktifkan untuk pemutaran DAC audiophile (Perlu restart)",
   "android14BitPerfect": "Bit-Perfect Android 14+",
-  "bypassSystemMixer": "Bypass mixer sistem untuk USB DAC",
-  "requiresAndroid14": "Memerlukan Android 14+ dan USB DAC",
+  "bypassSystemMixer": "Lewati mixer sistem untuk DAC USB",
+  "requiresAndroid14": "Membutuhkan Android 14+ dan DAC USB",
   "bitPerfectEnabled": "Mode Bit-Perfect Diaktifkan. Kontrol volume mungkin dinonaktifkan.",
   "audioOutputDevice": "Perangkat Output Audio",
   "loadingDevices": "Memuat perangkat...",
@@ -130,28 +156,28 @@
   "resetLibraryContent": "Ini akan menghapus folder saat ini dari pemutar. File asli Anda TIDAK akan dihapus.",
   "resetPath": "Atur Ulang Jalur",
   "clearStreamingCache": "Bersihkan Cache Streaming",
-  "freeUpSpace": "Bebaskan ruang",
+  "freeUpSpace": "Bebaskan ruang (Saat ini: {size})",
   "resetStatistics": "Atur Ulang Statistik",
-  "clearPlayHistory": "Bersihkan riwayat putar dan waktu mendengarkan",
+  "clearPlayHistory": "Hapus riwayat putar dan waktu mendengarkan",
   "resetStatsTitle": "Atur Ulang Statistik?",
-  "resetStatsContent": "Tindakan ini tidak dapat dibatalkan.\\nSemua jumlah putaran dan waktu mendengarkan akan hilang selamanya.",
+  "resetStatsContent": "Tindakan ini tidak dapat dibatalkan.\nSemua hitungan putar dan waktu mendengarkan akan hilang selamanya.",
   "resetEverything": "Atur Ulang Semuanya",
   "debugging": "Debugging",
   "showDebugButton": "Tampilkan Tombol Debug Melayang",
   "toggleDebugButton": "Alihkan visibilitas konsol debug melayang",
   "community": "Komunitas",
   "donate": "Donasi",
-  "joinUs": "Bergabung dengan Kami",
+  "joinUs": "Bergabunglah",
   "usbAudioBypass": "USB Audio Bypass (Beta) - Output DAC langsung untuk Android 13 ke bawah",
   "comingSoon": "Segera Hadir",
   "underDevelopment": "Fitur ini sedang dalam pengembangan",
   "version": "Versi",
-  "restartRequired": "Perlu Restart",
+  "restartRequired": "Restart Diperlukan",
   "restartContent": "Mengubah perangkat output audio memerlukan restart aplikasi agar efeknya terasa.\\n\\nApakah Anda ingin restart sekarang?",
   "later": "Nanti",
   "restartNow": "Restart Sekarang",
   "applyOnRestart": "Perubahan akan diterapkan pada restart berikutnya.",
-  "autoRestartNotSupported": "Auto-restart tidak didukung. Silakan restart secara manual.",
+  "autoRestartNotSupported": "Restart otomatis tidak didukung. Harap restart secara manual.",
   "enterAdminCode": "Masukkan Kode Akses Admin",
   "accessCode": "Kode Akses",
   "cancel": "Batal",
@@ -168,25 +194,10 @@
   "changeLanguage": "Ubah bahasa aplikasi",
   "unlinkFolderClear": "Putuskan tautan folder dan hapus daftar lagu",
   "enterAdminAccessCode": "Masukkan Kode Akses Admin",
-  "accessCode": "Kode Akses",
   "invalidAccessCode": "Kode Akses Tidak Valid",
   "androidBitPerfect": "Android 14+ Bit-Perfect",
-  "bypassSystemMixer": "Lewati mixer sistem untuk DAC USB",
-  "requiresAndroid14": "Membutuhkan Android 14+ dan DAC USB",
-  "bitPerfectEnabled": "Mode Bit-Perfect Diaktifkan. Kontrol volume mungkin dinonaktifkan.",
-  "audioOutputDevice": "Perangkat Output Audio",
-  "loadingDevices": "Memuat perangkat...",
-  "systemDefault": "Default Sistem",
   "customDevice": "Perangkat Kustom",
   "exclusiveModeWarning": "Peringatan: Mode Eksklusif berfungsi paling baik saat perangkat tertentu dipilih di atas, bukan Default Sistem.",
-  "dataCleanup": "Data & Pembersihan",
-  "resetLibraryPath": "Atur Ulang Jalur Perpustakaan",
-  "unlinkFolderClear": "Putuskan tautan folder dan hapus daftar lagu",
-  "resetLibraryTitle": "Atur Ulang Perpustakaan?",
-  "resetLibraryContent": "Ini akan menghapus folder saat ini dari pemutar. File asli Anda TIDAK akan dihapus.",
-  "resetPath": "Atur Ulang Jalur",
-  "clearStreamingCache": "Bersihkan Cache Streaming",
-  "freeUpSpace": "Bebaskan ruang (Saat ini: {size})",
   "@freeUpSpace": {
     "placeholders": {
       "size": {
@@ -194,20 +205,9 @@
       }
     }
   },
-  "resetStatistics": "Atur Ulang Statistik",
-  "clearPlayHistory": "Hapus riwayat putar dan waktu mendengarkan",
-  "resetStatsTitle": "Atur Ulang Statistik?",
-  "resetStatsContent": "Tindakan ini tidak dapat dibatalkan.\nSemua hitungan putar dan waktu mendengarkan akan hilang selamanya.",
-  "resetEverything": "Atur Ulang Semuanya",
   "statisticsReset": "Statistik telah diatur ulang.",
-  "debugging": "Debugging",
-  "showDebugButton": "Tampilkan Tombol Debug Melayang",
   "toggleDebugConsole": "Alihkan visibilitas konsol debug melayang",
-  "community": "Komunitas",
-  "joinUs": "Bergabunglah",
-  "donate": "Donasi",
   "usbAudioBypassBeta": "USB Audio Bypass (Beta) - Output DAC langsung untuk Android 13 ke bawah",
-  "underDevelopment": "Fitur ini sedang dalam pengembangan",
   "connectedUsbDacs": "DAC USB terhubung:",
   "scanning": "Memindai...",
   "scan": "Pindai",
@@ -223,11 +223,7 @@
       }
     }
   },
-  "restartRequired": "Restart Diperlukan",
   "changingAudioDeviceRestart": "Mengubah perangkat output audio memerlukan restart aplikasi untuk diterapkan.\n\nApakah Anda ingin merestart sekarang?",
-  "later": "Nanti",
-  "restartNow": "Restart Sekarang",
-  "autoRestartNotSupported": "Restart otomatis tidak didukung. Harap restart secara manual.",
   "translateLyrics": "Terjemahkan Lirik",
   "viewQueue": "Lihat Antrean",
   "loadingLyrics": "Memuat lirik...",
@@ -235,7 +231,7 @@
   "noSyncedLyricsFound": "Lirik Ter-sinkronisasi Tidak Ditemukan",
   "justEnjoyVibes": "Nikmati saja suasananya.",
   "scrollForLyrics": "Gulir untuk lirik",
-  "switchingTo": "Beralih ke",
+  "switchingTo": "Beralih ke: {title}",
   "metadataEditorInfo": "Perbaiki pengubah metadata Anda dalam sekejap dengan mencarinya.",
   "metadataEditorNote": "Catatan: Sampul album mungkin berubah setelah status \"Berhasil Disimpan\", Anda tidak perlu khawatir ini tidak tersimpan, ini hanya masalah cache di aplikasi dan sedang kami perbaiki. Anda dapat memverifikasinya melalui manajer file atau lainnya.",
   "close": "Tutup",
@@ -293,7 +289,7 @@
   "noMusicPlaying": "Tidak ada musik yang diputar",
   "refreshList": "Segarkan Daftar",
   "noDownloadsFound": "Tidak ada unduhan ditemukan",
-  "play": "Putar",
+  "play": "kali diputar",
   "showInFolder": "Tampilkan di Folder",
   "delete": "Hapus",
   "deleteFileTitle": "Hapus File?",
@@ -302,7 +298,6 @@
   "folderPath": "Folder: {path}",
   "errorDeleting": "Gagal menghapus: {error}",
   "ok": "OKE",
-  "cancel": "Batal",
   "searchSongs": "Cari lagu...",
   "noResultsFound": "Hasil tidak ditemukan",
   "refreshLibrary": "Segarkan Perpustakaan",
@@ -357,9 +352,10 @@
   "noAlbumsFound": "Album tidak ditemukan",
   "moreOptions": "Lebih banyak",
   "titleLabel": "Judul",
-  "artistLabel": "Artis",
+  "artistLabel": "ARTIS",
   "albumLabel": "Album",
-  "equalizer": "Equalizer",
+  "downloadAll": "Unduh Semua",
+  "equalizer": "Ekualiser",
   "trackDetails": "Detail Lagu",
   "audioQuality": "Kualitas Audio",
   "formatLabel": "Format",
@@ -388,8 +384,6 @@
   "statusLabel": "Status",
   "unknown": "Tidak diketahui",
   "unknownDevice": "Perangkat Tidak Dikenal",
-  "systemDefault": "Default Sistem",
-  "customDevice": "Perangkat Kustom",
   "sharedMode": "Shared",
   "exclusiveMode": "Eksklusif",
   "androidAudioTrack": "AudioTrack Android",
@@ -474,7 +468,6 @@
   "libraryNotLoaded": "Pustaka tidak dimuat.",
   "noArtistsFound": "Artis tidak ditemukan.",
   "goToLocalLibraryToSelect": "Buka 'Pustaka Lokal' untuk memilih folder musik Anda.",
-  "artistLabel": "ARTIS",
   "popularOnSpotify": "Populer di Spotify",
   "songsInLibrary": "{count} lagu di pustaka",
   "@songsInLibrary": {
@@ -504,8 +497,11 @@
   "emptyPlaylistSubtitle": "Buat daftar putar baru yang kosong",
   "importFromSpotify": "Impor dari Spotify",
   "importFromSpotifySubtitle": "Tempel URL daftar putar Spotify",
+  "importFromYoutubeMusic": "Impor dari YouTube Music",
+  "importFromYoutubeMusicSubtitle": "Tempel tautan playlist YouTube Music",
   "playlistNameHint": "Nama Daftar Putar",
   "importSpotifyPlaylist": "Impor Daftar Putar Spotify",
+  "importYoutubeMusicPlaylist": "Impor Daftar Putar YouTube Music",
   "deletePlaylistTitle": "Hapus Daftar Putar?",
   "deletePlaylistConfirm": "Hapus '{name}'?",
   "@deletePlaylistConfirm": {
@@ -522,7 +518,66 @@
   "allDownloadsRemoved": "Semua unduhan dihapus",
   "rename": "Ubah Nama",
   "removeFromPlaylist": "Hapus dari Daftar Putar",
-  "renamePlaylist": "Ubah Nama Daftar Putar",
+  "deletePlaylistPermanentConfirm": "Apakah Anda yakin ingin menghapus daftar putar ini? (Tindakan ini tidak dapat dibatalkan)",
+  "publicSharing": "Berbagi Publik",
+  "publicSharingDesc": "Siapa pun yang memiliki kode dapat mengimpor daftar putar ini.",
+  "publicSharingDisabledDesc": "Dinonaktifkan. Aktifkan untuk berbagi dengan orang lain.",
+  "failedEnableSharing": "Gagal mengaktifkan berbagi. Periksa koneksi.",
+  "failedDisableSharing": "Gagal menonaktifkan berbagi.",
+  "disablingSharingWarning": "Menonaktifkan berbagi akan menghapus kode dan data dari server secara permanen untuk menghemat ruang.",
+  "invalidSpotifyUrl": "URL daftar putar Spotify tidak valid",
+  "invalidYoutubeMusicUrl": "Tautan playlist YouTube Music tidak valid",
+  "fetchingPlaylistInfo": "Mengambil info daftar putar...",
+  "failedFetchPlaylistInfo": "Tidak dapat mengambil info daftar putar",
+  "fetchingTracksFrom": "Mengambil lagu dari \"{name}\"...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "Tidak ada lagu ditemukan di daftar putar",
+  "creatingPlaylistWithTracks": "Membuat daftar putar dengan {count} lagu...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "Berhasil mengimpor {count} lagu!",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "Impor gagal: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "Mengambil daftar putar bersama...",
+  "playlistNotFoundOrError": "Daftar putar tidak ditemukan atau kesalahan server",
+  "parsingPlaylistData": "Mengurai data daftar putar...",
+  "importedPlaylistName": "Berhasil mengimpor \"{name}\"!",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "Kode harus 6 digit",
+  "fetchingPlaylist": "Mengambil daftar putar...",
+  "importViaCode": "Impor melalui Kode",
+  "enterShareCode": "Masukkan 6 digit kode berbagi",
+  "importChoice": "Impor",
   "listeningStats": "Statistik Mendengarkan",
   "topArtist": "Artis Teratas",
   "mostListened": "Paling Sering Didengar",
@@ -531,14 +586,11 @@
   "minutes": "Menit",
   "tracks": "Lagu",
   "songs": "Lagu",
-  "artists": "Artis",
   "noStatsYet": "Belum ada statistik.",
   "noArtistStatsYet": "Belum ada statistik artis.",
-  "play": "kali diputar",
   "plays": "kali diputar",
   "min": "menit",
   "share": "Bagikan",
-  "close": "Tutup",
   "savedTo": "Disimpan ke \"{path}\"",
   "@savedTo": {
     "placeholders": {
@@ -585,7 +637,6 @@
   "goodMorning": "Selamat Pagi",
   "goodAfternoon": "Selamat Siang",
   "goodEvening": "Selamat Malam",
-  "shuffleAll": "Acak Semua",
   "jumpBackIn": "Baru Saja Dimainkan",
   "yourTopMix": "Mix Teratas Anda",
   "youMayLike": "Mungkin Anda Suka",
@@ -667,7 +718,6 @@
     }
   },
   "start": "Mulai",
-  "switchingTo": "Beralih ke: {title}",
   "@switchingTo": {
     "placeholders": {
       "title": {
@@ -685,13 +735,11 @@
       }
     }
   },
-  "close": "Tutup",
-  "cancel": "Batal",
   "nowPlayingHeader": "Sedang Diputar",
   "nowPlayingSection": "SEDANG DIPUTAR",
   "upNextSection": "BERIKUTNYA",
   "recommendationsSection": "REKOMENDASI",
-  "fromLibrarySection": "DARI PERPUSTAKAAN",
+  "fromLibrarySection": "DARI PUSTAKA",
   "queueIsEmpty": "Antrean kosong",
   "historySection": "RIWAYAT",
   "upNextCount": "BERIKUTNYA ({count} lagu)",
@@ -702,7 +750,6 @@
       }
     }
   },
-  "fromLibrarySection": "DARI PUSTAKA",
   "fromLibraryCount": "DARI PUSTAKA ({count} lagu)",
   "@fromLibraryCount": {
     "placeholders": {
@@ -711,7 +758,6 @@
       }
     }
   },
-  "recommendationsSection": "REKOMENDASI",
   "recommendationsCount": "REKOMENDASI ({count} lagu)",
   "@recommendationsCount": {
     "placeholders": {
@@ -720,7 +766,6 @@
       }
     }
   },
-  "queueIsEmpty": "Antrean kosong",
   "noSongPlaying": "Tidak Ada Lagu yang Diputar",
   "selectTrackToStart": "Pilih lagu untuk memulai",
   "importLabel": "Impor",
@@ -735,11 +780,8 @@
   "overwrite": "Timpa",
   "lyricsSavedSuccess": "Lirik disimpan sebagai file .lrc",
   "lyricsSaveError": "Gagal menyimpan lirik",
-  "equalizer": "Ekualiser",
-  "selectVersion": "Pilih Versi",
   "miniPlayer": "Pemutar Mini",
   "listeningParty": "Dengarkan Bersama",
-  "songInformation": "Informasi Lagu",
   "audioOutput": "Output Audio",
   "lyricsTooltip": "Lirik",
   "queueTooltip": "Antrean",
@@ -750,5 +792,29 @@
   "importLyricsTooltip": "Impor Lirik",
   "saveLyricsTooltip": "Simpan Lirik",
   "refreshLyricsTooltip": "Segarkan Lirik",
-  "translateLyricsTooltip": "Terjemahkan Lirik"
+  "translateLyricsTooltip": "Terjemahkan Lirik",
+  "sharePlaylist": "Bagikan Daftar Putar",
+  "deletePlaylist": "Hapus Daftar Putar",
+  "importViaCodeSubtitle": "Impor daftar putar yang dibagikan oleh teman",
+  "sharePlaylistTitle": "Bagikan \"{name}\"",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "Membuat kode berbagi...",
+  "failedToGenerateCode": "Gagal membuat kode berbagi. Periksa koneksi.",
+  "playlistReadyShare": "Daftar putar Anda siap dibagikan!",
+  "copyCode": "Salin Kode",
+  "codeCopied": "Kode disalin ke clipboard!",
+  "shareCodeUsage": "Berikan kode 6 digit ini kepada teman untuk mereka mengimpor daftar putar ini.",
+  "renamePlaylist": "Ubah Nama Daftar Putar",
+  "filters": "Filter",
+  "fileName": "Nama File",
+  "dataUsage": "Penggunaan Data",
+  "todayLabel": "Hari ini: {size}",
+  "last7DaysLabel": "7 hari terakhir: {size}",
+  "last30DaysLabel": "30 hari terakhir: {size}"
 }

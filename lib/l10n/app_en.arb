@@ -11,6 +11,12 @@
   "local_library": "Local Library",
   "downloads": "Downloads",
   "metadata_editor": "Metadata Editor",
+  "editMetadata": "Edit Metadata",
+  "success": "Success",
+  "enableAlphabetIndexer": "Enable Alphabet Scroll Indexer",
+  "enableAlphabetIndexerSubtitle": "Show A-Z sidebar indexing on mobile list view",
+  "metadataUpdated": "Metadata Updated",
+  "failedToUpdateMetadata": "Failed to update metadata",
   "toggleLyrics": "Toggle Lyrics",
   "settings": "Settings",
   "navigation": "Navigation",
@@ -73,6 +79,32 @@
   "integration": "Integration",
   "discordRPC": "Discord Rich Presence",
   "showStatusDiscord": "Show status on Discord",
+  "tidalApiStatus": "Tidal API",
+  "online": "Online",
+  "unauthorize": "Unauthorize",
+  "offlineStatus": "Offline",
+  "checkInternetConnection": "Check your internet connection",
+  "autoClearCache": "Auto Clear Cache",
+  "@autoClearCache": {
+    "description": "Auto clear cache setting section"
+  },
+  "autoClearDisabled": "Disabled",
+  "@autoClearDisabled": {
+    "description": "Option to disable auto clear cache"
+  },
+  "autoClearOnClose": "When app closed",
+  "@autoClearOnClose": {
+    "description": "Option to clear cache when app closes"
+  },
+  "autoClearAfter24h": "After 24 hours",
+  "@autoClearAfter24h": {
+    "description": "Option to clear cache every 24 hours"
+  },
+  "autoClearAfter7d": "After 7 days",
+  "@autoClearAfter7d": {
+    "description": "Option to clear cache every 7 days"
+  },
+  "autoClearEvery30m": "Every 30 mins (Listening)",
   "library": "Library",
   "musicFolderLocation": "Music Folder Location",
   "noFolderSelected": "No folder selected",
@@ -106,6 +138,17 @@
   "playback": "Playback",
   "endlessQueue": "Endless Queue",
   "autoAddSimilar": "Auto-add similar songs when queue is nearly empty",
+  "gaplessPlayback": "Gapless Playback",
+  "gaplessPlaybackDesc": "Eliminate silence between tracks",
+  "crossfade": "Crossfade",
+  "crossfadeDesc": "Fade between tracks ({seconds}s)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "Disable Romanization",
   "hideRomajiPinyin": "Hide romaji/pinyin below Korean, Japanese, and Chinese lyrics",
   "translationLanguage": "Translation Language",
@@ -459,8 +502,11 @@
   "emptyPlaylistSubtitle": "Create a new empty playlist",
   "importFromSpotify": "Import from Spotify",
   "importFromSpotifySubtitle": "Paste a Spotify playlist URL",
+  "importFromYoutubeMusic": "Import from YouTube Music",
+  "importFromYoutubeMusicSubtitle": "Paste a YouTube Music playlist URL",
   "playlistNameHint": "Playlist Name",
   "importSpotifyPlaylist": "Import Spotify Playlist",
+  "importYoutubeMusicPlaylist": "Import YouTube Music Playlist",
   "deletePlaylistTitle": "Delete Playlist?",
   "deletePlaylistConfirm": "Delete '{name}'?",
   "@deletePlaylistConfirm": {
@@ -478,6 +524,67 @@
   "rename": "Rename",
   "removeFromPlaylist": "Remove from Playlist",
   "renamePlaylist": "Rename Playlist",
+  "deletePlaylist": "Delete Playlist",
+  "deletePlaylistPermanentConfirm": "Are you sure want to delete this playlist? (This action cannot be undone)",
+  "publicSharing": "Public Sharing",
+  "publicSharingDesc": "Anyone with the code can import this playlist.",
+  "publicSharingDisabledDesc": "Disabled. Enable to share with others.",
+  "failedEnableSharing": "Failed to enable sharing. Check connection.",
+  "failedDisableSharing": "Failed to disable sharing.",
+  "disablingSharingWarning": "Disabling sharing will permanently delete the code and the data from the server to save space.",
+  "invalidSpotifyUrl": "Invalid Spotify playlist URL",
+  "invalidYoutubeMusicUrl": "Invalid YouTube Music playlist URL",
+  "fetchingPlaylistInfo": "Fetching playlist info...",
+  "failedFetchPlaylistInfo": "Could not fetch playlist info",
+  "fetchingTracksFrom": "Fetching tracks from \"{name}\"...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "No tracks found in playlist",
+  "creatingPlaylistWithTracks": "Creating playlist with {count} tracks...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "Imported {count} tracks!",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "Import failed: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "Fetching shared playlist...",
+  "playlistNotFoundOrError": "Playlist not found or server error",
+  "parsingPlaylistData": "Parsing playlist data...",
+  "importedPlaylistName": "Imported \"{name}\"!",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "Code must be 6 digits",
+  "fetchingPlaylist": "Fetching playlist...",
+  "importViaCode": "Import via Code",
+  "enterShareCode": "Enter 6-digit share code",
+  "importChoice": "Import",
   "listeningStats": "Listening Stats",
   "topArtist": "Top Artist",
   "mostListened": "Most Listened",
@@ -805,5 +912,53 @@
   "importLyricsTooltip": "Import Lyrics",
   "saveLyricsTooltip": "Save Lyrics",
   "refreshLyricsTooltip": "Refresh Lyrics",
-  "translateLyricsTooltip": "Translate Lyrics"
+  "translateLyricsTooltip": "Translate Lyrics",
+  "sharePlaylist": "Share Playlist",
+  "importViaCode": "Import via Code",
+  "importViaCodeSubtitle": "Import a playlist shared by a friend",
+  "sharePlaylistTitle": "Share \"{name}\"",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "Generating share code...",
+  "failedToGenerateCode": "Failed to generate share code. Check your connection.",
+  "playlistReadyShare": "Your playlist is ready to share!",
+  "copyCode": "Copy Code",
+  "codeCopied": "Code copied to clipboard!",
+  "shareCodeUsage": "Give this 6-digit code to a friend for them to import this playlist.",
+  "fetchingPlaylist": "Fetching playlist...",
+  "codeMust6Digits": "Code must be 6 digits",
+  "enterShareCode": "Enter the 6-digit share code",
+  "importChoice": "Import",
+  "filters": "Filters",
+  "fileName": "File Name",
+  "dataUsage": "Data Usage",
+  "todayLabel": "Today: {size}",
+  "@todayLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "last7DaysLabel": "Last 7 days: {size}",
+  "@last7DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "last30DaysLabel": "Last 30 days: {size}",
+  "@last30DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  }
 }

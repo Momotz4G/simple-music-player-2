@@ -33,7 +33,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get albums => 'Album';
 
   @override
-  String get folders => 'Folders';
+  String get folders => 'Thư mục';
 
   @override
   String get local_library => 'Thư viện cục bộ';
@@ -43,6 +43,25 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get metadata_editor => 'Trình sửa metadata';
+
+  @override
+  String get editMetadata => 'Chỉnh sửa metadata';
+
+  @override
+  String get success => 'Thành công';
+
+  @override
+  String get enableAlphabetIndexer => 'Bật chỉ mục cuộn bảng chữ cái';
+
+  @override
+  String get enableAlphabetIndexerSubtitle =>
+      'Hiển thị chỉ mục thanh bên A-Z trên chế độ xem danh sách di động';
+
+  @override
+  String get metadataUpdated => 'Đã cập nhật metadata';
+
+  @override
+  String get failedToUpdateMetadata => 'Cập nhật metadata thất bại';
 
   @override
   String get toggleLyrics => 'Bật/Tắt Lời bài hát';
@@ -233,6 +252,39 @@ class AppLocalizationsVi extends AppLocalizations {
   String get showStatusDiscord => 'Hiển thị trạng thái trên Discord';
 
   @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => 'Trực tuyến';
+
+  @override
+  String get unauthorize => 'Chưa ủy quyền';
+
+  @override
+  String get offlineStatus => 'Ngoại tuyến';
+
+  @override
+  String get checkInternetConnection => 'Vui lòng kiểm tra kết nối internet';
+
+  @override
+  String get autoClearCache => 'Tự động xóa bộ nhớ đệm';
+
+  @override
+  String get autoClearDisabled => 'Đã tắt';
+
+  @override
+  String get autoClearOnClose => 'Khi đóng ứng dụng';
+
+  @override
+  String get autoClearAfter24h => 'Sau 24 giờ';
+
+  @override
+  String get autoClearAfter7d => 'Sau 7 ngày';
+
+  @override
+  String get autoClearEvery30m => 'Mỗi 30 phút (Chỉ khi đang nghe)';
+
+  @override
   String get musicFolderLocation => 'Vị trí thư mục nhạc';
 
   @override
@@ -327,6 +379,20 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get autoAddSimilar =>
       'Tự động thêm các bài hát tương tự vào cuối hàng chờ';
+
+  @override
+  String get gaplessPlayback => 'Phát nhạc liền mạch';
+
+  @override
+  String get gaplessPlaybackDesc => 'Loại bỏ khoảng lặng giữa các bài hát';
+
+  @override
+  String get crossfade => 'Crossfade';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return 'Chuyển tiếp mượt mà giữa các bài ($seconds giây)';
+  }
 
   @override
   String get disableRomanization => 'Tắt phiên âm';
@@ -1044,10 +1110,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get importFromSpotifySubtitle => 'Dán liên kết danh sách phát Spotify';
 
   @override
+  String get importFromYoutubeMusic => 'Nhập từ YouTube Music';
+
+  @override
+  String get importFromYoutubeMusicSubtitle =>
+      'Dán liên kết danh sách phát YouTube Music';
+
+  @override
   String get playlistNameHint => 'Tên danh sách phát';
 
   @override
   String get importSpotifyPlaylist => 'Nhập danh sách phát Spotify';
+
+  @override
+  String get importYoutubeMusicPlaylist => 'Nhập danh sách phát YouTube Music';
 
   @override
   String get deletePlaylistTitle => 'Xóa danh sách phát?';
@@ -1081,6 +1157,102 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get renamePlaylist => 'Đổi tên danh sách phát';
+
+  @override
+  String get deletePlaylist => 'Xóa danh sách phát';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      'Bạn có chắc chắn muốn xóa danh sách phát này không? (Hành động này không thể hoàn tác)';
+
+  @override
+  String get publicSharing => 'Chia sẻ công khai';
+
+  @override
+  String get publicSharingDesc =>
+      'Bất kỳ ai có mã đều có thể nhập danh sách phát này.';
+
+  @override
+  String get publicSharingDisabledDesc =>
+      'Đã tắt. Bật để chia sẻ với người phát khác.';
+
+  @override
+  String get failedEnableSharing => 'Không thể bật chia sẻ. Kiểm tra kết nối.';
+
+  @override
+  String get failedDisableSharing => 'Không thể tắt chia sẻ.';
+
+  @override
+  String get disablingSharingWarning =>
+      'Tắt chia sẻ sẽ xóa vĩnh viễn mã và dữ liệu khỏi máy chủ để tiết kiệm dung lượng.';
+
+  @override
+  String get invalidSpotifyUrl => 'URL danh sách phát Spotify không hợp lệ';
+
+  @override
+  String get invalidYoutubeMusicUrl =>
+      'URL danh sách phát YouTube Music không hợp lệ';
+
+  @override
+  String get fetchingPlaylistInfo => 'Đang lấy thông tin danh sách phát...';
+
+  @override
+  String get failedFetchPlaylistInfo =>
+      'Không thể lấy thông tin danh sách phát';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return 'Đang lấy các bài hát từ \"$name\"...';
+  }
+
+  @override
+  String get noTracksFound => 'Không tìm thấy bài hát nào trong danh sách phát';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return 'Đang tạo danh sách phát với $count bài hát...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return 'Đã nhập thành công $count bài hát!';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'Nhập thất bại: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist =>
+      'Đang lấy danh sách phát được chia sẻ...';
+
+  @override
+  String get playlistNotFoundOrError =>
+      'Không tìm thấy danh sách phát hoặc lỗi máy chủ';
+
+  @override
+  String get parsingPlaylistData => 'Đang phân tích dữ liệu danh sách phát...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return 'Đã nhập thành công \"$name\"!';
+  }
+
+  @override
+  String get codeMust6Digits => 'Mã phải có 6 chữ số';
+
+  @override
+  String get fetchingPlaylist => 'Đang lấy danh sách phát...';
+
+  @override
+  String get importViaCode => 'Nhập qua Mã';
+
+  @override
+  String get enterShareCode => 'Nhập mã chia sẻ 6 chữ số';
+
+  @override
+  String get importChoice => 'Nhập';
 
   @override
   String get listeningStats => 'Thống kê nghe nhạc';
@@ -1628,4 +1800,61 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => 'Dịch lời bài hát';
+
+  @override
+  String get sharePlaylist => 'Chia sẻ danh sách phát';
+
+  @override
+  String get importViaCodeSubtitle =>
+      'Nhập danh sách phát được chia sẻ bởi một người bạn';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return 'Chia sẻ \"$name\"';
+  }
+
+  @override
+  String get generatingShareCode => 'Đang tạo mã chia sẻ...';
+
+  @override
+  String get failedToGenerateCode =>
+      'Không thể tạo mã chia sẻ. Kiểm tra kết nối.';
+
+  @override
+  String get playlistReadyShare =>
+      'Danh sách phát của bạn đã sẵn sàng để chia sẻ!';
+
+  @override
+  String get copyCode => 'Sao chép Mã';
+
+  @override
+  String get codeCopied => 'Đã sao chép mã vào danh bạ!';
+
+  @override
+  String get shareCodeUsage =>
+      'Đưa mã 6 chữ số này cho bạn bè để họ nhập danh sách phát này.';
+
+  @override
+  String get filters => 'Bộ lọc';
+
+  @override
+  String get fileName => 'Tên tệp';
+
+  @override
+  String get dataUsage => 'Sử dụng dữ liệu';
+
+  @override
+  String todayLabel(String size) {
+    return 'Hôm nay: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return '7 ngày qua: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return '30 ngày qua: $size';
+  }
 }

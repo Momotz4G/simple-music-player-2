@@ -13,6 +13,7 @@ import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 // --- PROJECT IMPORTS ---
 import 'providers/settings_provider.dart';
 import 'providers/library_provider.dart';
+import 'providers/data_usage_provider.dart'; // Added for initialization
 // import 'providers/library_presentation_provider.dart'; // Unused
 import 'core/theme/app_theme.dart';
 import 'package:logging/logging.dart';
@@ -20,6 +21,7 @@ import 'services/debug_log_service.dart';
 import 'ui/screens/main_shell.dart';
 import 'services/metrics_service.dart';
 import 'services/db_service.dart';
+import 'services/youtube_downloader_service.dart';
 import 'l10n/app_localizations.dart';
 
 // late final Future<void> dotEnvFuture;
@@ -34,10 +36,40 @@ Future<void> main() async {
     debugPrint("⚠️ MetadataGod Init Failed: $e");
   }
 
+  final prefs = await SharedPreferences.getInstance();
+  final autoClearCache = prefs.getString('autoClearCache') ?? 'disabled';
+  if (autoClearCache == 'after_24h' || autoClearCache == 'after_7d' || autoClearCache == 'on_close') {
+    if (autoClearCache == 'on_close') {
+      // Swipe-kills prevent code from running during AppLifecycleState.detached.
+      // So if set to "on close", we just unconditionally clear it on the NEXT startup.
+      debugPrint("🧹 Auto Clear Cache triggered on startup (Mode: on_close)");
+      await YoutubeDownloaderService().clearCache();
+    } else {
+      final lastClearStr = prefs.getString('lastCacheClearTimestamp');
+      if (lastClearStr != null) {
+        final lastClear = DateTime.tryParse(lastClearStr);
+        if (lastClear != null) {
+          final now = DateTime.now();
+          final hoursDiff = now.difference(lastClear).inHours;
+          final shouldClear = (autoClearCache == 'after_24h' && hoursDiff >= 24) ||
+              (autoClearCache == 'after_7d' && hoursDiff >= 168); // 7 * 24 = 168
+
+          if (shouldClear) {
+            debugPrint("🧹 Auto Clear Cache triggered (Mode: $autoClearCache)");
+            await YoutubeDownloaderService().clearCache();
+            await prefs.setString('lastCacheClearTimestamp', now.toIso8601String());
+          }
+        }
+      } else {
+        // First time running with this setting
+        await prefs.setString('lastCacheClearTimestamp', DateTime.now().toIso8601String());
+      }
+    }
+  }
+
   // 🎵 Initialize MediaKit audio backend for Windows/Linux
   // Read WASAPI exclusive setting from SharedPreferences (must be done before AudioPlayer is created)
   if (Platform.isWindows) {
-    final prefs = await SharedPreferences.getInstance();
     final wasapiExclusive = prefs.getBool('wasapiExclusive') ?? false;
     if (wasapiExclusive) {
       JustAudioMediaKit.audioExclusive = true;
@@ -109,7 +141,7 @@ Future<void> main() async {
   // Initialize Analytics (Startup)
   // 🚀 Reduced timeout for faster offline startup
   try {
-    await MetricsService().init().timeout(const Duration(seconds: 2),
+    await MetricsService().init().timeout(const Duration(seconds: 5),
         onTimeout: () {
       debugPrint("⚠️ MetricsService init timed out in main");
     });
@@ -126,11 +158,11 @@ Future<void> main() async {
       final dbService = DBService();
       final totalPlays = await dbService
           .getTotalStatsPlays()
-          .timeout(const Duration(seconds: 2), onTimeout: () => 0);
+          .timeout(const Duration(seconds: 5), onTimeout: () => 0);
       if (totalPlays > 0) {
         await MetricsService()
             .syncLocalStats(totalPlays)
-            .timeout(const Duration(seconds: 2), onTimeout: () {
+            .timeout(const Duration(seconds: 5), onTimeout: () {
           debugPrint("⚠️ syncLocalStats timed out - skipping cloud sync");
         });
         debugPrint("✅ Startup: Synced $totalPlays local plays to cloud.");
@@ -140,7 +172,6 @@ Future<void> main() async {
     }
   }(); // Fire-and-forget - don't block startup
 
-  final prefs = await SharedPreferences.getInstance();
 
   // 2. Initialize Window Manager (Required for Full Screen toggle or Desktop)
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -153,7 +184,7 @@ Future<void> main() async {
       await SMTCWindows.initialize();
       debugPrint("🚀 [Main] SMTC Initialized");
     } catch (e) {
-      print("Failed to initialize SMTC: $e");
+      debugPrint("Failed to initialize SMTC: $e");
     }
   }
 
@@ -203,6 +234,9 @@ class MyApp extends ConsumerWidget {
 
         // Legacy Provider Bridge (for LibraryPage)
         final libInstance = ref.watch(libraryProvider);
+
+        // Force initialize Data Usage Singleton pointers
+        ref.read(dataUsageProvider);
 
         return p.MultiProvider(
           providers: [

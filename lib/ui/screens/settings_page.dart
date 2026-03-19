@@ -12,6 +12,7 @@ import '../../l10n/app_localizations.dart';
 
 import '../../providers/settings_provider.dart';
 import '../../providers/library_provider.dart';
+import '../../providers/data_usage_provider.dart'; // Added
 import '../../providers/stats_provider.dart';
 import '../../providers/player_provider.dart';
 import '../../services/youtube_downloader_service.dart';
@@ -656,6 +657,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             activeColor: accentColor,
             onChanged: (val) => settingsNotifier.toggleIgnoreSubfolders(val),
           ),
+          if (Platform.isAndroid || Platform.isIOS)
+            SwitchListTile(
+              title: Text(AppLocalizations.of(context)!.enableAlphabetIndexer,
+                  style: TextStyle(color: textColor)),
+              subtitle: Text(AppLocalizations.of(context)!.enableAlphabetIndexerSubtitle,
+                  style: TextStyle(color: subtitleColor)),
+              value: settings.enableAlphabetIndexer,
+              activeColor: accentColor,
+              onChanged: (val) => settingsNotifier.toggleAlphabetIndexer(val),
+            ),
 
           // Import Additional Paths Section
           ListTile(
@@ -1052,14 +1063,59 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             builder: (context, ref, _) {
               final playerState = ref.watch(playerProvider);
               final playerNotifier = ref.read(playerProvider.notifier);
-              return SwitchListTile(
-                title: Text(AppLocalizations.of(context)!.endlessQueue,
-                    style: TextStyle(color: textColor)),
-                subtitle: Text(AppLocalizations.of(context)!.autoAddSimilar,
-                    style: TextStyle(color: subtitleColor)),
-                value: playerState.endlessQueueEnabled,
-                activeColor: accentColor,
-                onChanged: (_) => playerNotifier.toggleEndlessQueue(),
+              return Column(
+                children: [
+                  SwitchListTile(
+                    title: Text(AppLocalizations.of(context)!.endlessQueue,
+                        style: TextStyle(color: textColor)),
+                    subtitle: Text(AppLocalizations.of(context)!.autoAddSimilar,
+                        style: TextStyle(color: subtitleColor)),
+                    value: playerState.endlessQueueEnabled,
+                    activeColor: accentColor,
+                    onChanged: (_) => playerNotifier.toggleEndlessQueue(),
+                  ),
+                  SwitchListTile(
+                    title: Text(AppLocalizations.of(context)!.gaplessPlayback,
+                        style: TextStyle(color: textColor)),
+                    subtitle: Text(
+                        AppLocalizations.of(context)!.gaplessPlaybackDesc,
+                        style: TextStyle(color: subtitleColor)),
+                    value: settings.gaplessPlayback,
+                    activeColor: accentColor,
+                    onChanged: (val) =>
+                        settingsNotifier.toggleGaplessPlayback(val),
+                  ),
+                  ListTile(
+                    title: Text(AppLocalizations.of(context)!.crossfade,
+                        style: TextStyle(color: textColor)),
+                    subtitle: Text(
+                        AppLocalizations.of(context)!.crossfadeDesc(
+                            settings.crossfadeDuration.toStringAsFixed(1)),
+                        style: TextStyle(color: subtitleColor)),
+                    trailing: SizedBox(
+                      width: 150,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 2,
+                          thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 6),
+                          overlayShape:
+                              const RoundSliderOverlayShape(overlayRadius: 14),
+                        ),
+                        child: Slider(
+                          value: settings.crossfadeDuration,
+                          min: 0,
+                          max: 12,
+                          divisions: 120,
+                          activeColor: accentColor,
+                          inactiveColor: accentColor.withOpacity(0.2),
+                          onChanged: (val) =>
+                              settingsNotifier.setCrossfadeDuration(val),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -1394,7 +1450,74 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              AppLocalizations.of(context)!.autoClearCache,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          RadioListTile<String>(
+            title: Text(AppLocalizations.of(context)!.autoClearDisabled,
+                style: TextStyle(color: textColor, fontSize: 13)),
+            value: 'disabled',
+            groupValue: settings.autoClearCache,
+            activeColor: accentColor,
+            onChanged: (val) {
+              if (val != null) settingsNotifier.setAutoClearCache(val);
+            },
+            dense: true,
+          ),
+          RadioListTile<String>(
+            title: Text(AppLocalizations.of(context)!.autoClearEvery30m,
+                style: TextStyle(color: textColor, fontSize: 13)),
+            value: 'every_30min',
+            groupValue: settings.autoClearCache,
+            activeColor: accentColor,
+            onChanged: (val) {
+              if (val != null) settingsNotifier.setAutoClearCache(val);
+            },
+            dense: true,
+          ),
+          RadioListTile<String>(
+            title: Text(AppLocalizations.of(context)!.autoClearOnClose,
+                style: TextStyle(color: textColor, fontSize: 13)),
+            value: 'on_close',
+            groupValue: settings.autoClearCache,
+            activeColor: accentColor,
+            onChanged: (val) {
+              if (val != null) settingsNotifier.setAutoClearCache(val);
+            },
+            dense: true,
+          ),
+          RadioListTile<String>(
+            title: Text(AppLocalizations.of(context)!.autoClearAfter24h,
+                style: TextStyle(color: textColor, fontSize: 13)),
+            value: 'after_24h',
+            groupValue: settings.autoClearCache,
+            activeColor: accentColor,
+            onChanged: (val) {
+              if (val != null) settingsNotifier.setAutoClearCache(val);
+            },
+            dense: true,
+          ),
+          RadioListTile<String>(
+            title: Text(AppLocalizations.of(context)!.autoClearAfter7d,
+                style: TextStyle(color: textColor, fontSize: 13)),
+            value: 'after_7d',
+            groupValue: settings.autoClearCache,
+            activeColor: accentColor,
+            onChanged: (val) {
+              if (val != null) settingsNotifier.setAutoClearCache(val);
+            },
+            dense: true,
+          ),
+          const SizedBox(height: 24),
 
           // DATA & CLEANUP
           Text(AppLocalizations.of(context)!.dataCleanup.toUpperCase(),
@@ -1443,6 +1566,80 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             },
           ),
           ListTile(
+            leading: Icon(Icons.data_usage_rounded, color: Colors.teal[400]),
+            title: Row(
+              children: [
+                Text(AppLocalizations.of(context)!.dataUsage, style: TextStyle(color: textColor)),
+                const SizedBox(width: 6),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final usage = ref.watch(dataUsageProvider);
+                    return Tooltip(
+                      message: "${AppLocalizations.of(context)!.todayLabel(usage.todayFormatted)}\n"
+                          "${AppLocalizations.of(context)!.last7DaysLabel(usage.weekFormatted)}\n"
+                          "${AppLocalizations.of(context)!.last30DaysLabel(usage.monthFormatted)}",
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[850]?.withValues(alpha: 1) ??
+                            Colors.black87,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white10, width: 1),
+                      ),
+                      textStyle: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500),
+                      triggerMode: TooltipTriggerMode.tap,
+                      child: Icon(Icons.info_outline_rounded,
+                          size: 16, color: Colors.grey[400]),
+                    );
+                  },
+                ),
+              ],
+            ),
+            subtitle: Consumer(
+              builder: (context, ref, _) {
+                final usage = ref.watch(dataUsageProvider);
+                return Text(
+                  usage.formattedSize,
+                  style: TextStyle(color: subtitleColor),
+                );
+              },
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.refresh_rounded, color: Colors.grey),
+              tooltip: "Reset Usage",
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: Theme.of(context).cardColor,
+                    title: Text("Reset Data Usage",
+                        style: TextStyle(color: textColor)),
+                    content: Text(
+                        "Are you sure you want to reset data usage? This does not affect downloaded music.",
+                        style: TextStyle(color: textColor)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child:
+                            Text("Cancel", style: TextStyle(color: textColor)),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          ref.read(dataUsageProvider.notifier).reset();
+                          Navigator.pop(context);
+                        },
+                        child: const Text("Reset",
+                            style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          ListTile(
             leading:
                 Icon(Icons.cleaning_services_rounded, color: Colors.blue[400]),
             title: Text(AppLocalizations.of(context)!.clearStreamingCache,
@@ -1465,6 +1662,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               }
             },
           ),
+          const SizedBox(height: 8),
           ListTile(
             leading: Icon(Icons.delete_forever_rounded, color: Colors.red[400]),
             title: Text(AppLocalizations.of(context)!.resetStatistics,

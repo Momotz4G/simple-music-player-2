@@ -7,9 +7,16 @@
   "playlists": "Playlists",
   "artists": "Artistes",
   "albums": "Albums",
+  "folders": "Dossiers",
   "local_library": "Bibliothèque locale",
   "downloads": "Téléchargements",
   "metadata_editor": "Éditeur de Métadonnées",
+  "editMetadata": "Modifier les métadonnées",
+  "success": "Succès",
+  "enableAlphabetIndexer": "Activer l'indexeur de défilement alphabétique",
+  "enableAlphabetIndexerSubtitle": "Afficher l'indexation de la barre latérale A-Z sur la vue de liste mobile",
+  "metadataUpdated": "Métadonnées mises à jour",
+  "failedToUpdateMetadata": "Échec de la mise à jour des métadonnées",
   "toggleLyrics": "Afficher/Masquer les Paroles",
   "settings": "Paramètres",
   "navigation": "Navigation",
@@ -72,6 +79,17 @@
   "integration": "Intégration",
   "discordRPC": "Discord Rich Presence",
   "showStatusDiscord": "Afficher le statut sur Discord",
+  "tidalApiStatus": "Tidal API",
+  "online": "En ligne",
+  "unauthorize": "Non autorisé",
+  "offlineStatus": "Hors ligne",
+  "checkInternetConnection": "Vérifiez votre connexion internet",
+  "autoClearCache": "Vider le cache automatiquement",
+  "autoClearDisabled": "Désactivé",
+  "autoClearOnClose": "À la fermeture de l'application",
+  "autoClearAfter24h": "Après 24 heures",
+  "autoClearAfter7d": "Après 7 jours",
+  "autoClearEvery30m": "Toutes les 30 min (Écoute seulement)",
   "musicFolderLocation": "Emplacement du dossier musique",
   "noFolderSelected": "Aucun dossier sélectionné",
   "change": "Modifier",
@@ -103,6 +121,17 @@
   "playback": "Lecture",
   "endlessQueue": "File d'attente infinie",
   "autoAddSimilar": "Ajouter automatiquement des chansons similaires à la fin de la file",
+  "gaplessPlayback": "Lecture sans Blanc",
+  "gaplessPlaybackDesc": "Éliminer les silences entre les pistes",
+  "crossfade": "Crossfade",
+  "crossfadeDesc": "Fondu entre les pistes ({seconds} s)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "Désactiver la romanisation",
   "hideRomajiPinyin": "Ne pas afficher Romaji/Pinyin sous les paroles coréennes, japonaises ou chinoises",
   "translationLanguage": "Langue de traduction",
@@ -127,7 +156,7 @@
   "resetLibraryContent": "Cela retirera le dossier actuel du lecteur. Vos fichiers ne seront pas supprimés.",
   "resetPath": "Réinitialiser le chemin",
   "clearStreamingCache": "Effacer le cache de streaming",
-  "freeUpSpace": "Libérer de l'espace",
+  "freeUpSpace": "Libérer de l'espace (Actuel : {size})",
   "resetStatistics": "Réinitialiser les statistiques",
   "clearPlayHistory": "Effacer l'historique et le temps d'écoute",
   "resetStatsTitle": "Réinitialiser les statistiques ?",
@@ -169,7 +198,6 @@
   "androidBitPerfect": "Android 14+ Bit-Perfect",
   "customDevice": "Périphérique personnalisé",
   "exclusiveModeWarning": "Avertissement : Le mode exclusif fonctionne mieux si vous sélectionnez un périphérique spécifique plutôt que le défaut système.",
-  "freeUpSpace": "Libérer de l'espace (Actuel : {size})",
   "@freeUpSpace": {
     "placeholders": {
       "size": {
@@ -259,6 +287,66 @@
   "refreshList": "Actualiser la liste",
   "noDownloadsFound": "Aucun téléchargement trouvé",
   "play": "Lire",
+  "deletePlaylistPermanentConfirm": "Êtes-vous sûr de vouloir supprimer cette liste de lecture ? (Cette action est irréversible)",
+  "publicSharing": "Partage public",
+  "publicSharingDesc": "Toute personne disposant du code peut importer cette liste de lecture.",
+  "publicSharingDisabledDesc": "Désactivé. Activez-le pour partager avec d'autres.",
+  "failedEnableSharing": "Échec de l'activation du partage. Vérifiez la connexion.",
+  "failedDisableSharing": "Échec de la désactivation du partage.",
+  "disablingSharingWarning": "La désactivation du partage supprimera définitivement le code et les données du serveur pour gagner de l'espace.",
+  "invalidSpotifyUrl": "URL de liste de lecture Spotify invalide",
+  "invalidYoutubeMusicUrl": "URL de playlist YouTube Music invalide",
+  "fetchingPlaylistInfo": "Récupération des informations de la liste de lecture...",
+  "failedFetchPlaylistInfo": "Impossible de récupérer les informations de la liste de lecture",
+  "fetchingTracksFrom": "Récupération des pistes de \"{name}\"...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "Aucune piste trouvée dans la liste de lecture",
+  "creatingPlaylistWithTracks": "Création d'une liste de lecture avec {count} pistes...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "{count} pistes importées avec succès !",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "Échec de l'importation : {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "Récupération de la liste de lecture partagée...",
+  "playlistNotFoundOrError": "Liste de lecture introuvable ou erreur du serveur",
+  "parsingPlaylistData": "Analyse des données de la liste de lecture...",
+  "importedPlaylistName": "\"{name}\" importée avec succès !",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "Le code doit comporter 6 chiffres",
+  "fetchingPlaylist": "Récupération de la liste de lecture...",
+  "importViaCode": "Importer via un code",
+  "enterShareCode": "Entrez le code de partage à 6 chiffres",
+  "importChoice": "Importer",
   "showInFolder": "Afficher dans le dossier",
   "delete": "Supprimer",
   "deleteFileTitle": "Supprimer le fichier ?",
@@ -425,8 +513,11 @@
   "emptyPlaylistSubtitle": "Créer une nouvelle playlist vide",
   "importFromSpotify": "Importer depuis Spotify",
   "importFromSpotifySubtitle": "Collez un lien de playlist Spotify",
+  "importFromYoutubeMusic": "Importer depuis YouTube Music",
+  "importFromYoutubeMusicSubtitle": "Coller un lien de playlist YouTube Music",
   "playlistNameHint": "Nom de la playlist",
   "importSpotifyPlaylist": "Importer playlist Spotify",
+  "importYoutubeMusicPlaylist": "Importer playlist YouTube Music",
   "deletePlaylistTitle": "Supprimer la playlist ?",
   "deletePlaylistConfirm": "Êtes-vous sûr de vouloir supprimer \"{name}\" ?",
   "@deletePlaylistConfirm": {
@@ -454,7 +545,6 @@
   "songs": "chansons",
   "noStatsYet": "Pas encore de statistiques.",
   "noArtistStatsYet": "Pas encore de statistiques d'artistes.",
-  "play": "Lire",
   "plays": "lectures",
   "min": "min",
   "share": "Partager",
@@ -751,5 +841,28 @@
   "importLyricsTooltip": "Importer des paroles",
   "saveLyricsTooltip": "Enregistrer les paroles",
   "refreshLyricsTooltip": "Actualiser les paroles",
-  "translateLyricsTooltip": "Traduire les paroles"
+  "translateLyricsTooltip": "Traduire les paroles",
+  "sharePlaylist": "Partager la liste de lecture",
+  "deletePlaylist": "Supprimer la liste de lecture",
+  "importViaCodeSubtitle": "Importer une liste de lecture partagée par un ami",
+  "sharePlaylistTitle": "Partager \"{name}\"",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "Génération du code de partage...",
+  "failedToGenerateCode": "Échec de la génération du code de partage. Vérifiez la connexion.",
+  "playlistReadyShare": "Votre liste de lecture est prête à être partagée !",
+  "copyCode": "Copier le code",
+  "codeCopied": "Code copié dans le presse-papier !",
+  "shareCodeUsage": "Donnez ce code à 6 chiffres à un ami pour qu'il puisse importer cette liste de lecture.",
+  "filters": "Filtres",
+  "fileName": "Nom de fichier",
+  "dataUsage": "Utilisation des données",
+  "todayLabel": "Aujourd'hui: {size}",
+  "last7DaysLabel": "7 derniers jours: {size}",
+  "last30DaysLabel": "30 derniers jours: {size}"
 }

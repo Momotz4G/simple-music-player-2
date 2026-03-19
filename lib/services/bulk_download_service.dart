@@ -11,7 +11,9 @@ import 'smart_download_service.dart';
 import 'youtube_downloader_service.dart';
 import 'metrics_service.dart';
 import 'spotify_service.dart';
+import 'deezer_service.dart';
 import 'notification_service.dart'; // 🚀 IMPORT
+import '../utils/filename_helper.dart';
 
 class BulkDownloadService {
   static final BulkDownloadService _instance = BulkDownloadService._internal();
@@ -127,7 +129,7 @@ class BulkDownloadService {
           break;
         }
 
-        final song = songs[i];
+        var song = songs[i];
         currentSongNotifier.value = song.filePath; // 🚀 Notify Start
 
         // 🛑 CHECK BAN STATUS FIRST
@@ -176,30 +178,60 @@ class BulkDownloadService {
             : (song.onlineArtUrl ?? "");
 
         // 🚀 SMART METADATA ENRICHMENT
-        // If year or track number is missing (common in playlist entries), fetch from Spotify
+        // Always try to enrich YT Music tracks with Spotify data for high-res art and exact album
         String? year = song.year;
         String? genre = song.genre;
         int? trackNum = song.trackNumber;
         int? discNum = song.discNumber;
         String? isrc = song.isrc;
 
-        if (year == null || year.isEmpty || trackNum == null) {
-          print(
-              "🔍 Metadata incomplete for ${song.title}, fetching details from Spotify...");
-          final richMeta = await SpotifyService.getBestMatchMetadata(
-              song.title, song.artist);
+        final isYtSource = song.sourceUrl != null && song.sourceUrl!.contains('youtube');
 
-          if (richMeta != null) {
+        if (isYtSource || year == null || year.isEmpty || trackNum == null) {
+          try {
             print(
-                "✅ Found rich metadata: Year=${richMeta.year}, Track=${richMeta.trackNumber}");
+                "🔍 Fetching rich Spotify metadata for ${song.title}...");
+            // Ensure we search precisely, matching the playlist player behavior
+            final query = "${song.title} ${song.artist}";
+            List<SongMetadata> results = [];
+          
+          try {
+            results = await SpotifyService.searchTracks(query);
+          } catch (e) {
+            print("Spotify enrichment failed during bulk download: $e, falling back to Deezer");
+          }
 
-            // Fill in missing fields
-            if (artUrl.isEmpty) artUrl = richMeta.albumArtUrl;
-            if (year == null || year.isEmpty) year = richMeta.year;
-            if (genre == null || genre.isEmpty) genre = richMeta.genre;
-            if (trackNum == null) trackNum = richMeta.trackNumber;
-            if (discNum == null) discNum = richMeta.discNumber;
-            if (isrc == null || isrc.isEmpty) isrc = richMeta.isrc;
+          if (results.isEmpty) {
+            try {
+              results = await DeezerService.searchSongs(query);
+            } catch (e) {
+              print("Deezer enrichment failed during bulk download: $e");
+            }
+          }
+
+          if (results.isNotEmpty) {
+            final richMeta = results.first;
+            print("✅ Found rich metadata: Album=${richMeta.album}");
+
+            // Override basic YT metadata with Official Meta
+            artUrl = richMeta.albumArtUrl.isNotEmpty ? richMeta.albumArtUrl : artUrl;
+            year = (richMeta.year != null && richMeta.year!.isNotEmpty) ? richMeta.year : year;
+            genre = richMeta.genre ?? genre;
+            trackNum = richMeta.trackNumber ?? trackNum;
+            discNum = richMeta.discNumber ?? discNum;
+            isrc = richMeta.isrc ?? isrc;
+            
+            // Also update the song title and artist to standard formatting
+            song = song.copyWith(
+              title: richMeta.title,
+              artist: richMeta.artist,
+              album: richMeta.album,
+              spotifyId: richMeta.spotifyId ?? song.spotifyId,
+              deezerId: richMeta.deezerId ?? song.deezerId,
+            );
+            }
+          } catch (e) {
+            print("Metadata enrichment failed completely during bulk download: $e");
           }
         }
 
@@ -396,7 +428,7 @@ class BulkDownloadService {
       await base.create(recursive: true);
     }
 
-    final safeAlbum = albumTitle.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+    final safeAlbum = FilenameHelper.sanitize(albumTitle);
     final albumDir = Directory("${base.path}/$safeAlbum");
 
     if (!await albumDir.exists()) {

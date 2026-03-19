@@ -33,7 +33,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get albums => 'एल्बम';
 
   @override
-  String get folders => 'Folders';
+  String get folders => 'फ़ोल्डर';
 
   @override
   String get local_library => 'स्थानीय लाइब्रेरी';
@@ -43,6 +43,25 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get metadata_editor => 'मेटाडेटा संपादक';
+
+  @override
+  String get editMetadata => 'मेटाडेटा संपादित करें';
+
+  @override
+  String get success => 'सफलता';
+
+  @override
+  String get enableAlphabetIndexer => 'वर्णमाला स्क्रॉल अनुक्रमणिका सक्षम करें';
+
+  @override
+  String get enableAlphabetIndexerSubtitle =>
+      'मोबाइल सूची दृश्य पर ए-जेด साइडबार अनुक्रमणिका दिखाएं';
+
+  @override
+  String get metadataUpdated => 'मेटाडेटा अपडेट किया गया';
+
+  @override
+  String get failedToUpdateMetadata => 'मेटाडेटा अपडेट करने में विफल';
 
   @override
   String get toggleLyrics => 'लिरिक्स बदलें';
@@ -232,6 +251,39 @@ class AppLocalizationsHi extends AppLocalizations {
   String get showStatusDiscord => 'डिस्कॉर्ड पर स्थिति दिखाएं';
 
   @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => 'ऑनलाइन';
+
+  @override
+  String get unauthorize => 'अनधिकृत';
+
+  @override
+  String get offlineStatus => 'ऑफ़लाइन';
+
+  @override
+  String get checkInternetConnection => 'अपने इंटरनेट कनेक्शन की जाँच करें';
+
+  @override
+  String get autoClearCache => 'ऑटो क्लियर कैश';
+
+  @override
+  String get autoClearDisabled => 'अक्षम';
+
+  @override
+  String get autoClearOnClose => 'ऐप बंद होने पर';
+
+  @override
+  String get autoClearAfter24h => '24 घंटे बाद';
+
+  @override
+  String get autoClearAfter7d => '7 दिन बाद';
+
+  @override
+  String get autoClearEvery30m => 'हर 30 मिनट में (केवल सुनते समय)';
+
+  @override
   String get musicFolderLocation => 'संगीत फ़ोल्डर का स्थान';
 
   @override
@@ -326,7 +378,21 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get autoAddSimilar =>
-      'कतार के अंत में स्वचालित रूप से समान गाने जोड़ें';
+      'कतर के अंत में स्वचालित रूप से समान गाने जोड़ें';
+
+  @override
+  String get gaplessPlayback => 'गैपलेस प्लेबैक';
+
+  @override
+  String get gaplessPlaybackDesc => 'ट्रैक के बीच सन्नाटा खत्म करें';
+
+  @override
+  String get crossfade => 'क्रॉसफ़ेड';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return 'ट्रैक के बीच फेड करें ($seconds सेकंड)';
+  }
 
   @override
   String get disableRomanization => 'रोमानाइज़ेशन अक्षम करें';
@@ -1044,10 +1110,20 @@ class AppLocalizationsHi extends AppLocalizations {
   String get importFromSpotifySubtitle => 'Spotify प्लेलिस्ट लिंक पेस्ट करें';
 
   @override
+  String get importFromYoutubeMusic => 'YouTube Music से आयात करें';
+
+  @override
+  String get importFromYoutubeMusicSubtitle =>
+      'YouTube Music प्लेलिस्ट लिंक पेस्ट करें';
+
+  @override
   String get playlistNameHint => 'प्लेलिस्ट का नाम';
 
   @override
   String get importSpotifyPlaylist => 'Spotify प्लेलिस्ट आयात करें';
+
+  @override
+  String get importYoutubeMusicPlaylist => 'YouTube Music प्लेलिस्ट आयात करें';
 
   @override
   String get deletePlaylistTitle => 'प्लेलिस्ट हटाएं?';
@@ -1081,6 +1157,102 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get renamePlaylist => 'प्लेलिस्ट का नाम बदलें';
+
+  @override
+  String get deletePlaylist => 'प्लेलिस्ट हटाएँ';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      'क्या आप वाकई इस प्लेलिस्ट को हटाना चाहते हैं? (इस क्रिया को पूर्ववत नहीं किया जा सकता)';
+
+  @override
+  String get publicSharing => 'सार्वजनिक साझाकरण';
+
+  @override
+  String get publicSharingDesc =>
+      'कोड वाला कोई भी व्यक्ति इस प्लेलिस्ट को आयात कर सकता है।';
+
+  @override
+  String get publicSharingDisabledDesc =>
+      'अक्षम। दूसरों के साथ साझा करने के लिए सक्षम करें।';
+
+  @override
+  String get failedEnableSharing =>
+      'साझाकरण सक्षम करने में विफल। कनेक्शन की जांच करें।';
+
+  @override
+  String get failedDisableSharing => 'साझाकरण अक्षम करने में विफल।';
+
+  @override
+  String get disablingSharingWarning =>
+      'साझाकरण अक्षम करने से स्थान बचाने के लिए सर्वर से कोड और डेटा स्थायी रूप से हटा दिया जाएगा।';
+
+  @override
+  String get invalidSpotifyUrl => 'अमान्य Spotify प्लेलिस्ट URL';
+
+  @override
+  String get invalidYoutubeMusicUrl => 'अमान्य YouTube Music प्लेलिस्ट लिंक';
+
+  @override
+  String get fetchingPlaylistInfo =>
+      'प्लेलिस्ट जानकारी प्राप्त की जा रही है...';
+
+  @override
+  String get failedFetchPlaylistInfo =>
+      'प्लेलिस्ट जानकारी प्राप्त नहीं की जा सकी';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return '\"$name\" से ट्रैक प्राप्त किए जा रहे हैं...';
+  }
+
+  @override
+  String get noTracksFound => 'प्लेलिस्ट में कोई ट्रैक नहीं मिला';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return '$count ट्रैक के साथ प्लेलिस्ट बनाई जा रही है...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return '$count ट्रैक सफलतापूर्वक आयात किए गए!';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'आयात विफल: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist => 'साझा प्लेलिस्ट प्राप्त की जा रही है...';
+
+  @override
+  String get playlistNotFoundOrError => 'प्लेलिस्ट नहीं मिली या सर्वर त्रुटि';
+
+  @override
+  String get parsingPlaylistData =>
+      'प्लेलिस्ट डेटा का विश्लेषण किया जा रहा है...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return '\"$name\" सफलतापूर्वक आयात किया गया!';
+  }
+
+  @override
+  String get codeMust6Digits => 'कोड 6 अंकों का होना चाहिए';
+
+  @override
+  String get fetchingPlaylist => 'प्लेलिस्ट प्राप्त की जा रही है...';
+
+  @override
+  String get importViaCode => 'कोड के माध्यम से आयात करें';
+
+  @override
+  String get enterShareCode => '6-अंकों का साझाकरण कोड दर्ज करें';
+
+  @override
+  String get importChoice => 'आयात करें';
 
   @override
   String get listeningStats => 'सुनने के आंकड़े';
@@ -1628,4 +1800,60 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => 'लिरिक्स अनुवाद करें';
+
+  @override
+  String get sharePlaylist => 'प्लेलिस्ट साझा करें';
+
+  @override
+  String get importViaCodeSubtitle =>
+      'किसी मित्र द्वारा साझा की गई प्लेलिस्ट आयात करें';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return '\"$name\" साझा करें';
+  }
+
+  @override
+  String get generatingShareCode => 'साझाकरण कोड तैयार किया जा रहा है...';
+
+  @override
+  String get failedToGenerateCode =>
+      'साझाकरण कोड तैयार करने में विफल। कनेक्शन की जांच करें।';
+
+  @override
+  String get playlistReadyShare => 'आपकी प्लेलिस्ट साझा करने के लिए तैयार है!';
+
+  @override
+  String get copyCode => 'कोड कॉपी करें';
+
+  @override
+  String get codeCopied => 'कोड क्लिपबोर्ड पर कॉपी किया गया!';
+
+  @override
+  String get shareCodeUsage =>
+      'यह 6-अंकों का कोड किसी मित्र को दें ताकि वे इस प्लेलिस्ट को आयात कर सकें।';
+
+  @override
+  String get filters => 'फ़िल्टर';
+
+  @override
+  String get fileName => 'फ़ाइल का नाम';
+
+  @override
+  String get dataUsage => 'डेटा उपयोग';
+
+  @override
+  String todayLabel(String size) {
+    return 'आज: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return 'पिछले 7 दिन: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return 'पिछले 30 दिन: $size';
+  }
 }

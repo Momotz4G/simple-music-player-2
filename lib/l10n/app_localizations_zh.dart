@@ -33,7 +33,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get albums => '专辑';
 
   @override
-  String get folders => 'Folders';
+  String get folders => '文件夹';
 
   @override
   String get local_library => '本地库';
@@ -43,6 +43,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get metadata_editor => '元数据编辑器';
+
+  @override
+  String get editMetadata => '编辑元数据';
+
+  @override
+  String get success => '成功';
+
+  @override
+  String get enableAlphabetIndexer => '启用字母滚动索引器';
+
+  @override
+  String get enableAlphabetIndexerSubtitle => '在移动端列表视图中显示 A-Z 侧边栏索引';
+
+  @override
+  String get metadataUpdated => '元数据已更新';
+
+  @override
+  String get failedToUpdateMetadata => '更新元数据失败';
 
   @override
   String get toggleLyrics => '切换歌词';
@@ -225,10 +243,43 @@ class AppLocalizationsZh extends AppLocalizations {
   String get integration => '集成';
 
   @override
-  String get discordRPC => 'Discord Rich Presence';
+  String get discordRPC => 'Discord状态显示';
 
   @override
-  String get showStatusDiscord => '在 Discord 上显示状态';
+  String get showStatusDiscord => '在Discord上显示状态';
+
+  @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => '在线';
+
+  @override
+  String get unauthorize => '未授权';
+
+  @override
+  String get offlineStatus => '离线';
+
+  @override
+  String get checkInternetConnection => '请检查网络连接';
+
+  @override
+  String get autoClearCache => '自动清除缓存';
+
+  @override
+  String get autoClearDisabled => '已禁用';
+
+  @override
+  String get autoClearOnClose => '关闭应用时';
+
+  @override
+  String get autoClearAfter24h => '24小时后';
+
+  @override
+  String get autoClearAfter7d => '7天后';
+
+  @override
+  String get autoClearEvery30m => '每 30 分钟（仅在聆听时）';
 
   @override
   String get musicFolderLocation => '音乐文件夹位置';
@@ -322,6 +373,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get autoAddSimilar => '当队列接近结束时自动添加相似歌曲';
+
+  @override
+  String get gaplessPlayback => '无缝播放';
+
+  @override
+  String get gaplessPlaybackDesc => '消除曲目之间的间隙';
+
+  @override
+  String get crossfade => '淡入淡出';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return '曲目间平滑过渡 ($seconds 秒)';
+  }
 
   @override
   String get disableRomanization => '禁用罗马拼音';
@@ -1004,10 +1069,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importFromSpotifySubtitle => '粘贴 Spotify 播放列表链接';
 
   @override
+  String get importFromYoutubeMusic => '从 YouTube Music 导入';
+
+  @override
+  String get importFromYoutubeMusicSubtitle => '粘贴 YouTube Music 歌单链接';
+
+  @override
   String get playlistNameHint => '播放列表名称';
 
   @override
   String get importSpotifyPlaylist => '导入 Spotify 播放列表';
+
+  @override
+  String get importYoutubeMusicPlaylist => '导入 YouTube Music 播放列表';
 
   @override
   String get deletePlaylistTitle => '删除播放列表？';
@@ -1040,6 +1114,94 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get renamePlaylist => '重命名播放列表';
+
+  @override
+  String get deletePlaylist => '删除播放列表';
+
+  @override
+  String get deletePlaylistPermanentConfirm => '您确定要删除此播放列表吗？（此操作无法撤销）';
+
+  @override
+  String get publicSharing => '公共共享';
+
+  @override
+  String get publicSharingDesc => '任何拥有代码的人都可以导入此播放列表。';
+
+  @override
+  String get publicSharingDisabledDesc => '已禁用。启用以与他人共享。';
+
+  @override
+  String get failedEnableSharing => '未能启用共享。请检查连接。';
+
+  @override
+  String get failedDisableSharing => '未能禁用共享。';
+
+  @override
+  String get disablingSharingWarning => '禁用共享将永久从服务器删除代码和数据以节省空间。';
+
+  @override
+  String get invalidSpotifyUrl => 'Spotify 播放列表 URL 无效';
+
+  @override
+  String get invalidYoutubeMusicUrl => 'YouTube Music 歌单链接无效';
+
+  @override
+  String get fetchingPlaylistInfo => '正在获取播放列表信息...';
+
+  @override
+  String get failedFetchPlaylistInfo => '无法获取播放列表信息';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return '正在从 \"$name\" 获取曲目...';
+  }
+
+  @override
+  String get noTracksFound => '播放列表中未找到曲目';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return '正在创建包含 $count 首曲目的播放列表...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return '已成功导入 $count 首曲目！';
+  }
+
+  @override
+  String importFailed(String error) {
+    return '导入失败：$error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist => '正在获取共享播放列表...';
+
+  @override
+  String get playlistNotFoundOrError => '未找到播放列表或服务器错误';
+
+  @override
+  String get parsingPlaylistData => '正在解析播放列表数据...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return '已成功导入 \"$name\"！';
+  }
+
+  @override
+  String get codeMust6Digits => '代码必须为 6 位数字';
+
+  @override
+  String get fetchingPlaylist => '正在获取播放列表...';
+
+  @override
+  String get importViaCode => '通过代码导入';
+
+  @override
+  String get enterShareCode => '输入 6 位共享代码';
+
+  @override
+  String get importChoice => '导入';
 
   @override
   String get listeningStats => '听歌统计';
@@ -1581,4 +1743,57 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => '翻译歌词';
+
+  @override
+  String get sharePlaylist => '共享播放列表';
+
+  @override
+  String get importViaCodeSubtitle => '导入朋友共享的播放列表';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return '共享 \"$name\"';
+  }
+
+  @override
+  String get generatingShareCode => '正在生成共享代码...';
+
+  @override
+  String get failedToGenerateCode => '未能生成共享代码。请检查连接。';
+
+  @override
+  String get playlistReadyShare => '您的播放列表已准备好共享！';
+
+  @override
+  String get copyCode => '复制代码';
+
+  @override
+  String get codeCopied => '代码已复制到剪贴板！';
+
+  @override
+  String get shareCodeUsage => '将此 6 位代码交给朋友，以便他们导入此播放列表。';
+
+  @override
+  String get filters => '过滤器';
+
+  @override
+  String get fileName => '文件名';
+
+  @override
+  String get dataUsage => '数据使用情况';
+
+  @override
+  String todayLabel(String size) {
+    return '今天: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return '过去 7 天: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return '过去 30 天: $size';
+  }
 }

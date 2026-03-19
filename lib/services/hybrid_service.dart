@@ -41,6 +41,29 @@ class HybridService {
     }
   }
 
+  /// Search Metadata with Fallback (For Editor)
+  static Future<List<Map<String, dynamic>>> searchMetadata(String query, {int limit = 10}) async {
+    try {
+      return await SpotifyService.searchMetadata(query);
+    } catch (e) {
+      print("HybridService: Spotify Metadata Search Error $e. Falling back to Deezer...");
+      final songs = await DeezerService.searchSongs(query, limit: limit);
+      return songs.map((s) => {
+        'title': s.title,
+        'artist': s.artist,
+        'album': s.album,
+        'year': s.year,
+        'image_url': s.albumArtUrl,
+        'spotify_id': s.spotifyId,
+        'duration_ms': s.durationSeconds * 1000,
+        'track_number': s.trackNumber,
+        'disc_number': s.discNumber,
+        'isrc': s.isrc,
+        'deezer_id': s.deezerId,
+      }).toList();
+    }
+  }
+
   /// Search All Entities (Fallback support)
   static Future<Map<String, dynamic>> searchAll(String query,
       {int limit = 5}) async {
@@ -128,7 +151,7 @@ class HybridService {
     if (deezerArtist != null) {
       return await DeezerService.getArtistTopTracks(deezerArtist.id);
     }
-    return [];
+    return <SongMetadata>[];
   }
 
   // --- NEW METHODS ---
@@ -146,7 +169,7 @@ class HybridService {
     try {
       return await DeezerService.getNewReleases();
     } catch (e) {
-      return [];
+      return <Map<String, dynamic>>[];
     }
   }
 
@@ -169,7 +192,7 @@ class HybridService {
         // TODO: Real solution requires passing Album Name or having a cross-reference.
       }
     }
-    return [];
+    return <SongMetadata>[];
   }
 
   /// Get Album Tracks with Fallback Strategy requiring Album Name
@@ -178,18 +201,15 @@ class HybridService {
     try {
       return await SpotifyService.getAlbumTracks(albumId);
     } catch (e) {
-      if (e.toString().contains("rate_limit_429")) {
-        print(
-            "Hybrid: Spotify Album 429. Searching Deezer for '$albumName'...");
-        // Fallback: Search Album on Deezer by Name + Artist
-        final deezerAlbums =
-            await DeezerService.searchAlbums("$albumName $artistName");
-        if (deezerAlbums.isNotEmpty) {
-          return await DeezerService.getAlbumTracks(deezerAlbums.first.id);
-        }
+      print("Hybrid: Spotify Album Tracks Error $e. Searching Deezer for '$albumName'...");
+      // Fallback: Search Album on Deezer by Name + Artist
+      final deezerAlbums =
+          await DeezerService.searchAlbums("$albumName $artistName");
+      if (deezerAlbums.isNotEmpty) {
+        return await DeezerService.getAlbumTracks(deezerAlbums.first.id);
       }
     }
-    return [];
+    return <SongMetadata>[];
   }
 
   static Future<List<AlbumModel>> getArtistAlbums(String artistName) async {
@@ -207,7 +227,7 @@ class HybridService {
     if (deezerArtist != null) {
       return await DeezerService.getArtistAlbums(deezerArtist.id);
     }
-    return [];
+    return <AlbumModel>[];
   }
 
   static Future<List<AlbumModel>> searchAlbums(String query) async {

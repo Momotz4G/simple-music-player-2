@@ -25,6 +25,7 @@ class SongModel {
   final String? spotifyId; // Spotify track ID for recommendations
   final String? spotifyArtistId; // Spotify artist ID for recommendations
   final String? deezerId; // 🚀 Deezer track ID for direct FLAC match
+  final DateTime? dateAdded; // 🚀 Follows Isar 'Song' dateAdded
 
   SongModel({
     required this.title,
@@ -44,6 +45,7 @@ class SongModel {
     this.spotifyId,
     this.spotifyArtistId,
     this.deezerId,
+    this.dateAdded,
   });
 
   // Factory constructor for creating from file scan
@@ -59,6 +61,7 @@ class SongModel {
     int? discNumber,
     String? year,
     String? genre,
+    DateTime? dateAdded,
   }) {
     return SongModel(
       title: title,
@@ -75,6 +78,7 @@ class SongModel {
       discNumber: discNumber,
       year: year,
       genre: genre,
+      dateAdded: dateAdded,
       // deezerId is naturally null for local files
     );
   }
@@ -97,6 +101,7 @@ class SongModel {
     String? spotifyId,
     String? spotifyArtistId,
     String? deezerId,
+    DateTime? dateAdded,
   }) {
     return SongModel(
       title: title ?? this.title,
@@ -116,6 +121,7 @@ class SongModel {
       spotifyId: spotifyId ?? this.spotifyId,
       spotifyArtistId: spotifyArtistId ?? this.spotifyArtistId,
       deezerId: deezerId ?? this.deezerId,
+      dateAdded: dateAdded ?? this.dateAdded,
     );
   }
 
@@ -138,6 +144,7 @@ class SongModel {
       'spotifyId': spotifyId,
       'spotifyArtistId': spotifyArtistId,
       'deezerId': deezerId,
+      'dateAdded': dateAdded?.toIso8601String(),
       // Note: We don't save albumArtBytes to JSON as it's too heavy.
       // We rely on reloading it from file or URL.
     };
@@ -172,6 +179,9 @@ class SongModel {
       spotifyId: json['spotifyId'],
       spotifyArtistId: json['spotifyArtistId'],
       deezerId: json['deezerId'],
+      dateAdded: json['dateAdded'] != null
+          ? DateTime.tryParse(json['dateAdded'])
+          : null,
     );
   }
 

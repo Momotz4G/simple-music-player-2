@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:convert';
 import '../env/env.dart';
 import 'debug_log_service.dart';
 
@@ -18,7 +19,7 @@ class PocketBaseService {
   String? _userId;
 
   Future<void> init({String? userId}) async {
-    if (_initialized) return;
+    if (_initialized && _userId != null) return;
     try {
       if (userId != null) {
         _userId = userId;
@@ -32,10 +33,28 @@ class PocketBaseService {
         }
       }
 
-      debugPrint("🚀 PocketBaseService: Initialized for User: $_userId");
+      DebugLogService().info("🚀 PocketBaseService: Initialized for User: $_userId");
       _initialized = true;
     } catch (e) {
+      DebugLogService().error("⚠️ PB Init Error: $e");
       debugPrint("⚠️ PB Init Error: $e");
+    }
+  }
+
+  /// 🚀 Wait for initialization to complete if it hasn't already
+  Future<void> _ensureInitialized() async {
+    if (_initialized && _userId != null) return;
+    
+    // If not initialized, try one more quick local init or wait
+    int retries = 0;
+    while (!_initialized && retries < 10) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      retries++;
+    }
+    
+    if (!_initialized) {
+      DebugLogService().error("⚠️ PocketBaseService: Failed to initialize after waiting.");
+      throw Exception("PocketBase not initialized");
     }
   }
 
@@ -130,25 +149,31 @@ class PocketBaseService {
       if (existingRecords.items.isNotEmpty) {
         // Found existing record - update it
         final existingId = existingRecords.items.first.id;
-        await pb
-            .collection('metrics')
-            .update(existingId, body: dataWithHost)
-            .timeout(_networkTimeout);
-        _cachedMetricsId = existingId;
+        try {
+          await pb
+              .collection('metrics')
+              .update(existingId, body: dataWithHost)
+              .timeout(_networkTimeout);
+          _cachedMetricsId = existingId;
 
-        // Save to local storage
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('pb_metrics_id', existingId);
+          // Save to local storage
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('pb_metrics_id', existingId);
 
-        debugPrint("📊 Found and updated existing metrics record: $existingId");
+          debugPrint("📊 Found and updated existing metrics record: $existingId");
+        } catch (e) {
+          debugPrint("⚠️ Failed to update metrics record: $e");
+        }
         return;
       }
     } catch (e) {
       debugPrint("⚠️ Search existing record error: $e");
-      // Continue to create new record if search fails
+      // 🚀 IF SEARCH FAILS DUE TO NETWORK ERROR, DO NOT CREATE NEW ONES!
+      // ONLY create a new record if the network call successfully returned 0 items.
+      return; 
     }
 
-    // 4. Create new record (only if no existing record found)
+    // 4. Create new record (only if no existing record found and search succeeded)
     try {
       final rec = await pb.collection('metrics').create(body: {
         'user_id': _userId,
@@ -367,31 +392,16 @@ class PocketBaseService {
     }
 
     // 4. 🚀 SEARCH for existing session by user_id BEFORE creating new one
-    // Also handles AUTOMATIC CLEANUP of duplicates
     try {
       final existingRecords = await pb.collection('sessions').getList(
             page: 1,
-            perPage: 50,
+            perPage: 1,
             filter: 'user_id = "$_userId"',
-            sort: '-updated',
           );
 
       if (existingRecords.items.isNotEmpty) {
         // Found existing session(s)
         final newest = existingRecords.items.first;
-
-        // Cleanup: Delete any extra records foundbeyond the first one
-        if (existingRecords.items.length > 1) {
-          debugPrint(
-              "📡 Multi-session detected for $_userId. Cleaning ${existingRecords.items.length - 1} duplicates...");
-          for (int i = 1; i < existingRecords.items.length; i++) {
-            try {
-              await pb
-                  .collection('sessions')
-                  .delete(existingRecords.items[i].id);
-            } catch (_) {}
-          }
-        }
 
         _cachedSessionId = newest.id;
 
@@ -404,10 +414,11 @@ class PocketBaseService {
       }
     } catch (e) {
       debugPrint("⚠️ Search existing session error: $e");
-      // Continue to create new session if search fails
+      // IF SEARCH FAILS DUE TO NETWORK ERROR, DO NOT BLINDLY CREATE NEW ONE
+      return null;
     }
 
-    // 5. Create new session (only if no existing session found)
+    // 5. Create new session (only if no existing session found and search succeeded)
     try {
       final rec =
           await pb.collection('sessions').create(body: {'user_id': _userId});
@@ -484,5 +495,187 @@ class PocketBaseService {
 
   void unsubscribe() {
     pb.collection('sessions').unsubscribe();
+  }
+
+  // --- SHAREABLE PLAYLISTS ---
+
+  /// Shares a playlist and returns a 6-digit share code
+  Future<String?> sharePlaylist(String playlistId, Map<String, dynamic> playlistData) async {
+    try {
+      await _ensureInitialized();
+
+      // 1. Check if already shared
+      final existing = await pb.collection('shared_playlists').getList(
+        page: 1,
+        perPage: 1,
+        filter: 'playlist_id = "$playlistId" && user_id = "$_userId"',
+      ).timeout(_networkTimeout);
+
+      // 2. Prepare the data
+      final data = Map<String, dynamic>.from(playlistData);
+      if (data['entries'] != null) {
+        for (var entry in data['entries']) {
+          entry.remove('path');
+        }
+      }
+
+      final jsonBody = json.encode(data);
+      final List<int> processedData;
+      bool isCompressed = false;
+
+      final entriesCount = (data['entries'] as List?)?.length ?? 0;
+      if (entriesCount > 50 || jsonBody.length > 3000) {
+        processedData = gzip.encode(utf8.encode(jsonBody));
+        isCompressed = true;
+      } else {
+        processedData = utf8.encode(jsonBody);
+      }
+
+      final payload = {
+        'user_id': _userId,
+        'playlist_id': playlistId,
+        'data': base64.encode(processedData),
+        'is_compressed': isCompressed,
+      };
+
+      if (existing.items.isNotEmpty) {
+        // Update existing record
+        await pb.collection('shared_playlists').update(
+          existing.items.first.id,
+          body: payload,
+        ).timeout(_networkTimeout);
+        
+        final code = existing.items.first.data['share_code'];
+        DebugLogService().success("✅ Updated shared playlist: $code");
+        return code;
+      } else {
+        // Create new record
+        final shareCode = _generateShareCode();
+        payload['share_code'] = shareCode;
+        
+        await pb.collection('shared_playlists').create(
+          body: payload,
+        ).timeout(_networkTimeout);
+
+        DebugLogService().success("📦 Playlist shared with code: $shareCode");
+        return shareCode;
+      }
+    } catch (e) {
+      DebugLogService().error("⚠️ Share Playlist Error: $e");
+      return null;
+    }
+  }
+
+  /// Deletes a shared playlist from the database
+  Future<bool> unsharePlaylist(String playlistId) async {
+    try {
+      await _ensureInitialized();
+      
+      final existing = await pb.collection('shared_playlists').getList(
+        page: 1,
+        perPage: 1,
+        filter: 'playlist_id = "$playlistId" && user_id = "$_userId"',
+      ).timeout(_networkTimeout);
+
+      if (existing.items.isEmpty) return true;
+
+      await pb.collection('shared_playlists').delete(existing.items.first.id).timeout(_networkTimeout);
+      DebugLogService().success("🗑️ Unshared playlist: $playlistId");
+      return true;
+    } catch (e) {
+      DebugLogService().error("⚠️ Unshare Error: $e");
+      return false;
+    }
+  }
+
+  /// Checks if a playlist is currently shared and returns its code
+  Future<String?> getShareCode(String playlistId) async {
+    try {
+      await _ensureInitialized();
+      
+      final records = await pb.collection('shared_playlists').getList(
+        page: 1,
+        perPage: 1,
+        filter: 'playlist_id = "$playlistId" && user_id = "$_userId"',
+      ).timeout(_networkTimeout);
+
+      if (records.items.isEmpty) return null;
+      return records.items.first.data['share_code'];
+    } catch (e) {
+      // Don't log error here to avoid noise during idle checks
+      return null;
+    }
+  }
+
+  /// Fetches a shared playlist by its 6-digit code
+  Future<Map<String, dynamic>?> fetchSharedPlaylist(String shareCode) async {
+    if (!_initialized) return null;
+
+    try {
+      final records = await pb.collection('shared_playlists').getList(
+            page: 1,
+            perPage: 1,
+            filter: 'share_code = "$shareCode"',
+          ).timeout(_networkTimeout);
+
+      if (records.items.isEmpty) {
+        debugPrint("⚠️ No shared playlist found for code: $shareCode");
+        return null;
+      }
+
+      // Return only the 'data' field, hiding the 'user_id' and other internal fields
+      final record = records.items.first;
+      final rawData = record.data['data'];
+      final bool isCompressed = record.data['is_compressed'] ?? false;
+
+      if (rawData == null) return null;
+
+      String jsonStr;
+      
+      // 🚀 NORMALIZE DATA (Handles raw JSON, List<int>, or Base64 String)
+      final List<int> bytes;
+      if (rawData is String) {
+        // Try to see if it's Base64. Shareable playlists now use Base64.
+        try {
+          bytes = base64.decode(rawData);
+          // If decoding succeeded, we use the bytes
+        } catch (_) {
+          // If it failed, it might be raw JSON string (compatibility)
+          jsonStr = rawData;
+          return json.decode(jsonStr) as Map<String, dynamic>?;
+        }
+      } else if (rawData is List) {
+        bytes = List<int>.from(rawData);
+      } else if (rawData is Map) {
+         // Compatibility: if it's already a map
+         return rawData as Map<String, dynamic>;
+      } else {
+        return null;
+      }
+
+      // Handle decompression if needed
+      if (isCompressed) {
+        jsonStr = utf8.decode(gzip.decode(bytes));
+      } else {
+        jsonStr = utf8.decode(bytes);
+      }
+
+      DebugLogService().success("✅ Fetched and decoded shared playlist: $shareCode");
+      return json.decode(jsonStr) as Map<String, dynamic>?;
+    } catch (e) {
+      DebugLogService().error("⚠️ Fetch Shared Playlist Error: $e");
+      debugPrint("⚠️ Fetch Shared Playlist Error: $e");
+      return null;
+    }
+  }
+
+  String _generateShareCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 to avoid confusion
+    final rnd = DateTime.now().microsecondsSinceEpoch;
+    String code = '';
+    for (int i = 0; i < 6; i++) {
+      code += chars[(rnd >> (i * 5)) % chars.length];
+    }
+    return code;
   }
 }

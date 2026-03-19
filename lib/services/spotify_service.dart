@@ -96,11 +96,18 @@ class SpotifyService {
         print("✅ Spotify Auth [$keyName]: Token acquired");
         return data['access_token'];
       } else if (response.statusCode == 429) {
-        print("❌ Spotify Auth [$keyName]: Rate Limit Exceeded");
+        print("❌ Spotify Auth [$keyName]: Rate Limit Exceeded (429)");
         throw Exception("rate_limit_429");
+      } else if (response.statusCode == 401) {
+        print("❌ Spotify Auth [$keyName]: Unauthorized (401). Check your Client ID and Secret!");
+        print("Response Body: ${response.body}");
+      } else if (response.statusCode == 403) {
+        print("❌ Spotify Auth [$keyName]: Forbidden (403). Your app might be suspended or restricted.");
+        print("Response Body: ${response.body}");
       } else {
         print(
             "❌ Spotify Auth [$keyName]: Failed. Status: ${response.statusCode}");
+        print("Response Body: ${response.body}");
       }
     } catch (e) {
       print("❌ Spotify Auth [$keyName] Error: $e");
@@ -177,7 +184,7 @@ class SpotifyService {
   static Future<List<Map<String, dynamic>>> searchMetadata(String query) async {
     // 🚀 UPDATED: Use SECONDARY key first for metadata, fallback to primary
     final token = await _getTokenWithFallback(preferPrimary: false);
-    if (token == null) return [];
+    if (token == null) throw Exception("Spotify Auth Failed - No token available");
 
     try {
       final uri = Uri.https('api.spotify.com', '/v1/search', {
@@ -224,12 +231,13 @@ class SpotifyService {
             'isrc': item['external_ids']?['isrc'], // EXTRACT ISRC
           };
         }).toList();
+      } else {
+        throw Exception("Spotify Metadata Search Failed: ${response.statusCode}");
       }
     } catch (e) {
       print("Metadata Search Error: $e");
-      if (e.toString().contains("rate_limit_429")) rethrow;
+      rethrow; // Rethrow to trigger fallback
     }
-    return [];
   }
 
   // --- 3.5 SEARCH BY ISRC ---
@@ -492,13 +500,21 @@ class SpotifyService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final items = data['tracks']['items'] as List;
+        print("🔍 Spotify getTrackLink: Found ${items.length} tracks for '$title'");
         if (items.isNotEmpty) {
-          return items[0]['external_urls']['spotify'];
+          final link = items[0]['external_urls']['spotify'];
+          print("✅ Spotify getTrackLink: Success! URL: $link");
+          return link;
+        } else {
+          print("⚠️ Spotify getTrackLink: No tracks found for '$title' by '$artist'");
         }
       } else if (response.statusCode == 429) {
         print(
             "⚠️ getTrackLink: API returned 429, token might have been from cached pool");
         throw Exception("rate_limit_429");
+      } else {
+        print("❌ Spotify getTrackLink: Failed. Status: ${response.statusCode}");
+        print("Response: ${response.body}");
       }
     } catch (e) {
       if (e.toString().contains("rate_limit_429")) rethrow;
@@ -614,9 +630,7 @@ class SpotifyService {
       {int limit = 5}) async {
     // Uses SECONDARY (CLIENT_ID_2) first for remote search, falls back to PRIMARY on 429
     final token = await _getTokenWithFallback(preferPrimary: false);
-    if (token == null) {
-      return {'songs': [], 'albums': [], 'artists': []};
-    }
+    if (token == null) throw Exception("Spotify Auth Failed - No token available");
 
     // Correct URL for searching (uses $query)
     final url = Uri.parse(
@@ -679,13 +693,14 @@ class SpotifyService {
     } else if (response.statusCode == 429) {
       throw Exception("rate_limit_429");
     } else {
-      return {'songs': [], 'albums': [], 'artists': []};
+      throw Exception("Spotify SearchAll Failed: ${response.statusCode}");
     }
   }
 
   // Get tracks for a specific album
   static Future<List<SongMetadata>> getAlbumTracks(String albumId) async {
     final token = await _getAccessToken();
+    if (token == null) throw Exception("Spotify Auth Failed - No token available");
 
     // 1. First fetch the simplified tracks to get IDs
     final url = Uri.parse(
@@ -728,9 +743,9 @@ class SpotifyService {
 
       if (fullResponse.statusCode == 200) {
         final fullData = jsonDecode(fullResponse.body);
-        final List fullItems = fullData['tracks'];
+        final List fullItems = fullData['tracks'] ?? [];
 
-        return fullItems.map((e) {
+        return fullItems.map<SongMetadata>((e) {
           final album = e['album'];
           // Get image from the full track's album object if available,
           // otherwise it might be null if the tracks endpoint was called without album context,
@@ -755,9 +770,12 @@ class SpotifyService {
             isrc: e['external_ids']?['isrc'], // ✅ ISRC NOW CAPTURED
           );
         }).toList();
+      } else {
+        throw Exception("Spotify Batch Tracks Failed: ${fullResponse.statusCode}");
       }
+    } else {
+      throw Exception("Spotify AlbumTracks Failed: ${response.statusCode}");
     }
-    return [];
   }
 
   // 9. FETCH ARTIST IMAGE TO ALBUM DETAIL PAGE

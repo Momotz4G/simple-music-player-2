@@ -89,6 +89,11 @@ class RemoteControlService {
         : 999999;
     final isBroadcastCooldown = msSinceBroadcast < 3000;
 
+    // 🚀 Check if this is an empty/newly created session (no active song)
+    // If it is, DO NOT adopt its default false/0 values because it will reset the local player
+    final title = data['current_title'] as String?;
+    final isNewEmptySession = title == null || title.isEmpty;
+
     // 🚀 SAFE SYNC (Loop Breaker Pattern for Shuffle/Loop)
     // Only dispatch if state DIFFERS from what we last sent (ignores echoes).
     final newShuffle = data['is_shuffle'] as bool?;
@@ -98,7 +103,8 @@ class RemoteControlService {
     bool shuffleChanged = newShuffle != null && newShuffle != _lastShuffle;
     bool loopChanged = newLoop != null && newLoop != _lastLoop;
 
-    if (shuffleChanged || loopChanged) {
+    // Reject sync if it's an empty session (brand new pocketbase record with default values)
+    if (!isNewEmptySession && (shuffleChanged || loopChanged)) {
       if (isStartupPeriod) {
         debugPrint(
             "📡 [Remote] Sync IGNORED (startup cooldown): Shuffle=$newShuffle, Loop=$newLoop");
@@ -111,6 +117,8 @@ class RemoteControlService {
         if (loopChanged) _lastLoop = newLoop;
         hasNewState = true;
       }
+    } else if (isNewEmptySession && (shuffleChanged || loopChanged)) {
+      debugPrint("📡 [Remote] Sync IGNORED (new empty session): Shuffle=$newShuffle, Loop=$newLoop");
     }
 
     if (hasNewState) {

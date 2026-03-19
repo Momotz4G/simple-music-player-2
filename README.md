@@ -43,6 +43,7 @@
 - **Multiple Audio Versions**: Choose between different versions of a song (original, acoustic, live, etc.)
 - **Wide Format Support**: Plays MP3, FLAC, WAV, AAC, M4A, OGG, and **Opus** files
 - **Native DSD Support**: High-fidelity playback for **DSF** and **DFF** files with detailed metadata extraction
+- **Gapless & Crossfade**: Smooth transitions between tracks with customizable crossfade duration
 
 ### 🎤 **Lyrics & Metadata**
 - **Synced Lyrics**: Sing along with time-synced lyrics (LRC) fetched automatically from LRCLIB.net
@@ -61,6 +62,7 @@
 - **Resilient Downloading**: Robust error handling prevents crashes even if network issues occur
 - **Automatic Metadata**: Tags downloaded files with correct artist, title, and album art from Spotify
 - **Import Spotify Playlist**: Paste your Spotify playlist link to import the entire playlist. Stream or download all tracks directly from the app
+- **Import YouTube Playlist**: Support for importing entire YouTube playlists via link
 - **FLAC Streaming and Download**: You can stream or download all songs with lossless quality if available. (Just adjust your settings preferences)
 
 ### 📊 **Statistics & History**
@@ -74,6 +76,7 @@
 - **Smart Library**: Browse by Songs, Albums, Artists, or Playlists
 - **Local Music Player**: Full support for reading and managing your local song library with fast indexing
 - **Custom Playlists**: Create and manage your own playlists
+- **Shareable Playlists**: Share your curated playlists with friends via unique 6-digit codes
 - **Search**: Powerful search across your entire library
 - **Folder Import**: Import music from any folder on your computer
 - **Album/Artist Pages**: Detailed pages with all tracks, info, and actions

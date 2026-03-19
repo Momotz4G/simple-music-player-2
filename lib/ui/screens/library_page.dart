@@ -26,11 +26,37 @@ String _formatDuration(double seconds) {
   return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
 }
 
-class LibraryPage extends ConsumerWidget {
+class LibraryPage extends ConsumerStatefulWidget {
   const LibraryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LibraryPage> createState() => _LibraryPageState();
+}
+
+class _LibraryPageState extends ConsumerState<LibraryPage> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // 🚀 Clear any leftover search from previous visit
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        p.Provider.of<LibraryProvider>(context, listen: false).search('');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final library = p.Provider.of<LibraryProvider>(context);
     final presentationState = ref.watch(libraryPresentationProvider);
     final isGridView = presentationState.isGridView;
@@ -47,6 +73,9 @@ class LibraryPage extends ConsumerWidget {
         : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5));
     final iconColor = isDark ? Colors.grey : Colors.grey[600];
     final activeIconColor = isDark ? Colors.white : Colors.black;
+
+    final filterKey = GlobalKey<PopupMenuButtonState<LibraryFilter>>();
+    final sortKey = GlobalKey<PopupMenuButtonState<LibrarySort>>();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -92,6 +121,7 @@ class LibraryPage extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
+                            controller: _searchCtrl, // 🚀 Persistent controller
                             decoration: InputDecoration(
                               hintText:
                                   AppLocalizations.of(context)!.searchSongs,
@@ -176,57 +206,195 @@ class LibraryPage extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
-            // FILTER TABS
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _FilterChip(
-                    label: AppLocalizations.of(context)!.songs,
-                    isSelected:
-                        presentationState.currentFilter == LibraryFilter.songs,
-                    onTap: () => ref
-                        .read(libraryPresentationProvider.notifier)
-                        .setFilter(LibraryFilter.songs),
-                    isDark: isDark,
+            // SUB-CONTROLS (Separate Filters & Sort)
+            Row(
+              children: [
+                // --- FILTERS ---
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    hoverColor: Colors.transparent,
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    splashFactory: NoSplash.splashFactory,
                   ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: AppLocalizations.of(context)!.folders,
-                    isSelected: presentationState.currentFilter ==
-                        LibraryFilter.folders,
-                    onTap: () => ref
+                  child: PopupMenuButton<LibraryFilter>(
+                    key: filterKey,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => filterKey.currentState?.showButtonMenu(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.filters,
+                              style: TextStyle(
+                                color: titleColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(Icons.filter_list_rounded,
+                                color: settings.accentColor, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                    tooltip: "",
+                    offset: const Offset(0, 40),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    onSelected: (filter) => ref
                         .read(libraryPresentationProvider.notifier)
-                        .setFilter(LibraryFilter.folders),
-                    isDark: isDark,
+                        .setFilter(filter),
+                    itemBuilder: (context) => LibraryFilter.values.map((filter) {
+                      String label = _getFilterLabel(context, filter);
+                      IconData iconData;
+                      switch (filter) {
+                        case LibraryFilter.songs:
+                          iconData = Icons.music_note_rounded;
+                          break;
+                        case LibraryFilter.folders:
+                          iconData = Icons.folder_rounded;
+                          break;
+                        case LibraryFilter.artists:
+                          iconData = Icons.person_rounded;
+                          break;
+                        case LibraryFilter.albums:
+                          iconData = Icons.album_rounded;
+                          break;
+                      }
+                      return PopupMenuItem(
+                        value: filter,
+                        child: Row(
+                          children: [
+                            Icon(iconData,
+                                size: 20,
+                                color: presentationState.currentFilter == filter
+                                    ? settings.accentColor
+                                    : iconColor),
+                            const SizedBox(width: 12),
+                            Text(label,
+                                style: TextStyle(
+                                    color: presentationState.currentFilter == filter
+                                        ? settings.accentColor
+                                        : titleColor,
+                                    fontWeight: presentationState.currentFilter == filter
+                                        ? FontWeight.bold
+                                        : FontWeight.normal)),
+                          ],
+                        ),
+                      );
+                    }).toList(),
                   ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: AppLocalizations.of(context)!.artists,
-                    isSelected: presentationState.currentFilter ==
-                        LibraryFilter.artists,
-                    onTap: () => ref
+                ),
+
+                const SizedBox(width: 12),
+                Container(
+                  height: 20,
+                  width: 1,
+                  color: iconColor?.withOpacity(0.3),
+                ),
+                const SizedBox(width: 12),
+
+                // --- SORT ---
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    hoverColor: Colors.transparent,
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    splashFactory: NoSplash.splashFactory,
+                  ),
+                  child: PopupMenuButton<LibrarySort>(
+                    key: sortKey,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => sortKey.currentState?.showButtonMenu(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _getSortLabel(context, presentationState.sortBy,
+                                  presentationState.currentFilter,
+                                  presentationState.isSortDescending),
+                              style: TextStyle(
+                                color: titleColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                                presentationState.isSortDescending
+                                    ? Icons.arrow_downward_rounded
+                                    : Icons.arrow_upward_rounded,
+                                color: settings.accentColor,
+                                size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                    tooltip: "",
+                    offset: const Offset(0, 40),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    onSelected: (sort) => ref
                         .read(libraryPresentationProvider.notifier)
-                        .setFilter(LibraryFilter.artists),
-                    isDark: isDark,
+                        .setSortBy(sort),
+                    itemBuilder: (context) {
+                      final isCategoryView =
+                          presentationState.currentFilter == LibraryFilter.artists ||
+                          presentationState.currentFilter == LibraryFilter.albums;
+                      
+                      final options = isCategoryView 
+                          ? [LibrarySort.title] 
+                          : LibrarySort.values;
+                      return options.map((sort) {
+                        final isSelected = presentationState.sortBy == sort;
+                        String label = _getSortLabel(context, sort,
+                            presentationState.currentFilter,
+                            presentationState.isSortDescending);
+                        return PopupMenuItem(
+                          value: sort,
+                          child: Row(
+                            children: [
+                              Icon(
+                                  isSelected
+                                      ? Icons.check_circle_rounded
+                                      : Icons.circle_outlined,
+                                  size: 18,
+                                  color: isSelected ? settings.accentColor : iconColor),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(label,
+                                    style: TextStyle(
+                                        color: isSelected ? settings.accentColor : titleColor,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                              ),
+                              if (isSelected)
+                                Icon(
+                                    presentationState.isSortDescending
+                                        ? Icons.arrow_downward_rounded
+                                        : Icons.arrow_upward_rounded,
+                                    size: 16,
+                                    color: settings.accentColor),
+                            ],
+                          ),
+                        );
+                      }).toList();
+                    },
                   ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: AppLocalizations.of(context)!.albums,
-                    isSelected:
-                        presentationState.currentFilter == LibraryFilter.albums,
-                    onTap: () => ref
-                        .read(libraryPresentationProvider.notifier)
-                        .setFilter(LibraryFilter.albums),
-                    isDark: isDark,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
 
             // CONTENT
             Expanded(
@@ -237,6 +405,37 @@ class LibraryPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _getFilterLabel(BuildContext context, LibraryFilter filter) {
+    switch (filter) {
+      case LibraryFilter.songs:
+        return AppLocalizations.of(context)!.songs;
+      case LibraryFilter.folders:
+        return AppLocalizations.of(context)!.folders;
+      case LibraryFilter.artists:
+        return AppLocalizations.of(context)!.artists;
+      case LibraryFilter.albums:
+        return AppLocalizations.of(context)!.albums;
+    }
+  }
+
+  String _getSortLabel(
+      BuildContext context, LibrarySort sort, LibraryFilter currentFilter, bool isDescending) {
+    if (sort == LibrarySort.title &&
+        (currentFilter == LibraryFilter.artists ||
+            currentFilter == LibraryFilter.albums)) {
+      return isDescending ? "Z-A" : "A-Z";
+    }
+
+    switch (sort) {
+      case LibrarySort.title:
+        return AppLocalizations.of(context)!.title;
+      case LibrarySort.artist:
+        return AppLocalizations.of(context)!.artist;
+      case LibrarySort.fileName:
+        return AppLocalizations.of(context)!.fileName;
+    }
   }
 
   Widget _buildBody(
@@ -283,11 +482,14 @@ class LibraryPage extends ConsumerWidget {
 
     switch (presentationState.currentFilter) {
       case LibraryFilter.folders:
-        return _buildFoldersView(context, ref, textColor);
+        return _buildFoldersView(
+            context, ref, presentationState, isGridView, isDark, textColor);
       case LibraryFilter.artists:
-        return _buildArtistsView(context, ref, textColor);
+        return _buildArtistsView(
+            context, ref, presentationState, isGridView, isDark, textColor);
       case LibraryFilter.albums:
-        return _buildAlbumsView(context, ref, textColor);
+        return _buildAlbumsView(
+            context, ref, presentationState, isGridView, isDark, textColor);
       case LibraryFilter.songs:
         return _buildSongsView(context, ref, library, presentationState,
             isGridView, isDark, textColor);
@@ -302,8 +504,8 @@ class LibraryPage extends ConsumerWidget {
       bool isGridView,
       bool isDark,
       Color textColor) {
-    List<SongModel> displaySongs = library.songs;
-
+    final settings = ref.watch(settingsProvider);
+    List<SongModel> displaySongs = ref.watch(sortedSongsProvider);
     if (presentationState.selectedFolderPath != null) {
       final groupedFolders = ref.watch(groupedFoldersProvider);
       displaySongs =
@@ -372,40 +574,87 @@ class LibraryPage extends ConsumerWidget {
             ),
           ),
         Expanded(
-          child: isGridView
-              ? GridView.builder(
-                  padding: const EdgeInsets.only(bottom: 120),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200,
-                    childAspectRatio: 0.75,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  itemCount: displaySongs.length,
-                  itemBuilder: (context, index) => SongGridTile(
-                    song: displaySongs[index],
-                    allSongs: displaySongs,
-                    isDark: isDark,
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.only(bottom: 120),
-                  itemCount: displaySongs.length,
-                  separatorBuilder: (ctx, i) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) => SongListTile(
-                    song: displaySongs[index],
-                    allSongs: displaySongs,
-                    index: index,
-                    isDark: isDark,
+          child: Stack(
+            children: [
+              isGridView
+                  ? GridView.builder(
+                      key: const PageStorageKey('library_songs_grid'),
+                      padding: const EdgeInsets.only(bottom: 120),
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 200,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemCount: displaySongs.length,
+                      itemBuilder: (context, index) => SongGridTile(
+                        song: displaySongs[index],
+                        allSongs: displaySongs,
+                        isDark: isDark,
+                      ),
+                    )
+                  : ListView.separated(
+                      key: const PageStorageKey('library_songs_list'),
+                      controller: _scrollController,
+                      padding: EdgeInsets.only(
+                          bottom: 120,
+                          right: settings.enableAlphabetIndexer ? 30 : 0),
+                      itemCount: displaySongs.length,
+                      separatorBuilder: (ctx, i) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) => SongListTile(
+                        song: displaySongs[index],
+                        allSongs: displaySongs,
+                        index: index,
+                        isDark: isDark,
+                      ),
+                    ),
+              if (!isGridView && settings.enableAlphabetIndexer)
+                Positioned(
+                  right: 2,
+                  top: 0,
+                  bottom: 110,
+                  width: 28,
+                  child: _AlphabetIndexer(
+                    songs: displaySongs,
+                    sortBy: presentationState.sortBy,
+                    onLetterSelected: (letter) {
+                      final index = displaySongs.indexWhere((s) {
+                        String matchStr = s.title;
+                        if (presentationState.sortBy == LibrarySort.artist) {
+                          matchStr = s.artist;
+                        } else if (presentationState.sortBy == LibrarySort.fileName) {
+                          matchStr = p_path.basename(s.filePath);
+                        }
+                        
+                        matchStr = matchStr.trim();
+                        if (matchStr.isEmpty) return false;
+                        final firstChar = matchStr[0].toUpperCase();
+                        if (letter == '#') {
+                          return RegExp(r'[^a-zA-Z]').hasMatch(firstChar);
+                        }
+                        return firstChar == letter;
+                      });
+                      if (index != -1) {
+                        _scrollController.jumpTo(index * 80.0);
+                      }
+                    },
                   ),
                 ),
+            ],
+          ),
         ),
       ],
     );
   }
 
   Widget _buildFoldersView(
-      BuildContext context, WidgetRef ref, Color textColor) {
+      BuildContext context,
+      WidgetRef ref,
+      LibraryPresentationState presentationState,
+      bool isGridView,
+      bool isDark,
+      Color textColor) {
     final groupedFolders = ref.watch(groupedFoldersProvider);
 
     if (groupedFolders.isEmpty) {
@@ -413,35 +662,67 @@ class LibraryPage extends ConsumerWidget {
           child: Text("No folders found", style: TextStyle(color: textColor)));
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.only(bottom: 120),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 200,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: groupedFolders.length,
-      itemBuilder: (context, index) {
-        final folderPath = groupedFolders.keys.elementAt(index);
-        final folderName = p_path.basename(folderPath);
-        final songs = groupedFolders[folderPath]!;
+    if (isGridView) {
+      return GridView.builder(
+        key: const PageStorageKey('library_folders_grid'),
+        padding: const EdgeInsets.only(bottom: 120),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 200,
+          childAspectRatio: 0.8,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: groupedFolders.length,
+        itemBuilder: (context, index) {
+          final folderPath = groupedFolders.keys.elementAt(index);
+          final folderName = p_path.basename(folderPath);
+          final songs = groupedFolders[folderPath]!;
 
-        return AlbumCard(
-          albumName: folderName,
-          artistName: "${songs.length} songs",
-          songs: songs,
-          year: "",
-          onTap: () => ref
-              .read(libraryPresentationProvider.notifier)
-              .selectFolder(folderPath),
-        );
-      },
-    );
+          return AlbumCard(
+            albumName: folderName,
+            artistName: "${songs.length} songs",
+            songs: songs,
+            year: "",
+            onTap: () => ref
+                .read(libraryPresentationProvider.notifier)
+                .selectFolder(folderPath),
+          );
+        },
+      );
+    } else {
+      return ListView.separated(
+        key: const PageStorageKey('library_folders_list'),
+        padding: const EdgeInsets.only(bottom: 120),
+        itemCount: groupedFolders.length,
+        separatorBuilder: (ctx, i) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
+          final folderPath = groupedFolders.keys.elementAt(index);
+          final folderName = p_path.basename(folderPath);
+          final songs = groupedFolders[folderPath]!;
+
+          return CategoryListTile(
+            title: folderName,
+            subtitle: "${songs.length} songs",
+            icon: Icons.folder_rounded,
+            artPath: songs.isNotEmpty ? songs.first.filePath : null,
+            onlineArtUrl: songs.isNotEmpty ? songs.first.onlineArtUrl : null,
+            isDark: isDark,
+            onTap: () => ref
+                .read(libraryPresentationProvider.notifier)
+                .selectFolder(folderPath),
+          );
+        },
+      );
+    }
   }
 
   Widget _buildArtistsView(
-      BuildContext context, WidgetRef ref, Color textColor) {
+      BuildContext context,
+      WidgetRef ref,
+      LibraryPresentationState presentationState,
+      bool isGridView,
+      bool isDark,
+      Color textColor) {
     final groupedArtists = ref.watch(groupedArtistsProvider);
 
     if (groupedArtists.isEmpty) {
@@ -450,42 +731,83 @@ class LibraryPage extends ConsumerWidget {
     }
 
     final artists = groupedArtists.keys.toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      ..sort((a, b) {
+        final cmp = a.toLowerCase().compareTo(b.toLowerCase());
+        return presentationState.isSortDescending ? -cmp : cmp;
+      });
 
-    return GridView.builder(
-      padding: const EdgeInsets.only(bottom: 120),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 200,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-      ),
-      itemCount: artists.length,
-      itemBuilder: (context, index) {
-        final artistName = artists[index];
-        final artistSongs = groupedArtists[artistName]!;
+    if (isGridView) {
+      return GridView.builder(
+        key: const PageStorageKey('library_artists_grid'),
+        padding: const EdgeInsets.only(bottom: 120),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 200,
+          childAspectRatio: 0.8,
+          crossAxisSpacing: 20,
+          mainAxisSpacing: 20,
+        ),
+        itemCount: artists.length,
+        itemBuilder: (context, index) {
+          final artistName = artists[index];
+          final artistSongs = groupedArtists[artistName]!;
 
-        return AlbumCard(
-          albumName: artistName,
-          artistName: "${artistSongs.length} songs",
-          songs: artistSongs,
-          year: "",
-          onTap: () {
-            ref.read(navigationStackProvider.notifier).push(
-                  NavigationItem(
-                    type: NavigationType.artist,
-                    data: ArtistSelection(
-                        artistName: artistName, songs: artistSongs),
-                  ),
-                );
-          },
-        );
-      },
-    );
+          return AlbumCard(
+            albumName: artistName,
+            artistName: "${artistSongs.length} songs",
+            songs: artistSongs,
+            year: "",
+            onTap: () {
+              ref.read(navigationStackProvider.notifier).push(
+                    NavigationItem(
+                      type: NavigationType.artist,
+                      data: ArtistSelection(
+                          artistName: artistName, songs: artistSongs),
+                    ),
+                  );
+            },
+          );
+        },
+      );
+    } else {
+      return ListView.separated(
+        key: const PageStorageKey('library_artists_list'),
+        padding: const EdgeInsets.only(bottom: 120),
+        itemCount: artists.length,
+        separatorBuilder: (ctx, i) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
+          final artistName = artists[index];
+          final artistSongs = groupedArtists[artistName]!;
+
+          return CategoryListTile(
+            title: artistName,
+            subtitle: "${artistSongs.length} songs",
+            icon: Icons.person_rounded,
+            artPath: artistSongs.isNotEmpty ? artistSongs.first.filePath : null,
+            onlineArtUrl:
+                artistSongs.isNotEmpty ? artistSongs.first.onlineArtUrl : null,
+            isDark: isDark,
+            onTap: () {
+              ref.read(navigationStackProvider.notifier).push(
+                    NavigationItem(
+                      type: NavigationType.artist,
+                      data: ArtistSelection(
+                          artistName: artistName, songs: artistSongs),
+                    ),
+                  );
+            },
+          );
+        },
+      );
+    }
   }
 
   Widget _buildAlbumsView(
-      BuildContext context, WidgetRef ref, Color textColor) {
+      BuildContext context,
+      WidgetRef ref,
+      LibraryPresentationState presentationState,
+      bool isGridView,
+      bool isDark,
+      Color textColor) {
     final groupedAlbums = ref.watch(groupedAlbumsProvider);
 
     if (groupedAlbums.isEmpty) {
@@ -493,47 +815,91 @@ class LibraryPage extends ConsumerWidget {
           child: Text("No albums found", style: TextStyle(color: textColor)));
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.only(bottom: 120),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 200,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: groupedAlbums.length,
-      itemBuilder: (context, index) {
-        final albumName = groupedAlbums.keys.elementAt(index);
-        final songs = groupedAlbums[albumName]!;
-        final artistName =
-            songs.isNotEmpty ? songs.first.artist : "Unknown Artist";
-        final year = songs
-                .firstWhere((s) => s.year != null && s.year!.isNotEmpty,
-                    orElse: () => songs.first)
-                .year ??
-            "Unknown";
+    final albumNames = groupedAlbums.keys.toList()
+      ..sort((a, b) {
+        final cmp = a.toLowerCase().compareTo(b.toLowerCase());
+        return presentationState.isSortDescending ? -cmp : cmp;
+      });
 
-        return AlbumCard(
-          albumName: albumName,
-          artistName: artistName,
-          songs: songs,
-          year: year,
-          onTap: () {
-            final album = AlbumModel(
-              id: "local_$albumName",
-              title: albumName,
-              artist: artistName,
-              imageUrl: "",
-              releaseDate: year,
-              localSongs: songs,
-            );
-            ref.read(navigationStackProvider.notifier).push(
-                  NavigationItem(type: NavigationType.album, data: album),
-                );
-          },
-        );
-      },
-    );
+    if (isGridView) {
+      return GridView.builder(
+        key: const PageStorageKey('library_albums_grid'),
+        padding: const EdgeInsets.only(bottom: 120),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 200,
+          childAspectRatio: 0.8,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: albumNames.length,
+        itemBuilder: (context, index) {
+          final albumName = albumNames[index];
+          final songs = groupedAlbums[albumName]!;
+          final artistName =
+              songs.isNotEmpty ? songs.first.artist : "Unknown Artist";
+          final year = songs
+                  .firstWhere((s) => s.year != null && s.year!.isNotEmpty,
+                      orElse: () => songs.first)
+                  .year ??
+              "Unknown";
+
+          return AlbumCard(
+            albumName: albumName,
+            artistName: artistName,
+            songs: songs,
+            year: year,
+            onTap: () {
+              final album = AlbumModel(
+                id: "local_$albumName",
+                title: albumName,
+                artist: artistName,
+                imageUrl: "",
+                releaseDate: year,
+                localSongs: songs,
+              );
+              ref.read(navigationStackProvider.notifier).push(
+                    NavigationItem(type: NavigationType.album, data: album),
+                  );
+            },
+          );
+        },
+      );
+    } else {
+      return ListView.separated(
+        key: const PageStorageKey('library_albums_list'),
+        padding: const EdgeInsets.only(bottom: 120),
+        itemCount: albumNames.length,
+        separatorBuilder: (ctx, i) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
+          final albumName = albumNames[index];
+          final songs = groupedAlbums[albumName]!;
+          final artistName =
+              songs.isNotEmpty ? songs.first.artist : "Unknown Artist";
+
+          return CategoryListTile(
+            title: albumName,
+            subtitle: artistName,
+            icon: Icons.album_rounded,
+            artPath: songs.isNotEmpty ? songs.first.filePath : null,
+            onlineArtUrl: songs.isNotEmpty ? songs.first.onlineArtUrl : null,
+            isDark: isDark,
+            onTap: () {
+              final album = AlbumModel(
+                id: "local_$albumName",
+                title: albumName,
+                artist: artistName,
+                imageUrl: "",
+                releaseDate: songs.first.year ?? "Unknown",
+                localSongs: songs,
+              );
+              ref.read(navigationStackProvider.notifier).push(
+                    NavigationItem(type: NavigationType.album, data: album),
+                  );
+            },
+          );
+        },
+      );
+    }
   }
 
   Widget _buildError(
@@ -618,6 +984,7 @@ class SongListTile extends ConsumerWidget {
     return SongContextMenuRegion(
       song: song,
       currentQueue: allSongs,
+      allowMetadataEdit: true,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -626,8 +993,10 @@ class SongListTile extends ConsumerWidget {
           hoverColor: isDark
               ? Colors.white.withValues(alpha: 0.05)
               : Colors.black.withValues(alpha: 0.05),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: SizedBox(
+            height: 72,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
               children: [
                 SizedBox(
@@ -688,13 +1057,30 @@ class SongListTile extends ConsumerWidget {
                         color: metaColor,
                         fontFeatures: const [FontFeature.tabularFigures()])),
                 const SizedBox(width: 16),
-                Icon(Icons.more_vert_rounded, color: metaColor, size: 20),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {}, // Absorb tap tapping so parent InkWell doesn't capture on desktop
+                  onTapDown: (details) {
+                    SongContextMenuRegion.showSongMenu(
+                      context,
+                      details.globalPosition,
+                      ref,
+                      song,
+                      allowMetadataEdit: true,
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    child: Icon(Icons.more_vert_rounded, color: metaColor, size: 20),
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -731,6 +1117,7 @@ class SongGridTile extends ConsumerWidget {
     return SongContextMenuRegion(
       song: song,
       currentQueue: allSongs,
+      allowMetadataEdit: true,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -778,18 +1165,52 @@ class SongGridTile extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(song.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: isPlaying ? activeColor : titleColor)),
-                const SizedBox(height: 4),
-                Text(song.artist,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: artistColor)),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(song.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: isPlaying ? activeColor : titleColor)),
+                          const SizedBox(height: 4),
+                          Text(song.artist,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 12, color: artistColor)),
+                        ],
+                      ),
+                    ),
+                    if (Platform.isAndroid || Platform.isIOS)
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {}, // Absorb tap tapping so parent InkWell doesn't capture on desktop/hover context overlays
+                        onTapDown: (details) {
+                          SongContextMenuRegion.showSongMenu(
+                            context,
+                            details.globalPosition,
+                            ref,
+                            song,
+                            allowMetadataEdit: true,
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Icon(
+                            Icons.more_vert_rounded,
+                            size: 20,
+                            color: artistColor,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -799,44 +1220,200 @@ class SongGridTile extends ConsumerWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
+class CategoryListTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String? artPath;
+  final String? onlineArtUrl;
   final bool isDark;
+  final VoidCallback onTap;
 
-  const _FilterChip(
-      {required this.label,
-      required this.isSelected,
-      required this.onTap,
-      required this.isDark});
+  const CategoryListTile({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    this.artPath,
+    this.onlineArtUrl,
+    required this.isDark,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = Theme.of(context).primaryColor;
-    final surfaceColor = isDark
+    final titleColor = isDark ? Colors.white : Colors.black;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final iconBgColor = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-            color: isSelected ? activeColor : surfaceColor,
-            borderRadius: BorderRadius.circular(20)),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected
-                ? Colors.white
-                : (isDark ? Colors.white70 : Colors.black87),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 13,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        hoverColor: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: artPath != null
+                    ? SmartArt(
+                        path: artPath!,
+                        size: 56,
+                        borderRadius: 8,
+                        onlineArtUrl: onlineArtUrl)
+                    : Icon(icon, size: 28, color: titleColor),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: titleColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 13, color: subtitleColor),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Icon(Icons.chevron_right_rounded,
+                  color: (subtitleColor ?? Colors.grey).withValues(alpha: 0.5),
+                  size: 20),
+              const SizedBox(width: 8),
+            ],
           ),
         ),
       ),
     );
   }
 }
+
+class _AlphabetIndexer extends StatefulWidget {
+  final List<SongModel> songs;
+  final LibrarySort sortBy;
+  final Function(String) onLetterSelected;
+
+  const _AlphabetIndexer({
+    required this.songs,
+    required this.sortBy,
+    required this.onLetterSelected,
+  });
+
+  @override
+  State<_AlphabetIndexer> createState() => _AlphabetIndexerState();
+}
+
+class _AlphabetIndexerState extends State<_AlphabetIndexer> {
+  final List<String> _alphabet = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  String? _activeLetter;
+
+  String _getSongSortString(SongModel s) {
+    switch (widget.sortBy) {
+      case LibrarySort.artist:
+        return s.artist;
+      case LibrarySort.fileName:
+        return p_path.basename(s.filePath);
+      default:
+        return s.title;
+    }
+  }
+
+  void _triggerLetter(String letter) {
+    widget.onLetterSelected(letter);
+    setState(() => _activeLetter = letter);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemHeight = constraints.maxHeight / _alphabet.length;
+
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onVerticalDragUpdate: (details) {
+            final index = (details.localPosition.dy / itemHeight)
+                .floor()
+                .clamp(0, _alphabet.length - 1);
+            _triggerLetter(_alphabet[index]);
+          },
+          onVerticalDragDown: (details) {
+            final index = (details.localPosition.dy / itemHeight)
+                .floor()
+                .clamp(0, _alphabet.length - 1);
+            _triggerLetter(_alphabet[index]);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: _alphabet.map((letter) {
+                final isPresent = widget.songs.any((s) {
+                  final matchStr = _getSongSortString(s).trim();
+                  if (matchStr.isEmpty) return false;
+                  final firstChar = matchStr[0].toUpperCase();
+                  if (letter == '#') {
+                    return RegExp(r'[^a-zA-Z]').hasMatch(firstChar);
+                  }
+                  return firstChar == letter;
+                });
+
+                final isCurrent = _activeLetter == letter;
+
+                return Expanded(
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: Text(
+                      letter,
+                      style: TextStyle(
+                        color: isCurrent
+                            ? Theme.of(context).primaryColor
+                            : isPresent
+                                ? Colors.white
+                                : Colors.white.withValues(alpha: 0.2),
+                        fontSize: 11,
+                        fontWeight:
+                            isCurrent ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+

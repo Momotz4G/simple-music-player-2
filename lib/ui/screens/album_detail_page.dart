@@ -45,10 +45,13 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
 
   // Playback Loading State
   String? _loadingSongTitle;
+  bool _isLocal = false;
 
   @override
   void initState() {
     super.initState();
+    _isLocal = widget.album.localSongs != null &&
+        widget.album.localSongs!.isNotEmpty;
     _headerImageUrl = widget.album.imageUrl;
     _ytService.initialize();
     _initData();
@@ -635,10 +638,11 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                           const SizedBox(width: 24),
 
                           // 🚀 DOWNLOAD ALL BUTTON
-                          IconButton(
-                            icon: Icon(Icons.download_rounded,
-                                color: textColor.withValues(alpha: 0.7),
-                                size: 32),
+                          if (!_isLocal)
+                            IconButton(
+                              icon: Icon(Icons.download_rounded,
+                                  color: textColor.withValues(alpha: 0.7),
+                                  size: 32),
                             tooltip: AppLocalizations.of(context)!.downloadAll,
                             onPressed: () {
                               BulkDownloadService()
@@ -755,6 +759,15 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                         context, ref, action, song);
                                   },
                                   itemBuilder: (context) => [
+                                    if (!_isLocal)
+                                      PopupMenuItem(
+                                          value: SongAction.download,
+                                          child: Row(children: [
+                                            const Icon(Icons.download_rounded),
+                                            const SizedBox(width: 12),
+                                            Text(AppLocalizations.of(context)!
+                                                .download)
+                                          ])),
                                     PopupMenuItem(
                                         value: SongAction.playNext,
                                         child: Row(children: [
@@ -762,6 +775,14 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                           const SizedBox(width: 12),
                                           Text(AppLocalizations.of(context)!
                                               .playNext)
+                                        ])),
+                                    PopupMenuItem(
+                                        value: SongAction.addToQueue,
+                                        child: Row(children: [
+                                          const Icon(Icons.queue_music),
+                                          const SizedBox(width: 12),
+                                          Text(AppLocalizations.of(context)!
+                                              .addToQueue)
                                         ])),
                                     PopupMenuItem(
                                         value: SongAction.addToPlaylist,

@@ -1010,7 +1010,10 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       ..sort((a, b) {
         final secA = artistSeconds[a.key] ?? 0;
         final secB = artistSeconds[b.key] ?? 0;
-        return secB.compareTo(secA);
+        final timeDiff = secB.compareTo(secA);
+        if (timeDiff != 0) return timeDiff;
+        // Fallback to play counts
+        return b.value.compareTo(a.value);
       });
 
     MapEntry<String, int>? topArtist;

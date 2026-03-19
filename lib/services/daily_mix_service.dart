@@ -4,6 +4,7 @@ import '../models/daily_mix_model.dart';
 import '../models/song_metadata.dart';
 import '../models/stat_model.dart';
 import 'spotify_service.dart';
+import 'deezer_service.dart';
 
 /// Service to generate personalized daily mixes based on user's listening history
 class DailyMixService {
@@ -162,7 +163,21 @@ class DailyMixService {
 
     for (final artist in artists) {
       try {
-        final tracks = await SpotifyService.searchTracks('artist:$artist');
+        List<SongMetadata> tracks = [];
+        try {
+          tracks = await SpotifyService.searchTracks('artist:$artist');
+        } catch (e) {
+          print("   ⚠️ Spotify error searching for $artist: $e, trying Deezer");
+        }
+
+        if (tracks.isEmpty) {
+          try {
+            tracks = await DeezerService.searchSongs('artist:"$artist"');
+          } catch (e) {
+            print("   ⚠️ Deezer error searching for $artist: $e");
+          }
+        }
+
         for (final track in tracks.take(10)) {
           final key = '${track.title}_${track.artist}'.toLowerCase();
           if (!seenTracks.contains(key)) {

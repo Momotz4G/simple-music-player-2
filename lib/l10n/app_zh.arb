@@ -7,9 +7,16 @@
   "playlists": "播放列表",
   "artists": "艺术家",
   "albums": "专辑",
+  "folders": "文件夹",
   "local_library": "本地库",
   "downloads": "下载",
   "metadata_editor": "元数据编辑器",
+  "editMetadata": "编辑元数据",
+  "success": "成功",
+  "enableAlphabetIndexer": "启用字母滚动索引器",
+  "enableAlphabetIndexerSubtitle": "在移动端列表视图中显示 A-Z 侧边栏索引",
+  "metadataUpdated": "元数据已更新",
+  "failedToUpdateMetadata": "更新元数据失败",
   "toggleLyrics": "切换歌词",
   "settings": "设置",
   "navigation": "导航",
@@ -70,8 +77,19 @@
   "rainbowMode": "彩虹模式",
   "useMixedColors": "使用混合颜色（同步优先）",
   "integration": "集成",
-  "discordRPC": "Discord Rich Presence",
-  "showStatusDiscord": "在 Discord 上显示状态",
+  "discordRPC": "Discord状态显示",
+  "showStatusDiscord": "在Discord上显示状态",
+  "tidalApiStatus": "Tidal API",
+  "online": "在线",
+  "unauthorize": "未授权",
+  "offlineStatus": "离线",
+  "checkInternetConnection": "请检查网络连接",
+  "autoClearCache": "自动清除缓存",
+  "autoClearDisabled": "已禁用",
+  "autoClearOnClose": "关闭应用时",
+  "autoClearAfter24h": "24小时后",
+  "autoClearAfter7d": "7天后",
+  "autoClearEvery30m": "每 30 分钟（仅在聆听时）",
   "musicFolderLocation": "音乐文件夹位置",
   "noFolderSelected": "未选择文件夹",
   "change": "更改",
@@ -103,6 +121,17 @@
   "playback": "播放",
   "endlessQueue": "无限队列",
   "autoAddSimilar": "当队列接近结束时自动添加相似歌曲",
+  "gaplessPlayback": "无缝播放",
+  "gaplessPlaybackDesc": "消除曲目之间的间隙",
+  "crossfade": "淡入淡出",
+  "crossfadeDesc": "曲目间平滑过渡 ({seconds} 秒)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "禁用罗马拼音",
   "hideRomajiPinyin": "不在韩语、日语或中文歌词下方显示罗马拼音",
   "translationLanguage": "翻译语言",
@@ -127,7 +156,7 @@
   "resetLibraryContent": "这将从播放器中移除当前文件夹。实际文件不会被删除。",
   "resetPath": "重置路径",
   "clearStreamingCache": "清除流媒体缓存",
-  "freeUpSpace": "释放空间",
+  "freeUpSpace": "释放空间 (当前: {size})",
   "resetStatistics": "重置统计数据",
   "clearPlayHistory": "清除播放历史和收听时间",
   "resetStatsTitle": "重置统计数据？",
@@ -169,7 +198,6 @@
   "androidBitPerfect": "Android 14+ 位完美",
   "customDevice": "自定义设备",
   "exclusiveModeWarning": "警告：如果您在上方选择了特定设备而非系统默认，独占模式效果最佳。",
-  "freeUpSpace": "释放空间 (当前: {size})",
   "@freeUpSpace": {
     "placeholders": {
       "size": {
@@ -419,14 +447,77 @@
   "discography": "全部作品",
   "seeAll": "查看全部",
   "newPlaylist": "新建播放列表",
+  "deletePlaylistPermanentConfirm": "您确定要删除此播放列表吗？（此操作无法撤销）",
+  "publicSharing": "公共共享",
+  "publicSharingDesc": "任何拥有代码的人都可以导入此播放列表。",
+  "publicSharingDisabledDesc": "已禁用。启用以与他人共享。",
+  "failedEnableSharing": "未能启用共享。请检查连接。",
+  "failedDisableSharing": "未能禁用共享。",
+  "disablingSharingWarning": "禁用共享将永久从服务器删除代码和数据以节省空间。",
+  "invalidSpotifyUrl": "Spotify 播放列表 URL 无效",
+  "invalidYoutubeMusicUrl": "YouTube Music 歌单链接无效",
+  "fetchingPlaylistInfo": "正在获取播放列表信息...",
+  "failedFetchPlaylistInfo": "无法获取播放列表信息",
+  "fetchingTracksFrom": "正在从 \"{name}\" 获取曲目...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "播放列表中未找到曲目",
+  "creatingPlaylistWithTracks": "正在创建包含 {count} 首曲目的播放列表...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "已成功导入 {count} 首曲目！",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "导入失败：{error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "正在获取共享播放列表...",
+  "playlistNotFoundOrError": "未找到播放列表或服务器错误",
+  "parsingPlaylistData": "正在解析播放列表数据...",
+  "importedPlaylistName": "已成功导入 \"{name}\"！",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "代码必须为 6 位数字",
+  "fetchingPlaylist": "正在获取播放列表...",
+  "importViaCode": "通过代码导入",
+  "enterShareCode": "输入 6 位共享代码",
+  "importChoice": "导入",
   "noPlaylistsYet": "尚无播放列表",
   "createPlaylist": "创建播放列表",
   "emptyPlaylist": "空播放列表",
   "emptyPlaylistSubtitle": "创建一个新的空播放列表",
   "importFromSpotify": "从 Spotify 导入",
   "importFromSpotifySubtitle": "粘贴 Spotify 播放列表链接",
+  "importFromYoutubeMusic": "从 YouTube Music 导入",
+  "importFromYoutubeMusicSubtitle": "粘贴 YouTube Music 歌单链接",
   "playlistNameHint": "播放列表名称",
   "importSpotifyPlaylist": "导入 Spotify 播放列表",
+  "importYoutubeMusicPlaylist": "导入 YouTube Music 播放列表",
   "deletePlaylistTitle": "删除播放列表？",
   "deletePlaylistConfirm": "确认要删除“{name}”吗？",
   "@deletePlaylistConfirm": {
@@ -454,7 +545,6 @@
   "songs": "歌曲",
   "noStatsYet": "尚无统计数据。",
   "noArtistStatsYet": "尚无艺术家统计数据。",
-  "play": "播放",
   "plays": "次播放",
   "min": "分",
   "share": "分享",
@@ -751,5 +841,28 @@
   "importLyricsTooltip": "导入歌词",
   "saveLyricsTooltip": "保存歌词",
   "refreshLyricsTooltip": "刷新歌词",
-  "translateLyricsTooltip": "翻译歌词"
+  "translateLyricsTooltip": "翻译歌词",
+  "sharePlaylist": "共享播放列表",
+  "deletePlaylist": "删除播放列表",
+  "importViaCodeSubtitle": "导入朋友共享的播放列表",
+  "sharePlaylistTitle": "共享 \"{name}\"",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "正在生成共享代码...",
+  "failedToGenerateCode": "未能生成共享代码。请检查连接。",
+  "playlistReadyShare": "您的播放列表已准备好共享！",
+  "copyCode": "复制代码",
+  "codeCopied": "代码已复制到剪贴板！",
+  "shareCodeUsage": "将此 6 位代码交给朋友，以便他们导入此播放列表。",
+  "filters": "过滤器",
+  "fileName": "文件名",
+  "dataUsage": "数据使用情况",
+  "todayLabel": "今天: {size}",
+  "last7DaysLabel": "过去 7 天: {size}",
+  "last30DaysLabel": "过去 30 天: {size}"
 }

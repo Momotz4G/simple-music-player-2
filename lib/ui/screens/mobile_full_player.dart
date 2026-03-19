@@ -167,8 +167,18 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     final videoUrl = await CanvasService.getCanvasUrl(url);
 
     if (videoUrl != null) {
-      final controller = VideoPlayerController.networkUrl(
-        Uri.parse(videoUrl),
+      if (!mounted) return;
+      setState(() => _canvasStatus = "Downloading canvas...");
+
+      final cachedFile = await CanvasService.downloadCanvasToCache(videoUrl);
+
+      if (cachedFile == null) {
+        if (mounted) setState(() => _isLoadingCanvas = false);
+        return;
+      }
+
+      final controller = VideoPlayerController.file(
+        cachedFile,
         videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
       );
       try {

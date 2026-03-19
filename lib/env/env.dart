@@ -77,4 +77,8 @@ abstract class Env {
   // 🚀 Romaji API Config
   @EnviedField(varName: 'ROMAJI_API_URL', obfuscate: true)
   static final String romajiApiUrl = _Env.romajiApiUrl;
+
+  // 🚀 Tidal API Config (Private Server)
+  @EnviedField(varName: 'TIDAL_API_KEY', obfuscate: true, defaultValue: '')
+  static final String tidalApiKey = _Env.tidalApiKey;
 }

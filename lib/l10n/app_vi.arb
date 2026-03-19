@@ -7,9 +7,16 @@
   "playlists": "Danh sách phát",
   "artists": "Nghệ sĩ",
   "albums": "Album",
+  "folders": "Thư mục",
   "local_library": "Thư viện cục bộ",
   "downloads": "Tải về",
   "metadata_editor": "Trình sửa metadata",
+  "editMetadata": "Chỉnh sửa metadata",
+  "success": "Thành công",
+  "enableAlphabetIndexer": "Bật chỉ mục cuộn bảng chữ cái",
+  "enableAlphabetIndexerSubtitle": "Hiển thị chỉ mục thanh bên A-Z trên chế độ xem danh sách di động",
+  "metadataUpdated": "Đã cập nhật metadata",
+  "failedToUpdateMetadata": "Cập nhật metadata thất bại",
   "toggleLyrics": "Bật/Tắt Lời bài hát",
   "settings": "Cài đặt",
   "navigation": "Điều hướng",
@@ -72,6 +79,17 @@
   "integration": "Tích hợp",
   "discordRPC": "Discord Rich Presence",
   "showStatusDiscord": "Hiển thị trạng thái trên Discord",
+  "tidalApiStatus": "Tidal API",
+  "online": "Trực tuyến",
+  "unauthorize": "Chưa ủy quyền",
+  "offlineStatus": "Ngoại tuyến",
+  "checkInternetConnection": "Vui lòng kiểm tra kết nối internet",
+  "autoClearCache": "Tự động xóa bộ nhớ đệm",
+  "autoClearDisabled": "Đã tắt",
+  "autoClearOnClose": "Khi đóng ứng dụng",
+  "autoClearAfter24h": "Sau 24 giờ",
+  "autoClearAfter7d": "Sau 7 ngày",
+  "autoClearEvery30m": "Mỗi 30 phút (Chỉ khi đang nghe)",
   "musicFolderLocation": "Vị trí thư mục nhạc",
   "noFolderSelected": "Chưa chọn thư mục",
   "change": "Thay đổi",
@@ -103,6 +121,17 @@
   "playback": "Phát nhạc",
   "endlessQueue": "Hàng chờ vô tận",
   "autoAddSimilar": "Tự động thêm các bài hát tương tự vào cuối hàng chờ",
+  "gaplessPlayback": "Phát nhạc liền mạch",
+  "gaplessPlaybackDesc": "Loại bỏ khoảng lặng giữa các bài hát",
+  "crossfade": "Crossfade",
+  "crossfadeDesc": "Chuyển tiếp mượt mà giữa các bài ({seconds} giây)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "Tắt phiên âm",
   "hideRomajiPinyin": "Không hiển thị Romaji/Pinyin dưới lời bài hát tiếng Hàn, Nhật hoặc Trung",
   "translationLanguage": "Ngôn ngữ dịch",
@@ -127,7 +156,7 @@
   "resetLibraryContent": "Thao tác này sẽ xóa thư mục hiện tại khỏi trình phát. Tệp tin của bạn sẽ không bị xóa.",
   "resetPath": "Đặt lại đường dẫn",
   "clearStreamingCache": "Xóa bộ nhớ đệm streaming",
-  "freeUpSpace": "Giải phóng không gian",
+  "freeUpSpace": "Giải phóng không gian (Hiện tại: {size})",
   "resetStatistics": "Đặt lại thống kê",
   "clearPlayHistory": "Xóa lịch sử phát và thời gian nghe",
   "resetStatsTitle": "Đặt lại thống kê?",
@@ -169,7 +198,6 @@
   "androidBitPerfect": "Android 14+ Bit-Perfect",
   "customDevice": "Thiết bị tùy chỉnh",
   "exclusiveModeWarning": "Cảnh báo: Chế độ độc quyền hoạt động tốt nhất nếu bạn chọn thiết bị cụ thể ở trên thay vì mặc định hệ thống.",
-  "freeUpSpace": "Giải phóng không gian (Hiện tại: {size})",
   "@freeUpSpace": {
     "placeholders": {
       "size": {
@@ -425,8 +453,11 @@
   "emptyPlaylistSubtitle": "Tạo danh sách phát trống mới",
   "importFromSpotify": "Nhập từ Spotify",
   "importFromSpotifySubtitle": "Dán liên kết danh sách phát Spotify",
+  "importFromYoutubeMusic": "Nhập từ YouTube Music",
+  "importFromYoutubeMusicSubtitle": "Dán liên kết danh sách phát YouTube Music",
   "playlistNameHint": "Tên danh sách phát",
   "importSpotifyPlaylist": "Nhập danh sách phát Spotify",
+  "importYoutubeMusicPlaylist": "Nhập danh sách phát YouTube Music",
   "deletePlaylistTitle": "Xóa danh sách phát?",
   "deletePlaylistConfirm": "Bạn có chắc chắn muốn xóa \"{name}\"?",
   "@deletePlaylistConfirm": {
@@ -444,6 +475,68 @@
   "rename": "Đổi tên",
   "removeFromPlaylist": "Xóa khỏi danh sách phát",
   "renamePlaylist": "Đổi tên danh sách phát",
+  "deletePlaylist": "Xóa danh sách phát",
+  "sharePlaylist": "Chia sẻ danh sách phát",
+  "deletePlaylistPermanentConfirm": "Bạn có chắc chắn muốn xóa danh sách phát này không? (Hành động này không thể hoàn tác)",
+  "publicSharing": "Chia sẻ công khai",
+  "publicSharingDesc": "Bất kỳ ai có mã đều có thể nhập danh sách phát này.",
+  "publicSharingDisabledDesc": "Đã tắt. Bật để chia sẻ với người phát khác.",
+  "failedEnableSharing": "Không thể bật chia sẻ. Kiểm tra kết nối.",
+  "failedDisableSharing": "Không thể tắt chia sẻ.",
+  "disablingSharingWarning": "Tắt chia sẻ sẽ xóa vĩnh viễn mã và dữ liệu khỏi máy chủ để tiết kiệm dung lượng.",
+  "invalidSpotifyUrl": "URL danh sách phát Spotify không hợp lệ",
+  "invalidYoutubeMusicUrl": "URL danh sách phát YouTube Music không hợp lệ",
+  "fetchingPlaylistInfo": "Đang lấy thông tin danh sách phát...",
+  "failedFetchPlaylistInfo": "Không thể lấy thông tin danh sách phát",
+  "fetchingTracksFrom": "Đang lấy các bài hát từ \"{name}\"...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "Không tìm thấy bài hát nào trong danh sách phát",
+  "creatingPlaylistWithTracks": "Đang tạo danh sách phát với {count} bài hát...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "Đã nhập thành công {count} bài hát!",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "Nhập thất bại: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "Đang lấy danh sách phát được chia sẻ...",
+  "playlistNotFoundOrError": "Không tìm thấy danh sách phát hoặc lỗi máy chủ",
+  "parsingPlaylistData": "Đang phân tích dữ liệu danh sách phát...",
+  "importedPlaylistName": "Đã nhập thành công \"{name}\"!",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "Mã phải có 6 chữ số",
+  "fetchingPlaylist": "Đang lấy danh sách phát...",
+  "importViaCode": "Nhập qua Mã",
+  "enterShareCode": "Nhập mã chia sẻ 6 chữ số",
+  "importChoice": "Nhập",
   "listeningStats": "Thống kê nghe nhạc",
   "topArtist": "Nghệ sĩ nghe nhiều",
   "mostListened": "Nghe nhiều nhất",
@@ -454,7 +547,6 @@
   "songs": "bài hát",
   "noStatsYet": "Chưa có thống kê.",
   "noArtistStatsYet": "Chưa có thống kê nghệ sĩ.",
-  "play": "Phát",
   "plays": "lượt phát",
   "min": "phút",
   "share": "Chia sẻ",
@@ -744,5 +836,26 @@
   "importLyricsTooltip": "Nhập lời bài hát",
   "saveLyricsTooltip": "Lưu lời bài hát",
   "refreshLyricsTooltip": "Làm mới lời bài hát",
-  "translateLyricsTooltip": "Dịch lời bài hát"
+  "translateLyricsTooltip": "Dịch lời bài hát",
+  "importViaCodeSubtitle": "Nhập danh sách phát được chia sẻ bởi một người bạn",
+  "sharePlaylistTitle": "Chia sẻ \"{name}\"",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "Đang tạo mã chia sẻ...",
+  "failedToGenerateCode": "Không thể tạo mã chia sẻ. Kiểm tra kết nối.",
+  "playlistReadyShare": "Danh sách phát của bạn đã sẵn sàng để chia sẻ!",
+  "copyCode": "Sao chép Mã",
+  "codeCopied": "Đã sao chép mã vào danh bạ!",
+  "shareCodeUsage": "Đưa mã 6 chữ số này cho bạn bè để họ nhập danh sách phát này.",
+  "filters": "Bộ lọc",
+  "fileName": "Tên tệp",
+  "dataUsage": "Sử dụng dữ liệu",
+  "todayLabel": "Hôm nay: {size}",
+  "last7DaysLabel": "7 ngày qua: {size}",
+  "last30DaysLabel": "30 ngày qua: {size}"
 }

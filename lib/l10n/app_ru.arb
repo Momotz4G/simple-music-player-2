@@ -7,9 +7,16 @@
   "playlists": "Плейлисты",
   "artists": "Исполнители",
   "albums": "Альбомы",
+  "folders": "Папки",
   "local_library": "Локальная библиотека",
   "downloads": "Загрузки",
   "metadata_editor": "Редактор метаданных",
+  "editMetadata": "Редактировать метаданные",
+  "enableAlphabetIndexer": "Включить алфавитный указатель прокрутки",
+  "enableAlphabetIndexerSubtitle": "Показывать индекс боковой панели A-Z в мобильном списке",
+  "success": "Успешно",
+  "metadataUpdated": "Метаданные обновлены",
+  "failedToUpdateMetadata": "Не удалось обновить метаданные",
   "toggleLyrics": "Переключить текст",
   "settings": "Настройки",
   "navigation": "Навигация",
@@ -72,6 +79,17 @@
   "integration": "Интеграция",
   "discordRPC": "Discord Presence",
   "showStatusDiscord": "Показывать статус в Discord",
+  "tidalApiStatus": "Tidal API",
+  "online": "В сети",
+  "unauthorize": "Не авторизован",
+  "offlineStatus": "Не в сети",
+  "checkInternetConnection": "Проверьте интернет-соединение",
+  "autoClearCache": "Автоматическая очистка кэша",
+  "autoClearDisabled": "Отключено",
+  "autoClearOnClose": "При закрытии приложения",
+  "autoClearAfter24h": "Через 24 часа",
+  "autoClearAfter7d": "Через 7 дней",
+  "autoClearEvery30m": "Каждые 30 мин (Только при прослушивании)",
   "musicFolderLocation": "Расположение папки с музыкой",
   "noFolderSelected": "Папка не выбрана",
   "change": "Изменить",
@@ -103,6 +121,17 @@
   "playback": "Воспроизведение",
   "endlessQueue": "Бесконечная очередь",
   "autoAddSimilar": "Автоматически добавлять похожие песни в конец очереди",
+  "gaplessPlayback": "Бесшовное Воспроизведение",
+  "gaplessPlaybackDesc": "Устранить паузы между треками",
+  "crossfade": "Crossfade",
+  "crossfadeDesc": "Плавный переход между треками ({seconds} с)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "Отключить романизацию",
   "hideRomajiPinyin": "Не показывать Romaji/Pinyin под корейскими, японскими или китайскими текстами",
   "translationLanguage": "Язык перевода",
@@ -127,7 +156,7 @@
   "resetLibraryContent": "Это удалит текущую папку из проигрывателя. Ваши файлы не будут удалены.",
   "resetPath": "Сбросить путь",
   "clearStreamingCache": "Очистить кэш стриминга",
-  "freeUpSpace": "Освободить место",
+  "freeUpSpace": "Освободить место (Текущее: {size})",
   "resetStatistics": "Сбросить статистику",
   "clearPlayHistory": "Очистить историю и время прослушивания",
   "resetStatsTitle": "Сбросить статистику?",
@@ -169,7 +198,6 @@
   "androidBitPerfect": "Android 14+ Bit-Perfect",
   "customDevice": "Пользовательское устройство",
   "exclusiveModeWarning": "Предупреждение: Эксклюзивный режим работает лучше, если вы выберете конкретное устройство выше вместо системного по умолчанию.",
-  "freeUpSpace": "Освободить место (Текущее: {size})",
   "@freeUpSpace": {
     "placeholders": {
       "size": {
@@ -259,10 +287,66 @@
   "refreshList": "Обновить список",
   "noDownloadsFound": "Загрузки не найдены",
   "play": "Играть",
-  "showInFolder": "Показать в папке",
-  "delete": "Удалить",
-  "deleteFileTitle": "Удалить файл?",
-  "deleteFileContent": "Вы уверены, что хотите удалить «{filename}»?\\nЭто действие необратимо.",
+  "deletePlaylistPermanentConfirm": "Вы уверены, что хотите удалить этот плейлист? (Это действие нельзя отменить)",
+  "publicSharing": "Публичный доступ",
+  "publicSharingDesc": "Любой, у кого есть код, может импортировать этот плейлист.",
+  "publicSharingDisabledDesc": "Отключено. Включите, чтобы поделиться с другими.",
+  "failedEnableSharing": "Не удалось включить общий доступ. Проверьте соединение.",
+  "failedDisableSharing": "Не удалось отключить общий доступ.",
+  "disablingSharingWarning": "При отключении общего доступа код и данные будут навсегда удалены с сервера для экономии места.",
+  "invalidSpotifyUrl": "Неверный URL-адрес плейлиста Spotify",
+  "invalidYoutubeMusicUrl": "Неверная ссылка на плейлист YouTube Music",
+  "fetchingPlaylistInfo": "Получение информации о плейлисте...",
+  "failedFetchPlaylistInfo": "Не удалось получить информацию о плейлисте",
+  "fetchingTracksFrom": "Получение треков из \"{name}\"...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "Треки в плейлисте не найдены",
+  "creatingPlaylistWithTracks": "Создание плейлиста с {count} треками...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "Успешно импортировано {count} треков!",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "Ошибка импорта: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "Получение общего плейлиста...",
+  "playlistNotFoundOrError": "Плейлист не найден или ошибка сервера",
+  "parsingPlaylistData": "Анализ данных плейлиста...",
+  "importedPlaylistName": "Плейлист \"{name}\" успешно импортирован!",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "Код должен состоять из 6 цифр",
+  "fetchingPlaylist": "Получение плейлиста...",
+  "importViaCode": "Импорт по коду",
+  "enterShareCode": "Введите 6-значный код общего доступа",
+  "importChoice": "Импортировать",
   "downloadedTo": "Загружено в: {path}",
   "folderPath": "Папка: {path}",
   "errorDeleting": "Ошибка при удалении: {error}",
@@ -425,8 +509,11 @@
   "emptyPlaylistSubtitle": "Создать новый пустой плейлист",
   "importFromSpotify": "Импорт из Spotify",
   "importFromSpotifySubtitle": "Вставьте ссылку на плейлист Spotify",
+  "importFromYoutubeMusic": "Импорт из YouTube Music",
+  "importFromYoutubeMusicSubtitle": "Вставьте ссылку на плейлист YouTube Music",
   "playlistNameHint": "Название плейлиста",
   "importSpotifyPlaylist": "Импортировать плейлист Spotify",
+  "importYoutubeMusicPlaylist": "Импортировать плейлист YouTube Music",
   "deletePlaylistTitle": "Удалить плейлист?",
   "deletePlaylistConfirm": "Вы уверены, что хотите удалить «{name}»?",
   "@deletePlaylistConfirm": {
@@ -454,7 +541,6 @@
   "songs": "песен",
   "noStatsYet": "Статистики пока нет.",
   "noArtistStatsYet": "Статистики исполнителей пока нет.",
-  "play": "Играть",
   "plays": "проигрываний",
   "min": "мин",
   "share": "Поделиться",
@@ -751,5 +837,32 @@
   "importLyricsTooltip": "Импортировать текст",
   "saveLyricsTooltip": "Сохранить текст",
   "refreshLyricsTooltip": "Обновить текст",
-  "translateLyricsTooltip": "Перевести текст"
+  "translateLyricsTooltip": "Перевести текст",
+  "sharePlaylist": "Поделиться плейлистом",
+  "deletePlaylist": "Удалить плейлист",
+  "importViaCodeSubtitle": "Импорт плейлиста, которым поделился друг",
+  "sharePlaylistTitle": "Поделиться \"{name}\"",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "Создание кода общего доступа...",
+  "failedToGenerateCode": "Не удалось создать код общего доступа. Проверьте соединение.",
+  "playlistReadyShare": "Ваш плейлист готов к отправке!",
+  "copyCode": "Копировать код",
+  "codeCopied": "Код скопирован в буфер обмена!",
+  "shareCodeUsage": "Передайте этот 6-значный код другу, чтобы он мог импортировать этот плейлист.",
+  "showInFolder": "Показать в папке",
+  "delete": "Удалить",
+  "deleteFileTitle": "Удалить файл?",
+  "deleteFileContent": "Удалить «{filename}»?\\nЭту операцию нельзя отменить.",
+  "filters": "Фильтры",
+  "fileName": "Имя файла",
+  "dataUsage": "Использование данных",
+  "todayLabel": "Сегодня: {size}",
+  "last7DaysLabel": "Последние 7 дней: {size}",
+  "last30DaysLabel": "Последние 30 дней: {size}"
 }

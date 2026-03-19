@@ -42,10 +42,8 @@ class ArtCacheService {
     await init();
     final cachePath = _getCachePath(songPath);
     final file = File(cachePath);
-    // Only save if it doesn't already exist to save IO
-    if (!await file.exists()) {
-      await file.writeAsBytes(bytes);
-    }
+    // 🚀 Always overwrite to update with newest data
+    await file.writeAsBytes(bytes);
   }
 
   Future<void> clearCache() async {

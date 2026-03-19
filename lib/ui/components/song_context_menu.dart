@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/song_model.dart';
+import '../../providers/metadata_provider.dart';
+import 'metadata_editor_panel.dart';
 import '../../models/song_metadata.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/library_provider.dart';
@@ -12,6 +14,7 @@ import '../../providers/settings_provider.dart';
 import '../../services/smart_download_service.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../services/spotify_service.dart';
+import '../../services/deezer_service.dart';
 import '../../models/download_progress.dart';
 import '../../services/notification_service.dart';
 import 'music_notification.dart';
@@ -23,19 +26,22 @@ enum SongAction {
   addToPlaylist,
   addToFavorite,
   goToArtist,
-  download
+  download,
+  editMetadata
 }
 
 class SongContextMenuRegion extends ConsumerWidget {
   final SongModel song;
   final List<SongModel> currentQueue;
   final Widget child;
+  final bool allowMetadataEdit;
 
   const SongContextMenuRegion({
     super.key,
     required this.song,
     required this.currentQueue,
     required this.child,
+    this.allowMetadataEdit = false,
   });
 
   static Future<void> handleAction(BuildContext context, WidgetRef ref,
@@ -44,6 +50,96 @@ class SongContextMenuRegion extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     switch (action) {
+      case SongAction.editMetadata:
+        // 🚀 Set active selection prior to launch
+        ref.read(metadataProvider.notifier).selectSong(song);
+
+        // Calculate size for Desktop Dialog viewport bounds
+        final isDesktop = MediaQuery.of(context).size.width >= 800;
+
+        if (isDesktop) {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return Consumer(
+                builder: (context, ref, _) {
+                  final state = ref.watch(metadataProvider);
+                  final notifier = ref.read(metadataProvider.notifier);
+                  final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
+                  return AlertDialog(
+                    backgroundColor: Theme.of(context).cardColor,
+                    contentPadding: EdgeInsets.zero,
+                    content: SizedBox(
+                      width: 900,
+                      height: 600,
+                      child: state.isLoadingMetadata 
+                        ? const Center(child: CircularProgressIndicator())
+                        : MetadataEditorPanel(
+                            state: state,
+                            notifier: notifier,
+                            textColor: textColor,
+                          ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(AppLocalizations.of(context)!.close),
+                      )
+                    ],
+                  );
+                },
+              );
+            }
+          );
+        } else {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) {
+              return Consumer(
+                builder: (context, ref, _) {
+                  final state = ref.watch(metadataProvider);
+                  final notifier = ref.read(metadataProvider.notifier);
+                  final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
+                  return Container(
+                    height: MediaQuery.of(context).size.height * 0.85,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                    ),
+                    child: Column(
+                      children: [
+                        // Handle bar for Sheet drag
+                        Container(
+                          margin: const EdgeInsets.only(top: 12, bottom: 8),
+                          width: 40,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[600]?.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        Expanded(
+                          child: state.isLoadingMetadata 
+                            ? const Center(child: CircularProgressIndicator())
+                            : MetadataEditorPanel(
+                                state: state,
+                                notifier: notifier,
+                                textColor: textColor,
+                              ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            }
+          );
+        }
+        break;
       case SongAction.playNext:
         notifier.insertSongNext(song);
         if (!context.mounted) return;
@@ -198,12 +294,14 @@ class SongContextMenuRegion extends ConsumerWidget {
         final notifId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
         try {
-          // 🔍 STEP 0: Search Spotify FIRST to get metadata + album art
+          // 🔍 STEP 0: Preserve existing IDs from SongModel (from search results)
           String? spotifyArtUrl = song.onlineArtUrl;
-          String? spotifyId;
+          String? spotifyId = song.spotifyId;
+          String? deezerId = song.deezerId;
           String? isrc = song.isrc;
 
-          debugPrint("🔍 Searching Spotify for metadata...");
+          debugPrint("🔍 Searching for metadata (Spotify → Deezer fallback)...");
+          debugPrint("   Existing IDs: spotifyId=$spotifyId, deezerId=$deezerId, isrc=$isrc");
           if (!context.mounted) return;
           showCenterNotification(context,
               label: AppLocalizations.of(context)!.preparingDownload,
@@ -218,35 +316,92 @@ class SongContextMenuRegion extends ConsumerWidget {
               id: notifId,
               progress: 0,
               max: 100,
-              title:
-                  AppLocalizations.of(context)!.preparingDownloadNotification,
+              title: AppLocalizations.of(context)!.preparingDownloadNotification,
               body: song.title);
 
-          final spotifyResults = await SpotifyService.searchMetadata(
-            "${song.artist} ${song.title}",
-          );
+          // 🚀 SMART METADATA ENRICHMENT (Spotify first, Deezer fallback)
+          String? year = song.year;
+          String? genre = song.genre;
+          String title = song.title;
+          String artist = song.artist;
+          String album = song.album;
+          bool spotifyEnrichmentSucceeded = false;
 
-          if (spotifyResults.isNotEmpty) {
-            final firstResult = spotifyResults.first;
-            spotifyId = firstResult['spotify_id'] as String?;
-            spotifyArtUrl =
-                firstResult['image_url'] as String? ?? spotifyArtUrl;
-            isrc = (firstResult['isrc'] as String?) ?? isrc;
-            debugPrint(
-                "✓ Found Spotify metadata: ID=$spotifyId, Art=$spotifyArtUrl");
+          final isYtSource = song.sourceUrl != null && song.sourceUrl!.contains('youtube');
+
+          // --- TRY SPOTIFY FIRST ---
+          if (isYtSource || year == null || year.isEmpty) {
+             final query = "${song.title} ${song.artist}";
+             try {
+                final results = await SpotifyService.searchTracks(query);
+                if (results.isNotEmpty) {
+                  final richMeta = results.first;
+                  spotifyId ??= richMeta.spotifyId;
+                  spotifyArtUrl = richMeta.albumArtUrl.isNotEmpty ? richMeta.albumArtUrl : spotifyArtUrl;
+                  isrc = richMeta.isrc ?? isrc;
+                  year = (richMeta.year != null && richMeta.year!.isNotEmpty) ? richMeta.year : year;
+                  genre = richMeta.genre ?? genre;
+                  title = richMeta.title.isNotEmpty ? richMeta.title : title;
+                  artist = richMeta.artist.isNotEmpty ? richMeta.artist : artist;
+                  album = richMeta.album.isNotEmpty ? richMeta.album : album;
+                  spotifyEnrichmentSucceeded = true;
+                }
+             } catch(e) {
+                debugPrint("⚠️ Spotify enrichment failed: $e");
+             }
+          } else {
+             // Fallback to old behavior if already has good metadata or not YT
+             try {
+               final spotifyResults = await SpotifyService.searchMetadata(
+                "${song.artist} ${song.title}",
+               );
+  
+               if (spotifyResults.isNotEmpty) {
+                 final firstResult = spotifyResults.first;
+                 spotifyId ??= firstResult['spotify_id'] as String?;
+                 spotifyArtUrl =
+                     firstResult['image_url'] as String? ?? spotifyArtUrl;
+                 isrc = (firstResult['isrc'] as String?) ?? isrc;
+                 spotifyEnrichmentSucceeded = true;
+               }
+             } catch(e) {
+                debugPrint("⚠️ Spotify metadata search failed: $e");
+             }
           }
 
-          // Build metadata with Spotify data
+          // --- 🚀 DEEZER FALLBACK: If Spotify failed AND we don't have a deezerId yet ---
+          if (!spotifyEnrichmentSucceeded && (deezerId == null || deezerId.isEmpty)) {
+            debugPrint("🔄 Spotify unavailable. Trying Deezer for metadata enrichment...");
+            try {
+              final deezerResults = await DeezerService.searchSongs(
+                  "${song.title} ${song.artist}", limit: 5);
+              if (deezerResults.isNotEmpty) {
+                final bestMatch = deezerResults.first;
+                deezerId = bestMatch.deezerId;
+                spotifyArtUrl = bestMatch.albumArtUrl.isNotEmpty ? bestMatch.albumArtUrl : spotifyArtUrl;
+                isrc = bestMatch.isrc ?? isrc;
+                title = bestMatch.title.isNotEmpty ? bestMatch.title : title;
+                artist = bestMatch.artist.isNotEmpty ? bestMatch.artist : artist;
+                album = bestMatch.album.isNotEmpty ? bestMatch.album : album;
+                debugPrint("✅ Deezer fallback success: deezerId=$deezerId");
+              }
+            } catch(e) {
+              debugPrint("⚠️ Deezer fallback also failed: $e");
+            }
+          }
+
+          // Build metadata with enriched data (includes both spotifyId AND deezerId)
           final meta = SongMetadata(
-            title: song.title,
-            artist: song.artist,
-            album: song.album,
+            title: title,
+            artist: artist,
+            album: album,
             albumArtUrl: spotifyArtUrl ?? '',
             durationSeconds: song.duration.toInt(),
-            year: song.year ?? '',
-            genre: song.genre ?? '',
+            year: year ?? '',
+            genre: genre ?? '',
             isrc: isrc,
             spotifyId: spotifyId,
+            deezerId: deezerId,
           );
 
           showCenterNotification(context,
@@ -289,9 +444,7 @@ class SongContextMenuRegion extends ConsumerWidget {
           }
 
           // 2. FLAC path (if requested and spotifyId available)
-          if (isFlacRequested &&
-              (meta.spotifyId != null ||
-                  (meta.isrc != null && meta.isrc!.isNotEmpty))) {
+          if (isFlacRequested) {
             try {
               showCenterNotification(context,
                   label: AppLocalizations.of(context)!.downloadingFlac,
@@ -437,8 +590,7 @@ class SongContextMenuRegion extends ConsumerWidget {
                   id: notifId,
                   progress: (p * 100).toInt(),
                   max: 100,
-                  title: AppLocalizations.of(context)!
-                      .downloadingFormat(actualFormat),
+                  title: l10n.downloadingFormat(actualFormat),
                   body: song.title);
             },
             onComplete: (success) async {
@@ -453,27 +605,25 @@ class SongContextMenuRegion extends ConsumerWidget {
                 }
                 if (!context.mounted) return;
                 showCenterNotification(context,
-                    label: AppLocalizations.of(context)!.downloadComplete,
+                    label: l10n.downloadComplete,
                     title: song.title,
-                    subtitle: AppLocalizations.of(context)!
-                        .savedAsFormat(actualFormat),
+                    subtitle: l10n.savedAsFormat(actualFormat),
                     artPath: outputPath,
                     onlineArtUrl: spotifyArtUrl,
                     backgroundColor: Colors.green.withValues(alpha: 0.85));
 
                 notif.showComplete(
                     id: notifId,
-                    title: AppLocalizations.of(context)!
-                        .downloadCompleteNotification,
+                    title: l10n.downloadCompleteNotification,
                     body: "${song.title} ($actualFormat)");
               } else {
                 // Handled by outer catch if we throw? No, onComplete is async callback.
                 // We must handle failure here.
                 if (!context.mounted) return;
                 showCenterNotification(context,
-                    label: AppLocalizations.of(context)!.downloadFailed,
+                    label: l10n.downloadFailed,
                     title: song.title,
-                    subtitle: AppLocalizations.of(context)!.downloadError,
+                    subtitle: l10n.downloadError,
                     artPath: spotifyArtUrl,
                     onlineArtUrl: spotifyArtUrl,
                     backgroundColor: Colors.red.withValues(alpha: 0.85));
@@ -505,7 +655,9 @@ class SongContextMenuRegion extends ConsumerWidget {
   }
 
   static Future<void> showSongMenu(BuildContext context, Offset offset,
-      WidgetRef ref, SongModel song) async {
+      WidgetRef ref, SongModel song, {bool allowMetadataEdit = false}) async {
+    final isLocal = await File(song.filePath).exists();
+
     final selected = await showMenu<SongAction>(
       context: context,
       position:
@@ -546,13 +698,22 @@ class SongContextMenuRegion extends ConsumerWidget {
               const SizedBox(width: 12),
               Text(AppLocalizations.of(context)!.goToArtist)
             ])),
-        PopupMenuItem(
-            value: SongAction.download,
-            child: Row(children: [
-              const Icon(Icons.download_rounded),
-              const SizedBox(width: 12),
-              Text(AppLocalizations.of(context)!.download)
-            ])),
+        if (!isLocal)
+          PopupMenuItem(
+              value: SongAction.download,
+              child: Row(children: [
+                const Icon(Icons.download_rounded),
+                const SizedBox(width: 12),
+                Text(AppLocalizations.of(context)!.download)
+              ])),
+        if (allowMetadataEdit && isLocal)
+          PopupMenuItem(
+              value: SongAction.editMetadata,
+              child: Row(children: [
+                const Icon(Icons.edit_note),
+                const SizedBox(width: 12),
+                Text(AppLocalizations.of(context)!.editMetadata)
+              ])),
       ],
       elevation: 8.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -570,12 +731,12 @@ class SongContextMenuRegion extends ConsumerWidget {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onSecondaryTapDown: (details) {
-          showSongMenu(context, details.globalPosition, ref, song);
+          showSongMenu(context, details.globalPosition, ref, song, allowMetadataEdit: allowMetadataEdit);
         },
         onLongPressStart: (details) {
           // Mobile Long Press
           if (Platform.isAndroid || Platform.isIOS) {
-            showSongMenu(context, details.globalPosition, ref, song);
+            showSongMenu(context, details.globalPosition, ref, song, allowMetadataEdit: allowMetadataEdit);
           }
         },
         child: child,

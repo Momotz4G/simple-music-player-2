@@ -10,6 +10,8 @@ import '../../models/artist_model.dart';
 import '../../models/song_metadata.dart';
 
 import '../../services/hybrid_service.dart';
+import '../../services/tidal_service.dart';
+import '../../providers/tidal_provider.dart';
 import '../../l10n/app_localizations.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
@@ -130,9 +132,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         final results = await HybridService.searchAll(query, limit: 5);
         if (mounted && _isSuggesting) {
           setState(() {
-            _songSuggestions = results['songs'] as List<SongMetadata>;
-            _albumSuggestions = results['albums'] as List<AlbumModel>;
-            _artistSuggestions = results['artists'] as List<ArtistModel>;
+            _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? <SongMetadata>[];
+            _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? <AlbumModel>[];
+            _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? <ArtistModel>[];
             _isLoadingSuggestions = false;
           });
         }
@@ -207,9 +209,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
       if (mounted) {
         setState(() {
-          _songSuggestions = results['songs'] as List<SongMetadata>;
-          _albumSuggestions = results['albums'] as List<AlbumModel>;
-          _artistSuggestions = results['artists'] as List<ArtistModel>;
+          _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? <SongMetadata>[];
+          _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? <AlbumModel>[];
+          _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? <ArtistModel>[];
           _isLoadingSuggestions = false;
 
           final songCount = _songSuggestions.length;
@@ -306,8 +308,47 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(_l10n.statusWithText(_currentStatus),
-                style: TextStyle(color: textColor.withValues(alpha: 0.6))),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(_l10n.statusWithText(_currentStatus),
+                    style: TextStyle(color: textColor.withValues(alpha: 0.6))),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final tidalStatus = ref.watch(tidalStatusProvider);
+                    return tidalStatus.when(
+                      data: (state) {
+                        final color = _getTidalColor(state.status);
+                        final text = _getTidalStatusText(context, state.status);
+                        
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text("${_l10n.tidalApiStatus}: ", 
+                                style: TextStyle(color: textColor.withValues(alpha: 0.6), fontSize: 11)),
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: color,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(text, 
+                                style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 11, fontWeight: FontWeight.w500)),
+                          ],
+                        );
+                      },
+                      loading: () => Text("${_l10n.tidalApiStatus}: ...", 
+                          style: TextStyle(color: textColor.withValues(alpha: 0.4), fontSize: 11)),
+                      error: (_, __) => Text("${_l10n.tidalApiStatus}: ${_l10n.offlineStatus}", 
+                          style: TextStyle(color: Colors.redAccent.withValues(alpha: 0.6), fontSize: 11)),
+                    );
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 10),
 
             // 🚀 NO INTERNET CONNECTION MESSAGE
@@ -471,5 +512,38 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               fontWeight: FontWeight.bold,
               fontSize: 12)),
     );
+  }
+
+  Color _getTidalColor(TidalApiStatus status) {
+    switch (status) {
+      case TidalApiStatus.online:
+        return Colors.greenAccent;
+      case TidalApiStatus.unauthorize:
+        return Colors.orangeAccent;
+      case TidalApiStatus.offlineStatus:
+      case TidalApiStatus.noInternet:
+        return Colors.redAccent;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getTidalStatusText(BuildContext context, TidalApiStatus status) {
+    try {
+      switch (status) {
+        case TidalApiStatus.online:
+          return _l10n.online;
+        case TidalApiStatus.unauthorize:
+          return _l10n.unauthorize;
+        case TidalApiStatus.offlineStatus:
+          return _l10n.offlineStatus;
+        case TidalApiStatus.noInternet:
+          return _l10n.checkInternetConnection;
+        default:
+          return "...";
+      }
+    } catch (e) {
+      return status.name.toUpperCase();
+    }
   }
 }

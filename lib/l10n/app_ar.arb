@@ -7,9 +7,16 @@
   "playlists": "قوائم التشغيل",
   "artists": "الفنانون",
   "albums": "الألبومات",
+  "folders": "المجلدات",
   "local_library": "المكتبة المحلية",
   "downloads": "التنزيلات",
   "metadata_editor": "محرر البيانات الوصفية",
+  "editMetadata": "تعديل البيانات الوصفية",
+  "success": "نجاح",
+  "enableAlphabetIndexer": "تمكين الفهرس الأبجدي للتمرير",
+  "enableAlphabetIndexerSubtitle": "إظهار الفهرسة في الشريط الجانبي A-Z على عرض القائمة المحمولة",
+  "metadataUpdated": "تم تحديث البيانات الوصفية",
+  "failedToUpdateMetadata": "فشل تحديث البيانات الوصفية",
   "toggleLyrics": "تبديل الكلمات",
   "settings": "الإعدادات",
   "navigation": "التنقل",
@@ -72,6 +79,17 @@
   "integration": "التكامل",
   "discordRPC": "حضور ديسكورد",
   "showStatusDiscord": "إظهار الحالة على ديسكورد",
+  "tidalApiStatus": "Tidal API",
+  "online": "متصل",
+  "unauthorize": "غير مصرح",
+  "offlineStatus": "غير متصل",
+  "checkInternetConnection": "تحقق من اتصالك بالإنترنت",
+  "autoClearCache": "مسح ذاكرة التخزين المؤقت تلقائيًا",
+  "autoClearDisabled": "معطل",
+  "autoClearOnClose": "عند إغلاق التطبيق",
+  "autoClearAfter24h": "بعد 24 ساعة",
+  "autoClearAfter7d": "بعد 7 أيام",
+  "autoClearEvery30m": "كل 30 دقيقة (أثناء الاستماع فقط)",
   "musicFolderLocation": "موقع مجلد الموسيقى",
   "noFolderSelected": "لم يتم اختيار مجلد",
   "change": "تغيير",
@@ -103,6 +121,17 @@
   "playback": "التشغيل",
   "endlessQueue": "قائمة انتظار لا نهائية",
   "autoAddSimilar": "إضافة أغاني مشابهة تلقائياً في نهاية القائمة",
+  "gaplessPlayback": "تشغيل بدون فواصل",
+  "gaplessPlaybackDesc": "إزالة الصمت بين المقاطع",
+  "crossfade": "الكروس فيد",
+  "crossfadeDesc": "تلاشي بين المقاطع ({seconds} ث)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "تعطيل الرومنة",
   "hideRomajiPinyin": "عدم إظهار Romaji/Pinyin تحت الكلمات الكورية أو اليابانية أو الصينية",
   "translationLanguage": "لغة الترجمة",
@@ -127,7 +156,7 @@
   "resetLibraryContent": "سيؤدي هذا إلى إزالة المجلد الحالي من المشغل. لن يتم حذف ملفاتك.",
   "resetPath": "إعادة ضبط المسار",
   "clearStreamingCache": "مسح ذاكرة البث المؤقتة",
-  "freeUpSpace": "توفير مساحة",
+  "freeUpSpace": "توفير مساحة (الحالي: {size})",
   "resetStatistics": "إعادة ضبط الإحصائيات",
   "clearPlayHistory": "مسح السجل ووقت الاستماع",
   "resetStatsTitle": "إعادة ضبط الإحصائيات؟",
@@ -169,7 +198,6 @@
   "androidBitPerfect": "Android 14+ Bit-Perfect",
   "customDevice": "جهاز مخصص",
   "exclusiveModeWarning": "تحذير: الوضع الحصري يعمل بشكل أفضل إذا اخترت جهازاً محدداً أعلاه بدلاً من افتراضي النظام.",
-  "freeUpSpace": "توفير مساحة (الحالي: {size})",
   "@freeUpSpace": {
     "placeholders": {
       "size": {
@@ -348,8 +376,11 @@
   "emptyPlaylistSubtitle": "إنشاء قائمة تشغيل فارغة جديدة",
   "importFromSpotify": "استيراد من Spotify",
   "importFromSpotifySubtitle": "الصق رابط قائمة تشغيل Spotify",
+  "importFromYoutubeMusic": "استيراد من YouTube Music",
+  "importFromYoutubeMusicSubtitle": "الصق رابط قائمة تشغيل YouTube Music",
   "playlistNameHint": "اسم قائمة التشغيل",
   "importSpotifyPlaylist": "استيراد قائمة تشغيل Spotify",
+  "importYoutubeMusicPlaylist": "استيراد قائمة تشغيل YouTube Music",
   "deletePlaylistTitle": "حذف قائمة التشغيل؟",
   "deletePlaylistConfirm": "هل أنت متأكد أنك تريد حذف \"{name}\"؟",
   "playlistNotFound": "قائمة التشغيل غير موجودة",
@@ -359,7 +390,66 @@
   "allDownloadsRemoved": "تمت إزالة جميع التنزيلات",
   "rename": "إعادة تسمية",
   "removeFromPlaylist": "إزالة من قائمة التشغيل",
-  "renamePlaylist": "إعادة تسمية قائمة التشغيل",
+  "deletePlaylistPermanentConfirm": "هل أنت متأكد من رغبتك في حذف قائمة التشغيل هذه؟ (لا يمكن التراجع عن هذا الإجراء)",
+  "publicSharing": "المشاركة العلنية",
+  "publicSharingDesc": "يمكن لأي شخص لديه الرمز استيراد قائمة التشغيل هذه.",
+  "publicSharingDisabledDesc": "معطلة. قم بتفعيلها للمشاركة مع الآخرين.",
+  "failedEnableSharing": "فشل تفعيل المشاركة. تحقق من الاتصال.",
+  "failedDisableSharing": "فشل تعطيل المشاركة.",
+  "disablingSharingWarning": "سيعمل تعطيل المشاركة على حذف الرمز والبيانات نهائياً من الخادم لتوفير المساحة.",
+  "invalidSpotifyUrl": "رابط قائمة تشغيل Spotify غير صالح",
+  "invalidYoutubeMusicUrl": "رابط قائمة تشغيل YouTube Music غير صالح",
+  "fetchingPlaylistInfo": "جاري جلب معلومات قائمة التشغيل...",
+  "failedFetchPlaylistInfo": "تعذر جلب معلومات قائمة التشغيل",
+  "fetchingTracksFrom": "جاري جلب المقاطع من \"{name}\"...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "لم يتم العثور على مقاطع في قائمة التشغيل",
+  "creatingPlaylistWithTracks": "جاري إنشاء قائمة تشغيل تضم {count} من المقاطع...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "تم استيراد {count} من المقاطع بنجاح!",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "فشل الاستيراد: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "جاري جلب قائمة التشغيل المشتركة...",
+  "playlistNotFoundOrError": "قائمة التشغيل غير موجودة أو حدث خطأ في الخادم",
+  "parsingPlaylistData": "جاري تحليل بيانات قائمة التشغيل...",
+  "importedPlaylistName": "تم استيراد \"{name}\" بنجاح!",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "يجب أن يتكون الرمز من 6 أرقام",
+  "fetchingPlaylist": "جاري جلب قائمة التشغيل...",
+  "importViaCode": "استيراد عبر الرمز",
+  "enterShareCode": "أدخل رمز المشاركة المكون من 6 أرقام",
+  "importChoice": "استيراد",
   "listeningStats": "إحصائيات الاستماع",
   "topArtist": "أفضل فنان",
   "mostListened": "الأكثر استماعاً",
@@ -520,5 +610,29 @@
   "importLyricsTooltip": "استيراد كلمات",
   "saveLyricsTooltip": "حفظ كلمات",
   "refreshLyricsTooltip": "تحديث كلمات",
-  "translateLyricsTooltip": "ترجمة كلمات"
+  "translateLyricsTooltip": "ترجمة كلمات",
+  "sharePlaylist": "مشاركة قائمة التشغيل",
+  "deletePlaylist": "حذف قائمة التشغيل",
+  "importViaCodeSubtitle": "استيراد قائمة تشغيل مشتركة بواسطة صديق",
+  "sharePlaylistTitle": "مشاركة \"{name}\"",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "جاري إنشاء رمز المشاركة...",
+  "failedToGenerateCode": "فشل إنشاء رمز المشاركة. تحقق من الاتصال.",
+  "playlistReadyShare": "قائمة التشغيل الخاصة بك جاهزة للمشاركة!",
+  "copyCode": "نسخ الرمز",
+  "codeCopied": "تم نسخ الرمز إلى الحافظة!",
+  "shareCodeUsage": "أعط هذا الرمز المكون من 6 أرقام لصديق لتمكينه من استيراد قائمة التشغيل هذه.",
+  "renamePlaylist": "إعادة تسمية قائمة التشغيل",
+  "filters": "مرشحات",
+  "fileName": "اسم الملف",
+  "dataUsage": "استخدام البيانات",
+  "todayLabel": "اليوم: {size}",
+  "last7DaysLabel": "آخر 7 أيام: {size}",
+  "last30DaysLabel": "آخر 30 يومًا: {size}"
 }

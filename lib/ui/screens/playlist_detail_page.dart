@@ -15,8 +15,11 @@ import '../../providers/search_bridge_provider.dart';
 import '../../services/bulk_download_service.dart';
 import '../../services/smart_download_service.dart'; // 🚀 IMPORT
 import '../../models/song_metadata.dart'; // 🚀 IMPORT
+import '../../services/spotify_service.dart'; // 🚀 ADDED SPOTIFY SERVICE
+import '../../services/deezer_service.dart'; // 🚀 ADDED DEEZER SERVICE
 import 'dart:io'; // 🚀 IMPORT
 import 'dart:async'; // 🚀 IMPORT
+import '../components/playlist_sharing_dialogs.dart'; // 🚀 IMPORT
 
 class PlaylistDetailPage extends ConsumerStatefulWidget {
   final String playlistId;
@@ -92,29 +95,32 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     final newStatus = <String, bool>{};
     final smartService = SmartDownloadService();
 
-    // Loop through entries
     for (var i = 0; i < playlist.entries.length; i++) {
-      final entry = playlist.entries[i];
-      // 🚀 STRICT CHECK: Ignore library path, only check playlist folder
+      try {
+        final entry = playlist.entries[i];
+        final meta = SongMetadata(
+          title: entry.title ?? "Unknown Title",
+          artist: entry.artist ?? "Unknown Artist",
+          album: entry.album ?? "Unknown Album",
+          albumArtUrl: entry.artUrl ?? "",
+          durationSeconds: (entry.duration ?? 0).toInt(),
+        );
 
-      // 2. Predict Filename for Playlist Download
-      final meta = SongMetadata(
-        title: entry.title ?? "Unknown Title",
-        artist: entry.artist ?? "Unknown Artist",
-        album: entry.album ?? "Unknown Album",
-        albumArtUrl: entry.artUrl ?? "",
-        durationSeconds: (entry.duration ?? 0).toInt(),
-      );
+        final filename = await smartService.generateFilename(meta,
+            patternKey: 'playlist_filename_pattern', playlistIndex: i + 1);
 
-      // We need to match the index used in BulkDownloadService (1-based)
-      final filename = await smartService.generateFilename(meta,
-          patternKey: 'playlist_filename_pattern', playlistIndex: i + 1);
+        final predictedPath = "${baseDir.path}/$filename.m4a";
+        if (File(predictedPath).existsSync()) {
+          newStatus[entry.path] = true;
+        } else {
+          newStatus[entry.path] = false;
+        }
+      } catch (_) {}
 
-      final predictedPath = "${baseDir.path}/$filename.m4a";
-      if (await File(predictedPath).exists()) {
-        newStatus[entry.path] = true;
-      } else {
-        newStatus[entry.path] = false;
+      // 🚀 Yield to UI thread every 10 items to prevent "not responding"
+      if (i % 10 == 9) {
+        await Future.delayed(Duration.zero);
+        if (!mounted) return;
       }
     }
 
@@ -176,14 +182,61 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       final playlists = ref.read(playlistProvider);
       final playlist = playlists.firstWhere((p) => p.id == widget.playlistId);
 
-      // Show "Preparing..." or similar?
       final resolvedQueue = await _resolveLocalFiles(queue, playlist.name);
 
-      // Find the target song in the resolved queue (by index or reference)
+      // Find the target song in the resolved queue
       final index = queue.indexOf(song);
-      final resolvedSong = (index != -1 && index < resolvedQueue.length)
+      var resolvedSong = (index != -1 && index < resolvedQueue.length)
           ? resolvedQueue[index]
           : song;
+
+      // 🚀 SPOTIFY METADATA ENRICHMENT FOR NON-LOCAL TRACKS
+      // Only enrich if it's a stream (not downloaded) AND if it's from YT Music import (sourceUrl is YT)
+      final isStream = !await File(resolvedSong.filePath).exists();
+      final fromYtImport = resolvedSong.sourceUrl != null && resolvedSong.sourceUrl!.contains('youtube');
+      
+      if (isStream && fromYtImport) {
+        try {
+          final query = "${resolvedSong.title} ${resolvedSong.artist}";
+          List<SongMetadata> results = [];
+          
+          try {
+            results = await SpotifyService.searchTracks(query);
+          } catch (e) {
+            print("Spotify enrichment failed: $e, falling back to Deezer");
+          }
+
+          if (results.isEmpty) {
+            try {
+              results = await DeezerService.searchSongs(query);
+            } catch (e) {
+              print("Deezer enrichment failed: $e");
+            }
+          }
+          
+          if (results.isNotEmpty) {
+            final bestMatch = results.first;
+            // Enrich the song with Spotify/Deezer Data
+            resolvedSong = resolvedSong.copyWith(
+              title: bestMatch.title,
+              artist: bestMatch.artist,
+              album: bestMatch.album,
+              onlineArtUrl: bestMatch.albumArtUrl.isNotEmpty ? bestMatch.albumArtUrl : resolvedSong.onlineArtUrl,
+              isrc: bestMatch.isrc ?? resolvedSong.isrc,
+              spotifyId: bestMatch.spotifyId ?? resolvedSong.spotifyId,
+              deezerId: bestMatch.deezerId ?? resolvedSong.deezerId,
+              // Keep original youtube source URL so downloader works
+            );
+            
+            // Also enrich the corresponding item in the queue so the player has it
+            if (index != -1 && index < resolvedQueue.length) {
+              resolvedQueue[index] = resolvedSong;
+            }
+          }
+        } catch (e) {
+          print("Metadata enrichment failed completely: $e, playing original");
+        }
+      }
 
       if (mounted) {
         await ref
@@ -241,31 +294,36 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
           headerArtUrls.add(librarySong.onlineArtUrl);
         }
       } else {
-        // 🚀 FALLBACK: USE METADATA FROM ENTRY (For Spotify imports)
-        final title = entry.title ?? entry.path.split('/').last;
+        // 🚀 FALLBACK: USE METADATA FROM ENTRY (For Spotify/YTMusic imports)
+        final title = entry.title ?? 
+            (entry.path.isNotEmpty ? entry.path.split('/').last : "Unknown Song");
 
         final song = SongModel(
           title: title.isEmpty ? "Unknown Song" : title,
           artist: entry.artist ?? "Unknown Artist",
           album: entry.album ?? "Unknown Album",
           filePath: entry.path,
-          fileExtension: ".mp3", // Assumption
-          duration: (entry.duration ?? 0).toDouble(), // 🚀 USE SAVED DURATION
+          fileExtension: ".mp3",
+          duration: (entry.duration ?? 0).toDouble(),
           onlineArtUrl: entry.artUrl,
-          sourceUrl: (entry.sourceUrl != null &&
-                  !entry.sourceUrl!.contains("spotify.com"))
-              ? entry.sourceUrl
-              : "", // 🚀 IGNORE SPOTIFY URLS
-          isrc: entry.isrc, // USE ISRC
+          sourceUrl: entry.sourceUrl,
+          isrc: entry.isrc,
         );
         rowData.add(_PlaylistRowData(song, entry.dateAdded));
         if (headerImagePaths.length < 4) {
-          // Use URL if path doesn't exist? SmartArt handles it.
           headerImagePaths.add(entry.path);
           headerArtUrls.add(entry.artUrl);
         }
       }
     }
+
+    // 🚀 CACHE song list once — avoid re-creating per tile
+    final List<SongModel> songList = rowData.map((r) => r.song).toList();
+
+    // 🚀 CALCULATE PLAYLIST STATS
+    final totalDurationSeconds =
+        rowData.fold<double>(0, (sum, item) => sum + item.song.duration);
+    final songCount = rowData.length;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accentColor = Theme.of(context).colorScheme.primary;
@@ -274,6 +332,14 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
 
     // 🚀 Use Spotify cover if available
     final hasCover = playlist.coverUrl != null && playlist.coverUrl!.isNotEmpty;
+
+    // 🚀 RESPONSIVENESS: Adjust sizes for mobile
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    
+    final expandedHeight = isSmallScreen ? 340.0 : 420.0;
+    final collageSize = isSmallScreen ? 140.0 : 200.0;
+    final titleFontSize = isSmallScreen ? 20.0 : 26.0;
 
     return Scaffold(
       body: CustomScrollView(
@@ -286,12 +352,16 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                 ref.read(navigationStackProvider.notifier).pop();
               },
             ),
-            expandedHeight: 300,
+            // Title for collapsed state
+            title: Text(playlist.name,
+                style: TextStyle(color: textColor, fontSize: 16)),
+            centerTitle: true,
+            expandedHeight: expandedHeight, 
             pinned: true,
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(playlist.name),
-              centerTitle: true,
+              // Expanded title is handled in the background stack for more control
+              title: null,
               background: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -308,16 +378,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                       ),
                     )
                   else if (headerImagePaths.isNotEmpty)
-                    ImageFiltered(
-                      imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                      child: Opacity(
-                        opacity: 0.4,
-                        child: PlaylistCollage(
-                            imagePaths: headerImagePaths,
-                            onlineArtUrls: headerArtUrls,
-                            size: 400),
-                      ),
-                    ),
+                    Container(color: const Color(0xFF1C1C1C)),
 
                   Container(
                     decoration: BoxDecoration(
@@ -332,29 +393,62 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                     ),
                   ),
 
-                  // Foreground Cover - Use Spotify cover or collage
+                  // Foreground Content: Collage + Title + Stats
                   Center(
-                    child: Container(
-                      decoration: const BoxDecoration(boxShadow: [
-                        BoxShadow(
-                            color: Colors.black45,
-                            blurRadius: 20,
-                            offset: Offset(0, 10))
-                      ]),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: hasCover
-                            ? Image.network(
-                                playlist.coverUrl!,
-                                width: 160,
-                                height: 160,
-                                fit: BoxFit.cover,
-                              )
-                            : PlaylistCollage(
-                                imagePaths: headerImagePaths,
-                                onlineArtUrls: headerArtUrls,
-                                size: 160),
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(height: isSmallScreen ? 40 : 60), // Account for Back button
+                        // Collage
+                        Container(
+                          decoration: const BoxDecoration(boxShadow: [
+                            BoxShadow(
+                                color: Colors.black45,
+                                blurRadius: 20,
+                                offset: Offset(0, 10))
+                          ]),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: hasCover
+                                ? Image.network(
+                                    playlist.coverUrl!,
+                                    width: collageSize,
+                                    height: collageSize,
+                                    fit: BoxFit.cover,
+                                  )
+                                : PlaylistCollage(
+                                    imagePaths: headerImagePaths,
+                                    onlineArtUrls: headerArtUrls,
+                                    size: collageSize),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Title (TRUNCATED)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            playlist.name,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: titleFontSize,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Stats (Song Count & Total Duration)
+                        Text(
+                          "${AppLocalizations.of(context)!.countSongs(songCount)} • ${_formatTotalDuration(totalDurationSeconds, AppLocalizations.of(context)!)}",
+                          style: TextStyle(
+                            color: subtitleColor,
+                            fontSize: isSmallScreen ? 12 : 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -464,23 +558,82 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
               ),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
+                onSelected: (value) async {
                   if (value == 'delete') {
-                    notifier.deletePlaylist(widget.playlistId);
-                    // POP FROM STACK
-                    ref.read(navigationStackProvider.notifier).pop();
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: Theme.of(context).cardColor,
+                        title: Text(AppLocalizations.of(context)!.deletePlaylist,
+                            style: TextStyle(color: textColor)),
+                        content: Text(
+                            AppLocalizations.of(context)!
+                                .deletePlaylistPermanentConfirm,
+                            style: TextStyle(color: textColor)),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(AppLocalizations.of(context)!.cancel)),
+                          TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text(AppLocalizations.of(context)!.delete,
+                                  style: const TextStyle(color: Colors.red))),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      notifier.deletePlaylist(widget.playlistId);
+                      if (mounted) {
+                        ref.read(navigationStackProvider.notifier).pop();
+                      }
+                    }
                   } else if (value == 'rename') {
                     _showRenameDialog(context, ref, playlist);
+                  } else if (value == 'share') {
+                    showDialog(
+                      context: context,
+                      builder: (context) => SharePlaylistDialog(
+                        playlistId: widget.playlistId,
+                        playlistName: playlist.name,
+                      ),
+                    );
                   }
                 },
                 itemBuilder: (context) => [
                   PopupMenuItem(
+                      value: 'share',
+                      child: Row(
+                        children: [
+                          Icon(Icons.share_outlined,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(width: 8),
+                          Text(AppLocalizations.of(context)!.sharePlaylist),
+                        ],
+                      )),
+                  PopupMenuItem(
                       value: 'rename',
-                      child: Text(AppLocalizations.of(context)!.rename)),
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(width: 8),
+                          Text(AppLocalizations.of(context)!.renamePlaylist),
+                        ],
+                      )),
                   PopupMenuItem(
                       value: 'delete',
-                      child: Text(AppLocalizations.of(context)!.renamePlaylist,
-                          style: const TextStyle(color: Colors.red))),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete_outline,
+                              size: 18, color: Colors.red),
+                          const SizedBox(width: 8),
+                          Text(AppLocalizations.of(context)!.deletePlaylist,
+                              style: const TextStyle(color: Colors.red)),
+                        ],
+                      )),
                 ],
               ),
               const SizedBox(width: 16),
@@ -537,7 +690,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                         SongCardOverlay(
                             song: data.song,
                             size: 48,
-                            playQueue: rowData.map((r) => r.song).toList(),
+                            playQueue: songList,
                             radius: 6),
                       ],
                     ),
@@ -554,47 +707,53 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                             : data.song.artist,
                         maxLines: 1,
                         style: TextStyle(color: subtitleColor, fontSize: 12)),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Duration (Fixed Width)
-                        SizedBox(
-                          width: 45,
-                          child: Text(_formatDuration(data.song.duration),
-                              textAlign: TextAlign.end,
-                              style: TextStyle(
-                                  color: subtitleColor, fontSize: 12)),
-                        ),
-                        // 🚀 DOWNLOAD INDICATOR
-                        if (_downloadStatus[data.song.filePath] == true)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Icon(Icons.download_done_rounded,
-                                size: 16, color: accentColor),
-                          ),
-                        const SizedBox(width: 32), // 🚀 DOUBLED GAP
-                        // Date (Fixed Width)
-                        SizedBox(
-                          width: 75,
-                          child: Text(_formatDate(data.dateAdded),
-                              textAlign: TextAlign.end,
-                              style: TextStyle(
-                                  color: subtitleColor, fontSize: 12)),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: Icon(Icons.remove_circle_outline,
-                              color: subtitleColor),
-                          tooltip:
-                              AppLocalizations.of(context)!.removeFromPlaylist,
-                          onPressed: () => notifier.removeSongFromPlaylist(
-                              widget.playlistId, data.song.filePath),
-                        ),
-                      ],
+                    trailing: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isMobile = MediaQuery.of(context).size.width < 600;
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Duration (Fixed Width)
+                            SizedBox(
+                              width: 45,
+                              child: Text(_formatDuration(data.song.duration),
+                                  textAlign: TextAlign.end,
+                                  style: TextStyle(
+                                      color: subtitleColor, fontSize: 12)),
+                            ),
+                            // 🚀 DOWNLOAD INDICATOR
+                            if (_downloadStatus[data.song.filePath] == true)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: Icon(Icons.download_done_rounded,
+                                    size: 16, color: accentColor),
+                              ),
+                            // Date - HIDE ON MOBILE
+                            if (!isMobile) ...[
+                              const SizedBox(width: 32),
+                              SizedBox(
+                                width: 75,
+                                child: Text(_formatDate(data.dateAdded),
+                                    textAlign: TextAlign.end,
+                                    style: TextStyle(
+                                        color: subtitleColor, fontSize: 12)),
+                              ),
+                            ],
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: Icon(Icons.remove_circle_outline,
+                                  color: subtitleColor),
+                              tooltip:
+                                  AppLocalizations.of(context)!.removeFromPlaylist,
+                              onPressed: () => notifier.removeSongFromPlaylist(
+                                  widget.playlistId, data.song.filePath),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     onTap: () {
-                      _playTrack(
-                          data.song, rowData.map((r) => r.song).toList());
+                      _playTrack(data.song, songList);
                     },
                   );
                 },
@@ -653,6 +812,19 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     final int minutes = duration ~/ 60;
     final int seconds = (duration % 60).toInt();
     return "$minutes:${seconds.toString().padLeft(2, '0')}";
+  }
+
+  String _formatTotalDuration(double durationSeconds, AppLocalizations l10n) {
+    if (durationSeconds <= 0) return "0 ${l10n.minuteShort}";
+    final duration = Duration(seconds: durationSeconds.toInt());
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+
+    if (hours > 0) {
+      return "$hours ${l10n.hourShort} $minutes ${l10n.minuteShort}";
+    } else {
+      return "$minutes ${l10n.minuteShort}";
+    }
   }
 }
 

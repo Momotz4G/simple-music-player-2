@@ -61,35 +61,6 @@ class JapaneseRomanizer {
     return null;
   }
 
-  /// Batch romanize multiple lines at once (one API call per line, parallel).
-  /// Returns a map of original text → romanized text.
-  static Future<Map<String, String>> romanizeBatch(List<String> lines) async {
-    final japaneseLines = lines
-        .where((l) => containsJapanese(l) && !_cache.containsKey(l))
-        .toList();
-
-    if (japaneseLines.isEmpty) {
-      // All cached or no Japanese
-      return Map.fromEntries(
-        lines
-            .where((l) => _cache.containsKey(l))
-            .map((l) => MapEntry(l, _cache[l]!)),
-      );
-    }
-
-    // Parallel requests (capped at 10 concurrent)
-    final futures = <Future<void>>[];
-    for (final line in japaneseLines) {
-      futures.add(romanize(line).then((_) {}));
-    }
-    await Future.wait(futures);
-
-    return Map.fromEntries(
-      lines
-          .where((l) => _cache.containsKey(l))
-          .map((l) => MapEntry(l, _cache[l]!)),
-    );
-  }
 
   /// Clear the cache (e.g., when switching songs)
   static void clearCache() => _cache.clear();

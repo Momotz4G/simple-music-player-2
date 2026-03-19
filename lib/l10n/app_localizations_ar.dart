@@ -33,7 +33,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get albums => 'الألبومات';
 
   @override
-  String get folders => 'Folders';
+  String get folders => 'المجلدات';
 
   @override
   String get local_library => 'المكتبة المحلية';
@@ -43,6 +43,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get metadata_editor => 'محرر البيانات الوصفية';
+
+  @override
+  String get editMetadata => 'تعديل البيانات الوصفية';
+
+  @override
+  String get success => 'نجاح';
+
+  @override
+  String get enableAlphabetIndexer => 'تمكين الفهرس الأبجدي للتمرير';
+
+  @override
+  String get enableAlphabetIndexerSubtitle =>
+      'إظهار الفهرسة في الشريط الجانبي A-Z على عرض القائمة المحمولة';
+
+  @override
+  String get metadataUpdated => 'تم تحديث البيانات الوصفية';
+
+  @override
+  String get failedToUpdateMetadata => 'فشل تحديث البيانات الوصفية';
 
   @override
   String get toggleLyrics => 'تبديل الكلمات';
@@ -231,6 +250,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get showStatusDiscord => 'إظهار الحالة على ديسكورد';
 
   @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => 'متصل';
+
+  @override
+  String get unauthorize => 'غير مصرح';
+
+  @override
+  String get offlineStatus => 'غير متصل';
+
+  @override
+  String get checkInternetConnection => 'تحقق من اتصالك بالإنترنت';
+
+  @override
+  String get autoClearCache => 'مسح ذاكرة التخزين المؤقت تلقائيًا';
+
+  @override
+  String get autoClearDisabled => 'معطل';
+
+  @override
+  String get autoClearOnClose => 'عند إغلاق التطبيق';
+
+  @override
+  String get autoClearAfter24h => 'بعد 24 ساعة';
+
+  @override
+  String get autoClearAfter7d => 'بعد 7 أيام';
+
+  @override
+  String get autoClearEvery30m => 'كل 30 دقيقة (أثناء الاستماع فقط)';
+
+  @override
   String get musicFolderLocation => 'موقع مجلد الموسيقى';
 
   @override
@@ -324,6 +376,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get autoAddSimilar => 'إضافة أغاني مشابهة تلقائياً في نهاية القائمة';
+
+  @override
+  String get gaplessPlayback => 'تشغيل بدون فواصل';
+
+  @override
+  String get gaplessPlaybackDesc => 'إزالة الصمت بين المقاطع';
+
+  @override
+  String get crossfade => 'الكروس فيد';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return 'تلاشي بين المقاطع ($seconds ث)';
+  }
 
   @override
   String get disableRomanization => 'تعطيل الرومنة';
@@ -1038,10 +1104,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get importFromSpotifySubtitle => 'الصق رابط قائمة تشغيل Spotify';
 
   @override
+  String get importFromYoutubeMusic => 'استيراد من YouTube Music';
+
+  @override
+  String get importFromYoutubeMusicSubtitle =>
+      'الصق رابط قائمة تشغيل YouTube Music';
+
+  @override
   String get playlistNameHint => 'اسم قائمة التشغيل';
 
   @override
   String get importSpotifyPlaylist => 'استيراد قائمة تشغيل Spotify';
+
+  @override
+  String get importYoutubeMusicPlaylist => 'استيراد قائمة تشغيل YouTube Music';
 
   @override
   String get deletePlaylistTitle => 'حذف قائمة التشغيل؟';
@@ -1075,6 +1151,100 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get renamePlaylist => 'إعادة تسمية قائمة التشغيل';
+
+  @override
+  String get deletePlaylist => 'حذف قائمة التشغيل';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      'هل أنت متأكد من رغبتك في حذف قائمة التشغيل هذه؟ (لا يمكن التراجع عن هذا الإجراء)';
+
+  @override
+  String get publicSharing => 'المشاركة العلنية';
+
+  @override
+  String get publicSharingDesc =>
+      'يمكن لأي شخص لديه الرمز استيراد قائمة التشغيل هذه.';
+
+  @override
+  String get publicSharingDisabledDesc =>
+      'معطلة. قم بتفعيلها للمشاركة مع الآخرين.';
+
+  @override
+  String get failedEnableSharing => 'فشل تفعيل المشاركة. تحقق من الاتصال.';
+
+  @override
+  String get failedDisableSharing => 'فشل تعطيل المشاركة.';
+
+  @override
+  String get disablingSharingWarning =>
+      'سيعمل تعطيل المشاركة على حذف الرمز والبيانات نهائياً من الخادم لتوفير المساحة.';
+
+  @override
+  String get invalidSpotifyUrl => 'رابط قائمة تشغيل Spotify غير صالح';
+
+  @override
+  String get invalidYoutubeMusicUrl =>
+      'رابط قائمة تشغيل YouTube Music غير صالح';
+
+  @override
+  String get fetchingPlaylistInfo => 'جاري جلب معلومات قائمة التشغيل...';
+
+  @override
+  String get failedFetchPlaylistInfo => 'تعذر جلب معلومات قائمة التشغيل';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return 'جاري جلب المقاطع من \"$name\"...';
+  }
+
+  @override
+  String get noTracksFound => 'لم يتم العثور على مقاطع في قائمة التشغيل';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return 'جاري إنشاء قائمة تشغيل تضم $count من المقاطع...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return 'تم استيراد $count من المقاطع بنجاح!';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'فشل الاستيراد: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist => 'جاري جلب قائمة التشغيل المشتركة...';
+
+  @override
+  String get playlistNotFoundOrError =>
+      'قائمة التشغيل غير موجودة أو حدث خطأ في الخادم';
+
+  @override
+  String get parsingPlaylistData => 'جاري تحليل بيانات قائمة التشغيل...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return 'تم استيراد \"$name\" بنجاح!';
+  }
+
+  @override
+  String get codeMust6Digits => 'يجب أن يتكون الرمز من 6 أرقام';
+
+  @override
+  String get fetchingPlaylist => 'جاري جلب قائمة التشغيل...';
+
+  @override
+  String get importViaCode => 'استيراد عبر الرمز';
+
+  @override
+  String get enterShareCode => 'أدخل رمز المشاركة المكون من 6 أرقام';
+
+  @override
+  String get importChoice => 'استيراد';
 
   @override
   String get listeningStats => 'إحصائيات الاستماع';
@@ -1622,4 +1792,58 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => 'ترجمة كلمات';
+
+  @override
+  String get sharePlaylist => 'مشاركة قائمة التشغيل';
+
+  @override
+  String get importViaCodeSubtitle => 'استيراد قائمة تشغيل مشتركة بواسطة صديق';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return 'مشاركة \"$name\"';
+  }
+
+  @override
+  String get generatingShareCode => 'جاري إنشاء رمز المشاركة...';
+
+  @override
+  String get failedToGenerateCode => 'فشل إنشاء رمز المشاركة. تحقق من الاتصال.';
+
+  @override
+  String get playlistReadyShare => 'قائمة التشغيل الخاصة بك جاهزة للمشاركة!';
+
+  @override
+  String get copyCode => 'نسخ الرمز';
+
+  @override
+  String get codeCopied => 'تم نسخ الرمز إلى الحافظة!';
+
+  @override
+  String get shareCodeUsage =>
+      'أعط هذا الرمز المكون من 6 أرقام لصديق لتمكينه من استيراد قائمة التشغيل هذه.';
+
+  @override
+  String get filters => 'مرشحات';
+
+  @override
+  String get fileName => 'اسم الملف';
+
+  @override
+  String get dataUsage => 'استخدام البيانات';
+
+  @override
+  String todayLabel(String size) {
+    return 'اليوم: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return 'آخر 7 أيام: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return 'آخر 30 يومًا: $size';
+  }
 }

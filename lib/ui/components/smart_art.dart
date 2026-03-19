@@ -4,32 +4,36 @@ import 'package:flutter/material.dart';
 import 'package:metadata_god/metadata_god.dart';
 import '../../services/art_cache_service.dart';
 
-class SmartArt extends StatelessWidget {
+class SmartArt extends StatefulWidget {
   final String path;
   final double size;
   final double? borderRadius;
-  final String? onlineArtUrl; // Fallback URL
+  final String? onlineArtUrl;
 
-  // 1. STATIC CACHE (Moved inside the class)
+  // 🚀 STATIC CACHES
   static final Map<String, Uint8List?> _cache = {};
-
-  // 🚀 DISK CACHE MAP: Track which paths we ALREADY know have cache files
-  // This avoids calling ArtCacheService().getCachedArt() every rebuild.
   static final Map<String, File> _knownDiskCache = {};
-
-  // Track paths that don't exist to avoid repeated file checks
   static final Set<String> _nonExistentPaths = {};
 
-  // 2. HELPER TO CHECK CACHE
+  // 🚀 GLOBAL VERSION: Incremented on invalidation to force rebuilds
+  static int _globalVersion = 0;
+  // Per-path version tracking
+  static final Map<String, int> _pathVersions = {};
+
   static bool isCached(String path) {
     return _cache.containsKey(path) || _knownDiskCache.containsKey(path);
   }
 
-  // 3. INVALIDATE CACHE
+  // 🚀 INVALIDATE: Clear all caches AND bump version so widgets rebuild
   static void invalidateCache(String path) {
     _cache.remove(path);
     _knownDiskCache.remove(path);
     _nonExistentPaths.remove(path);
+    _globalVersion++;
+    _pathVersions[path] = _globalVersion;
+    // Also clear Flutter's image cache for this file
+    imageCache.clear();
+    imageCache.clearLiveImages();
   }
 
   const SmartArt({
@@ -41,34 +45,64 @@ class SmartArt extends StatelessWidget {
   });
 
   @override
+  State<SmartArt> createState() => _SmartArtState();
+}
+
+class _SmartArtState extends State<SmartArt> {
+  int _localVersion = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _localVersion = SmartArt._pathVersions[widget.path] ?? 0;
+  }
+
+  @override
+  void didUpdateWidget(covariant SmartArt oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final currentPathVersion = SmartArt._pathVersions[widget.path] ?? 0;
+    if (currentPathVersion != _localVersion || widget.path != oldWidget.path) {
+      _localVersion = currentPathVersion;
+      // Force state change to trigger rebuild with new FutureBuilder
+      setState(() {});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // PRIORITIZE ONLINE ART (Fixes YouTube Thumbnail issue)
-    if (onlineArtUrl != null && onlineArtUrl!.isNotEmpty) {
+    // Check if our version is stale (another widget invalidated this path)
+    final currentPathVersion = SmartArt._pathVersions[widget.path] ?? 0;
+    if (currentPathVersion != _localVersion) {
+      _localVersion = currentPathVersion;
+    }
+
+    // PRIORITIZE ONLINE ART
+    if (widget.onlineArtUrl != null && widget.onlineArtUrl!.isNotEmpty) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius ?? 8),
+        borderRadius: BorderRadius.circular(widget.borderRadius ?? 8),
         child: Image.network(
-          onlineArtUrl!,
-          width: size,
-          height: size,
+          widget.onlineArtUrl!,
+          width: widget.size,
+          height: widget.size,
           fit: BoxFit.cover,
-          cacheWidth: (size * 2).toInt(),
+          cacheWidth: (widget.size * 2).toInt(),
           errorBuilder: (_, __, ___) => _buildFileArt(),
         ),
       );
     }
 
-    // 🚀 CHECK IN-MEMORY BYTES FIRST
-    if (_cache.containsKey(path)) {
-      return _buildImage(_cache[path]);
+    // CHECK IN-MEMORY BYTES
+    if (SmartArt._cache.containsKey(widget.path)) {
+      return _buildImage(SmartArt._cache[widget.path]);
     }
 
-    // 🚀 CHECK KNOWN DISK CACHE NEXT (Zero-Latency Rendering)
-    if (_knownDiskCache.containsKey(path)) {
-      return _buildFileImage(_knownDiskCache[path]!);
+    // CHECK KNOWN DISK CACHE
+    if (SmartArt._knownDiskCache.containsKey(widget.path)) {
+      return _buildFileImage(SmartArt._knownDiskCache[widget.path]!);
     }
 
-    // 🚀 SKIP: If path is known to not exist (e.g., Spotify imports)
-    if (_nonExistentPaths.contains(path)) {
+    // SKIP non-existent paths
+    if (SmartArt._nonExistentPaths.contains(widget.path)) {
       return _buildPlaceholder();
     }
 
@@ -77,11 +111,12 @@ class SmartArt extends StatelessWidget {
 
   Widget _buildFileArt() {
     return FutureBuilder<File?>(
-      future: ArtCacheService().getCachedArt(path),
+      // 🚀 KEY includes version to force new Future on invalidation
+      key: ValueKey('disk_${widget.path}_$_localVersion'),
+      future: ArtCacheService().getCachedArt(widget.path),
       builder: (context, cacheSnapshot) {
-        // If we just found it in this builder, save it to the known map for next time
         if (cacheSnapshot.hasData && cacheSnapshot.data != null) {
-          _knownDiskCache[path] = cacheSnapshot.data!;
+          SmartArt._knownDiskCache[widget.path] = cacheSnapshot.data!;
           return _buildFileImage(cacheSnapshot.data!);
         }
 
@@ -89,28 +124,26 @@ class SmartArt extends StatelessWidget {
           return _buildPlaceholder();
         }
 
-        // 🚀 DISK CACHE MISS: Original fallback logic
+        // DISK CACHE MISS: Fallback
         return FutureBuilder<bool>(
-          future: File(path).exists(),
+          future: File(widget.path).exists(),
           builder: (context, existsSnapshot) {
             if (existsSnapshot.connectionState != ConnectionState.done) {
               return _buildPlaceholder();
             }
 
             if (existsSnapshot.data != true) {
-              _nonExistentPaths.add(path);
+              SmartArt._nonExistentPaths.add(widget.path);
               return _buildPlaceholder();
             }
 
-            // Still read metadata if no cache exists (e.g. first scan)
             return FutureBuilder<Metadata?>(
-              future: MetadataGod.readMetadata(file: path),
+              future: MetadataGod.readMetadata(file: widget.path),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data?.picture != null) {
                   final bytes = snapshot.data!.picture!.data;
-                  _cache[path] = bytes;
-                  // Save to disk cache for NEXT time
-                  ArtCacheService().saveArt(path, bytes);
+                  SmartArt._cache[widget.path] = bytes;
+                  ArtCacheService().saveArt(widget.path, bytes);
                   return _buildImage(bytes);
                 }
                 return _buildPlaceholder();
@@ -122,17 +155,15 @@ class SmartArt extends StatelessWidget {
     );
   }
 
-  // 🚀 Helper for Rendering from Disk Cache File
   Widget _buildFileImage(File file) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius ?? 8),
+      borderRadius: BorderRadius.circular(widget.borderRadius ?? 8),
       child: Image.file(
         file,
-        width: size,
-        height: size,
+        width: widget.size,
+        height: widget.size,
         fit: BoxFit.cover,
-        cacheWidth: (size * 2).toInt(), // Optimize memory usage
-        gaplessPlayback: true, // 🚀 PREVENTS FLICKERING on rebuild
+        cacheWidth: (widget.size * 2).toInt(),
         errorBuilder: (_, __, ___) => _buildPlaceholder(),
       ),
     );
@@ -140,16 +171,15 @@ class SmartArt extends StatelessWidget {
 
   Widget _buildImage(Uint8List? bytes) {
     if (bytes == null) {
-      // FALLBACK TO ONLINE URL (For Cached Nulls)
-      if (onlineArtUrl != null && onlineArtUrl!.isNotEmpty) {
+      if (widget.onlineArtUrl != null && widget.onlineArtUrl!.isNotEmpty) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadius ?? 8),
+          borderRadius: BorderRadius.circular(widget.borderRadius ?? 8),
           child: Image.network(
-            onlineArtUrl!,
-            width: size,
-            height: size,
+            widget.onlineArtUrl!,
+            width: widget.size,
+            height: widget.size,
             fit: BoxFit.cover,
-            cacheWidth: (size * 2).toInt(),
+            cacheWidth: (widget.size * 2).toInt(),
             errorBuilder: (_, __, ___) => _buildPlaceholder(),
           ),
         );
@@ -158,30 +188,30 @@ class SmartArt extends StatelessWidget {
     }
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius ?? 8),
+      borderRadius: BorderRadius.circular(widget.borderRadius ?? 8),
       child: Image.memory(
         bytes,
-        width: size,
-        height: size,
+        width: widget.size,
+        height: widget.size,
         fit: BoxFit.cover,
-        cacheWidth: (size * 2).toInt(),
-        gaplessPlayback: true, // 🚀 PREVENTS FLICKERING
+        cacheWidth: (widget.size * 2).toInt(),
+        gaplessPlayback: true,
       ),
     );
   }
 
   Widget _buildPlaceholder() {
     return Container(
-      width: size,
-      height: size,
+      width: widget.size,
+      height: widget.size,
       decoration: BoxDecoration(
         color: Colors.grey[850],
-        borderRadius: BorderRadius.circular(borderRadius ?? 8),
+        borderRadius: BorderRadius.circular(widget.borderRadius ?? 8),
       ),
       child: Icon(
         Icons.music_note,
         color: Colors.white24,
-        size: size * 0.5,
+        size: widget.size * 0.5,
       ),
     );
   }

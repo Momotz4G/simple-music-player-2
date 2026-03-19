@@ -7,9 +7,16 @@
   "playlists": "प्लेलिस्ट",
   "artists": "कलाकार",
   "albums": "एल्बम",
+  "folders": "फ़ोल्डर",
   "local_library": "स्थानीय लाइब्रेरी",
   "downloads": "डाउनलोड",
   "metadata_editor": "मेटाडेटा संपादक",
+  "editMetadata": "मेटाडेटा संपादित करें",
+  "success": "सफलता",
+  "enableAlphabetIndexer": "वर्णमाला स्क्रॉल अनुक्रमणिका सक्षम करें",
+  "enableAlphabetIndexerSubtitle": "मोबाइल सूची दृश्य पर ए-जेด साइडबार अनुक्रमणिका दिखाएं",
+  "metadataUpdated": "मेटाडेटा अपडेट किया गया",
+  "failedToUpdateMetadata": "मेटाडेटा अपडेट करने में विफल",
   "toggleLyrics": "लिरिक्स बदलें",
   "settings": "सेटिंग्स",
   "navigation": "नेविगेशन",
@@ -72,6 +79,17 @@
   "integration": "एकीकरण",
   "discordRPC": "डिस्कॉर्ड प्रेजेंस",
   "showStatusDiscord": "डिस्कॉर्ड पर स्थिति दिखाएं",
+  "tidalApiStatus": "Tidal API",
+  "online": "ऑनलाइन",
+  "unauthorize": "अनधिकृत",
+  "offlineStatus": "ऑफ़लाइन",
+  "checkInternetConnection": "अपने इंटरनेट कनेक्शन की जाँच करें",
+  "autoClearCache": "ऑटो क्लियर कैश",
+  "autoClearDisabled": "अक्षम",
+  "autoClearOnClose": "ऐप बंद होने पर",
+  "autoClearAfter24h": "24 घंटे बाद",
+  "autoClearAfter7d": "7 दिन बाद",
+  "autoClearEvery30m": "हर 30 मिनट में (केवल सुनते समय)",
   "musicFolderLocation": "संगीत फ़ोल्डर का स्थान",
   "noFolderSelected": "कोई फ़ोल्डर नहीं चुना गया",
   "change": "बदलें",
@@ -102,7 +120,18 @@
   "losslessNote": "यदि Deezer/Tidal पर उपलब्ध हो तो यह FLAC लॉसलेस का उपयोग करेगा। वरना, यह M4A पर वापस चला जाएगा।",
   "playback": "प्लेबैक",
   "endlessQueue": "अंतहीन कतार",
-  "autoAddSimilar": "कतार के अंत में स्वचालित रूप से समान गाने जोड़ें",
+  "autoAddSimilar": "कतर के अंत में स्वचालित रूप से समान गाने जोड़ें",
+  "gaplessPlayback": "गैपलेस प्लेबैक",
+  "gaplessPlaybackDesc": "ट्रैक के बीच सन्नाटा खत्म करें",
+  "crossfade": "क्रॉसफ़ेड",
+  "crossfadeDesc": "ट्रैक के बीच फेड करें ({seconds} सेकंड)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "रोमानाइज़ेशन अक्षम करें",
   "hideRomajiPinyin": "कोरियाई, जापानी या चीनी लिरिक्स के नीचे रोमाजी/पिनयिन न दिखाएं",
   "translationLanguage": "अनुवाद भाषा",
@@ -127,7 +156,7 @@
   "resetLibraryContent": "यह प्लेयर से वर्तमान फ़ोल्डर को हटा देगा। आपकी फ़ाइलें डिलीट नहीं होंगी।",
   "resetPath": "पथ रीसेट करें",
   "clearStreamingCache": "स्ट्रीमिंग कैश साफ़ करें",
-  "freeUpSpace": "जगह खाली करें",
+  "freeUpSpace": "जगह खाली करें (वर्तमान: {size})",
   "resetStatistics": "आंकड़े रीसेट करें",
   "clearPlayHistory": "इतिहास और सुनने का समय साफ़ करें",
   "resetStatsTitle": "आंकड़े रीसेट करें?",
@@ -169,7 +198,6 @@
   "androidBitPerfect": "Android 14+ बिट-परफेक्ट",
   "customDevice": "कस्टम डिवाइस",
   "exclusiveModeWarning": "चेतावनी: एक्सक्लूसिव मोड बेहतर काम करता है यदि आप सिस्टम डिफ़ॉल्ट के बजाय ऊपर एक विशिष्ट डिवाइस चुनते हैं।",
-  "freeUpSpace": "जगह खाली करें (वर्तमान: {size})",
   "@freeUpSpace": {
     "placeholders": {
       "size": {
@@ -348,10 +376,73 @@
   "emptyPlaylistSubtitle": "एक नई खाली प्लेलिस्ट बनाएं",
   "importFromSpotify": "Spotify से आयात करें",
   "importFromSpotifySubtitle": "Spotify प्लेलिस्ट लिंक पेस्ट करें",
+  "importFromYoutubeMusic": "YouTube Music से आयात करें",
+  "importFromYoutubeMusicSubtitle": "YouTube Music प्लेलिस्ट लिंक पेस्ट करें",
   "playlistNameHint": "प्लेलिस्ट का नाम",
   "importSpotifyPlaylist": "Spotify प्लेलिस्ट आयात करें",
+  "importYoutubeMusicPlaylist": "YouTube Music प्लेलिस्ट आयात करें",
   "deletePlaylistTitle": "प्लेलिस्ट हटाएं?",
   "deletePlaylistConfirm": "क्या आप वाकई '{name}' को हटाना चाहते हैं?",
+  "deletePlaylistPermanentConfirm": "क्या आप वाकई इस प्लेलिस्ट को हटाना चाहते हैं? (इस क्रिया को पूर्ववत नहीं किया जा सकता)",
+  "publicSharing": "सार्वजनिक साझाकरण",
+  "publicSharingDesc": "कोड वाला कोई भी व्यक्ति इस प्लेलिस्ट को आयात कर सकता है।",
+  "publicSharingDisabledDesc": "अक्षम। दूसरों के साथ साझा करने के लिए सक्षम करें।",
+  "failedEnableSharing": "साझाकरण सक्षम करने में विफल। कनेक्शन की जांच करें।",
+  "failedDisableSharing": "साझाकरण अक्षम करने में विफल।",
+  "disablingSharingWarning": "साझाकरण अक्षम करने से स्थान बचाने के लिए सर्वर से कोड और डेटा स्थायी रूप से हटा दिया जाएगा।",
+  "invalidSpotifyUrl": "अमान्य Spotify प्लेलिस्ट URL",
+  "invalidYoutubeMusicUrl": "अमान्य YouTube Music प्लेलिस्ट लिंक",
+  "fetchingPlaylistInfo": "प्लेलिस्ट जानकारी प्राप्त की जा रही है...",
+  "failedFetchPlaylistInfo": "प्लेलिस्ट जानकारी प्राप्त नहीं की जा सकी",
+  "fetchingTracksFrom": "\"{name}\" से ट्रैक प्राप्त किए जा रहे हैं...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "प्लेलिस्ट में कोई ट्रैक नहीं मिला",
+  "creatingPlaylistWithTracks": "{count} ट्रैक के साथ प्लेलिस्ट बनाई जा रही है...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "{count} ट्रैक सफलतापूर्वक आयात किए गए!",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "आयात विफल: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "साझा प्लेलिस्ट प्राप्त की जा रही है...",
+  "playlistNotFoundOrError": "प्लेलिस्ट नहीं मिली या सर्वर त्रुटि",
+  "parsingPlaylistData": "प्लेलिस्ट डेटा का विश्लेषण किया जा रहा है...",
+  "importedPlaylistName": "\"{name}\" सफलतापूर्वक आयात किया गया!",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "कोड 6 अंकों का होना चाहिए",
+  "fetchingPlaylist": "प्लेलिस्ट प्राप्त की जा रही है...",
+  "importViaCode": "कोड के माध्यम से आयात करें",
+  "enterShareCode": "6-अंकों का साझाकरण कोड दर्ज करें",
+  "importChoice": "आयात करें",
   "playlistNotFound": "प्लेलिस्ट नहीं मिली",
   "noSongsAdded": "अभी तक कोई गाना नहीं जोड़ा गया है",
   "deleteDownloadsTitle": "डाउनलोड हटाएं?",
@@ -520,5 +611,28 @@
   "importLyricsTooltip": "लिरिक्स आयात करें",
   "saveLyricsTooltip": "लिरिक्स सहेजें",
   "refreshLyricsTooltip": "लिरिक्स रीफ्रेश करें",
-  "translateLyricsTooltip": "लिरिक्स अनुवाद करें"
+  "translateLyricsTooltip": "लिरिक्स अनुवाद करें",
+  "sharePlaylist": "प्लेलिस्ट साझा करें",
+  "deletePlaylist": "प्लेलिस्ट हटाएँ",
+  "importViaCodeSubtitle": "किसी मित्र द्वारा साझा की गई प्लेलिस्ट आयात करें",
+  "sharePlaylistTitle": "\"{name}\" साझा करें",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "साझाकरण कोड तैयार किया जा रहा है...",
+  "failedToGenerateCode": "साझाकरण कोड तैयार करने में विफल। कनेक्शन की जांच करें।",
+  "playlistReadyShare": "आपकी प्लेलिस्ट साझा करने के लिए तैयार है!",
+  "copyCode": "कोड कॉपी करें",
+  "codeCopied": "कोड क्लिपबोर्ड पर कॉपी किया गया!",
+  "shareCodeUsage": "यह 6-अंकों का कोड किसी मित्र को दें ताकि वे इस प्लेलिस्ट को आयात कर सकें।",
+  "filters": "फ़िल्टर",
+  "fileName": "फ़ाइल का नाम",
+  "dataUsage": "डेटा उपयोग",
+  "todayLabel": "आज: {size}",
+  "last7DaysLabel": "पिछले 7 दिन: {size}",
+  "last30DaysLabel": "पिछले 30 दिन: {size}"
 }

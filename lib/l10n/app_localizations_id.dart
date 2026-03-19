@@ -45,6 +45,25 @@ class AppLocalizationsId extends AppLocalizations {
   String get metadata_editor => 'Pengubah Metadata';
 
   @override
+  String get editMetadata => 'Ubah Metadata';
+
+  @override
+  String get success => 'Sukses';
+
+  @override
+  String get enableAlphabetIndexer => 'Aktifkan Indeks Skrol Alfabet';
+
+  @override
+  String get enableAlphabetIndexerSubtitle =>
+      'Tampilkan indeks bilah samping A-Z di ponsel';
+
+  @override
+  String get metadataUpdated => 'Metadata Diperbarui';
+
+  @override
+  String get failedToUpdateMetadata => 'Gagal memperbarui metadata';
+
+  @override
   String get toggleLyrics => 'Alihkan Lirik';
 
   @override
@@ -228,10 +247,43 @@ class AppLocalizationsId extends AppLocalizations {
   String get integration => 'Integrasi';
 
   @override
-  String get discordRPC => 'Discord Rich Presence';
+  String get discordRPC => 'Kehadiran kaya Discord';
 
   @override
   String get showStatusDiscord => 'Tampilkan status di Discord';
+
+  @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => 'Online';
+
+  @override
+  String get unauthorize => 'Tidak Berizin';
+
+  @override
+  String get offlineStatus => 'Offline';
+
+  @override
+  String get checkInternetConnection => 'Periksa koneksi internet Anda';
+
+  @override
+  String get autoClearCache => 'Hapus Cache Otomatis';
+
+  @override
+  String get autoClearDisabled => 'Dinonaktifkan';
+
+  @override
+  String get autoClearOnClose => 'Saat aplikasi ditutup';
+
+  @override
+  String get autoClearAfter24h => 'Setelah 24 jam';
+
+  @override
+  String get autoClearAfter7d => 'Setelah 7 hari';
+
+  @override
+  String get autoClearEvery30m => 'Tiap 30 menit (Hanya ketika mendengarkan)';
 
   @override
   String get musicFolderLocation => 'Lokasi Folder Musik';
@@ -329,6 +381,20 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get autoAddSimilar =>
       'Tambah lagu serupa secara otomatis saat antrean hampir kosong';
+
+  @override
+  String get gaplessPlayback => 'Pemutaran Tanpa Jeda';
+
+  @override
+  String get gaplessPlaybackDesc => 'Menghilangkan keheningan antar trek';
+
+  @override
+  String get crossfade => 'Crossfade';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return 'Memudarkan antar trek ($seconds dtk)';
+  }
 
   @override
   String get disableRomanization => 'Nonaktifkan Romanisasi';
@@ -951,7 +1017,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get albumLabel => 'Album';
 
   @override
-  String get downloadAll => 'Download All';
+  String get downloadAll => 'Unduh Semua';
 
   @override
   String get albumRemovedFromPlaylists => 'Album dihapus dari daftar putar';
@@ -1033,10 +1099,20 @@ class AppLocalizationsId extends AppLocalizations {
   String get importFromSpotifySubtitle => 'Tempel URL daftar putar Spotify';
 
   @override
+  String get importFromYoutubeMusic => 'Impor dari YouTube Music';
+
+  @override
+  String get importFromYoutubeMusicSubtitle =>
+      'Tempel tautan playlist YouTube Music';
+
+  @override
   String get playlistNameHint => 'Nama Daftar Putar';
 
   @override
   String get importSpotifyPlaylist => 'Impor Daftar Putar Spotify';
+
+  @override
+  String get importYoutubeMusicPlaylist => 'Impor Daftar Putar YouTube Music';
 
   @override
   String get deletePlaylistTitle => 'Hapus Daftar Putar?';
@@ -1070,6 +1146,102 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get renamePlaylist => 'Ubah Nama Daftar Putar';
+
+  @override
+  String get deletePlaylist => 'Hapus Daftar Putar';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      'Apakah Anda yakin ingin menghapus daftar putar ini? (Tindakan ini tidak dapat dibatalkan)';
+
+  @override
+  String get publicSharing => 'Berbagi Publik';
+
+  @override
+  String get publicSharingDesc =>
+      'Siapa pun yang memiliki kode dapat mengimpor daftar putar ini.';
+
+  @override
+  String get publicSharingDisabledDesc =>
+      'Dinonaktifkan. Aktifkan untuk berbagi dengan orang lain.';
+
+  @override
+  String get failedEnableSharing =>
+      'Gagal mengaktifkan berbagi. Periksa koneksi.';
+
+  @override
+  String get failedDisableSharing => 'Gagal menonaktifkan berbagi.';
+
+  @override
+  String get disablingSharingWarning =>
+      'Menonaktifkan berbagi akan menghapus kode dan data dari server secara permanen untuk menghemat ruang.';
+
+  @override
+  String get invalidSpotifyUrl => 'URL daftar putar Spotify tidak valid';
+
+  @override
+  String get invalidYoutubeMusicUrl =>
+      'Tautan playlist YouTube Music tidak valid';
+
+  @override
+  String get fetchingPlaylistInfo => 'Mengambil info daftar putar...';
+
+  @override
+  String get failedFetchPlaylistInfo =>
+      'Tidak dapat mengambil info daftar putar';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return 'Mengambil lagu dari \"$name\"...';
+  }
+
+  @override
+  String get noTracksFound => 'Tidak ada lagu ditemukan di daftar putar';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return 'Membuat daftar putar dengan $count lagu...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return 'Berhasil mengimpor $count lagu!';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'Impor gagal: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist => 'Mengambil daftar putar bersama...';
+
+  @override
+  String get playlistNotFoundOrError =>
+      'Daftar putar tidak ditemukan atau kesalahan server';
+
+  @override
+  String get parsingPlaylistData => 'Mengurai data daftar putar...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return 'Berhasil mengimpor \"$name\"!';
+  }
+
+  @override
+  String get codeMust6Digits => 'Kode harus 6 digit';
+
+  @override
+  String get fetchingPlaylist => 'Mengambil daftar putar...';
+
+  @override
+  String get importViaCode => 'Impor melalui Kode';
+
+  @override
+  String get enterShareCode => 'Masukkan 6 digit kode berbagi';
+
+  @override
+  String get importChoice => 'Impor';
 
   @override
   String get listeningStats => 'Statistik Mendengarkan';
@@ -1613,4 +1785,60 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => 'Terjemahkan Lirik';
+
+  @override
+  String get sharePlaylist => 'Bagikan Daftar Putar';
+
+  @override
+  String get importViaCodeSubtitle =>
+      'Impor daftar putar yang dibagikan oleh teman';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return 'Bagikan \"$name\"';
+  }
+
+  @override
+  String get generatingShareCode => 'Membuat kode berbagi...';
+
+  @override
+  String get failedToGenerateCode =>
+      'Gagal membuat kode berbagi. Periksa koneksi.';
+
+  @override
+  String get playlistReadyShare => 'Daftar putar Anda siap dibagikan!';
+
+  @override
+  String get copyCode => 'Salin Kode';
+
+  @override
+  String get codeCopied => 'Kode disalin ke clipboard!';
+
+  @override
+  String get shareCodeUsage =>
+      'Berikan kode 6 digit ini kepada teman untuk mereka mengimpor daftar putar ini.';
+
+  @override
+  String get filters => 'Filter';
+
+  @override
+  String get fileName => 'Nama File';
+
+  @override
+  String get dataUsage => 'Penggunaan Data';
+
+  @override
+  String todayLabel(String size) {
+    return 'Hari ini: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return '7 hari terakhir: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return '30 hari terakhir: $size';
+  }
 }

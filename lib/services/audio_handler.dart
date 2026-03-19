@@ -2,33 +2,37 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart';
+import 'native_music_service.dart'; // 🚀 FIXED IMPORT
 
 /// The "Side-Car" that talks to the Android Notification System
 class MusicHandler extends BaseAudioHandler {
-  final AudioPlayer _player;
+  final Stream<PlaybackEvent> _playbackEventStream;
+  bool _isPlaying = false; // 🚀 Manually track playing state
 
   // Callbacks for queue navigation (since NativeMusicService doesn't know about Queue)
   VoidCallback? onSkipNext;
   VoidCallback? onSkipPrevious;
 
-  MusicHandler(this._player) {
-    // 1. Listen to playback events (Play/Pause/Buffering)
-    _player.playbackEventStream.listen(_broadcastState);
-
-    // 2. Listen to position actions (Seekbar)
-    // Note: just_audio broadcasts position in playbackEventStream mostly, but specific position stream helps
+  MusicHandler(this._playbackEventStream) {
+    // Only listening to the active stream provided by NativeMusicService
+    _playbackEventStream.listen(_broadcastState);
+    // Listen to playerStateStream to track _isPlaying reliably
+    NativeMusicService().playerStateStream.listen((state) {
+      _isPlaying = state.playing;
+    });
   }
 
   /// Broadcasts the current state of the player to the OS
   Future<void> _broadcastState(PlaybackEvent event) async {
-    final playing = _player.playing;
+    // The player object is no longer directly accessible here.
+    final playing = _isPlaying; // Use tracked playing state
     final processingState = const {
       ProcessingState.idle: AudioProcessingState.idle,
       ProcessingState.loading: AudioProcessingState.loading,
       ProcessingState.buffering: AudioProcessingState.buffering,
       ProcessingState.ready: AudioProcessingState.ready,
       ProcessingState.completed: AudioProcessingState.completed,
-    }[_player.processingState]!;
+    }[event.processingState]!; // Use event.processingState
 
     playbackState.add(playbackState.value.copyWith(
       controls: [
@@ -44,9 +48,9 @@ class MusicHandler extends BaseAudioHandler {
       androidCompactActionIndices: const [0, 1, 2], // Prev, Play/Pause, Next
       playing: playing,
       processingState: processingState,
-      updatePosition: _player.position,
-      bufferedPosition: _player.bufferedPosition,
-      speed: _player.speed,
+      updatePosition: event.updatePosition, // Use event.updatePosition
+      bufferedPosition: event.bufferedPosition, // Use event.bufferedPosition
+      speed: 1.0, // Fixed default speed since it's not in PlaybackEvent
       queueIndex: event.currentIndex,
     ));
   }
@@ -54,13 +58,27 @@ class MusicHandler extends BaseAudioHandler {
   // --- OS COMMANDS (The "Police" telling us what to do) ---
 
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() async {
+    final NativeMusicService _musicService = NativeMusicService();
+    await _musicService.resume();
+  }
 
   @override
-  Future<void> pause() => _player.pause();
+  Future<void> pause() async {
+    final NativeMusicService _musicService = NativeMusicService();
+    await _musicService.pause();
+    playbackState.add(playbackState.value.copyWith(
+      processingState: AudioProcessingState.ready,
+      playing: false,
+    ));
+    await super.pause();
+  }
 
   @override
-  Future<void> seek(Duration position) => _player.seek(position);
+  Future<void> seek(Duration position) async {
+    final NativeMusicService _musicService = NativeMusicService();
+    await _musicService.seek(position.inSeconds.toDouble());
+  }
 
   @override
   Future<void> skipToNext() async {
@@ -72,18 +90,18 @@ class MusicHandler extends BaseAudioHandler {
   Future<void> onTaskRemoved() async {
     debugPrint("🎵 Notification: Task Removed (App Swiped Away)");
     await stop();
-    await _player.dispose();
-    // Force exit the Dart process to fully stop the notification
+    // 🚀 DO NOT DISPOSE here. It can cause race condition crashes if late events fire.
+    // exit(0) will clean up the OS process resources.
     exit(0);
   }
 
   @override
   Future<void> stop() async {
-    // 1. Stop the player
-    await _player.stop();
+    final NativeMusicService _musicService = NativeMusicService();
+    await _musicService.stop();
     // 2. Broadcast stopped state to AudioService so notification disappears
     playbackState.add(playbackState.value.copyWith(
-      processingState: AudioProcessingState.idle,
+      processingState: AudioProcessingState.idle, // Reverted to original correct state
       playing: false,
     ));
     await super.stop();

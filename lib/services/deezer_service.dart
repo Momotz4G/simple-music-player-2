@@ -17,9 +17,9 @@ class DeezerService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final List items = data['data'];
+        final List items = data['data'] ?? [];
 
-        return items.map((item) {
+        return items.map<SongMetadata>((item) {
           final artist = item['artist'];
           final album = item['album'];
 
@@ -47,7 +47,21 @@ class DeezerService {
     } catch (e) {
       print("Deezer Search Error: $e");
     }
-    return [];
+    return <SongMetadata>[];
+  }
+
+  /// Helper to get the best track image URL from Deezer
+  static Future<String?> getTrackImage(String title, String artist) async {
+    try {
+      final query = Uri.encodeComponent('$title $artist');
+      final results = await searchSongs(query, limit: 1);
+      if (results.isNotEmpty && results.first.albumArtUrl.isNotEmpty) {
+        return results.first.albumArtUrl;
+      }
+    } catch (e) {
+      print("Deezer getTrackImage Error: $e");
+    }
+    return null;
   }
 
   /// Get Artist Info
@@ -175,7 +189,7 @@ class DeezerService {
         // But usually track list has simplified objects.
         // For speed, let's assume we have what we need or minimal.
 
-        return items.map((item) {
+        return items.map<SongMetadata>((item) {
           return SongMetadata(
             title: item['title_short'] ?? item['title'],
             artist: item['artist']['name'],
@@ -195,7 +209,7 @@ class DeezerService {
     } catch (e) {
       print("Deezer Album Tracks Error: $e");
     }
-    return [];
+    return <SongMetadata>[];
   }
 
   /// Get Artist Top Tracks
@@ -206,9 +220,9 @@ class DeezerService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final List items = data['data'];
+        final List items = data['data'] ?? [];
 
-        return items.map((item) {
+        return items.map<SongMetadata>((item) {
           final album = item['album'];
 
           return SongMetadata(
@@ -228,7 +242,7 @@ class DeezerService {
     } catch (e) {
       print("Deezer Top Tracks Error: $e");
     }
-    return [];
+    return <SongMetadata>[];
   }
 
   /// Search All (Tracks, Albums, Artists) - Parallel Fetch
@@ -265,8 +279,8 @@ class DeezerService {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final List items = data['data'];
-        return items.map((item) {
+        final List items = data['data'] ?? [];
+        return items.map<AlbumModel>((item) {
           return AlbumModel(
             id: item['id'].toString(),
             title: item['title'],
@@ -277,7 +291,7 @@ class DeezerService {
         }).toList();
       }
     } catch (e) {}
-    return [];
+    return <AlbumModel>[];
   }
 
   /// Get Artist Albums
@@ -288,9 +302,9 @@ class DeezerService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final List items = data['data'];
+        final List items = data['data'] ?? [];
 
-        return items.map((item) {
+        return items.map<AlbumModel>((item) {
           return AlbumModel(
             id: item['id'].toString(),
             title: item['title'],
@@ -303,7 +317,7 @@ class DeezerService {
     } catch (e) {
       print("Deezer Artist Albums Error: $e");
     }
-    return [];
+    return <AlbumModel>[];
   }
 
   /// Get Chart / New Releases
@@ -315,9 +329,9 @@ class DeezerService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final List items = data['data'];
+        final List items = data['data'] ?? [];
 
-        return items.map((item) {
+        return items.map<Map<String, dynamic>>((item) {
           return {
             'title': item['title'],
             'artist': item['artist']['name'],
@@ -330,7 +344,7 @@ class DeezerService {
     } catch (e) {
       print("Deezer Chart Error: $e");
     }
-    return [];
+    return <Map<String, dynamic>>[];
   }
 
   static Future<List<ArtistModel>> _searchArtists(String query,
@@ -341,8 +355,8 @@ class DeezerService {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final List items = data['data'];
-        return items.map((item) {
+        final List items = data['data'] ?? [];
+        return items.map<ArtistModel>((item) {
           return ArtistModel(
             id: item['id'].toString(),
             name: item['name'],
@@ -351,6 +365,6 @@ class DeezerService {
         }).toList();
       }
     } catch (e) {}
-    return [];
+    return <ArtistModel>[];
   }
 }

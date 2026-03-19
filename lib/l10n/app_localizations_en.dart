@@ -45,6 +45,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get metadata_editor => 'Metadata Editor';
 
   @override
+  String get editMetadata => 'Edit Metadata';
+
+  @override
+  String get success => 'Success';
+
+  @override
+  String get enableAlphabetIndexer => 'Enable Alphabet Scroll Indexer';
+
+  @override
+  String get enableAlphabetIndexerSubtitle =>
+      'Show A-Z sidebar indexing on mobile list view';
+
+  @override
+  String get metadataUpdated => 'Metadata Updated';
+
+  @override
+  String get failedToUpdateMetadata => 'Failed to update metadata';
+
+  @override
   String get toggleLyrics => 'Toggle Lyrics';
 
   @override
@@ -231,6 +250,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showStatusDiscord => 'Show status on Discord';
 
   @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => 'Online';
+
+  @override
+  String get unauthorize => 'Unauthorize';
+
+  @override
+  String get offlineStatus => 'Offline';
+
+  @override
+  String get checkInternetConnection => 'Check your internet connection';
+
+  @override
+  String get autoClearCache => 'Auto Clear Cache';
+
+  @override
+  String get autoClearDisabled => 'Disabled';
+
+  @override
+  String get autoClearOnClose => 'When app closed';
+
+  @override
+  String get autoClearAfter24h => 'After 24 hours';
+
+  @override
+  String get autoClearAfter7d => 'After 7 days';
+
+  @override
+  String get autoClearEvery30m => 'Every 30 mins (Listening)';
+
+  @override
   String get musicFolderLocation => 'Music Folder Location';
 
   @override
@@ -325,6 +377,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get autoAddSimilar =>
       'Auto-add similar songs when queue is nearly empty';
+
+  @override
+  String get gaplessPlayback => 'Gapless Playback';
+
+  @override
+  String get gaplessPlaybackDesc => 'Eliminate silence between tracks';
+
+  @override
+  String get crossfade => 'Crossfade';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return 'Fade between tracks (${seconds}s)';
+  }
 
   @override
   String get disableRomanization => 'Disable Romanization';
@@ -1027,10 +1093,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importFromSpotifySubtitle => 'Paste a Spotify playlist URL';
 
   @override
+  String get importFromYoutubeMusic => 'Import from YouTube Music';
+
+  @override
+  String get importFromYoutubeMusicSubtitle =>
+      'Paste a YouTube Music playlist URL';
+
+  @override
   String get playlistNameHint => 'Playlist Name';
 
   @override
   String get importSpotifyPlaylist => 'Import Spotify Playlist';
+
+  @override
+  String get importYoutubeMusicPlaylist => 'Import YouTube Music Playlist';
 
   @override
   String get deletePlaylistTitle => 'Delete Playlist?';
@@ -1064,6 +1140,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get renamePlaylist => 'Rename Playlist';
+
+  @override
+  String get deletePlaylist => 'Delete Playlist';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      'Are you sure want to delete this playlist? (This action cannot be undone)';
+
+  @override
+  String get publicSharing => 'Public Sharing';
+
+  @override
+  String get publicSharingDesc =>
+      'Anyone with the code can import this playlist.';
+
+  @override
+  String get publicSharingDisabledDesc =>
+      'Disabled. Enable to share with others.';
+
+  @override
+  String get failedEnableSharing =>
+      'Failed to enable sharing. Check connection.';
+
+  @override
+  String get failedDisableSharing => 'Failed to disable sharing.';
+
+  @override
+  String get disablingSharingWarning =>
+      'Disabling sharing will permanently delete the code and the data from the server to save space.';
+
+  @override
+  String get invalidSpotifyUrl => 'Invalid Spotify playlist URL';
+
+  @override
+  String get invalidYoutubeMusicUrl => 'Invalid YouTube Music playlist URL';
+
+  @override
+  String get fetchingPlaylistInfo => 'Fetching playlist info...';
+
+  @override
+  String get failedFetchPlaylistInfo => 'Could not fetch playlist info';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return 'Fetching tracks from \"$name\"...';
+  }
+
+  @override
+  String get noTracksFound => 'No tracks found in playlist';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return 'Creating playlist with $count tracks...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return 'Imported $count tracks!';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist => 'Fetching shared playlist...';
+
+  @override
+  String get playlistNotFoundOrError => 'Playlist not found or server error';
+
+  @override
+  String get parsingPlaylistData => 'Parsing playlist data...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return 'Imported \"$name\"!';
+  }
+
+  @override
+  String get codeMust6Digits => 'Code must be 6 digits';
+
+  @override
+  String get fetchingPlaylist => 'Fetching playlist...';
+
+  @override
+  String get importViaCode => 'Import via Code';
+
+  @override
+  String get enterShareCode => 'Enter the 6-digit share code';
+
+  @override
+  String get importChoice => 'Import';
 
   @override
   String get listeningStats => 'Listening Stats';
@@ -1610,4 +1779,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => 'Translate Lyrics';
+
+  @override
+  String get sharePlaylist => 'Share Playlist';
+
+  @override
+  String get importViaCodeSubtitle => 'Import a playlist shared by a friend';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return 'Share \"$name\"';
+  }
+
+  @override
+  String get generatingShareCode => 'Generating share code...';
+
+  @override
+  String get failedToGenerateCode =>
+      'Failed to generate share code. Check your connection.';
+
+  @override
+  String get playlistReadyShare => 'Your playlist is ready to share!';
+
+  @override
+  String get copyCode => 'Copy Code';
+
+  @override
+  String get codeCopied => 'Code copied to clipboard!';
+
+  @override
+  String get shareCodeUsage =>
+      'Give this 6-digit code to a friend for them to import this playlist.';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String get fileName => 'File Name';
+
+  @override
+  String get dataUsage => 'Data Usage';
+
+  @override
+  String todayLabel(String size) {
+    return 'Today: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return 'Last 7 days: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return 'Last 30 days: $size';
+  }
 }

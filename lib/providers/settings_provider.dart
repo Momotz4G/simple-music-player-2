@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:simple_music_player_2/services/android_audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_music_player_2/utils/translation_service.dart';
+import 'package:path/path.dart' as p;
 
 // NEW ENUM
 enum VisualizerStyle { spectrum, wave, pulse }
@@ -49,6 +50,10 @@ class SettingsState {
   final bool enableSnowEffect; // DEPRECATED: use atmosphereTheme
   final AtmosphereTheme atmosphereTheme; // Active seasonal atmosphere theme
   final String appLocale; // NEW: Application UI language (e.g., 'en', 'id')
+  final String autoClearCache; // 'disabled', 'on_close', 'after_24h', 'after_7d'
+  final bool gaplessPlayback; // Enable gapless transitions
+  final double crossfadeDuration; // Crossfade duration in seconds (0.0-12.0)
+  final bool enableAlphabetIndexer; // NEW: Enable side Alphabet scroll indexer on mobile
 
   SettingsState({
     this.isDarkMode = true,
@@ -74,6 +79,10 @@ class SettingsState {
     this.enableSnowEffect = false, // DEPRECATED
     this.atmosphereTheme = AtmosphereTheme.none,
     this.appLocale = 'en',
+    this.autoClearCache = 'disabled',
+    this.gaplessPlayback = true,
+    this.crossfadeDuration = 0.0, // Default: No crossfade
+    this.enableAlphabetIndexer = false, // Default: Off
   });
 
   SettingsState copyWith({
@@ -100,6 +109,10 @@ class SettingsState {
     bool? enableSnowEffect,
     AtmosphereTheme? atmosphereTheme,
     String? appLocale,
+    String? autoClearCache,
+    bool? gaplessPlayback,
+    double? crossfadeDuration,
+    bool? enableAlphabetIndexer,
   }) {
     return SettingsState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -127,6 +140,11 @@ class SettingsState {
       enableSnowEffect: enableSnowEffect ?? this.enableSnowEffect,
       atmosphereTheme: atmosphereTheme ?? this.atmosphereTheme,
       appLocale: appLocale ?? this.appLocale,
+      autoClearCache: autoClearCache ?? this.autoClearCache,
+      gaplessPlayback: gaplessPlayback ?? this.gaplessPlayback,
+      crossfadeDuration: crossfadeDuration ?? this.crossfadeDuration,
+      enableAlphabetIndexer:
+          enableAlphabetIndexer ?? this.enableAlphabetIndexer,
     );
   }
 }
@@ -168,6 +186,10 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final translationLanguage = _prefs.getString('translationLanguage') ?? 'en';
     final enableSnowEffect = _prefs.getBool('enableSnowEffect') ?? false;
     final appLocale = _prefs.getString('appLocale') ?? 'en';
+    final autoClearCache = _prefs.getString('autoClearCache') ?? 'disabled';
+    final gaplessPlayback = _prefs.getBool('gaplessPlayback') ?? true;
+    final crossfadeDuration = _prefs.getDouble('crossfadeDuration') ?? 0.0;
+    final enableAlphabetIndexer = _prefs.getBool('enableAlphabetIndexer') ?? false;
 
     // Load Theme Enum
     final themeIndex = _prefs.getInt('atmosphereTheme') ??
@@ -205,6 +227,10 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       enableSnowEffect: enableSnowEffect,
       atmosphereTheme: theme,
       appLocale: appLocale,
+      autoClearCache: autoClearCache,
+      gaplessPlayback: gaplessPlayback,
+      crossfadeDuration: crossfadeDuration,
+      enableAlphabetIndexer: enableAlphabetIndexer,
     );
   }
 
@@ -312,15 +338,17 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   // Additional Music Folders
   Future<void> addMusicFolder(String path) async {
-    if (state.additionalMusicFolders.contains(path)) return;
-    final newFolders = [...state.additionalMusicFolders, path];
+    final canonicalPath = p.canonicalize(path);
+    if (state.additionalMusicFolders.contains(canonicalPath)) return;
+    final newFolders = [...state.additionalMusicFolders, canonicalPath];
     await _prefs.setStringList('additionalMusicFolders', newFolders);
     state = state.copyWith(additionalMusicFolders: newFolders);
   }
 
   Future<void> removeMusicFolder(String path) async {
+    final canonicalPath = p.canonicalize(path);
     final newFolders =
-        state.additionalMusicFolders.where((f) => f != path).toList();
+        state.additionalMusicFolders.where((f) => f != canonicalPath).toList();
     await _prefs.setStringList('additionalMusicFolders', newFolders);
     state = state.copyWith(additionalMusicFolders: newFolders);
   }
@@ -364,6 +392,26 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> setAppLocale(String localeCode) async {
     await _prefs.setString('appLocale', localeCode);
     state = state.copyWith(appLocale: localeCode);
+  }
+
+  Future<void> setAutoClearCache(String mode) async {
+    await _prefs.setString('autoClearCache', mode);
+    state = state.copyWith(autoClearCache: mode);
+  }
+
+  Future<void> toggleGaplessPlayback(bool enabled) async {
+    await _prefs.setBool('gaplessPlayback', enabled);
+    state = state.copyWith(gaplessPlayback: enabled);
+  }
+
+  Future<void> setCrossfadeDuration(double duration) async {
+    await _prefs.setDouble('crossfadeDuration', duration);
+    state = state.copyWith(crossfadeDuration: duration);
+  }
+
+  Future<void> toggleAlphabetIndexer(bool enabled) async {
+    await _prefs.setBool('enableAlphabetIndexer', enabled);
+    state = state.copyWith(enableAlphabetIndexer: enabled);
   }
 }
 

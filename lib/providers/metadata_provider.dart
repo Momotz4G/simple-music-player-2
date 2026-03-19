@@ -13,6 +13,10 @@ import '../services/debug_log_service.dart';
 import '../ui/components/smart_art.dart';
 import 'library_provider.dart';
 import '../services/audio_info_service.dart';
+import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
+import 'package:path_provider/path_provider.dart';
+import '../services/art_cache_service.dart'; // 🚀 Added
 
 class MetadataState {
   final SongModel? selectedSong;
@@ -249,13 +253,13 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
       title: song.title,
       artist: song.artist,
       album: song.album,
-      year: "",
-      trackNumber: "",
-      discNumber: "",
-      genre: "",
+      year: song.year ?? "",
+      trackNumber: song.trackNumber?.toString() ?? "",
+      discNumber: song.discNumber?.toString() ?? "",
+      genre: song.genre ?? "",
       coverUrl: null,
       statusMessage: "",
-      isLoadingMetadata: true,
+      isLoadingMetadata: false,
     );
     _readFreshTags(song.filePath);
   }
@@ -337,8 +341,9 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
     await autoMatchAll([state.selectedSong!]);
   }
 
-  Future<void> saveChanges() async {
-    if (state.selectedSong == null) return;
+  Future<bool> saveChanges() async {
+    if (state.selectedSong == null) return false;
+    final _log = DebugLogService();
     var filePath = state.selectedSong!.filePath;
     state = state.copyWith(isSaving: true, statusMessage: "Saving tags...");
 
@@ -403,14 +408,68 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
         throw "Cannot read file: ${e.message} (OS Error ${e.osError?.errorCode})";
       }
 
-      // 🚀 DEBUG: Log what we're about to write
-      final _log = DebugLogService();
-      _log.info('=== METADATA SAVE START ===');
-      _log.info('File: $filePath');
-      _log.info('Title: ${state.title}');
-      _log.info('Artist: ${state.artist}');
-      _log.info(
-          'Picture: ${pictureToWrite != null ? "${pictureToWrite.data.length} bytes, ${pictureToWrite.mimeType}" : "NULL - NO ART"}');
+      // 🚀 STRIP EXISTING ARTWORK (Clean Slate Workaround)
+      // Only necessary if we are ABOUT to write a new picture
+      if (pictureToWrite != null) {
+        state = state.copyWith(statusMessage: "Clearing old artwork...");
+        final tempPath = "${p.withoutExtension(filePath)}_temp${p.extension(filePath)}";
+        bool stripSuccess = false;
+
+        try {
+          if (Platform.isAndroid || Platform.isIOS) {
+            // Mobile: Use FFmpegKit
+            final session = await FFmpegKit.execute('-y -i "$filePath" -map 0:a -c copy "$tempPath"');
+            if (ReturnCode.isSuccess(await session.getReturnCode())) {
+              stripSuccess = true;
+            }
+          } else {
+            // Desktop: Use native Process
+            final ffmpegPath = await _getFFmpegPath();
+            if (ffmpegPath != null) {
+              final ffmpegFile = File(ffmpegPath);
+              final workingDir = ffmpegFile.parent.path;
+              final exeName = ffmpegFile.uri.pathSegments.last;
+
+              final result = await Process.run(
+                exeName,
+                ['-y', '-i', filePath, '-map', '0:a', '-c', 'copy', tempPath],
+                workingDirectory: workingDir,
+                runInShell: false,
+              );
+
+              if (result.exitCode == 0 && await File(tempPath).exists()) {
+                stripSuccess = true;
+              }
+            }
+          }
+
+          if (stripSuccess && await File(tempPath).exists()) {
+            final originalFile = File(filePath);
+            final tempFile = File(tempPath);
+            
+            // Safety: Ensure temp file is non-empty
+            if (await tempFile.length() > 1000) {
+              await originalFile.delete();
+              await tempFile.rename(filePath);
+              _log.success('FFmpeg artwork strip successful');
+            } else {
+              _log.error('FFmpeg strip output file size is empty/too small!');
+            }
+          } else {
+            _log.warning('FFmpeg artwork strip failed. Appending instead...');
+            state = state.copyWith(
+                statusMessage: "Warning: Could not clear old art. Appending...");
+          }
+        } catch (e) {
+          _log.error('Exception during artwork strip: $e');
+        } finally {
+          // Cleanup partial temp file if still exists
+          try {
+            final tFile = File(tempPath);
+            if (await tFile.exists()) await tFile.delete();
+          } catch (_) {}
+        }
+      }
 
       state = state.copyWith(statusMessage: "Writing metadata to file...");
 
@@ -427,6 +486,11 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
           picture: pictureToWrite,
         ),
       );
+
+      // 🚀 UPDATE DISK CACHE FOR SMARTART (MUST be awaited before invalidation)
+      if (pictureToWrite != null) {
+        await ArtCacheService().saveArt(filePath, pictureToWrite.data);
+      }
 
       _log.success('writeMetadata() completed without exception');
 
@@ -460,10 +524,11 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
       );
 
       // 🚀 INVALIDATE ART CACHE so UI shows fresh art immediately
+      // This MUST happen AFTER disk cache is updated above
       SmartArt.invalidateCache(filePath);
       _log.info('SmartArt cache invalidated for: $filePath');
 
-      ref.read(libraryProvider).updateSingleSong(newSong);
+      await ref.read(libraryProvider).updateSingleSong(newSong);
 
       final importedIndex =
           state.importedSongs.indexWhere((s) => s.filePath == filePath);
@@ -494,8 +559,10 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
       } else {
         state = state.copyWith(isSaving: false);
       }
+      return true;
     } catch (e) {
       state = state.copyWith(isSaving: false, statusMessage: "Error: $e");
+      return false;
     }
   }
 
@@ -569,6 +636,37 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
         progressTotal: 0);
     // Refresh library as fallback
     ref.read(libraryProvider).refreshLibrary();
+  }
+
+  /// Get FFmpeg path from bin directory
+  Future<String?> _getFFmpegPath() async {
+    try {
+      final appDir = await getApplicationSupportDirectory();
+      final binDir = Directory('${appDir.path}/bin');
+
+      final ffmpegName = Platform.isWindows ? 'ffmpeg.exe' : 'ffmpeg';
+      final ffmpegFile = File('${binDir.path}/$ffmpegName');
+
+      if (await ffmpegFile.exists()) {
+        return ffmpegFile.path;
+      }
+
+      // Try system ffmpeg
+      final result = await Process.run(
+        Platform.isWindows ? 'where' : 'which',
+        ['ffmpeg'],
+        runInShell: true,
+      );
+
+      if (result.exitCode == 0) {
+        return result.stdout.toString().trim().split('\n').first;
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('⚠️ Could not find FFmpeg: $e');
+      return null;
+    }
   }
 
   Future<void> _writeMetadata(

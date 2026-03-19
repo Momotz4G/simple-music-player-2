@@ -194,6 +194,42 @@ abstract class AppLocalizations {
   /// **'Metadata Editor'**
   String get metadata_editor;
 
+  /// No description provided for @editMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Metadata'**
+  String get editMetadata;
+
+  /// No description provided for @success.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get success;
+
+  /// No description provided for @enableAlphabetIndexer.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Alphabet Scroll Indexer'**
+  String get enableAlphabetIndexer;
+
+  /// No description provided for @enableAlphabetIndexerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show A-Z sidebar indexing on mobile list view'**
+  String get enableAlphabetIndexerSubtitle;
+
+  /// No description provided for @metadataUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata Updated'**
+  String get metadataUpdated;
+
+  /// No description provided for @failedToUpdateMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update metadata'**
+  String get failedToUpdateMetadata;
+
   /// No description provided for @toggleLyrics.
   ///
   /// In en, this message translates to:
@@ -566,6 +602,72 @@ abstract class AppLocalizations {
   /// **'Show status on Discord'**
   String get showStatusDiscord;
 
+  /// No description provided for @tidalApiStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Tidal API'**
+  String get tidalApiStatus;
+
+  /// No description provided for @online.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get online;
+
+  /// No description provided for @unauthorize.
+  ///
+  /// In en, this message translates to:
+  /// **'Unauthorize'**
+  String get unauthorize;
+
+  /// No description provided for @offlineStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offlineStatus;
+
+  /// No description provided for @checkInternetConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your internet connection'**
+  String get checkInternetConnection;
+
+  /// Auto clear cache setting section
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Clear Cache'**
+  String get autoClearCache;
+
+  /// Option to disable auto clear cache
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get autoClearDisabled;
+
+  /// Option to clear cache when app closes
+  ///
+  /// In en, this message translates to:
+  /// **'When app closed'**
+  String get autoClearOnClose;
+
+  /// Option to clear cache every 24 hours
+  ///
+  /// In en, this message translates to:
+  /// **'After 24 hours'**
+  String get autoClearAfter24h;
+
+  /// Option to clear cache every 7 days
+  ///
+  /// In en, this message translates to:
+  /// **'After 7 days'**
+  String get autoClearAfter7d;
+
+  /// No description provided for @autoClearEvery30m.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 30 mins (Listening)'**
+  String get autoClearEvery30m;
+
   /// No description provided for @musicFolderLocation.
   ///
   /// In en, this message translates to:
@@ -751,6 +853,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto-add similar songs when queue is nearly empty'**
   String get autoAddSimilar;
+
+  /// No description provided for @gaplessPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Gapless Playback'**
+  String get gaplessPlayback;
+
+  /// No description provided for @gaplessPlaybackDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Eliminate silence between tracks'**
+  String get gaplessPlaybackDesc;
+
+  /// No description provided for @crossfade.
+  ///
+  /// In en, this message translates to:
+  /// **'Crossfade'**
+  String get crossfade;
+
+  /// No description provided for @crossfadeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fade between tracks ({seconds}s)'**
+  String crossfadeDesc(String seconds);
 
   /// No description provided for @disableRomanization.
   ///
@@ -2030,6 +2156,18 @@ abstract class AppLocalizations {
   /// **'Paste a Spotify playlist URL'**
   String get importFromSpotifySubtitle;
 
+  /// No description provided for @importFromYoutubeMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from YouTube Music'**
+  String get importFromYoutubeMusic;
+
+  /// No description provided for @importFromYoutubeMusicSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a YouTube Music playlist URL'**
+  String get importFromYoutubeMusicSubtitle;
+
   /// No description provided for @playlistNameHint.
   ///
   /// In en, this message translates to:
@@ -2041,6 +2179,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import Spotify Playlist'**
   String get importSpotifyPlaylist;
+
+  /// No description provided for @importYoutubeMusicPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Import YouTube Music Playlist'**
+  String get importYoutubeMusicPlaylist;
 
   /// No description provided for @deletePlaylistTitle.
   ///
@@ -2101,6 +2245,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rename Playlist'**
   String get renamePlaylist;
+
+  /// No description provided for @deletePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Playlist'**
+  String get deletePlaylist;
+
+  /// No description provided for @deletePlaylistPermanentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure want to delete this playlist? (This action cannot be undone)'**
+  String get deletePlaylistPermanentConfirm;
+
+  /// No description provided for @publicSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Sharing'**
+  String get publicSharing;
+
+  /// No description provided for @publicSharingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with the code can import this playlist.'**
+  String get publicSharingDesc;
+
+  /// No description provided for @publicSharingDisabledDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled. Enable to share with others.'**
+  String get publicSharingDisabledDesc;
+
+  /// No description provided for @failedEnableSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to enable sharing. Check connection.'**
+  String get failedEnableSharing;
+
+  /// No description provided for @failedDisableSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to disable sharing.'**
+  String get failedDisableSharing;
+
+  /// No description provided for @disablingSharingWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabling sharing will permanently delete the code and the data from the server to save space.'**
+  String get disablingSharingWarning;
+
+  /// No description provided for @invalidSpotifyUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Spotify playlist URL'**
+  String get invalidSpotifyUrl;
+
+  /// No description provided for @invalidYoutubeMusicUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid YouTube Music playlist URL'**
+  String get invalidYoutubeMusicUrl;
+
+  /// No description provided for @fetchingPlaylistInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching playlist info...'**
+  String get fetchingPlaylistInfo;
+
+  /// No description provided for @failedFetchPlaylistInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not fetch playlist info'**
+  String get failedFetchPlaylistInfo;
+
+  /// No description provided for @fetchingTracksFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching tracks from \"{name}\"...'**
+  String fetchingTracksFrom(String name);
+
+  /// No description provided for @noTracksFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No tracks found in playlist'**
+  String get noTracksFound;
+
+  /// No description provided for @creatingPlaylistWithTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating playlist with {count} tracks...'**
+  String creatingPlaylistWithTracks(int count);
+
+  /// No description provided for @importedTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} tracks!'**
+  String importedTracks(int count);
+
+  /// No description provided for @importFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}'**
+  String importFailed(String error);
+
+  /// No description provided for @fetchingSharedPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching shared playlist...'**
+  String get fetchingSharedPlaylist;
+
+  /// No description provided for @playlistNotFoundOrError.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist not found or server error'**
+  String get playlistNotFoundOrError;
+
+  /// No description provided for @parsingPlaylistData.
+  ///
+  /// In en, this message translates to:
+  /// **'Parsing playlist data...'**
+  String get parsingPlaylistData;
+
+  /// No description provided for @importedPlaylistName.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported \"{name}\"!'**
+  String importedPlaylistName(String name);
+
+  /// No description provided for @codeMust6Digits.
+  ///
+  /// In en, this message translates to:
+  /// **'Code must be 6 digits'**
+  String get codeMust6Digits;
+
+  /// No description provided for @fetchingPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching playlist...'**
+  String get fetchingPlaylist;
+
+  /// No description provided for @importViaCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Import via Code'**
+  String get importViaCode;
+
+  /// No description provided for @enterShareCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit share code'**
+  String get enterShareCode;
+
+  /// No description provided for @importChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get importChoice;
 
   /// No description provided for @listeningStats.
   ///
@@ -3067,6 +3367,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Translate Lyrics'**
   String get translateLyricsTooltip;
+
+  /// No description provided for @sharePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Playlist'**
+  String get sharePlaylist;
+
+  /// No description provided for @importViaCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a playlist shared by a friend'**
+  String get importViaCodeSubtitle;
+
+  /// No description provided for @sharePlaylistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share \"{name}\"'**
+  String sharePlaylistTitle(String name);
+
+  /// No description provided for @generatingShareCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating share code...'**
+  String get generatingShareCode;
+
+  /// No description provided for @failedToGenerateCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate share code. Check your connection.'**
+  String get failedToGenerateCode;
+
+  /// No description provided for @playlistReadyShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your playlist is ready to share!'**
+  String get playlistReadyShare;
+
+  /// No description provided for @copyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Code'**
+  String get copyCode;
+
+  /// No description provided for @codeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied to clipboard!'**
+  String get codeCopied;
+
+  /// No description provided for @shareCodeUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Give this 6-digit code to a friend for them to import this playlist.'**
+  String get shareCodeUsage;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @fileName.
+  ///
+  /// In en, this message translates to:
+  /// **'File Name'**
+  String get fileName;
+
+  /// No description provided for @dataUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Usage'**
+  String get dataUsage;
+
+  /// No description provided for @todayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {size}'**
+  String todayLabel(String size);
+
+  /// No description provided for @last7DaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days: {size}'**
+  String last7DaysLabel(String size);
+
+  /// No description provided for @last30DaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days: {size}'**
+  String last30DaysLabel(String size);
 }
 
 class _AppLocalizationsDelegate

@@ -229,7 +229,17 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
     final videoUrl = await CanvasService.getCanvasUrl(url);
 
     if (videoUrl != null) {
-      final controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+      if (!mounted) return;
+      setState(() => _loadingStatus = "Downloading Canvas...");
+
+      final cachedFile = await CanvasService.downloadCanvasToCache(videoUrl);
+
+      if (cachedFile == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      final controller = VideoPlayerController.file(cachedFile);
       try {
         await controller.initialize();
         controller.setLooping(true);

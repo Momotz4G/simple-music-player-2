@@ -13,6 +13,8 @@ import 'package:audio_service/audio_service.dart'; // 🚀 IMPORT
 import 'audio_handler.dart'; // 🚀 IMPORT
 import 'package:metadata_god/metadata_god.dart';
 import '../models/song_model.dart';
+import 'flac_downloader_service.dart'; // 🚀 IMPORT FOR VALIDATION
+import 'package:rxdart/rxdart.dart'; // 🚀 IMPORT RXDART FOR STREAM SWITCHING
 // Env not needed locally
 
 class NativeMusicService {
@@ -24,6 +26,13 @@ class NativeMusicService {
   final ReceivePort _mutexPort = ReceivePort();
   final String _mutexName = 'simple_music_player_audio_mutex';
   bool _hasClaimedMutex = false;
+  
+  // 🚀 Preload tracking to avoid redundant loads during crossfade
+  String? _preloadedFilePath;
+  SongModel? _preloadedSong;
+
+  // 🚀 Subject to track the active player for dynamic stream switching
+  final BehaviorSubject<AudioPlayer> _activePlayerSubject = BehaviorSubject<AudioPlayer>();
 
   // 🚀 Loading guard to prevent race conditions
   bool _isLoading = false;
@@ -31,10 +40,15 @@ class NativeMusicService {
 
   NativeMusicService._internal() {
     _instanceCount++;
+    _activePlayerSubject.add(_player1); // Initialize subject with default player
+    
     DebugLogService().info(
         "NativeMusicService Created. Count=$_instanceCount Hash=${hashCode} PID=${pid} Isolate=${Isolate.current.debugName} InitialState=ZOMBIE");
 
     // 🚀 INITIALIZE AUDIO HANDLER (Mobile Only)
+    _setupListeners(1);
+    _setupListeners(2);
+
     if (Platform.isAndroid || Platform.isIOS) {
       _initAudioHandler();
     }
@@ -95,7 +109,11 @@ class NativeMusicService {
   void _becomeZombie() {
     _isZombie = true;
     _hasClaimedMutex = false;
-    _player.stop();
+    try {
+      _player.stop();
+    } catch (e) {
+      DebugLogService().error("Error stopping during zombification: $e");
+    }
     DebugLogService().info("NativeMusicService: Downgraded to ZOMBIE.");
   }
 
@@ -129,7 +147,7 @@ class NativeMusicService {
   Future<void> _initAudioHandler() async {
     try {
       _audioHandler = await AudioService.init(
-        builder: () => MusicHandler(_player),
+        builder: () => MusicHandler(playbackEventStream), // 🚀 Dynamic stream provider
         config: const AudioServiceConfig(
           androidNotificationChannelId: 'com.simplemusicplayer.channel.audio',
           androidNotificationChannelName: 'Music Playback',
@@ -139,16 +157,7 @@ class NativeMusicService {
       );
 
       // 🚀 ERROR & STATE LOGGING
-      _player.playbackEventStream.listen((event) {
-        // Log if there's a problem
-      }, onError: (Object e, StackTrace stackTrace) {
-        DebugLogService().error("NativeMusicService: Playback Event Error: $e");
-      });
-
-      _player.playerStateStream.listen((state) {
-        DebugLogService().info(
-            "NativeMusicService: PlayerState [processing=${state.processingState}, playing=${state.playing}]");
-      });
+      // 🚀 Listeners moved to _setupListeners called in constructor for all platforms
 
       // Register pending callbacks if any
       if (_onNext != null) _audioHandler!.onSkipNext = _onNext;
@@ -192,15 +201,30 @@ class NativeMusicService {
     }
 
     // 🚀 NON-BLOCKING: Do not await play()!
-    // If we await, it waits for the song to FINISH before returning.
-    _player.play();
+    // Protective catch to prevent crash if player was disposed or failed hardware init
+    _player.play().catchError((e) {
+      DebugLogService().error("[Native] play() FAILED: $e");
+    });
     final positionAfter = _player.position;
     DebugLogService()
         .info("[Native] resume() DONE. Pos=${positionAfter.inSeconds}s");
   }
 
-  final AudioPlayer _player = AudioPlayer();
-  AudioPlayer get player => _player;
+  AudioPlayer _player1 = AudioPlayer();
+  AudioPlayer _player2 = AudioPlayer();
+  int _activePlayerIndex = 1; // 1 or 2
+  Timer? _fadeTimer;
+  double _currentVolume = 0.5; // 🚀 TRACK CURRENT VOLUME
+
+  AudioPlayer get _player => _activePlayerIndex == 1 ? _player1 : _player2;
+  AudioPlayer get _inactivePlayer => _activePlayerIndex == 1 ? _player2 : _player1;
+  AudioPlayer get player => _player; // Interface for external listeners
+
+  // 🚀 DYNAMIC STREAMS For UI Synchronization during Crossfade
+  Stream<Duration> get positionStream => _activePlayerSubject.switchMap((p) => p.positionStream);
+  Stream<Duration?> get durationStream => _activePlayerSubject.switchMap((p) => p.durationStream);
+  Stream<PlayerState> get playerStateStream => _activePlayerSubject.switchMap((p) => p.playerStateStream);
+  Stream<PlaybackEvent> get playbackEventStream => _activePlayerSubject.switchMap((p) => p.playbackEventStream);
 
   Future<void> load(SongModel song,
       {Duration? initialPosition, bool lazyLoad = false}) async {
@@ -315,22 +339,38 @@ class NativeMusicService {
         return;
       }
 
-      // 🚀 FIX: Removed redundant stop() in load. Already handled by setAudioSource.
+      // 🚀 FLAC INTEGRITY CHECK
+      if (song.filePath.toLowerCase().endsWith('.flac')) {
+        if (!await FlacDownloaderService.isFlacFileValid(song.filePath)) {
+          debugPrint(
+              "❌ Service Load Error: Invalid FLAC file at ${song.filePath}");
+          DebugLogService().error("Invalid FLAC header detected: ${song.title}");
+          return;
+        }
+      }
 
+      // 🚀 Optimization: Determine target player for preloading
+      final p = lazyLoad ? _inactivePlayer : _player;
+      
       // Use Uri.parse for better cross-platform compatibility
       final uri = Uri.file(song.filePath);
       debugPrint("🎵 URI: $uri");
 
-      await _player.setAudioSource(
+      // 🚀 Update preloaded tracking for crossfade consumption
+      if (lazyLoad) {
+        _preloadedFilePath = song.filePath;
+        _preloadedSong = song;
+      }
+
+      await p.setAudioSource(
         AudioSource.uri(
           uri,
           tag: song,
         ),
         initialPosition: initialPosition,
-        preload:
-            !lazyLoad, // 🚀 LAZY LOAD: If true, don't buffer until play() is called
+        preload: true, // 🚀 Set to true to actually buffer the next song
       );
-      debugPrint("🎵 Pre-Load Success");
+      debugPrint("🎵 Pre-Load Success (${lazyLoad ? 'Inactive' : 'Active'} Player)");
     } catch (e, stackTrace) {
       debugPrint("❌ Service Load Error: $e");
       debugPrint("❌ Stack trace: $stackTrace");
@@ -495,7 +535,7 @@ class NativeMusicService {
     }
   }
 
-  Future<bool> play(SongModel song) async {
+  Future<bool> play(SongModel song, {double crossfadeDuration = 0.0}) async {
     if (_isZombie) {
       DebugLogService().info(
           "[Native] play() called in Zombie state. Attempting to claim Mutex...");
@@ -505,6 +545,21 @@ class NativeMusicService {
             .info("[Native] play() BLOCKED (Zombie) - Claim failed");
         return false;
       }
+    }
+
+    // 🚀 CROSSFADE LOGIC
+    if (crossfadeDuration > 0.1 && _player.playing) {
+      return _startCrossfade(song, crossfadeDuration);
+    }
+
+    // Normal play logic (stops current player)
+    _fadeTimer?.cancel();
+    _fadeTimer = null; // Clear timer reference
+    try {
+      _player.setVolume(_currentVolume); // 🚀 FIX: Use tracked volume instead of hardcoded 1.0
+      _inactivePlayer.stop(); // Stop the inactive player to prepare it for next use
+    } catch (e) {
+      DebugLogService().error("Error during normal play setup: $e");
     }
 
     // 🚀 Loading Guard: Wait for any pending load to finish, then cancel it
@@ -560,7 +615,7 @@ class NativeMusicService {
 
             debugPrint("🎵 Stream URL: ${audioInfo.url}");
 
-            await _player.stop();
+            // await _player.stop(); // 🚀 FIX: Same as below, removed for smoothness.
             await _player.setAudioSource(
               AudioSource.uri(
                 audioInfo.url,
@@ -615,7 +670,7 @@ class NativeMusicService {
       debugPrint("🎵 File size: ${fileSize} bytes");
 
       // 2. Stop previous playback explicitly to clear buffers
-      await _player.stop();
+      // await _player.stop(); // 🚀 FIX: Removed redundant stop() to prioritize seamless transitions and prevent UI blink.
 
       // 3. Load the file using Uri.file for proper path handling
       final uri = Uri.file(song.filePath);
@@ -660,15 +715,142 @@ class NativeMusicService {
   }
 
   Future<void> setVolume(double volume) async {
-    await _player.setVolume(volume);
+    _currentVolume = volume;
+    // Only apply immediately if not crossfading to avoid interrupting the fade
+    if (_fadeTimer == null || !_fadeTimer!.isActive) {
+      try {
+        await _player1.setVolume(volume);
+        await _player2.setVolume(volume);
+      } catch (e) {
+        // Silently ignore disposal errors during setVolume to prevent app crash
+        // This can happen during late events on shutdown or hot restart
+      }
+    }
   }
 
   Future<void> setLoopMode(LoopMode mode) async {
-    await _player.setLoopMode(mode);
+    await _player1.setLoopMode(mode);
+    await _player2.setLoopMode(mode);
   }
 
-  void dispose() {
-    _player.dispose();
+  void _setupListeners(int index) {
+    final p = index == 1 ? _player1 : _player2;
+    p.playbackEventStream.listen((event) {}, onError: (e, s) {
+      DebugLogService().error("NativeMusicService: Playback Event Error (P$index): $e");
+    });
+    
+    p.playerStateStream.listen((state) {
+      if (_activePlayerIndex == index) {
+        DebugLogService().info("NativeMusicService: Player$index State [${state.processingState}, ${state.playing}]");
+      }
+    });
+  }
+
+  void recreateActivePlayer() {
+    final idx = _activePlayerIndex;
+    DebugLogService().info("NativeMusicService: Recreating active player $idx due to fatal error.");
+    try {
+      if (idx == 1) {
+        _player1.dispose().catchError((e) => null);
+        _player1 = AudioPlayer();
+        _setupListeners(1);
+        _player1.setVolume(_currentVolume);
+        _activePlayerSubject.add(_player1);
+      } else {
+        _player2.dispose().catchError((e) => null);
+        _player2 = AudioPlayer();
+        _setupListeners(2);
+        _player2.setVolume(_currentVolume);
+        _activePlayerSubject.add(_player2);
+      }
+    } catch (e) {
+       DebugLogService().error("NativeMusicService: Recreate failed: $e");
+    }
+  }
+
+
+
+  Future<bool> _startCrossfade(SongModel song, double duration) async {
+    _fadeTimer?.cancel();
+    _fadeTimer = null;
+    
+    final outPlayer = _player;
+    final inPlayer = _inactivePlayer;
+
+    DebugLogService().info("[Native] Starting Crossfade: ${duration}s");
+
+    try {
+      // 🚀 Optimize: Don't await non-critical setup calls to start fade faster
+      inPlayer.stop(); 
+      inPlayer.setVolume(0.0);
+      outPlayer.setVolume(_currentVolume);
+
+      // Load source (Only if not already preloaded)
+      if (song.filePath == "cloud_stream") {
+        // Resolve online stream (simplified: reuse existing logic if possible, or skip crossfade for cloud for now)
+        // For now, let's just return false to fallback to normal play if it's cloud
+        DebugLogService().info("[Native] Crossfade not supported for cloud streams yet.");
+        return false;
+      } else {
+        // 🚀 CRITICAL OPTIMIZATION: Check if already preloaded to avoid "cropping" delay
+        if (_preloadedFilePath == song.filePath && _preloadedSong?.title == song.title) {
+          DebugLogService().info("[Native] Crossfade: Using preloaded source for ${song.title}");
+        } else {
+           DebugLogService().info("[Native] Crossfade: Song not preloaded, loading now: ${song.title}");
+           await inPlayer.setAudioSource(
+            AudioSource.uri(Uri.file(song.filePath), tag: song),
+            preload: true,
+          );
+        }
+      }
+
+      // Clear preloaded state now that we are using it
+      _preloadedFilePath = null;
+      _preloadedSong = null;
+
+      // Start playing incoming
+      inPlayer.play();
+
+      // Switch active player index & broadcast new player to UI streams instantly
+      _activePlayerIndex = _activePlayerIndex == 1 ? 2 : 1;
+      _activePlayerSubject.add(_player); 
+
+      // Update Audio Service metadata to new song (Fire and forget)
+      if (Platform.isAndroid || Platform.isIOS) {
+        _updateAudioServiceMetadata(song);
+      }
+
+      // Fading logic
+      const steps = 20;
+      final stepDuration = Duration(milliseconds: (duration * 1000 / steps).round());
+      int currentStep = 0;
+
+      _fadeTimer = Timer.periodic(stepDuration, (timer) {
+        currentStep++;
+        // 🚀 DYNAMIC SCALING: Use _currentVolume directly in each step
+        // This ensures the fade remains smooth even if the user slides the volume during the crossfade.
+        double outVol = _currentVolume * (1.0 - (currentStep / steps));
+        double inVol = _currentVolume * (currentStep / steps);
+
+        if (outVol < 0) outVol = 0;
+        if (inVol > _currentVolume) inVol = _currentVolume;
+
+        outPlayer.setVolume(outVol);
+        inPlayer.setVolume(inVol);
+
+        if (currentStep >= steps) {
+          timer.cancel();
+          outPlayer.stop();
+          outPlayer.setVolume(_currentVolume); // Reset for next use
+          DebugLogService().info("[Native] Crossfade Complete");
+        }
+      });
+
+      return true;
+    } catch (e) {
+      DebugLogService().error("Crossfade Error: $e");
+      return false;
+    }
   }
 }
 
@@ -682,9 +864,12 @@ class _NativeLifecycleObserver extends WidgetsBindingObserver {
       _service._tryClaimMutex();
     } else if (state == AppLifecycleState.detached) {
       // App is being killed - full cleanup
-      debugPrint("🎵 Lifecycle: App DETACHED - Full Cleanup");
-      _service._player.stop();
-      _service._player.dispose();
+      debugPrint("🎵 Lifecycle: App DETACHED - Stopping Players");
+      _service._player1.stop();
+      _service._player2.stop();
+      // 🚀 DO NOT DISPOSE in singleton lifecycle observer.
+      // It causes crashes if any late events (like volume sync) fire.
+      // The OS will clean up process resources anyway.
       _service._audioHandler?.stop();
     }
   }

@@ -43,8 +43,8 @@ class PlaylistEntry {
       title: map['title'],
       artist: map['artist'],
       album: map['album'],
-      artUrl: map['artUrl'],
-      sourceUrl: map['sourceUrl'],
+      artUrl: map['artUrl'] == 'null' ? null : map['artUrl'],
+      sourceUrl: map['sourceUrl'] == 'null' ? null : map['sourceUrl'],
       isrc: map['isrc'],
       duration: map['duration'],
     );
@@ -84,7 +84,7 @@ class PlaylistModel {
         (map['entries'] ?? []).map((x) => PlaylistEntry.fromMap(x)),
       ),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
-      coverUrl: map['coverUrl'],
+      coverUrl: map['coverUrl'] == 'null' ? null : map['coverUrl'],
     );
   }
 

@@ -60,9 +60,16 @@ class LibraryProvider extends ChangeNotifier {
     // 2. 🚀 DECOUPLED LISTENER: Update internal state without provider disposal
     // This is the permanent fix for: Cannot use ref functions after the dependency of a provider changed...
     ref.listen(settingsProvider, (previous, next) {
+      bool shouldFetch = false;
       if (previous?.ignoreSubfolders != next.ignoreSubfolders) {
         _ignoreSubfolders = next.ignoreSubfolders;
-        // Re-fetch to apply new folder filter
+        shouldFetch = true;
+      }
+      if (previous?.additionalMusicFolders != next.additionalMusicFolders) {
+        shouldFetch = true;
+      }
+
+      if (shouldFetch) {
         final dbService = ref.read(dbServiceProvider);
         _fetchFromDatabase(dbService, next);
       }
@@ -145,8 +152,8 @@ class LibraryProvider extends ChangeNotifier {
 
     // Get all folders to filter: main folder + additional folders
     final List<String> allFolders = [
-      if (_selectedFolder != null) _selectedFolder!,
-      ...settings.additionalMusicFolders,
+      if (_selectedFolder != null) p.canonicalize(_selectedFolder!),
+      ...settings.additionalMusicFolders.map((f) => p.canonicalize(f)),
     ];
 
     // 🚀 FILTERING LOGIC
@@ -197,6 +204,7 @@ class LibraryProvider extends ChangeNotifier {
       trackNumber: dbSong.trackNumber,
       discNumber: dbSong.discNumber,
       genre: dbSong.genre,
+      dateAdded: dbSong.dateAdded,
     );
   }
 
@@ -384,7 +392,7 @@ class LibraryProvider extends ChangeNotifier {
     // 🚀 Capture dependencies at ENTRY
     final dbService = ref.read(dbServiceProvider);
     final settings = ref.read(settingsProvider);
-    await _scanFolder(path, dbService, settings);
+    await _scanFolder(p.canonicalize(path), dbService, settings);
   }
 
   Future<void> updateSingleSong(SongModel newSong) async {

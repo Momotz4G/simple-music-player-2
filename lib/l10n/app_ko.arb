@@ -7,9 +7,16 @@
   "playlists": "플레이리스트",
   "artists": "아티스트",
   "albums": "앨범",
+  "folders": "폴더",
   "local_library": "로컬 라이브러리",
   "downloads": "다운로드",
   "metadata_editor": "메타데이터 편집기",
+  "editMetadata": "메타데이터 편집",
+  "success": "성공",
+  "enableAlphabetIndexer": "알파벳 스크롤 인덱서 활성화",
+  "enableAlphabetIndexerSubtitle": "모바일 리스트 뷰에서 A-Z 사이드바 인덱스 표시",
+  "metadataUpdated": "메타데이터가 업데이트되었습니다",
+  "failedToUpdateMetadata": "메타데이터 업데이트 실패",
   "toggleLyrics": "가사 켜기/끄기",
   "settings": "설정",
   "navigation": "네비게이션",
@@ -72,6 +79,17 @@
   "integration": "연동",
   "discordRPC": "Discord Rich Presence",
   "showStatusDiscord": "Discord에 상태 표시",
+  "tidalApiStatus": "Tidal API",
+  "online": "온라인",
+  "unauthorize": "승인되지 않음",
+  "offlineStatus": "오프라인",
+  "checkInternetConnection": "인터넷 연결을 확인하세요",
+  "autoClearCache": "캐시 자동 지우기",
+  "autoClearDisabled": "비활성화됨",
+  "autoClearOnClose": "앱 종료 시",
+  "autoClearAfter24h": "24시간 후",
+  "autoClearAfter7d": "7일 후",
+  "autoClearEvery30m": "30분마다 (청취 중일 때만)",
   "musicFolderLocation": "음악 폴더 위치",
   "noFolderSelected": "폴더가 선택되지 않음",
   "change": "변경",
@@ -103,6 +121,17 @@
   "playback": "재생",
   "endlessQueue": "무한 대기열",
   "autoAddSimilar": "대기열이 거의 비었을 때 비슷한 곡 자동 추가",
+  "gaplessPlayback": "끊김 없는 재생",
+  "gaplessPlaybackDesc": "트랙 사이의 공백 제거",
+  "crossfade": "크로스페이드",
+  "crossfadeDesc": "곡 사이전환을 부드럽게 ({seconds} 초)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "로마자 표기 비활성화",
   "hideRomajiPinyin": "한국어, 일본어, 중국어 가사 아래의 로마자/병음 숨기기",
   "translationLanguage": "번역 언어",
@@ -127,7 +156,7 @@
   "resetLibraryContent": "플레이어에서 현재 폴더를 제거합니다. 실제 파일은 삭제되지 않습니다.",
   "resetPath": "경로 재설정",
   "clearStreamingCache": "스트리밍 캐시 지우기",
-  "freeUpSpace": "공간 확보",
+  "freeUpSpace": "공간 확보 (현재: {size})",
   "resetStatistics": "통계 재설정",
   "clearPlayHistory": "재생 기록 및 감상 시간 지우기",
   "resetStatsTitle": "통계를 재설정할까요?",
@@ -169,7 +198,6 @@
   "androidBitPerfect": "Android 14+ 비트 퍼펙트",
   "customDevice": "사용자 지정 장치",
   "exclusiveModeWarning": "주의: 독점 모드는 시스템 기본값이 아닌 특정 장치를 선택했을 때 가장 잘 작동합니다.",
-  "freeUpSpace": "공간 확보 (현재: {size})",
   "@freeUpSpace": {
     "placeholders": {
       "size": {
@@ -419,14 +447,73 @@
   "discography": "디스코그래피",
   "seeAll": "모두 보기",
   "newPlaylist": "새 플레이리스트",
-  "noPlaylistsYet": "아직 플레이리스트가 없습니다",
-  "createPlaylist": "플레이리스트 만들기",
-  "emptyPlaylist": "빈 플레이리스트",
-  "emptyPlaylistSubtitle": "새 빈 플레이리스트 만들기",
+  "deletePlaylistPermanentConfirm": "이 재생 목록을 삭제하시겠습니까? (이 작업은 취소할 수 없습니다)",
+  "publicSharing": "공개 공유",
+  "publicSharingDesc": "코드를 아는 사람은 누구나 이 재생 목록을 가져올 수 있습니다.",
+  "publicSharingDisabledDesc": "비활성화됨. 다른 사람과 공유하려면 활성화하세요.",
+  "failedEnableSharing": "공유를 활성화하지 못했습니다. 연결을 확인하세요.",
+  "failedDisableSharing": "공유를 비활성화하지 못했습니다.",
+  "disablingSharingWarning": "공유를 비활성화하면 공간을 절약하기 위해 서버에서 코드와 데이터가 영구적으로 삭제됩니다.",
+  "invalidSpotifyUrl": "유효하지 않은 Spotify 재생 목록 URL",
+  "invalidYoutubeMusicUrl": "유효하지 않은 YouTube Music 재생목록 URL입니다",
+  "fetchingPlaylistInfo": "재생 목록 정보를 가져오는 중...",
+  "failedFetchPlaylistInfo": "재생 목록 정보를 가져올 수 없습니다",
+  "fetchingTracksFrom": "\"{name}\"에서 트랙을 가져오는 중...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "재생 목록에서 트랙을 찾을 수 없습니다",
+  "creatingPlaylistWithTracks": "{count}개의 트랙으로 재생 목록을 생성하는 중...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "{count}개의 트랙을 성공적으로 가져왔습니다!",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "가져오기 실패: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "공유 재생 목록을 가져오는 중...",
+  "playlistNotFoundOrError": "재생 목록을 찾을 수 없거나 서버 오류입니다",
+  "parsingPlaylistData": "재생 목록 데이터를 분석하는 중...",
+  "importedPlaylistName": "\"{name}\"을(를) 성공적으로 가져왔습니다!",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "코드는 6자리여야 합니다",
+  "fetchingPlaylist": "재생 목록을 가져오는 중...",
+  "importViaCode": "코드를 통해 가져오기",
+  "enterShareCode": "6자리 공유 코드를 입력하세요",
+  "importChoice": "가져오기",
   "importFromSpotify": "Spotify에서 가져오기",
   "importFromSpotifySubtitle": "Spotify 플레이리스트 URL 붙여넣기",
+  "importFromYoutubeMusic": "YouTube Music에서 가져오기",
+  "importFromYoutubeMusicSubtitle": "YouTube Music 재생목록 URL 붙여넣기",
   "playlistNameHint": "플레이리스트 이름",
   "importSpotifyPlaylist": "Spotify 플레이리스트 가져오기",
+  "importYoutubeMusicPlaylist": "YouTube Music 플레이리스트 가져오기",
   "deletePlaylistTitle": "플레이리스트 삭제?",
   "deletePlaylistConfirm": "'{name}'을(를) 삭제하시겠습니까?",
   "@deletePlaylistConfirm": {
@@ -454,7 +541,6 @@
   "songs": "곡",
   "noStatsYet": "아직 통계가 없습니다.",
   "noArtistStatsYet": "아직 아티스트 통계가 없습니다.",
-  "play": "재생",
   "plays": "회 재생",
   "min": "분",
   "share": "공유",
@@ -751,5 +837,32 @@
   "importLyricsTooltip": "가사 가져오기",
   "saveLyricsTooltip": "가사 저장",
   "refreshLyricsTooltip": "가사 새로고침",
-  "translateLyricsTooltip": "가사 번역"
+  "translateLyricsTooltip": "가사 번역",
+  "sharePlaylist": "재생 목록 공유",
+  "deletePlaylist": "재생 목록 삭제",
+  "importViaCodeSubtitle": "친구가 공유한 재생 목록 가져오기",
+  "sharePlaylistTitle": "\"{name}\" 공유",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "공유 코드 생성 중...",
+  "failedToGenerateCode": "공유 코드를 생성하지 못했습니다. 연결을 확인하세요.",
+  "playlistReadyShare": "재생 목록을 공유할 준비가 되었습니다!",
+  "copyCode": "코드 복사",
+  "codeCopied": "코드가 클립보드에 복사되었습니다!",
+  "shareCodeUsage": "친구에게 이 6자리 코드를 알려주어 재생 목록을 가져오게 하세요.",
+  "noPlaylistsYet": "아직 재생 목록이 없습니다",
+  "createPlaylist": "재생 목록 만들기",
+  "emptyPlaylist": "빈 재생 목록",
+  "emptyPlaylistSubtitle": "비어 있는 새 재생 목록 만들기",
+  "filters": "필터",
+  "fileName": "파일 이름",
+  "dataUsage": "데이터 사용량",
+  "todayLabel": "오늘: {size}",
+  "last7DaysLabel": "지난 7일: {size}",
+  "last30DaysLabel": "지난 30일: {size}"
 }

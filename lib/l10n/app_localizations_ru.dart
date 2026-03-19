@@ -33,7 +33,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get albums => 'Альбомы';
 
   @override
-  String get folders => 'Folders';
+  String get folders => 'Папки';
 
   @override
   String get local_library => 'Локальная библиотека';
@@ -43,6 +43,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get metadata_editor => 'Редактор метаданных';
+
+  @override
+  String get editMetadata => 'Редактировать метаданные';
+
+  @override
+  String get success => 'Успешно';
+
+  @override
+  String get enableAlphabetIndexer => 'Включить алфавитный указатель прокрутки';
+
+  @override
+  String get enableAlphabetIndexerSubtitle =>
+      'Показывать индекс боковой панели A-Z в мобильном списке';
+
+  @override
+  String get metadataUpdated => 'Метаданные обновлены';
+
+  @override
+  String get failedToUpdateMetadata => 'Не удалось обновить метаданные';
 
   @override
   String get toggleLyrics => 'Переключить текст';
@@ -233,6 +252,39 @@ class AppLocalizationsRu extends AppLocalizations {
   String get showStatusDiscord => 'Показывать статус в Discord';
 
   @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => 'В сети';
+
+  @override
+  String get unauthorize => 'Не авторизован';
+
+  @override
+  String get offlineStatus => 'Не в сети';
+
+  @override
+  String get checkInternetConnection => 'Проверьте интернет-соединение';
+
+  @override
+  String get autoClearCache => 'Автоматическая очистка кэша';
+
+  @override
+  String get autoClearDisabled => 'Отключено';
+
+  @override
+  String get autoClearOnClose => 'При закрытии приложения';
+
+  @override
+  String get autoClearAfter24h => 'Через 24 часа';
+
+  @override
+  String get autoClearAfter7d => 'Через 7 дней';
+
+  @override
+  String get autoClearEvery30m => 'Каждые 30 мин (Только при прослушивании)';
+
+  @override
   String get musicFolderLocation => 'Расположение папки с музыкой';
 
   @override
@@ -330,6 +382,20 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get autoAddSimilar =>
       'Автоматически добавлять похожие песни в конец очереди';
+
+  @override
+  String get gaplessPlayback => 'Бесшовное Воспроизведение';
+
+  @override
+  String get gaplessPlaybackDesc => 'Устранить паузы между треками';
+
+  @override
+  String get crossfade => 'Crossfade';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return 'Плавный переход между треками ($seconds с)';
+  }
 
   @override
   String get disableRomanization => 'Отключить романизацию';
@@ -753,7 +819,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String deleteFileContent(String filename) {
-    return 'Вы уверены, что хотите удалить «$filename»?\\nЭто действие необратимо.';
+    return 'Удалить «$filename»?\\nЭту операцию нельзя отменить.';
   }
 
   @override
@@ -1050,10 +1116,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importFromSpotifySubtitle => 'Вставьте ссылку на плейлист Spotify';
 
   @override
+  String get importFromYoutubeMusic => 'Импорт из YouTube Music';
+
+  @override
+  String get importFromYoutubeMusicSubtitle =>
+      'Вставьте ссылку на плейлист YouTube Music';
+
+  @override
   String get playlistNameHint => 'Название плейлиста';
 
   @override
   String get importSpotifyPlaylist => 'Импортировать плейлист Spotify';
+
+  @override
+  String get importYoutubeMusicPlaylist =>
+      'Импортировать плейлист YouTube Music';
 
   @override
   String get deletePlaylistTitle => 'Удалить плейлист?';
@@ -1087,6 +1164,101 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get renamePlaylist => 'Переименовать плейлист';
+
+  @override
+  String get deletePlaylist => 'Удалить плейлист';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      'Вы уверены, что хотите удалить этот плейлист? (Это действие нельзя отменить)';
+
+  @override
+  String get publicSharing => 'Публичный доступ';
+
+  @override
+  String get publicSharingDesc =>
+      'Любой, у кого есть код, может импортировать этот плейлист.';
+
+  @override
+  String get publicSharingDisabledDesc =>
+      'Отключено. Включите, чтобы поделиться с другими.';
+
+  @override
+  String get failedEnableSharing =>
+      'Не удалось включить общий доступ. Проверьте соединение.';
+
+  @override
+  String get failedDisableSharing => 'Не удалось отключить общий доступ.';
+
+  @override
+  String get disablingSharingWarning =>
+      'При отключении общего доступа код и данные будут навсегда удалены с сервера для экономии места.';
+
+  @override
+  String get invalidSpotifyUrl => 'Неверный URL-адрес плейлиста Spotify';
+
+  @override
+  String get invalidYoutubeMusicUrl =>
+      'Неверная ссылка на плейлист YouTube Music';
+
+  @override
+  String get fetchingPlaylistInfo => 'Получение информации о плейлисте...';
+
+  @override
+  String get failedFetchPlaylistInfo =>
+      'Не удалось получить информацию о плейлисте';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return 'Получение треков из \"$name\"...';
+  }
+
+  @override
+  String get noTracksFound => 'Треки в плейлисте не найдены';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return 'Создание плейлиста с $count треками...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return 'Успешно импортировано $count треков!';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'Ошибка импорта: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist => 'Получение общего плейлиста...';
+
+  @override
+  String get playlistNotFoundOrError => 'Плейлист не найден или ошибка сервера';
+
+  @override
+  String get parsingPlaylistData => 'Анализ данных плейлиста...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return 'Плейлист \"$name\" успешно импортирован!';
+  }
+
+  @override
+  String get codeMust6Digits => 'Код должен состоять из 6 цифр';
+
+  @override
+  String get fetchingPlaylist => 'Получение плейлиста...';
+
+  @override
+  String get importViaCode => 'Импорт по коду';
+
+  @override
+  String get enterShareCode => 'Введите 6-значный код общего доступа';
+
+  @override
+  String get importChoice => 'Импортировать';
 
   @override
   String get listeningStats => 'Статистика прослушивания';
@@ -1637,4 +1809,60 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => 'Перевести текст';
+
+  @override
+  String get sharePlaylist => 'Поделиться плейлистом';
+
+  @override
+  String get importViaCodeSubtitle =>
+      'Импорт плейлиста, которым поделился друг';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return 'Поделиться \"$name\"';
+  }
+
+  @override
+  String get generatingShareCode => 'Создание кода общего доступа...';
+
+  @override
+  String get failedToGenerateCode =>
+      'Не удалось создать код общего доступа. Проверьте соединение.';
+
+  @override
+  String get playlistReadyShare => 'Ваш плейлист готов к отправке!';
+
+  @override
+  String get copyCode => 'Копировать код';
+
+  @override
+  String get codeCopied => 'Код скопирован в буфер обмена!';
+
+  @override
+  String get shareCodeUsage =>
+      'Передайте этот 6-значный код другу, чтобы он мог импортировать этот плейлист.';
+
+  @override
+  String get filters => 'Фильтры';
+
+  @override
+  String get fileName => 'Имя файла';
+
+  @override
+  String get dataUsage => 'Использование данных';
+
+  @override
+  String todayLabel(String size) {
+    return 'Сегодня: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return 'Последние 7 дней: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return 'Последние 30 дней: $size';
+  }
 }

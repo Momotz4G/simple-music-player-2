@@ -7,9 +7,16 @@
   "playlists": "プレイリスト",
   "artists": "アーティスト",
   "albums": "アルバム",
+  "folders": "フォルダー",
   "local_library": "ローカルライブラリ",
   "downloads": "ダウンロード",
   "metadata_editor": "メタデータエディタ",
+  "editMetadata": "メタデータを編集",
+  "success": "成功",
+  "enableAlphabetIndexer": "アルファベットスクロールインデクサーを有効にする",
+  "enableAlphabetIndexerSubtitle": "モバイルのリストビューで A-Z サイドバーのインデックスを表示する",
+  "metadataUpdated": "メタデータが更新されました",
+  "failedToUpdateMetadata": "メタデータの更新に失敗しました",
   "toggleLyrics": "歌詞を切り替える",
   "settings": "設定",
   "navigation": "ナビゲーション",
@@ -69,9 +76,20 @@
   "circularPulse": "サーキュラーパルス",
   "rainbowMode": "レインボーモード",
   "useMixedColors": "ミックスカラーを使用する（同期を優先）",
-  "integration": "連携",
+  "integration": "統合",
   "discordRPC": "Discord Rich Presence",
   "showStatusDiscord": "Discordにステータスを表示する",
+  "tidalApiStatus": "Tidal API",
+  "online": "オンライン",
+  "unauthorize": "未承認",
+  "offlineStatus": "オフライン",
+  "checkInternetConnection": "インターネット接続を確認してください",
+  "autoClearCache": "キャッシュの自動クリア",
+  "autoClearDisabled": "無効",
+  "autoClearOnClose": "アプリ終了時",
+  "autoClearAfter24h": "24時間後",
+  "autoClearAfter7d": "7日後",
+  "autoClearEvery30m": "30分ごと（再生中のみ）",
   "musicFolderLocation": "音楽フォルダの場所",
   "noFolderSelected": "フォルダが選択されていません",
   "change": "変更",
@@ -103,6 +121,17 @@
   "playback": "再生",
   "endlessQueue": "エンドレスキュー",
   "autoAddSimilar": "キューが空に近づいたときに似た曲を自動追加する",
+  "gaplessPlayback": "ギャップレス再生",
+  "gaplessPlaybackDesc": "トラック間の無音を解消します",
+  "crossfade": "クロスフェード",
+  "crossfadeDesc": "トラック間をフェードさせる ({seconds} 秒)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "ローマ字表記を無効にする",
   "hideRomajiPinyin": "韓国語、日本語、中国語の歌詞の下にローマ字/ピンインを表示しない",
   "translationLanguage": "翻訳言語",
@@ -419,14 +448,77 @@
   "discography": "ディスコグラフィ",
   "seeAll": "すべて表示",
   "newPlaylist": "新しいプレイリスト",
+  "deletePlaylistPermanentConfirm": "このプレイリストを削除してもよろしいですか？（この操作は取り消せません）",
+  "publicSharing": "公開共有",
+  "publicSharingDesc": "コードを知っている人なら誰でもこのプレイリストをインポートできます。",
+  "publicSharingDisabledDesc": "無効。他のユーザーと共有するには有効にしてください。",
+  "failedEnableSharing": "共有を有効にできませんでした。接続を確認してください。",
+  "failedDisableSharing": "共有を無効にできませんでした。",
+  "disablingSharingWarning": "共有を無効にすると、容量を節約するためにサーバーからコードとデータが永久に削除されます。",
+  "invalidSpotifyUrl": "無効なSpotifyプレイリストURL",
+  "invalidYoutubeMusicUrl": "YouTube MusicプレイリストのURLが無効です",
+  "fetchingPlaylistInfo": "プレイリスト情報を取得中...",
+  "failedFetchPlaylistInfo": "プレイリスト情報を取得できませんでした",
+  "fetchingTracksFrom": "\"{name}\" からトラックを取得中...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "プレイリストにトラックが見つかりませんでした",
+  "creatingPlaylistWithTracks": "{count} 個のトラックでプレイリストを作成中...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "{count} 個のトラックを正常にインポートしました！",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "インポートに失敗しました: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "共有プレイリストを取得中...",
+  "playlistNotFoundOrError": "プレイリストが見つからないか、サーバーエラーです",
+  "parsingPlaylistData": "プレイリストデータを解析中...",
+  "importedPlaylistName": "\"{name}\" を正常にインポートしました！",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "コードは6桁である必要があります",
+  "fetchingPlaylist": "プレイリストを取得中...",
+  "importViaCode": "コードでインポート",
+  "enterShareCode": "6桁の共有コードを入力してください",
+  "importChoice": "インポート",
   "noPlaylistsYet": "プレイリストがまだありません",
   "createPlaylist": "プレイリストを作成する",
   "emptyPlaylist": "空のプレイリスト",
   "emptyPlaylistSubtitle": "新しく空のプレイリストを作成する",
   "importFromSpotify": "Spotifyからインポート",
   "importFromSpotifySubtitle": "SpotifyプレイリストのURLを貼り付け",
+  "importFromYoutubeMusic": "YouTube Music からインポート",
+  "importFromYoutubeMusicSubtitle": "YouTube Music のプレイリストのURLを貼り付け",
   "playlistNameHint": "プレイリスト名",
   "importSpotifyPlaylist": "Spotifyプレイリストをインポートする",
+  "importYoutubeMusicPlaylist": "YouTube Musicプレイリストをインポートする",
   "deletePlaylistTitle": "プレイリストを削除しますか？",
   "deletePlaylistConfirm": "「{name}」を削除しますか？",
   "@deletePlaylistConfirm": {
@@ -751,5 +843,28 @@
   "importLyricsTooltip": "歌詞をインポート",
   "saveLyricsTooltip": "歌詞を保存",
   "refreshLyricsTooltip": "歌詞を更新",
-  "translateLyricsTooltip": "歌詞を翻訳"
+  "translateLyricsTooltip": "歌詞を翻訳",
+  "sharePlaylist": "プレイリストを共有",
+  "deletePlaylist": "プレイリストを削除",
+  "importViaCodeSubtitle": "友達が共有したプレイリストをインポートします",
+  "sharePlaylistTitle": "\"{name}\" を共有",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "共有コードを生成中...",
+  "failedToGenerateCode": "共有コードの生成に失敗しました。接続を確認してください。",
+  "playlistReadyShare": "プレイリストの共有が可能になりました！",
+  "copyCode": "コードをコピー",
+  "codeCopied": "コードがクリップボードにコピーされました！",
+  "shareCodeUsage": "この6桁のコードを友達に教えて、プレイリストをインポートしてもらいます。",
+  "filters": "フィルター",
+  "fileName": "ファイル名",
+  "dataUsage": "データ使用量",
+  "todayLabel": "今日: {size}",
+  "last7DaysLabel": "過去 7 日間: {size}",
+  "last30DaysLabel": "過去 30 日間: {size}"
 }

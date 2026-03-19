@@ -107,9 +107,14 @@ class UsbAudioPlayer(private val context: Context) {
      * Open connection to a specific DAC
      */
     fun openDac(dac: UsbAudioManager.UsbAudioDevice, callback: (Boolean) -> Unit) {
-        if (!usbAudioManager.hasPermission(dac.usbDevice)) {
+        val hasPerm = usbAudioManager.hasPermission(dac.usbDevice)
+        Log.i(TAG, "Opening DAC: ${dac.deviceName}, Current permission: $hasPerm")
+        
+        if (!hasPerm) {
+            Log.i(TAG, "Requesting USB permission...")
             usbAudioManager.requestPermission(dac.usbDevice) { granted ->
                 if (granted) {
+                    Log.i(TAG, "Permission granted. Connecting to DAC...")
                     val success = connectToDac(dac)
                     callback(success)
                 } else {
@@ -118,6 +123,7 @@ class UsbAudioPlayer(private val context: Context) {
                 }
             }
         } else {
+            Log.i(TAG, "Found existing permission. Connecting to DAC...")
             val success = connectToDac(dac)
             callback(success)
         }

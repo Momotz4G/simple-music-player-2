@@ -55,3 +55,6 @@ remote_web_app/config.js
 
 RobloxCampingGame/
 tidal-api/
+
+# Helper scripts
+cleanup_pocketbase.dart

@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Added
+import '../providers/data_usage_provider.dart'; // Added
 import 'package:flutter/services.dart'; // Full import for MethodChannel
 import 'package:path_provider/path_provider.dart';
 
@@ -12,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as yt_explode;
 import 'debug_log_service.dart';
 import 'package:http/http.dart' as http;
+import '../utils/filename_helper.dart';
 
 class YoutubeDownloaderService {
   static final YoutubeDownloaderService _instance =
@@ -22,6 +25,8 @@ class YoutubeDownloaderService {
   }
 
   YoutubeDownloaderService._internal();
+
+  static Ref? globalRef; // Added for Data Usage tracking
 
   // We need paths for all 3 binaries
   late String _ytDlpPath;
@@ -366,15 +371,13 @@ class YoutubeDownloaderService {
         await cacheDir.create(recursive: true);
       }
 
-      final safeName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-      final truncatedName =
-          safeName.length > 50 ? safeName.substring(0, 50) : safeName;
+      final safeName = FilenameHelper.sanitize(fileName);
 
       // Use provided ext, or fall back to platform defaults
       // Mobile downloads M4A/AAC (no ffmpeg), Desktop can use MP3 or M4A
       final audioExt =
           ext ?? ((Platform.isAndroid || Platform.isIOS) ? 'm4a' : 'mp3');
-      return '${cacheDir.path}/$truncatedName.$audioExt';
+      return '${cacheDir.path}/$safeName.$audioExt';
     } catch (e) {
       if (kDebugMode) print("Error getting cache path: $e");
       return null;
@@ -386,7 +389,7 @@ class YoutubeDownloaderService {
     final prefs = await SharedPreferences.getInstance();
     final customPath = prefs.getString('custom_download_path');
 
-    final safeName = fileName.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+    final safeName = FilenameHelper.sanitize(fileName);
 
     if (customPath != null) {
       final dir = Directory(customPath);
@@ -681,6 +684,12 @@ class YoutubeDownloaderService {
           await downloadedFile.delete();
           onComplete(false);
         } else {
+          // Increment Data Usage
+          final activeRef = YoutubeDownloaderService.globalRef;
+          if (activeRef != null) {
+            activeRef.read(dataUsageProvider.notifier).addBytes(fileSize);
+          }
+
           // Rename to expected path if different
           if (downloadedFile.path != savePath) {
             debug.info("📱 Renaming ${downloadedFile.path} to $savePath");
@@ -732,6 +741,7 @@ class YoutubeDownloaderService {
 
     var yt = yt_explode.YoutubeExplode();
     IOSink? output;
+    int chunkAccumulator = 0; // Added for Data Usage tracking
 
     try {
       var videoId = yt_explode.VideoId(videoUrl);
@@ -810,7 +820,17 @@ class YoutubeDownloaderService {
       )) {
         firstChunkReceived = true;
         count += chunk.length;
+        chunkAccumulator += chunk.length; // Added
         output.add(chunk);
+
+        if (chunkAccumulator > 1024 * 1024) {
+          final activeRef = YoutubeDownloaderService.globalRef;
+          if (activeRef != null) {
+            activeRef.read(dataUsageProvider.notifier).addBytes(chunkAccumulator);
+          }
+          chunkAccumulator = 0;
+        }
+
         onProgress((count / len).clamp(0.0, 1.0));
       }
 
@@ -847,6 +867,10 @@ class YoutubeDownloaderService {
       } catch (_) {}
       onComplete(false);
     } finally {
+      final activeRef = YoutubeDownloaderService.globalRef;
+      if (chunkAccumulator > 0 && activeRef != null) {
+        activeRef.read(dataUsageProvider.notifier).addBytes(chunkAccumulator);
+      }
       yt.close();
     }
   }
@@ -951,6 +975,12 @@ class YoutubeDownloaderService {
       if (exitCode == 0) {
         final file = File(outputFilePath);
         if (await file.exists()) {
+          // Increment Data Usage
+          final activeRef = YoutubeDownloaderService.globalRef;
+          if (activeRef != null) {
+            final size = await file.length();
+            activeRef.read(dataUsageProvider.notifier).addBytes(size);
+          }
           safeComplete(true);
         } else {
           safeComplete(false);

@@ -85,24 +85,38 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
     for (final l in lyrics) {
       if (KoreanRomanizer.containsKorean(l.text)) continue;
-      if (JapaneseRomanizer.containsJapanese(l.text)) {
+      
+      // Optimization: Only queue if NOT in cache
+      if (JapaneseRomanizer.containsJapanese(l.text) && 
+          JapaneseRomanizer.getCached(l.text) == null) {
         linesToFetch[l.text] = 'ja';
-      } else if (ChineseRomanizer.containsChinese(l.text)) {
+      } else if (ChineseRomanizer.containsChinese(l.text) && 
+                 ChineseRomanizer.getCached(l.text) == null) {
         linesToFetch[l.text] = 'zh';
       }
     }
 
     if (linesToFetch.isEmpty) return;
 
-    final futures = linesToFetch.entries.map((entry) async {
-      if (entry.value == 'ja') {
-        await JapaneseRomanizer.romanize(entry.key);
-      } else {
-        await ChineseRomanizer.romanize(entry.key);
-      }
-    });
+    final entriesList = linesToFetch.entries.toList();
+    const chunkSize = 5; // Safe limit concurrent requests
 
-    await Future.wait(futures);
+    for (int i = 0; i < entriesList.length; i += chunkSize) {
+      final chunk = entriesList.sublist(
+        i, 
+        (i + chunkSize) < entriesList.length ? (i + chunkSize) : entriesList.length
+      );
+      
+      final futures = chunk.map((entry) async {
+        if (entry.value == 'ja') {
+          await JapaneseRomanizer.romanize(entry.key);
+        } else {
+          await ChineseRomanizer.romanize(entry.key);
+        }
+      });
+      
+      await Future.wait(futures);
+    }
   }
 
   void addOffset(double delta) {

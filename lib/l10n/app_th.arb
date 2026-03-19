@@ -7,9 +7,16 @@
   "playlists": "เพลย์ลิสต์",
   "artists": "ศิลปิน",
   "albums": "อัลบั้ม",
+  "folders": "โฟลเดอร์",
   "local_library": "คลังเพลงในเครื่อง",
   "downloads": "ดาวน์โหลด",
   "metadata_editor": "ตัวแก้ไขข้อมูลเมตา",
+  "editMetadata": "แก้ไขข้อมูลเมตา",
+  "success": "สำเร็จ",
+  "enableAlphabetIndexer": "เปิดใช้งานดัชนีการเลื่อนตามตัวอักษร",
+  "enableAlphabetIndexerSubtitle": "แสดงดัชนีแถบด้านข้าง A-Z บนมุมมองรายการบนมือถือ",
+  "metadataUpdated": "อัปเดตข้อมูลเมตาแล้ว",
+  "failedToUpdateMetadata": "ไม่สามารถอัปเดตข้อมูลเมตาได้",
   "toggleLyrics": "สลับเนื้อเพลง",
   "settings": "การตั้งค่า",
   "navigation": "การนำทาง",
@@ -69,9 +76,20 @@
   "circularPulse": "ชีพจรวงกลม",
   "rainbowMode": "โหมดรุ้ง",
   "useMixedColors": "ใช้สีผสม (เน้นการซิงค์เป็นหลัก)",
-  "integration": "การเชื่อมต่อ",
-  "discordRPC": "Discord Rich Presence",
+  "integration": "การรวมระบบ",
+  "discordRPC": "สถานะ Discord",
   "showStatusDiscord": "แสดงสถานะบน Discord",
+  "tidalApiStatus": "Tidal API",
+  "online": "ออนไลน์",
+  "unauthorize": "ไม่ได้รับอนุญาต",
+  "offlineStatus": "ออฟไลน์",
+  "checkInternetConnection": "ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณ",
+  "autoClearCache": "ล้างแคชอัตโนมัติ",
+  "autoClearDisabled": "ปิดการใช้งาน",
+  "autoClearOnClose": "เมื่อปิดแอป",
+  "autoClearAfter24h": "หลังจาก 24 ชั่วโมง",
+  "autoClearAfter7d": "หลังจาก 7 วัน",
+  "autoClearEvery30m": "ทุก 30 นาที (เฉพาะตอนฟังเท่านั้น)",
   "musicFolderLocation": "ตำแหน่งโฟลเดอร์เพลง",
   "noFolderSelected": "ไม่ได้เลือกโฟลเดอร์",
   "change": "เปลี่ยน",
@@ -103,6 +121,17 @@
   "playback": "การเล่น",
   "endlessQueue": "คิวไม่มีที่สิ้นสุด",
   "autoAddSimilar": "เพิ่มเพลงที่คล้ายกันโดยอัตโนมัติเมื่อจบรายการ",
+  "gaplessPlayback": "การเล่นแบบไร้รอยต่อ",
+  "gaplessPlaybackDesc": "ลบความเงียบระหว่างแทร็ก",
+  "crossfade": "ครอสเฟด",
+  "crossfadeDesc": "เฟดระหว่างแทร็ก ({seconds} วินาที)",
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "disableRomanization": "ปิดการถอดเสียง (Romanization)",
   "hideRomajiPinyin": "ไม่แสดง Romaji/Pinyin ใต้เนื้อเพลงเกาหลี ญี่ปุ่น หรือจีน",
   "translationLanguage": "ภาษาที่ใช้แปล",
@@ -127,7 +156,7 @@
   "resetLibraryContent": "การดำเนินการนี้จะลบโฟลเดอร์ปัจจุบันออกจากโปรแกรมเล่น ไฟล์ของคุณจะไม่ถูกลบ",
   "resetPath": "รีเซ็ตเส้นทาง",
   "clearStreamingCache": "ล้างแคชสตรีมมิ่ง",
-  "freeUpSpace": "เพิ่มพื้นที่ว่าง",
+  "freeUpSpace": "เพิ่มพื้นที่ว่าง (ปัจจุบัน: {size})",
   "resetStatistics": "รีเซ็ตสถิติ",
   "clearPlayHistory": "ล้างประวัติการเล่นและเวลาที่ฟัง",
   "resetStatsTitle": "รีเซ็ตสถิติ?",
@@ -169,7 +198,6 @@
   "androidBitPerfect": "Android 14+ Bit-Perfect",
   "customDevice": "อุปกรณ์ที่กำหนดเอง",
   "exclusiveModeWarning": "คำเตือน: โหมด Exclusive จะทำงานได้ดีที่สุดหากคุณเลือกอุปกรณ์ที่เจาะจงแทนค่าเริ่มต้นระบบ",
-  "freeUpSpace": "เพิ่มพื้นที่ว่าง (ปัจจุบัน: {size})",
   "@freeUpSpace": {
     "placeholders": {
       "size": {
@@ -425,8 +453,71 @@
   "emptyPlaylistSubtitle": "สร้างเพลย์ลิสต์เปล่าใหม่",
   "importFromSpotify": "นำเข้าจาก Spotify",
   "importFromSpotifySubtitle": "วางลิงก์เพลย์ลิสต์ Spotify",
+  "importFromYoutubeMusic": "นำเข้าจาก YouTube Music",
+  "importFromYoutubeMusicSubtitle": "วางลิงก์เพลย์ลิสต์ YouTube Music",
+  "deletePlaylistPermanentConfirm": "คุณแน่ใจหรือไม่ว่าต้องการลบเพลย์ลิสต์นี้? (การดำเนินการนี้ไม่สามารถย้อนกลับได้)",
+  "publicSharing": "การแชร์แบบสาธารณะ",
+  "publicSharingDesc": "ทุกคนที่มีรหัสสามารถนำเข้าเพลย์ลิสต์นี้ได้",
+  "publicSharingDisabledDesc": "ปิดใช้งาน เปิดใช้งานเพื่อแชร์กับผู้อื่น",
+  "failedEnableSharing": "ไม่สามารถเปิดใช้งานการแชร์ได้ ตรวจสอบการเชื่อมต่อ",
+  "failedDisableSharing": "ไม่สามารถปิดใช้งานการแชร์ได้",
+  "disablingSharingWarning": "การปิดใช้งานการแชร์จะลบรหัสและข้อมูลออกจากเซิร์ฟเวอร์อย่างถาวรเพื่อประหยัดพื้นที่",
+  "invalidSpotifyUrl": "URL เพลย์ลิสต์ Spotify ไม่ถูกต้อง",
+  "invalidYoutubeMusicUrl": "ลิงก์เพลย์ลิสต์ YouTube Music ไม่ถูกต้อง",
+  "fetchingPlaylistInfo": "กำลังดึงข้อมูลเพลย์ลิสต์...",
+  "failedFetchPlaylistInfo": "ไม่สามารถดึงข้อมูลเพลย์ลิสต์ได้",
+  "fetchingTracksFrom": "กำลังดึงเพลงจาก \"{name}\"...",
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTracksFound": "ไม่พบเพลงในเพลย์ลิสต์",
+  "creatingPlaylistWithTracks": "กำลังสร้างเพลย์ลิสต์ด้วยเพลง {count} เพลง...",
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importedTracks": "นำเข้าเพลง {count} เพลงสำเร็จแล้ว!",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "การนำเข้าล้มเหลว: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fetchingSharedPlaylist": "กำลังดึงเพลย์ลิสต์ที่แชร์...",
+  "playlistNotFoundOrError": "ไม่พบเพลย์ลิสต์หรือเกิดข้อผิดพลาดของเซิร์ฟเวอร์",
+  "parsingPlaylistData": "กำลังวิเคราะห์ข้อมูลเพลย์ลิสต์...",
+  "importedPlaylistName": "นำเข้า \"{name}\" สำเร็จแล้ว!",
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeMust6Digits": "รหัสต้องมี 6 หลัก",
+  "fetchingPlaylist": "กำลังดึงเพลย์ลิสต์...",
+  "importViaCode": "นำเข้าผ่านรหัส",
+  "enterShareCode": "ป้อนรหัสแชร์ 6 หลัก",
+  "importChoice": "นำเข้า",
   "playlistNameHint": "ชื่อเพลย์ลิสต์",
   "importSpotifyPlaylist": "นำเข้าเพลย์ลิสต์ Spotify",
+  "importYoutubeMusicPlaylist": "นำเข้าเพลย์ลิสต์ YouTube Music",
   "deletePlaylistTitle": "ลบเพลย์ลิสต์?",
   "deletePlaylistConfirm": "คุณแน่ใจไหมว่าต้องการลบ \"{name}\"?",
   "@deletePlaylistConfirm": {
@@ -454,7 +545,6 @@
   "songs": "เพลง",
   "noStatsYet": "ยังไม่มีสถิติ",
   "noArtistStatsYet": "ยังไม่มีสถิติศิลปิน",
-  "play": "เล่น",
   "plays": "ครั้ง",
   "min": "นาที",
   "share": "แชร์",
@@ -751,5 +841,28 @@
   "importLyricsTooltip": "นำเข้าเนื้อเพลง",
   "saveLyricsTooltip": "บันทึกเนื้อเพลง",
   "refreshLyricsTooltip": "รีเฟรชเนื้อเพลง",
-  "translateLyricsTooltip": "แปลเนื้อเพลง"
+  "translateLyricsTooltip": "แปลเนื้อเพลง",
+  "sharePlaylist": "แชร์เพลย์ลิสต์",
+  "deletePlaylist": "ลบเพลย์ลิสต์",
+  "importViaCodeSubtitle": "นำเข้าเพลย์ลิสต์ที่เพื่อนแชร์",
+  "sharePlaylistTitle": "แชร์ \"{name}\"",
+  "@sharePlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingShareCode": "กำลังสร้างรหัสแชร์...",
+  "failedToGenerateCode": "ไม่สามารถสร้างรหัสแชร์ได้ ตรวจสอบการเชื่อมต่อ",
+  "playlistReadyShare": "เพลย์ลิสต์ของคุณพร้อมสำหรับการแชร์แล้ว!",
+  "copyCode": "คัดลอกรหัส",
+  "codeCopied": "คัดลอกรหัสไปยังคลิปบอร์ดแล้ว!",
+  "shareCodeUsage": "ให้รหัส 6 หลักนี้กับเพื่อนเพื่อนำเข้าเพลย์ลิสต์นี้",
+  "filters": "ตัวกรอง",
+  "fileName": "ชื่อไฟล์",
+  "dataUsage": "การใช้ข้อมูล",
+  "todayLabel": "วันนี้: {size}",
+  "last7DaysLabel": "7 วันที่ผ่านมา: {size}",
+  "last30DaysLabel": "30 วันที่ผ่านมา: {size}"
 }

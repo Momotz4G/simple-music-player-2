@@ -33,7 +33,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get albums => 'アルバム';
 
   @override
-  String get folders => 'Folders';
+  String get folders => 'フォルダー';
 
   @override
   String get local_library => 'ローカルライブラリ';
@@ -43,6 +43,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get metadata_editor => 'メタデータエディタ';
+
+  @override
+  String get editMetadata => 'メタデータを編集';
+
+  @override
+  String get success => '成功';
+
+  @override
+  String get enableAlphabetIndexer => 'アルファベットスクロールインデクサーを有効にする';
+
+  @override
+  String get enableAlphabetIndexerSubtitle =>
+      'モバイルのリストビューで A-Z サイドバーのインデックスを表示する';
+
+  @override
+  String get metadataUpdated => 'メタデータが更新されました';
+
+  @override
+  String get failedToUpdateMetadata => 'メタデータの更新に失敗しました';
 
   @override
   String get toggleLyrics => '歌詞を切り替える';
@@ -222,13 +241,46 @@ class AppLocalizationsJa extends AppLocalizations {
   String get useMixedColors => 'ミックスカラーを使用する（同期を優先）';
 
   @override
-  String get integration => '連携';
+  String get integration => '統合';
 
   @override
   String get discordRPC => 'Discord Rich Presence';
 
   @override
   String get showStatusDiscord => 'Discordにステータスを表示する';
+
+  @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => 'オンライン';
+
+  @override
+  String get unauthorize => '未承認';
+
+  @override
+  String get offlineStatus => 'オフライン';
+
+  @override
+  String get checkInternetConnection => 'インターネット接続を確認してください';
+
+  @override
+  String get autoClearCache => 'キャッシュの自動クリア';
+
+  @override
+  String get autoClearDisabled => '無効';
+
+  @override
+  String get autoClearOnClose => 'アプリ終了時';
+
+  @override
+  String get autoClearAfter24h => '24時間後';
+
+  @override
+  String get autoClearAfter7d => '7日後';
+
+  @override
+  String get autoClearEvery30m => '30分ごと（再生中のみ）';
 
   @override
   String get musicFolderLocation => '音楽フォルダの場所';
@@ -324,6 +376,20 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get autoAddSimilar => 'キューが空に近づいたときに似た曲を自動追加する';
+
+  @override
+  String get gaplessPlayback => 'ギャップレス再生';
+
+  @override
+  String get gaplessPlaybackDesc => 'トラック間の無音を解消します';
+
+  @override
+  String get crossfade => 'クロスフェード';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return 'トラック間をフェードさせる ($seconds 秒)';
+  }
 
   @override
   String get disableRomanization => 'ローマ字表記を無効にする';
@@ -1012,10 +1078,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get importFromSpotifySubtitle => 'SpotifyプレイリストのURLを貼り付け';
 
   @override
+  String get importFromYoutubeMusic => 'YouTube Music からインポート';
+
+  @override
+  String get importFromYoutubeMusicSubtitle => 'YouTube Music のプレイリストのURLを貼り付け';
+
+  @override
   String get playlistNameHint => 'プレイリスト名';
 
   @override
   String get importSpotifyPlaylist => 'Spotifyプレイリストをインポートする';
+
+  @override
+  String get importYoutubeMusicPlaylist => 'YouTube Musicプレイリストをインポートする';
 
   @override
   String get deletePlaylistTitle => 'プレイリストを削除しますか？';
@@ -1049,6 +1124,96 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get renamePlaylist => 'プレイリストの名前を変更する';
+
+  @override
+  String get deletePlaylist => 'プレイリストを削除';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      'このプレイリストを削除してもよろしいですか？（この操作は取り消せません）';
+
+  @override
+  String get publicSharing => '公開共有';
+
+  @override
+  String get publicSharingDesc => 'コードを知っている人なら誰でもこのプレイリストをインポートできます。';
+
+  @override
+  String get publicSharingDisabledDesc => '無効。他のユーザーと共有するには有効にしてください。';
+
+  @override
+  String get failedEnableSharing => '共有を有効にできませんでした。接続を確認してください。';
+
+  @override
+  String get failedDisableSharing => '共有を無効にできませんでした。';
+
+  @override
+  String get disablingSharingWarning =>
+      '共有を無効にすると、容量を節約するためにサーバーからコードとデータが永久に削除されます。';
+
+  @override
+  String get invalidSpotifyUrl => '無効なSpotifyプレイリストURL';
+
+  @override
+  String get invalidYoutubeMusicUrl => 'YouTube MusicプレイリストのURLが無効です';
+
+  @override
+  String get fetchingPlaylistInfo => 'プレイリスト情報を取得中...';
+
+  @override
+  String get failedFetchPlaylistInfo => 'プレイリスト情報を取得できませんでした';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return '\"$name\" からトラックを取得中...';
+  }
+
+  @override
+  String get noTracksFound => 'プレイリストにトラックが見つかりませんでした';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return '$count 個のトラックでプレイリストを作成中...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return '$count 個のトラックを正常にインポートしました！';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'インポートに失敗しました: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist => '共有プレイリストを取得中...';
+
+  @override
+  String get playlistNotFoundOrError => 'プレイリストが見つからないか、サーバーエラーです';
+
+  @override
+  String get parsingPlaylistData => 'プレイリストデータを解析中...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return '\"$name\" を正常にインポートしました！';
+  }
+
+  @override
+  String get codeMust6Digits => 'コードは6桁である必要があります';
+
+  @override
+  String get fetchingPlaylist => 'プレイリストを取得中...';
+
+  @override
+  String get importViaCode => 'コードでインポート';
+
+  @override
+  String get enterShareCode => '6桁の共有コードを入力してください';
+
+  @override
+  String get importChoice => 'インポート';
 
   @override
   String get listeningStats => '聴取統計';
@@ -1590,4 +1755,57 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => '歌詞を翻訳';
+
+  @override
+  String get sharePlaylist => 'プレイリストを共有';
+
+  @override
+  String get importViaCodeSubtitle => '友達が共有したプレイリストをインポートします';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return '\"$name\" を共有';
+  }
+
+  @override
+  String get generatingShareCode => '共有コードを生成中...';
+
+  @override
+  String get failedToGenerateCode => '共有コードの生成に失敗しました。接続を確認してください。';
+
+  @override
+  String get playlistReadyShare => 'プレイリストの共有が可能になりました！';
+
+  @override
+  String get copyCode => 'コードをコピー';
+
+  @override
+  String get codeCopied => 'コードがクリップボードにコピーされました！';
+
+  @override
+  String get shareCodeUsage => 'この6桁のコードを友達に教えて、プレイリストをインポートしてもらいます。';
+
+  @override
+  String get filters => 'フィルター';
+
+  @override
+  String get fileName => 'ファイル名';
+
+  @override
+  String get dataUsage => 'データ使用量';
+
+  @override
+  String todayLabel(String size) {
+    return '今日: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return '過去 7 日間: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return '過去 30 日間: $size';
+  }
 }

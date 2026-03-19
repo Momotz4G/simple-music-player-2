@@ -58,6 +58,8 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
           discNumber: widget.songMetadata.discNumber,
           year: widget.songMetadata.year,
           genre: widget.songMetadata.genre,
+          spotifyId: widget.songMetadata.spotifyId,
+          deezerId: widget.songMetadata.deezerId,
         );
       });
     }

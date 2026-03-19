@@ -129,6 +129,7 @@ class UsbAudioManager(private val context: Context) {
      * Request permission to access a USB device
      */
     fun requestPermission(device: UsbDevice, callback: (Boolean) -> Unit) {
+        Log.i(TAG, "Requesting USB permission for: ${device.productName} (VID:${device.vendorId} PID:${device.productId})")
         permissionCallback = callback
         
         // Register permission receiver if not already registered
@@ -138,8 +139,17 @@ class UsbAudioManager(private val context: Context) {
                     if (ACTION_USB_PERMISSION == intent.action) {
                         synchronized(this) {
                             val granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
+                            Log.d(TAG, "USB Permission result: $granted")
                             permissionCallback?.invoke(granted)
                             permissionCallback = null
+                            
+                            // Unregister after result to prevent memory leaks/redundant registrations
+                            try {
+                                context.unregisterReceiver(this)
+                                permissionReceiver = null
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error unregistering permission receiver: ${e.message}")
+                            }
                         }
                     }
                 }
@@ -147,17 +157,22 @@ class UsbAudioManager(private val context: Context) {
             
             val filter = IntentFilter(ACTION_USB_PERMISSION)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.registerReceiver(permissionReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+                // IMPORTANT: Use RECEIVER_EXPORTED so the system UsbManager service can send the broadcast to us
+                context.registerReceiver(permissionReceiver, filter, Context.RECEIVER_EXPORTED)
             } else {
                 @Suppress("UnspecifiedRegisterReceiverFlag")
                 context.registerReceiver(permissionReceiver, filter)
             }
         }
 
+        val permissionIntent = Intent(ACTION_USB_PERMISSION).apply {
+            setPackage(context.packageName) // Ensure only our app receives the broadcast
+        }
+
         val pendingIntent = PendingIntent.getBroadcast(
             context, 
             0, 
-            Intent(ACTION_USB_PERMISSION),
+            permissionIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
         

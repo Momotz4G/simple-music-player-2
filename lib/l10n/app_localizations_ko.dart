@@ -33,7 +33,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get albums => '앨범';
 
   @override
-  String get folders => 'Folders';
+  String get folders => '폴더';
 
   @override
   String get local_library => '로컬 라이브러리';
@@ -43,6 +43,24 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get metadata_editor => '메타데이터 편집기';
+
+  @override
+  String get editMetadata => '메타데이터 편집';
+
+  @override
+  String get success => '성공';
+
+  @override
+  String get enableAlphabetIndexer => '알파벳 스크롤 인덱서 활성화';
+
+  @override
+  String get enableAlphabetIndexerSubtitle => '모바일 리스트 뷰에서 A-Z 사이드바 인덱스 표시';
+
+  @override
+  String get metadataUpdated => '메타데이터가 업데이트되었습니다';
+
+  @override
+  String get failedToUpdateMetadata => '메타데이터 업데이트 실패';
 
   @override
   String get toggleLyrics => '가사 켜기/끄기';
@@ -231,6 +249,39 @@ class AppLocalizationsKo extends AppLocalizations {
   String get showStatusDiscord => 'Discord에 상태 표시';
 
   @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => '온라인';
+
+  @override
+  String get unauthorize => '승인되지 않음';
+
+  @override
+  String get offlineStatus => '오프라인';
+
+  @override
+  String get checkInternetConnection => '인터넷 연결을 확인하세요';
+
+  @override
+  String get autoClearCache => '캐시 자동 지우기';
+
+  @override
+  String get autoClearDisabled => '비활성화됨';
+
+  @override
+  String get autoClearOnClose => '앱 종료 시';
+
+  @override
+  String get autoClearAfter24h => '24시간 후';
+
+  @override
+  String get autoClearAfter7d => '7일 후';
+
+  @override
+  String get autoClearEvery30m => '30분마다 (청취 중일 때만)';
+
+  @override
   String get musicFolderLocation => '음악 폴더 위치';
 
   @override
@@ -324,6 +375,20 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get autoAddSimilar => '대기열이 거의 비었을 때 비슷한 곡 자동 추가';
+
+  @override
+  String get gaplessPlayback => '끊김 없는 재생';
+
+  @override
+  String get gaplessPlaybackDesc => '트랙 사이의 공백 제거';
+
+  @override
+  String get crossfade => '크로스페이드';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return '곡 사이전환을 부드럽게 ($seconds 초)';
+  }
 
   @override
   String get disableRomanization => '로마자 표기 비활성화';
@@ -993,16 +1058,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get newPlaylist => '새 플레이리스트';
 
   @override
-  String get noPlaylistsYet => '아직 플레이리스트가 없습니다';
+  String get noPlaylistsYet => '아직 재생 목록이 없습니다';
 
   @override
-  String get createPlaylist => '플레이리스트 만들기';
+  String get createPlaylist => '재생 목록 만들기';
 
   @override
-  String get emptyPlaylist => '빈 플레이리스트';
+  String get emptyPlaylist => '빈 재생 목록';
 
   @override
-  String get emptyPlaylistSubtitle => '새 빈 플레이리스트 만들기';
+  String get emptyPlaylistSubtitle => '비어 있는 새 재생 목록 만들기';
 
   @override
   String get importFromSpotify => 'Spotify에서 가져오기';
@@ -1011,10 +1076,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get importFromSpotifySubtitle => 'Spotify 플레이리스트 URL 붙여넣기';
 
   @override
+  String get importFromYoutubeMusic => 'YouTube Music에서 가져오기';
+
+  @override
+  String get importFromYoutubeMusicSubtitle => 'YouTube Music 재생목록 URL 붙여넣기';
+
+  @override
   String get playlistNameHint => '플레이리스트 이름';
 
   @override
   String get importSpotifyPlaylist => 'Spotify 플레이리스트 가져오기';
+
+  @override
+  String get importYoutubeMusicPlaylist => 'YouTube Music 플레이리스트 가져오기';
 
   @override
   String get deletePlaylistTitle => '플레이리스트 삭제?';
@@ -1047,6 +1121,96 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get renamePlaylist => '플레이리스트 이름 변경';
+
+  @override
+  String get deletePlaylist => '재생 목록 삭제';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      '이 재생 목록을 삭제하시겠습니까? (이 작업은 취소할 수 없습니다)';
+
+  @override
+  String get publicSharing => '공개 공유';
+
+  @override
+  String get publicSharingDesc => '코드를 아는 사람은 누구나 이 재생 목록을 가져올 수 있습니다.';
+
+  @override
+  String get publicSharingDisabledDesc => '비활성화됨. 다른 사람과 공유하려면 활성화하세요.';
+
+  @override
+  String get failedEnableSharing => '공유를 활성화하지 못했습니다. 연결을 확인하세요.';
+
+  @override
+  String get failedDisableSharing => '공유를 비활성화하지 못했습니다.';
+
+  @override
+  String get disablingSharingWarning =>
+      '공유를 비활성화하면 공간을 절약하기 위해 서버에서 코드와 데이터가 영구적으로 삭제됩니다.';
+
+  @override
+  String get invalidSpotifyUrl => '유효하지 않은 Spotify 재생 목록 URL';
+
+  @override
+  String get invalidYoutubeMusicUrl => '유효하지 않은 YouTube Music 재생목록 URL입니다';
+
+  @override
+  String get fetchingPlaylistInfo => '재생 목록 정보를 가져오는 중...';
+
+  @override
+  String get failedFetchPlaylistInfo => '재생 목록 정보를 가져올 수 없습니다';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return '\"$name\"에서 트랙을 가져오는 중...';
+  }
+
+  @override
+  String get noTracksFound => '재생 목록에서 트랙을 찾을 수 없습니다';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return '$count개의 트랙으로 재생 목록을 생성하는 중...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return '$count개의 트랙을 성공적으로 가져왔습니다!';
+  }
+
+  @override
+  String importFailed(String error) {
+    return '가져오기 실패: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist => '공유 재생 목록을 가져오는 중...';
+
+  @override
+  String get playlistNotFoundOrError => '재생 목록을 찾을 수 없거나 서버 오류입니다';
+
+  @override
+  String get parsingPlaylistData => '재생 목록 데이터를 분석하는 중...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return '\"$name\"을(를) 성공적으로 가져왔습니다!';
+  }
+
+  @override
+  String get codeMust6Digits => '코드는 6자리여야 합니다';
+
+  @override
+  String get fetchingPlaylist => '재생 목록을 가져오는 중...';
+
+  @override
+  String get importViaCode => '코드를 통해 가져오기';
+
+  @override
+  String get enterShareCode => '6자리 공유 코드를 입력하세요';
+
+  @override
+  String get importChoice => '가져오기';
 
   @override
   String get listeningStats => '감상 통계';
@@ -1588,4 +1752,57 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => '가사 번역';
+
+  @override
+  String get sharePlaylist => '재생 목록 공유';
+
+  @override
+  String get importViaCodeSubtitle => '친구가 공유한 재생 목록 가져오기';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return '\"$name\" 공유';
+  }
+
+  @override
+  String get generatingShareCode => '공유 코드 생성 중...';
+
+  @override
+  String get failedToGenerateCode => '공유 코드를 생성하지 못했습니다. 연결을 확인하세요.';
+
+  @override
+  String get playlistReadyShare => '재생 목록을 공유할 준비가 되었습니다!';
+
+  @override
+  String get copyCode => '코드 복사';
+
+  @override
+  String get codeCopied => '코드가 클립보드에 복사되었습니다!';
+
+  @override
+  String get shareCodeUsage => '친구에게 이 6자리 코드를 알려주어 재생 목록을 가져오게 하세요.';
+
+  @override
+  String get filters => '필터';
+
+  @override
+  String get fileName => '파일 이름';
+
+  @override
+  String get dataUsage => '데이터 사용량';
+
+  @override
+  String todayLabel(String size) {
+    return '오늘: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return '지난 7일: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return '지난 30일: $size';
+  }
 }

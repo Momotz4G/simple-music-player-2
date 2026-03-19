@@ -33,7 +33,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get albums => 'อัลบั้ม';
 
   @override
-  String get folders => 'Folders';
+  String get folders => 'โฟลเดอร์';
 
   @override
   String get local_library => 'คลังเพลงในเครื่อง';
@@ -43,6 +43,25 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get metadata_editor => 'ตัวแก้ไขข้อมูลเมตา';
+
+  @override
+  String get editMetadata => 'แก้ไขข้อมูลเมตา';
+
+  @override
+  String get success => 'สำเร็จ';
+
+  @override
+  String get enableAlphabetIndexer => 'เปิดใช้งานดัชนีการเลื่อนตามตัวอักษร';
+
+  @override
+  String get enableAlphabetIndexerSubtitle =>
+      'แสดงดัชนีแถบด้านข้าง A-Z บนมุมมองรายการบนมือถือ';
+
+  @override
+  String get metadataUpdated => 'อัปเดตข้อมูลเมตาแล้ว';
+
+  @override
+  String get failedToUpdateMetadata => 'ไม่สามารถอัปเดตข้อมูลเมตาได้';
 
   @override
   String get toggleLyrics => 'สลับเนื้อเพลง';
@@ -222,13 +241,46 @@ class AppLocalizationsTh extends AppLocalizations {
   String get useMixedColors => 'ใช้สีผสม (เน้นการซิงค์เป็นหลัก)';
 
   @override
-  String get integration => 'การเชื่อมต่อ';
+  String get integration => 'การรวมระบบ';
 
   @override
-  String get discordRPC => 'Discord Rich Presence';
+  String get discordRPC => 'สถานะ Discord';
 
   @override
   String get showStatusDiscord => 'แสดงสถานะบน Discord';
+
+  @override
+  String get tidalApiStatus => 'Tidal API';
+
+  @override
+  String get online => 'ออนไลน์';
+
+  @override
+  String get unauthorize => 'ไม่ได้รับอนุญาต';
+
+  @override
+  String get offlineStatus => 'ออฟไลน์';
+
+  @override
+  String get checkInternetConnection => 'ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณ';
+
+  @override
+  String get autoClearCache => 'ล้างแคชอัตโนมัติ';
+
+  @override
+  String get autoClearDisabled => 'ปิดการใช้งาน';
+
+  @override
+  String get autoClearOnClose => 'เมื่อปิดแอป';
+
+  @override
+  String get autoClearAfter24h => 'หลังจาก 24 ชั่วโมง';
+
+  @override
+  String get autoClearAfter7d => 'หลังจาก 7 วัน';
+
+  @override
+  String get autoClearEvery30m => 'ทุก 30 นาที (เฉพาะตอนฟังเท่านั้น)';
 
   @override
   String get musicFolderLocation => 'ตำแหน่งโฟลเดอร์เพลง';
@@ -325,6 +377,20 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get autoAddSimilar => 'เพิ่มเพลงที่คล้ายกันโดยอัตโนมัติเมื่อจบรายการ';
+
+  @override
+  String get gaplessPlayback => 'การเล่นแบบไร้รอยต่อ';
+
+  @override
+  String get gaplessPlaybackDesc => 'ลบความเงียบระหว่างแทร็ก';
+
+  @override
+  String get crossfade => 'ครอสเฟด';
+
+  @override
+  String crossfadeDesc(String seconds) {
+    return 'เฟดระหว่างแทร็ก ($seconds วินาที)';
+  }
 
   @override
   String get disableRomanization => 'ปิดการถอดเสียง (Romanization)';
@@ -1030,10 +1096,20 @@ class AppLocalizationsTh extends AppLocalizations {
   String get importFromSpotifySubtitle => 'วางลิงก์เพลย์ลิสต์ Spotify';
 
   @override
+  String get importFromYoutubeMusic => 'นำเข้าจาก YouTube Music';
+
+  @override
+  String get importFromYoutubeMusicSubtitle =>
+      'วางลิงก์เพลย์ลิสต์ YouTube Music';
+
+  @override
   String get playlistNameHint => 'ชื่อเพลย์ลิสต์';
 
   @override
   String get importSpotifyPlaylist => 'นำเข้าเพลย์ลิสต์ Spotify';
+
+  @override
+  String get importYoutubeMusicPlaylist => 'นำเข้าเพลย์ลิสต์ YouTube Music';
 
   @override
   String get deletePlaylistTitle => 'ลบเพลย์ลิสต์?';
@@ -1067,6 +1143,100 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get renamePlaylist => 'เปลี่ยนชื่อเพลย์ลิสต์';
+
+  @override
+  String get deletePlaylist => 'ลบเพลย์ลิสต์';
+
+  @override
+  String get deletePlaylistPermanentConfirm =>
+      'คุณแน่ใจหรือไม่ว่าต้องการลบเพลย์ลิสต์นี้? (การดำเนินการนี้ไม่สามารถย้อนกลับได้)';
+
+  @override
+  String get publicSharing => 'การแชร์แบบสาธารณะ';
+
+  @override
+  String get publicSharingDesc => 'ทุกคนที่มีรหัสสามารถนำเข้าเพลย์ลิสต์นี้ได้';
+
+  @override
+  String get publicSharingDisabledDesc =>
+      'ปิดใช้งาน เปิดใช้งานเพื่อแชร์กับผู้อื่น';
+
+  @override
+  String get failedEnableSharing =>
+      'ไม่สามารถเปิดใช้งานการแชร์ได้ ตรวจสอบการเชื่อมต่อ';
+
+  @override
+  String get failedDisableSharing => 'ไม่สามารถปิดใช้งานการแชร์ได้';
+
+  @override
+  String get disablingSharingWarning =>
+      'การปิดใช้งานการแชร์จะลบรหัสและข้อมูลออกจากเซิร์ฟเวอร์อย่างถาวรเพื่อประหยัดพื้นที่';
+
+  @override
+  String get invalidSpotifyUrl => 'URL เพลย์ลิสต์ Spotify ไม่ถูกต้อง';
+
+  @override
+  String get invalidYoutubeMusicUrl =>
+      'ลิงก์เพลย์ลิสต์ YouTube Music ไม่ถูกต้อง';
+
+  @override
+  String get fetchingPlaylistInfo => 'กำลังดึงข้อมูลเพลย์ลิสต์...';
+
+  @override
+  String get failedFetchPlaylistInfo => 'ไม่สามารถดึงข้อมูลเพลย์ลิสต์ได้';
+
+  @override
+  String fetchingTracksFrom(String name) {
+    return 'กำลังดึงเพลงจาก \"$name\"...';
+  }
+
+  @override
+  String get noTracksFound => 'ไม่พบเพลงในเพลย์ลิสต์';
+
+  @override
+  String creatingPlaylistWithTracks(int count) {
+    return 'กำลังสร้างเพลย์ลิสต์ด้วยเพลง $count เพลง...';
+  }
+
+  @override
+  String importedTracks(int count) {
+    return 'นำเข้าเพลง $count เพลงสำเร็จแล้ว!';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'การนำเข้าล้มเหลว: $error';
+  }
+
+  @override
+  String get fetchingSharedPlaylist => 'กำลังดึงเพลย์ลิสต์ที่แชร์...';
+
+  @override
+  String get playlistNotFoundOrError =>
+      'ไม่พบเพลย์ลิสต์หรือเกิดข้อผิดพลาดของเซิร์ฟเวอร์';
+
+  @override
+  String get parsingPlaylistData => 'กำลังวิเคราะห์ข้อมูลเพลย์ลิสต์...';
+
+  @override
+  String importedPlaylistName(String name) {
+    return 'นำเข้า \"$name\" สำเร็จแล้ว!';
+  }
+
+  @override
+  String get codeMust6Digits => 'รหัสต้องมี 6 หลัก';
+
+  @override
+  String get fetchingPlaylist => 'กำลังดึงเพลย์ลิสต์...';
+
+  @override
+  String get importViaCode => 'นำเข้าผ่านรหัส';
+
+  @override
+  String get enterShareCode => 'ป้อนรหัสแชร์ 6 หลัก';
+
+  @override
+  String get importChoice => 'นำเข้า';
 
   @override
   String get listeningStats => 'สถิติการฟัง';
@@ -1614,4 +1784,59 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get translateLyricsTooltip => 'แปลเนื้อเพลง';
+
+  @override
+  String get sharePlaylist => 'แชร์เพลย์ลิสต์';
+
+  @override
+  String get importViaCodeSubtitle => 'นำเข้าเพลย์ลิสต์ที่เพื่อนแชร์';
+
+  @override
+  String sharePlaylistTitle(String name) {
+    return 'แชร์ \"$name\"';
+  }
+
+  @override
+  String get generatingShareCode => 'กำลังสร้างรหัสแชร์...';
+
+  @override
+  String get failedToGenerateCode =>
+      'ไม่สามารถสร้างรหัสแชร์ได้ ตรวจสอบการเชื่อมต่อ';
+
+  @override
+  String get playlistReadyShare => 'เพลย์ลิสต์ของคุณพร้อมสำหรับการแชร์แล้ว!';
+
+  @override
+  String get copyCode => 'คัดลอกรหัส';
+
+  @override
+  String get codeCopied => 'คัดลอกรหัสไปยังคลิปบอร์ดแล้ว!';
+
+  @override
+  String get shareCodeUsage =>
+      'ให้รหัส 6 หลักนี้กับเพื่อนเพื่อนำเข้าเพลย์ลิสต์นี้';
+
+  @override
+  String get filters => 'ตัวกรอง';
+
+  @override
+  String get fileName => 'ชื่อไฟล์';
+
+  @override
+  String get dataUsage => 'การใช้ข้อมูล';
+
+  @override
+  String todayLabel(String size) {
+    return 'วันนี้: $size';
+  }
+
+  @override
+  String last7DaysLabel(String size) {
+    return '7 วันที่ผ่านมา: $size';
+  }
+
+  @override
+  String last30DaysLabel(String size) {
+    return '30 วันที่ผ่านมา: $size';
+  }
 }

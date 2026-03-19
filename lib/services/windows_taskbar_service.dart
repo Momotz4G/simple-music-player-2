@@ -40,7 +40,7 @@ class WindowsTaskbarService {
           album: '',
           thumbnail: null,
         ),
-        timeline: const PlaybackTimeline(
+        timeline: PlaybackTimeline(
           startTimeMs: 0,
           endTimeMs: 1000,
           positionMs: 0,

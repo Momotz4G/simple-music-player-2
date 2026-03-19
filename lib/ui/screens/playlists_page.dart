@@ -7,6 +7,7 @@ import '../components/playlist_collage.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../components/playlist_sharing_dialogs.dart';
 
 class PlaylistsPage extends ConsumerWidget {
   const PlaylistsPage({super.key});
@@ -262,6 +263,34 @@ class PlaylistsPage extends ConsumerWidget {
                 _showSpotifyImportDialog(context, notifier);
               },
             ),
+            const Divider(),
+            // Option 3: Import from YouTube Music
+            ListTile(
+              leading: const Icon(Icons.music_video_outlined,
+                  color: Colors.red),
+              title: Text(AppLocalizations.of(context)!.importFromYoutubeMusic),
+              subtitle:
+                  Text(AppLocalizations.of(context)!.importFromYoutubeMusicSubtitle),
+              onTap: () {
+                Navigator.pop(context);
+                _showYoutubeMusicImportDialog(context, notifier);
+              },
+            ),
+            const Divider(),
+            // Option 3: Import via Code
+            ListTile(
+              leading: Icon(Icons.share_outlined,
+                  color: Theme.of(context).colorScheme.primary),
+              title: Text(AppLocalizations.of(context)!.importViaCode),
+              subtitle: Text(AppLocalizations.of(context)!.importViaCodeSubtitle),
+              onTap: () {
+                Navigator.pop(context);
+                showDialog(
+                  context: context,
+                  builder: (context) => const ImportPlaylistDialog(),
+                );
+              },
+            ),
           ],
         ),
         actions: [
@@ -395,14 +424,14 @@ class PlaylistsPage extends ConsumerWidget {
                           ? null
                           : () async {
                               if (controller.text.isEmpty) return;
-
+                              final l10n = AppLocalizations.of(context)!;
                               isLoadingNotifier.value = true;
 
                               final result =
                                   await notifier.importSpotifyPlaylist(
                                 controller.text,
-                                onProgress: (status) {
-                                  statusNotifier.value = status;
+                                onStatus: (key, {args}) {
+                                  statusNotifier.value = _getLocalizedStatus(l10n, key, args);
                                 },
                               );
 
@@ -425,6 +454,141 @@ class PlaylistsPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _showYoutubeMusicImportDialog(
+      BuildContext context, PlaylistNotifier notifier) {
+    final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final statusNotifier = ValueNotifier<String?>(null);
+    final isLoadingNotifier = ValueNotifier<bool>(false);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: Theme.of(context).cardColor,
+          title: Row(
+            children: [
+              Icon(Icons.music_video, color: Colors.red[400]),
+              const SizedBox(width: 8),
+              Text(AppLocalizations.of(context)!.importYoutubeMusicPlaylist,
+                  style:
+                      TextStyle(color: isDark ? Colors.white : Colors.black)),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                  decoration: const InputDecoration(
+                    hintText: "https://music.youtube.com/playlist?list=...",
+                    prefixIcon: Icon(Icons.link),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ValueListenableBuilder<String?>(
+                  valueListenable: statusNotifier,
+                  builder: (context, status, _) {
+                    if (status == null) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        status,
+                        style: TextStyle(
+                          color: status.startsWith("❌")
+                              ? Colors.red
+                              : status.startsWith("✅")
+                                  ? Colors.green
+                                  : Colors.grey,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: isLoadingNotifier,
+                  builder: (context, isLoading, _) {
+                    if (!isLoading) return const SizedBox.shrink();
+                    return const Padding(
+                      padding: EdgeInsets.only(top: 12),
+                      child: LinearProgressIndicator(),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ValueListenableBuilder<bool>(
+              valueListenable: isLoadingNotifier,
+              builder: (context, isLoading, _) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed:
+                          isLoading ? null : () => Navigator.pop(context),
+                      child: Text(AppLocalizations.of(context)!.cancel),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              if (controller.text.isEmpty) return;
+                              final l10n = AppLocalizations.of(context)!;
+                              isLoadingNotifier.value = true;
+
+                              final result =
+                                  await notifier.importYoutubeMusicPlaylist(
+                                controller.text,
+                                onStatus: (key, {args}) {
+                                  statusNotifier.value = _getLocalizedStatus(l10n, key, args);
+                                },
+                              );
+
+                              isLoadingNotifier.value = false;
+
+                              if (result != null && context.mounted) {
+                                await Future.delayed(
+                                    const Duration(milliseconds: 500));
+                                if (context.mounted) Navigator.pop(context);
+                              }
+                            },
+                      icon: const Icon(Icons.download),
+                      label: Text(AppLocalizations.of(context)!.download),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getLocalizedStatus(AppLocalizations l10n, String key, Map<String, dynamic>? args) {
+    switch (key) {
+      case "invalidSpotifyUrl": return "❌ ${l10n.invalidSpotifyUrl}";
+      case "invalidYoutubeMusicUrl": return "❌ ${l10n.invalidYoutubeMusicUrl}";
+      case "fetchingPlaylistInfo": return "📋 ${l10n.fetchingPlaylistInfo}";
+      case "failedFetchPlaylistInfo": return "❌ ${l10n.failedFetchPlaylistInfo}";
+      case "fetchingTracksFrom": return "🎵 ${l10n.fetchingTracksFrom(args?['name'] ?? '')}";
+      case "noTracksFound": return "❌ ${l10n.noTracksFound}";
+      case "creatingPlaylistWithTracks": return "📝 ${l10n.creatingPlaylistWithTracks(args?['count'] ?? 0)}";
+      case "importedTracks": return "✅ ${l10n.importedTracks(args?['count'] ?? 0)}";
+      case "importFailed": return "❌ ${l10n.importFailed(args?['error'] ?? '')}";
+      default: return key;
+    }
   }
 
   void _showDeleteDialog(
