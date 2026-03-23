@@ -275,6 +275,7 @@ In PocketBase Admin UI, create these collections with the following fields:
 | hostname | Text |
 | os | Text |
 | os_version | Text |
+| client_version | Text |
 | play_count | Number |
 | daily_play_count | Number |
 | download_count | Number |
