@@ -12,18 +12,12 @@ import 'package:share_plus/share_plus.dart';
 import '../../providers/stats_provider.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/library_provider.dart';
-import '../../providers/history_provider.dart';
-import '../../providers/settings_provider.dart';
 import '../../providers/search_bridge_provider.dart';
-import '../../services/smart_download_service.dart';
 import '../../models/song_model.dart';
-import '../../models/song_metadata.dart';
-import '../../models/youtube_search_result.dart';
-import '../../models/stat_model.dart';
+import '../../models/stat_model.dart'; // REQUIRED for ID generation
 import '../../services/spotify_service.dart';
 import '../components/smart_art.dart';
 import '../components/shareable_stats_card.dart';
-import '../components/music_notification.dart';
 import 'artists_page.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -56,11 +50,8 @@ class StatsPage extends ConsumerStatefulWidget {
 
 class _StatsPageState extends ConsumerState<StatsPage> {
   int _slideIndex = 0;
-  Timer? _slideTimer;
+  Timer? _slideTimer = null;
   List<_SlideData> _slides = [];
-
-  final SmartDownloadService _smartService = SmartDownloadService();
-  bool _isRestoring = false;
 
   // Image cache for the banner
   final Map<String, String?> _imageCache = {};
@@ -88,105 +79,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
   }
 
   // SMART PLAY / RESTORE LOGIC
-  Future<void> _handleSongTap(SongModel song) async {
-    if (_isRestoring) return;
-
-    final file = File(song.filePath);
-
-    // 1. File Exists -> Play immediately
-    if (await file.exists()) {
-      ref.read(playerProvider.notifier).playSong(song);
-      return;
-    }
-
-    // 2. File Missing -> Try to Restore via History Lookup OR Persisted URL
-    // Stats entry only has the path, but History has the YouTube URL.
-    final history = ref.read(historyProvider);
-    String? restoreUrl = song.sourceUrl; // 🚀 Try Persisted URL First
-    String? restoreArt = song.onlineArtUrl;
-
-    if (restoreUrl == null) {
-      try {
-        // Find the most recent match in history
-        final match = history.firstWhere((entry) =>
-            entry.title == song.title && entry.artist == song.artist);
-        restoreUrl = match.youtubeUrl;
-        restoreArt = match.albumArtUrl;
-      } catch (e) {
-        // Not found in history
-      }
-    }
-
-    if (restoreUrl == null || restoreUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(AppLocalizations.of(context)!.fileMissingHistory)),
-      );
-      return;
-    }
-
-    setState(() => _isRestoring = true);
-    showCenterNotification(context,
-        label: AppLocalizations.of(context)!.restoring,
-        title: song.title,
-        subtitle: AppLocalizations.of(context)!.reBuffering,
-        artPath: restoreArt);
-
-    try {
-      final meta = SongMetadata(
-        title: song.title,
-        artist: song.artist,
-        album: song.album,
-        year: "",
-        genre: "",
-        durationSeconds: song.duration.toInt(),
-        albumArtUrl: restoreArt ?? "",
-        isrc: song.isrc,
-      );
-
-      // FIX: Perform Just-In-Time YouTube Search if URL is missing or invalid (Spotify)
-      String finalUrl = restoreUrl;
-      if (finalUrl.isEmpty || finalUrl.contains("spotify.com")) {
-        print("🔍 Searching YouTube for: ${song.artist} - ${song.title}");
-        final match = await _smartService.searchYouTubeForMatch(meta);
-        if (match != null && match.youtubeMatches.isNotEmpty) {
-          finalUrl = match.youtubeMatches.first.url;
-          print("✅ Found YouTube Match: $finalUrl");
-        } else {
-          throw Exception("No YouTube match found.");
-        }
-      }
-
-      final ytResult = YoutubeSearchResult(
-        title: song.title,
-        artist: song.artist,
-        duration: "",
-        url: finalUrl,
-        thumbnailUrl: restoreArt ?? "",
-      );
-
-      final streamingQuality = ref.read(settingsProvider).streamingQuality;
-      final restoredSong = await _smartService.cacheAndPlay(
-        video: ytResult,
-        metadata: meta,
-        onProgress: (_) {},
-        streamingQuality: streamingQuality,
-      );
-
-      if (restoredSong != null && mounted) {
-        ref.read(playerProvider.notifier).playSong(restoredSong);
-        showCenterNotification(context,
-            label: AppLocalizations.of(context)!.nowPlaying,
-            title: restoredSong.title,
-            subtitle: restoredSong.artist,
-            artPath: restoredSong.filePath,
-            onlineArtUrl: restoredSong.onlineArtUrl);
-      }
-    } catch (e) {
-      print("Stats Restore Failed: $e");
-    } finally {
-      if (mounted) setState(() => _isRestoring = false);
-    }
+  void _handleSongTap(SongModel song) {
+    ref.read(playerProvider.notifier).playSong(song);
   }
 
   // ... Helpers ...

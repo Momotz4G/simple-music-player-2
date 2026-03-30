@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\MEKEW\source\repos\Simple_Music_Player_New_Gen\simple_music_player_2\cpp_audio_engine\build\CMakeFiles\71dc404a658423c2e4e032a4f69652c3\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{3477FD55-8896-32B5-8FEE-4D37AEF8E7FE}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

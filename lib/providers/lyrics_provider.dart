@@ -172,6 +172,9 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
   Future<void> loadLyrics(
       String filePath, String title, String artist, double durationSecs) async {
+    // 🚀 NEW: Delay lyrics fetch by 2 seconds to prioritize initial audio buffering
+    await Future.delayed(const Duration(seconds: 2));
+
     // 🚀 Same-song guard: preserve syncOffset if lyrics already loaded for this song
     final songKey = '$filePath|$title';
     if (songKey == _currentSongKey &&

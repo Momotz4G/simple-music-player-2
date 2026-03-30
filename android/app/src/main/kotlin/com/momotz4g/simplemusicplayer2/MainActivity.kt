@@ -3,11 +3,15 @@ package com.momotz4g.simplemusicplayer2
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import com.momotz4g.simplemusicplayer2.usbaudio.UsbAudioPlugin
+import android.media.audiofx.DynamicsProcessing
+import android.util.Log
 
 class MainActivity : AudioServiceActivity() {
     private val CHANNEL = "com.momotz4g.simplemusicplayer2/audio_settings"
+    private val EQ_CHANNEL = "com.momotz4g.simple_music_player/equalizer"
     private var bitPerfectModeEnabled = false
     private var usbAudioPlugin: UsbAudioPlugin? = null
+    private val dynamicsProcessingMap = mutableMapOf<Int, DynamicsProcessing>()
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -76,6 +80,24 @@ class MainActivity : AudioServiceActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        io.flutter.plugin.common.MethodChannel(flutterEngine.dartExecutor.binaryMessenger, EQ_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "apply" -> {
+                    val sessionId = call.argument<Int>("sessionId") ?: return@setMethodCallHandler
+                    val gains = call.argument<List<Double>>("gains") ?: return@setMethodCallHandler
+                    val preamp = call.argument<Double>("preamp") ?: 0.0
+                    applyEQ(sessionId, gains, preamp)
+                    result.success(true)
+                }
+                "bypass" -> {
+                    val sessionId = call.argument<Int>("sessionId") ?: return@setMethodCallHandler
+                    bypassEQ(sessionId)
+                    result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        }
     }
     
     override fun onDestroy() {
@@ -130,6 +152,73 @@ class MainActivity : AudioServiceActivity() {
             result.success(true)
         } catch (e: Exception) {
             result.error("NATIVE_ERROR", e.message, null)
+        }
+    }
+
+    private fun applyEQ(sessionId: Int, gains: List<Double>, preamp: Double) {
+        try {
+            var dp = dynamicsProcessingMap[sessionId]
+            if (dp == null) {
+                // Initialize DynamicsProcessing for this session
+                // We use 10 bands.
+                val channelCount = 2 // Stereo
+                val setPreEq = true
+                val setPostEq = false
+                val setLimiter = true // Good for preventing clipping with positive gains
+                
+                val builder = DynamicsProcessing.Config.Builder(
+                    0, // variant
+                    channelCount,
+                    setPreEq,
+                    10, // pre-EQ bands
+                    false, // mbc
+                    0, // mbc bands
+                    setPostEq,
+                    0, // post-EQ bands
+                    setLimiter
+                )
+                
+                val config = builder.build()
+                dp = DynamicsProcessing(0, sessionId, config)
+                dp.enabled = true
+                dynamicsProcessingMap[sessionId] = dp
+                Log.d("EQ", "Initialized DynamicsProcessing for session $sessionId")
+            }
+
+            // Sync bands if needed (first time or if config changed)
+            // Center frequencies for our 10 bands
+            val frequencies = floatArrayOf(31f, 62f, 125f, 250f, 500f, 1000f, 2000f, 4000f, 8000f, 16000f)
+            
+            val eq = dp.getConfig().getPreEqByChannelIndex(0) // Get first channel to check band count
+            // Note: In 0-variant, we apply same settings to all channels
+            
+            for (ch in 0 until 2) {
+                for (i in 0 until 10) {
+                    val band = dp.getPreEqBandByChannelIndex(ch, i)
+                    band.isEnabled = true
+                    band.cutoffFrequency = frequencies[i]
+                    band.gain = gains[i].toFloat()
+                    dp.setPreEqBandByChannelIndex(ch, i, band)
+                }
+            }
+            
+            // Pre-amp adjustment
+            // Apply input gain to all channels
+            dp.setInputGainAllChannelsTo(preamp.toFloat())
+            
+            dp.enabled = true
+
+        } catch (e: Exception) {
+            Log.e("EQ", "Error applying EQ: ${e.message}")
+        }
+    }
+
+    private fun bypassEQ(sessionId: Int) {
+        dynamicsProcessingMap[sessionId]?.let {
+            it.enabled = false
+            it.release()
+            dynamicsProcessingMap.remove(sessionId)
+            Log.d("EQ", "Bypassed and released EQ for session $sessionId")
         }
     }
 }

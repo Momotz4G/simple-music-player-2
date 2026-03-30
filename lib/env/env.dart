@@ -81,4 +81,11 @@ abstract class Env {
   // 🚀 Tidal API Config (Private Server)
   @EnviedField(varName: 'TIDAL_API_KEY', obfuscate: true, defaultValue: '')
   static final String tidalApiKey = _Env.tidalApiKey;
+
+  // 🚀 Tidal API URL (Primary Server)
+  @EnviedField(
+      varName: 'TIDAL_API_URL',
+      obfuscate: true,
+      defaultValue: 'https://tidal-api.stephanus-dev.online')
+  static final String tidalApiUrl = _Env.tidalApiUrl;
 }

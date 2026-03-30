@@ -153,7 +153,12 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
                           const SizedBox(height: 16),
 
                           // File Path Section
-                          _buildSectionHeader(l10n.fileLocation, isDark),
+                          // 🚀 POLISH: Mask sensitive URLs and update labels for streaming
+                          _buildSectionHeader(
+                              widget.song.filePath.startsWith('http')
+                                  ? 'Audio Source'
+                                  : l10n.fileLocation,
+                              isDark),
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -163,7 +168,9 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: SelectableText(
-                              widget.song.filePath,
+                              widget.song.filePath.startsWith('http')
+                                  ? 'Tidal Server Stream'
+                                  : widget.song.filePath,
                               style: TextStyle(
                                 color: subtitleColor,
                                 fontSize: 11,

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/schemas.dart';
@@ -356,6 +357,12 @@ class MetricsService {
       final hostname = Platform.localHostname;
       final os = Platform.operatingSystem;
       final osVersion = Platform.operatingSystemVersion;
+      
+      String clientVersion = "Unknown";
+      try {
+        final packageInfo = await PackageInfo.fromPlatform();
+        clientVersion = "${packageInfo.version} (${packageInfo.buildNumber})";
+      } catch (_) {}
 
       await _restWrite(
           'metrics',
@@ -364,6 +371,7 @@ class MetricsService {
             'hostname': hostname,
             'os': os,
             'os_version': osVersion,
+            'client_version': clientVersion, // 🚀 NEW
             'last_active': DateTime.now().toUtc().toIso8601String(),
           },
           isUpdate: true);

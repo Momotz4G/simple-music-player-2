@@ -1648,7 +1648,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileSizeLabel => 'File Size';
 
   @override
-  String get fileLocation => 'File Location';
+  String get fileLocation => 'Audio Source';
 
   @override
   String get audioSource => 'Audio Source';

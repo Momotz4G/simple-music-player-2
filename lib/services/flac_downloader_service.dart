@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/data_usage_provider.dart';
@@ -35,9 +36,15 @@ class FlacDownloaderService {
   DateTime? _lastSongLinkCall;
   int _songLinkCallCount = 0;
   DateTime _songLinkResetTime = DateTime.now();
+  bool _lastCallWas429 = false; // Track if last call was rate-limited
 
   // Default service priority order
   static const List<String> defaultServiceOrder = ['deezer', 'tidal', 'qobuz'];
+
+  // 🚀 SONG.LINK CACHE & REQUEST COALESCING
+  static final Map<String, StreamingUrls> _songLinkCache = {};
+  static final Map<String, String> _tidalSearchCache = {};
+  static final Map<String, Future<StreamingUrls?>> _pendingSongLinkRequests = {};
 
   /// Get streaming URLs from song.link API for a Spotify track
   Future<StreamingUrls?> getStreamingUrls(String spotifyTrackId) async {
@@ -47,12 +54,28 @@ class FlacDownloaderService {
   }
 
   /// Get streaming URLs from song.link API for ANY provider URL (Spotify, Deezer, etc)
+  /// [maxRetries] limits 429 retry attempts to prevent infinite loops (default: 2).
   Future<StreamingUrls?> getStreamingUrlsFromSpecificUrl(
-      String resourceUrl) async {
-    // Rate limiting
-    await _applySongLinkRateLimit();
+      String resourceUrl, {int maxRetries = 2}) async {
+    // 1. Check Cache
+    if (_songLinkCache.containsKey(resourceUrl)) {
+      debugPrint('🚀 song.link: Using cached URLs for $resourceUrl');
+      return _songLinkCache[resourceUrl];
+    }
+
+    // 2. Coalesce concurrent requests
+    if (_pendingSongLinkRequests.containsKey(resourceUrl)) {
+      debugPrint('🕒 song.link: Waiting for pending request for $resourceUrl');
+      return _pendingSongLinkRequests[resourceUrl];
+    }
+
+    final completer = Completer<StreamingUrls?>();
+    _pendingSongLinkRequests[resourceUrl] = completer.future;
 
     try {
+      // Rate limiting
+      await _applySongLinkRateLimit();
+
       // Build song.link API URL
       const apiBase = 'https://api.song.link/v1-alpha.1/links?url=';
       final apiUrl = '$apiBase${Uri.encodeComponent(resourceUrl)}';
@@ -68,20 +91,43 @@ class FlacDownloaderService {
       _songLinkCallCount++;
 
       if (response.statusCode == 429) {
-        debugPrint('⚠️ song.link rate limit hit, waiting...');
+        _lastCallWas429 = true; // Signal rate limiter to use longer backoff
+        
+        if (maxRetries <= 0) {
+          debugPrint('❌ song.link rate limit: Max retries exhausted. Giving up.');
+          _pendingSongLinkRequests.remove(resourceUrl);
+          completer.complete(null);
+          return null;
+        }
+        
+        debugPrint('⚠️ song.link rate limit hit, waiting 15s... (retries left: ${maxRetries - 1})');
         await Future.delayed(const Duration(seconds: 15));
-        return getStreamingUrlsFromSpecificUrl(resourceUrl); // Retry
+        
+        // Cleanup pending so next attempt starts fresh
+        _pendingSongLinkRequests.remove(resourceUrl);
+        final retryResult = await getStreamingUrlsFromSpecificUrl(
+            resourceUrl, maxRetries: maxRetries - 1);
+        completer.complete(retryResult);
+        return retryResult;
       }
+      
+      _lastCallWas429 = false; // Successful non-429 response
 
       if (response.statusCode != 200) {
         debugPrint('❌ song.link API error: ${response.statusCode}');
+        _pendingSongLinkRequests.remove(resourceUrl);
+        completer.complete(null);
         return null;
       }
 
       final data = json.decode(response.body);
       final linksByPlatform = data['linksByPlatform'] as Map<String, dynamic>?;
 
-      if (linksByPlatform == null) return null;
+      if (linksByPlatform == null) {
+        _pendingSongLinkRequests.remove(resourceUrl);
+        completer.complete(null);
+        return null;
+      }
 
       final urls = StreamingUrls(
         spotifyId: '',
@@ -94,9 +140,15 @@ class FlacDownloaderService {
       debugPrint('✓ Found URLs - Deezer: ${urls.deezerUrl != null}, '
           'Tidal: ${urls.tidalUrl != null}, Qobuz: ${urls.qobuzUrl != null}');
 
+      // Save to Cache
+      _songLinkCache[resourceUrl] = urls;
+      _pendingSongLinkRequests.remove(resourceUrl);
+      completer.complete(urls);
       return urls;
     } catch (e) {
       debugPrint('❌ Error getting streaming URLs: $e');
+      _pendingSongLinkRequests.remove(resourceUrl);
+      if (!completer.isCompleted) completer.complete(null);
       return null;
     }
   }
@@ -108,50 +160,130 @@ class FlacDownloaderService {
   }
 
   /// 🚀 NEW: Direct Tidal Search Fallback on API Server
-  Future<String?> getTidalTrackIdBySearch(String title, String artist) async {
+  Future<String?> getTidalTrackIdBySearch(String title, String artist, {int retries = 1}) async {
     final logger = DebugLogService();
     final servers = await _getTidalApiServers();
     final query = "$title $artist";
     
     logger.info('🔍 Direct Tidal Search: $query');
     
-    for (final server in servers) {
+    // 🚀 NEW: CHECK SEARCH CACHE FIRST
+    final cacheKey = query.toLowerCase().trim();
+    if (_tidalSearchCache.containsKey(cacheKey)) {
+      logger.info('🚀 [Tidal Search] Discovery matched in cache: ${_tidalSearchCache[cacheKey]}');
+      return _tidalSearchCache[cacheKey];
+    }
+    
+    // 🚀 STAGE 1: Parallel probe of the most reliable primary servers
+    final primaryServers = servers.take(3).toList();
+    
+    for (int attempt = 0; attempt <= retries; attempt++) {
+      if (attempt > 0) {
+        logger.warning('⏳ Tidal Search retry attempt $attempt after connection drop...');
+        await Future.delayed(const Duration(seconds: 1));
+      }
+      
       try {
-         // Only search if it is a trusted instance that supports it 
-         final isSelfHosted = server.contains('stephanus-dev.online');
-         if (!isSelfHosted) continue; // Skip public nodes that might not have our new route
-
-         final uri = Uri.parse('$server/search?q=${Uri.encodeComponent(query)}&limit=5&countryCode=US');
-         final Map<String, String> headers = {'Accept': 'application/json'};
-         
-         headers['x-api-key'] = Env.tidalApiKey;
-         
-         final response = await _client.get(uri, headers: headers).timeout(const Duration(seconds: 10));
-         
-         logger.info('📡 Direct Tidal Search Status on $server: ${response.statusCode}');
-
-         if (response.statusCode == 200) {
-            final data = json.decode(response.body);
-            final tracks = data['tracks'] ?? data; 
-            final items = tracks['items'] as List?;
-            
-            if (items != null && items.isNotEmpty) {
-               // 🎧 Prioritize Hi-Res Master tracks if multiple editions exist
-               final bestMatch = items.firstWhere(
+        // 🚀 FAST PATH: Try the VPS (Index 0) exclusively first if available
+        if (servers.isNotEmpty && servers[0].contains(Uri.parse(Env.tidalApiUrl).host)) {
+          try {
+            final vps = servers[0];
+            final uri = Uri.parse('$vps/search?q=${Uri.encodeComponent(query)}&key=${Env.tidalApiKey}');
+            final response = await _client.get(uri).timeout(const Duration(seconds: 3));
+            if (response.statusCode == 200) {
+              final data = json.decode(response.body);
+              // Handle both VPS (List) and public (Object with data['tracks']['items']) formats
+              final List? items = data is List ? data : (data['tracks']?['items'] ?? data['items']);
+              
+              if (items != null && items.isNotEmpty) {
+                final bestMatch = items.firstWhere(
                   (i) => i['audioQuality'] == 'HI_RES_LOSSLESS' || i['audioQuality'] == 'HI_RES',
                   orElse: () => items.first
-               );
-               final foundId = bestMatch['id']?.toString();
-               if (foundId != null) {
-                  logger.success('✅ [Tidal Search] Found Match on $server: $foundId (Quality: ${bestMatch['audioQuality'] ?? 'Standard'})');
+                );
+                final foundId = bestMatch['id']?.toString();
+                if (foundId != null) {
+                  logger.success('🚀 [Tidal Search] VPS FAST-PATH match: $foundId');
+                  _tidalSearchCache[cacheKey] = foundId; // UPDATE CACHE
                   return foundId;
-               }
-            } else {
-               logger.warning('⚠️ [Tidal Search] No tracks found for $query on $server');
+                }
+              }
             }
-         }
+          } catch (e) {
+            logger.warning('⚠️ VPS Search Fast-path failed: $e');
+          }
+        }
+
+        // 🚀 STAGE 1: Parallel probe of the most reliable primary servers
+        final results = await Future.wait(primaryServers.map((server) async {
+          try {
+            // VPS needs the key, public servers don't
+            String searchUrl = '$server/search?q=${Uri.encodeComponent(query)}&limit=5&countryCode=US';
+            if (server.contains(Uri.parse(Env.tidalApiUrl).host)) {
+              searchUrl += '&key=${Env.tidalApiKey}';
+            }
+
+            final response = await _client.get(Uri.parse(searchUrl)).timeout(const Duration(seconds: 5));
+            if (response.statusCode == 200) {
+              final data = json.decode(response.body);
+              // Handle both VPS (List) and public (Object with data['tracks']['items']) formats
+              final List? items = data is List ? data : (data['tracks']?['items'] ?? data['items']);
+              
+              if (items != null && items.isNotEmpty) {
+                final bestMatch = items.firstWhere(
+                  (i) => i['audioQuality'] == 'HI_RES_LOSSLESS' || i['audioQuality'] == 'HI_RES',
+                  orElse: () => items.first
+                );
+                return bestMatch['id']?.toString();
+              }
+            }
+          } catch (e) {
+            // Silently catch exceptions during parallel probe
+          }
+          return null;
+        }));
+        
+        final foundId = results.firstWhere((id) => id != null, orElse: () => null);
+        if (foundId != null) {
+          logger.success('✅ [Tidal Search] Found Match via Primary Parallel Probe: $foundId');
+          _tidalSearchCache[cacheKey] = foundId; // UPDATE CACHE
+          return foundId;
+        }
       } catch (e) {
-         logger.warning('⚠️ Tidal search failed on $server: $e');
+        logger.warning('⚠️ Primary parallel probe failed: $e');
+      }
+    }
+
+    // 🚀 STAGE 2: Sequential fallback for remaining servers
+    for (int i = 3; i < servers.length; i++) {
+      final server = servers[i];
+      try {
+        final uri = Uri.parse('$server/search?q=${Uri.encodeComponent(query)}&limit=5&countryCode=US');
+        final Map<String, String> headers = {
+          'Accept': 'application/json',
+          'x-api-key': Env.tidalApiKey
+        };
+        final response = await _client.get(uri, headers: headers).timeout(const Duration(seconds: 8));
+        
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          // Handle both VPS (List) and public (Object) formats
+          final List? items = data is List ? data : (data['tracks']?['items'] ?? data['items']);
+          
+          if (items != null && items.isNotEmpty) {
+            final bestMatch = items.firstWhere(
+              (i) => i['audioQuality'] == 'HI_RES_LOSSLESS' || i['audioQuality'] == 'HI_RES',
+              orElse: () => items.first
+            );
+            final foundId = bestMatch['id']?.toString();
+            if (foundId != null) {
+              logger.success('✅ [Tidal Search] Found Match on fallback server $server: $foundId');
+              _tidalSearchCache[cacheKey] = foundId; // UPDATE CACHE
+              return foundId;
+            }
+          }
+        }
+      } catch (e) {
+        logger.warning('⚠️ Tidal search failed on $server: $e');
       }
     }
     return null;
@@ -177,11 +309,12 @@ class FlacDownloaderService {
       _songLinkResetTime = DateTime.now();
     }
 
-    // Ensure 7 second delay between calls
+    // Ensure delay between calls (15s after a 429, 7s normally)
+    final minDelay = _lastCallWas429 ? 15 : 7;
     if (_lastSongLinkCall != null) {
       final timeSinceLast = now.difference(_lastSongLinkCall!);
-      if (timeSinceLast.inSeconds < 7) {
-        final waitTime = Duration(seconds: 7 - timeSinceLast.inSeconds);
+      if (timeSinceLast.inSeconds < minDelay) {
+        final waitTime = Duration(seconds: minDelay - timeSinceLast.inSeconds);
         await Future.delayed(waitTime);
       }
     }
@@ -345,16 +478,12 @@ class FlacDownloaderService {
 
     // 🚀 NEW: Standardized public hifi-api servers
     final fallbackServers = [
-      'https://tidal-api.stephanus-dev.online', // Cloudflare domain (Primary)
-      'https://triton.squid.wtf', // Priority Fallback (can return previews)
+      Env.tidalApiUrl, // VPS (Primary)
+      'https://triton.squid.wtf', // Priority Fallback
       'https://tnm.ngrok.app', // ngrok proxy
-      'https://api.mizu.moe', // mizu.moe hifi-api instance
-      'https://l.yokai.ee/api', // yokai api
-      'https://arran.monochrome.tf', // New monochrome node
-      'https://tidal-api.binimum.org', // hifi-api author's instance
-      'https://tidal.squid.wtf', // squid.wtf hifi-api instance
-      'https://api.monochrome.tf', // Original monochrome
+      'https://api.monochrome.tf', // Monochrome
       'https://eu-central.monochrome.tf', // EU fallback
+      'https://tidal-api.binimum.org', // Binimum
     ];
 
     logger.info(
@@ -401,7 +530,7 @@ class FlacDownloaderService {
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
             'Origin': 'https://monochrome.tf',
             'Referer': 'https://monochrome.tf/',
-            'x-api-key': '8f7G2k9P5mQ1nL4vW6xZ', // Your 20-character secure key
+            'x-api-key': Env.tidalApiKey,
           }).timeout(const Duration(seconds: 30));
 
           if (response.statusCode != 200) continue;
@@ -540,6 +669,7 @@ class FlacDownloaderService {
     String? artistName,
     String? albumName,
     Function(double)? onProgress,
+    int? timeoutSeconds,
   }) async {
     final logger = DebugLogService();
     logger.info("FLAC: downloadFlac called for $trackName");
@@ -570,6 +700,7 @@ class FlacDownloaderService {
 
     // === STEP 1: Try Tidal HI_RES_LOSSLESS first ===
     if (resolvedTidalUrl != null) {
+      if (onProgress != null) onProgress(0.0);
       debugPrint('🎧 Step 1: Trying Tidal HI_RES_LOSSLESS...');
       logger.info('FLAC: Step 1 - Trying Tidal HI_RES_LOSSLESS...');
       file = await downloadFromTidalWithQuality(
@@ -577,6 +708,7 @@ class FlacDownloaderService {
         outputPath: outputPath,
         quality: 'HI_RES_LOSSLESS',
         onProgress: onProgress,
+        timeoutSeconds: timeoutSeconds,
       );
       if (file != null) {
         logger.success('FLAC: Tidal Hi-Res success');
@@ -587,6 +719,7 @@ class FlacDownloaderService {
 
     // === STEP 2: Try Qobuz FLAC/Hi-Res ===
     if (urls?.qobuzUrl != null) {
+      if (onProgress != null) onProgress(0.0);
       debugPrint('🎧 Step 2: Trying Qobuz FLAC...');
       logger.info('FLAC: Step 2 - Trying Qobuz FLAC...');
       file = await _downloadFromQobuz(
@@ -603,6 +736,7 @@ class FlacDownloaderService {
 
     // === STEP 3: Try Deezer (CD quality) ===
     if (urls?.deezerUrl != null) {
+      if (onProgress != null) onProgress(0.0);
       debugPrint('🎧 Step 3: Trying Deezer FLAC...');
       logger.info('FLAC: Step 3 - Trying Deezer FLAC...');
       file = await downloadFromDeezer(
@@ -622,12 +756,14 @@ class FlacDownloaderService {
 
     // === STEP 4: Try Tidal LOSSLESS (CD quality fallback) ===
     if (resolvedTidalUrl != null) {
+      if (onProgress != null) onProgress(0.0);
       debugPrint('🎧 Step 4: Trying Tidal LOSSLESS (CD quality)...');
       file = await downloadFromTidalWithQuality(
         tidalUrl: resolvedTidalUrl,
         outputPath: outputPath,
         quality: 'LOSSLESS',
         onProgress: onProgress,
+        timeoutSeconds: timeoutSeconds,
       );
       if (file != null) {
         return FlacDownloadResult.success(file, 'tidal-lossless');
@@ -644,6 +780,7 @@ class FlacDownloaderService {
     required String outputPath,
     required String quality,
     Function(double)? onProgress,
+    int? timeoutSeconds,
   }) async {
     final trackId = _extractTidalTrackId(tidalUrl);
     if (trackId == null) return null;
@@ -657,6 +794,7 @@ class FlacDownloaderService {
     logger.info("TIDAL: Found ${servers.length} servers for $quality");
 
     for (final server in servers) {
+      if (onProgress != null) onProgress(0.0);
       try {
         String apiUrl = '$server/track/?id=$trackId&quality=$quality';
 
@@ -667,7 +805,7 @@ class FlacDownloaderService {
           'Referer': 'https://monochrome.tf/',
         };
 
-        if (server.contains('stephanus-dev.online')) {
+        if (server.contains(Uri.parse(Env.tidalApiUrl).host)) {
           requestHeaders['x-api-key'] = Env.tidalApiKey;
           // Also send as a parameter as requested
           apiUrl += '&key=${Env.tidalApiKey}';
@@ -676,7 +814,7 @@ class FlacDownloaderService {
         final request = http.Request('GET', Uri.parse(apiUrl));
         request.headers.addAll(requestHeaders);
 
-        final response = await _client.send(request).timeout(const Duration(seconds: 30));
+        final response = await _client.send(request).timeout(Duration(seconds: timeoutSeconds ?? 30));
 
         if (response.statusCode == 200) {
           final contentLength = response.contentLength ?? 0;
@@ -792,7 +930,7 @@ class FlacDownloaderService {
               await Future.delayed(const Duration(seconds: 2));
               try {
                 String statusUrl = '$server/status/?jobId=$jobId';
-                if (server.contains('stephanus-dev.online')) {
+                if (server.contains(Uri.parse(Env.tidalApiUrl).host)) {
                   statusUrl += '&key=${Env.tidalApiKey}';
                 }
 
@@ -833,7 +971,7 @@ class FlacDownloaderService {
             final file = File(tempPath);
             bool downloadOk = true;
 
-            final isSelfHosted = server.contains('stephanus-dev.online');
+            final isSelfHosted = server.contains(Uri.parse(Env.tidalApiUrl).host);
 
             if (isSelfHosted) {
               logger.info('TIDAL: Server is self-hosted. Downloading full buffer directly (streamed)...');
@@ -948,7 +1086,7 @@ class FlacDownloaderService {
 
           // For direct binary, we need to use a streamed request to get progress
           String directUrl = apiUrl;
-          if (server.contains('stephanus-dev.online')) {
+          if (server.contains(Uri.parse(Env.tidalApiUrl).host)) {
             directUrl += '&key=${Env.tidalApiKey}';
           }
 
@@ -1189,6 +1327,7 @@ class FlacDownloaderService {
     final qualities = ['5', '6', '7'];
 
     for (final quality in qualities) {
+      if (onProgress != null) onProgress(0.0);
       try {
         final apiUrl =
             '$qobuzApiBase/download-music?track_id=$trackId&quality=$quality';
@@ -1719,7 +1858,7 @@ class FlacDownloaderService {
       if (headers != null) {
         request.headers.addAll(headers);
       }
-      final streamedResponse = await _client.send(request);
+      final streamedResponse = await _client.send(request).timeout(const Duration(seconds: 30));
 
       if (streamedResponse.statusCode != 200) {
         debugPrint('❌ Download failed: ${streamedResponse.statusCode}');

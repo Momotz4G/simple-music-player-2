@@ -10,6 +10,7 @@ import '../../providers/player_provider.dart';
 import '../../providers/timer_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/interface_provider.dart';
+import '../../providers/equalizer_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../providers/library_presentation_provider.dart';
 import '../../models/song_model.dart';
@@ -122,19 +123,23 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     final playerState = ref.watch(playerProvider);
     final notifier = ref.read(playerProvider.notifier);
     final settings = ref.watch(settingsProvider);
+    final eq = ref.watch(equalizerProvider);
 
     final song = playerState.currentSong;
     final hasSong = song != null;
 
     // 1. Handle Song Changes and Initial Load
-    // Use explicit check because ref.listen might not fire for initial state on app launch
+
     if (song?.filePath != _lastFilePath) {
       // Update tracker immediately to prevent loop
       _lastFilePath = song?.filePath;
 
       // Reset info and fetch new
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        // 🚀 ALWAYS clear old quality info when file path changes to prevent stale badges
         if (mounted) setState(() => _audioInfo = null);
+        
+        // Fetch new info (either for new song or new path)
         _fetchAudioInfo(song?.filePath);
       });
     }
@@ -641,7 +646,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                     Icon(Icons.equalizer_rounded,
                                         color: primaryColor, size: 20),
                                     const SizedBox(width: 12),
-                                    Text(l10n.equalizer,
+                                    Text('${l10n.equalizer} (${eq.isEnabled ? "On" : "Off"})',
                                         style: TextStyle(color: primaryColor)),
                                   ],
                                 ),

@@ -6,13 +6,8 @@ import '../../l10n/app_localizations.dart';
 import '../../data/schemas.dart'; // Required for HistoryEntry
 import '../../providers/history_provider.dart';
 import '../../providers/player_provider.dart';
-import '../../providers/settings_provider.dart';
-import '../../services/smart_download_service.dart';
 import '../../models/song_model.dart';
-import '../../models/song_metadata.dart';
-import '../../models/youtube_search_result.dart';
 import '../components/smart_art.dart';
-import '../components/music_notification.dart';
 
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
@@ -22,138 +17,21 @@ class HistoryPage extends ConsumerStatefulWidget {
 }
 
 class _HistoryPageState extends ConsumerState<HistoryPage> {
-  final SmartDownloadService _smartService = SmartDownloadService();
-  bool _isRestoring = false;
 
   // 🚀 SMART PLAY FUNCTION
   // Handles playing local files OR restoring deleted cached files
-  Future<void> _handleSongTap(HistoryEntry entry) async {
-    if (_isRestoring) return;
-
-    final l10n = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.of(context);
-
-    final file = File(entry.originalFilePath);
-
-    // CASE 1: File still exists (Local or Cached) -> PLAY
-    if (await file.exists()) {
-      final song = SongModel(
-        title: entry.title,
-        artist: entry.artist,
-        album: entry.album,
-        filePath: entry.originalFilePath,
-        duration: entry.duration,
-        fileExtension: '.mp3',
-        sourceUrl: entry.youtubeUrl,
-        onlineArtUrl: entry.albumArtUrl,
-      );
-      ref.read(playerProvider.notifier).playSong(song);
-      return;
-    }
-
-    // CASE 2: File Deleted/Cleared (Restore Logic)
-    if (entry.youtubeUrl.isEmpty) {
-      if (mounted) {
-        // 🚀 FIX: Perform Just-In-Time Search if URL is missing
-        showCenterNotification(context,
-            label: l10n.searchingStatus,
-            title: entry.title,
-            subtitle: l10n.findingStream,
-            artPath: entry.albumArtUrl,
-            onlineArtUrl: entry.albumArtUrl);
-      }
-
-      try {
-        final meta = SongMetadata(
-          title: entry.title,
-          artist: entry.artist,
-          album: entry.album,
-          year: "",
-          genre: "",
-          durationSeconds: entry.duration.toInt(),
-          albumArtUrl: entry.albumArtUrl,
-        );
-
-        final match = await _smartService.searchYouTubeForMatch(meta);
-
-        if (match != null && match.youtubeMatches.isNotEmpty) {
-          final bestMatch = match.youtubeMatches.first;
-
-          // Update the entry with the found URL
-          entry.youtubeUrl = bestMatch.url;
-          if (entry.albumArtUrl.isEmpty) {
-            entry.albumArtUrl = bestMatch.thumbnailUrl;
-          }
-
-          // Save back to DB so we don't have to search again
-          await ref.read(historyProvider.notifier).updateHistoryEntry(entry);
-        } else {
-          if (mounted) {
-            messenger.showSnackBar(
-              SnackBar(content: Text(l10n.noStreamMatch)),
-            );
-          }
-          return;
-        }
-      } catch (e) {
-        debugPrint("Search failed: $e");
-        if (mounted) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(l10n.errorSearchingStream)),
-          );
-        }
-        return;
-      }
-    }
-
-    if (mounted) {
-      setState(() => _isRestoring = true);
-      showCenterNotification(context,
-          label: l10n.restoring,
-          title: entry.title,
-          subtitle: l10n.rebufferingFromCloud,
-          artPath: entry.albumArtUrl,
-          onlineArtUrl: entry.albumArtUrl);
-    }
-
-    try {
-      // Reconstruct Metadata object
-      final meta = SongMetadata(
-        title: entry.title,
-        artist: entry.artist,
-        album: entry.album,
-        year: "", // Not critical for simple playback
-        genre: "",
-        durationSeconds: entry.duration.toInt(),
-        albumArtUrl: entry.albumArtUrl,
-      );
-
-      // Reconstruct YouTube Result object
-      final ytResult = YoutubeSearchResult(
-        title: entry.title,
-        artist: entry.artist,
-        duration: "",
-        url: entry.youtubeUrl, // The key to getting it back!
-        thumbnailUrl: entry.albumArtUrl,
-      );
-
-      // Re-Download and Play
-      final streamingQuality = ref.read(settingsProvider).streamingQuality;
-      final song = await _smartService.cacheAndPlay(
-        video: ytResult,
-        metadata: meta,
-        onProgress: (_) {},
-        streamingQuality: streamingQuality,
-      );
-
-      if (song != null) {
-        ref.read(playerProvider.notifier).playSong(song);
-      }
-    } catch (e) {
-      debugPrint("Restore failed: $e");
-    } finally {
-      if (mounted) setState(() => _isRestoring = false);
-    }
+  void _handleSongTap(HistoryEntry entry) {
+    final song = SongModel(
+      title: entry.title,
+      artist: entry.artist,
+      album: entry.album,
+      filePath: entry.originalFilePath,
+      duration: entry.duration,
+      fileExtension: '.mp3', // Placeholder
+      sourceUrl: entry.youtubeUrl,
+      onlineArtUrl: entry.albumArtUrl,
+    );
+    ref.read(playerProvider.notifier).playSong(song);
   }
 
   @override

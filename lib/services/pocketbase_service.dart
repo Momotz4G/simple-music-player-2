@@ -168,9 +168,13 @@ class PocketBaseService {
       }
     } catch (e) {
       debugPrint("⚠️ Search existing record error: $e");
-      // 🚀 IF SEARCH FAILS DUE TO NETWORK ERROR, DO NOT CREATE NEW ONES!
-      // ONLY create a new record if the network call successfully returned 0 items.
-      return; 
+      // 🚀 Fallback: If search fails (e.g. 403 Forbidden because List permission is restricted), 
+      // proceed to create/update if we have a cached ID, or skip search and try to create.
+      if (e.toString().contains('403')) {
+         debugPrint("📊 403 Forbidden on list. Skipping duplicate check and proceeding.");
+      } else {
+         return; 
+      }
     }
 
     // 4. Create new record (only if no existing record found and search succeeded)
@@ -442,10 +446,7 @@ class PocketBaseService {
     if (recordId == null) return;
 
     try {
-      DebugLogService().info(
-          "📡 PB: Updating Session $recordId with keys: ${data.keys.toList()}");
       await pb.collection('sessions').update(recordId, body: data);
-      DebugLogService().info("✅ PB: Update Success");
     } catch (e) {
       DebugLogService().error("⚠️ PB: Update FAILED: $e");
       // debugPrint("⚠️ Session Update Error: $e");
@@ -476,7 +477,6 @@ class PocketBaseService {
 
     try {
       pb.collection('sessions').subscribe(recordId, (e) {
-        debugPrint("📡 EVENT RECEIVED: ${e.action} | ${e.record?.data}");
         if (e.action == 'update') {
           final data = e.record?.data ?? {};
           // Ensure 'updated' is available
@@ -484,7 +484,7 @@ class PocketBaseService {
           // Data received, push to listener
           onUpdate(data);
         } else {
-          debugPrint("📡 Event ignored (not update): ${e.action}");
+          // Event ignored (not update)
         }
       });
       debugPrint("📡 Subscribed to Session: $recordId");

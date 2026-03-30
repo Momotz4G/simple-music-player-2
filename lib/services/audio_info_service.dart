@@ -2,7 +2,9 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:ffmpeg_kit_flutter_new_audio/ffprobe_kit.dart';
+import '../env/env.dart';
 import '../models/song_model.dart';
 
 /// Audio quality information model
@@ -173,12 +175,26 @@ class AudioInfoService {
       }
     }
 
-    // 2. Try source URL if it exists
+    // 2. Try filePath if it's a URL (Instant Streaming)
+    if (song.filePath.startsWith('http')) {
+      // 🚀 NEW: Check if a local cached version exists before probing the URL
+      final cachedPath = await _checkCachePath(song);
+      if (cachedPath != null) {
+        return await getAudioInfo(cachedPath);
+      }
+      return await getAudioInfo(song.filePath);
+    }
+
+    // 3. Try source URL if it exists
     if (song.sourceUrl != null && song.sourceUrl!.startsWith('http')) {
+      final cachedPath = await _checkCachePath(song);
+      if (cachedPath != null) {
+        return await getAudioInfo(cachedPath);
+      }
       return await getAudioInfo(song.sourceUrl!);
     }
 
-    // 3. Fallback to basic info from song metadata
+    // 4. Fallback to basic info from song metadata
     return _getBasicInfo(song.filePath, 0, _getFormatFromPath(song.filePath));
   }
 
@@ -242,6 +258,12 @@ class AudioInfoService {
 
       final format = _getFormatFromPath(filePath);
 
+      // 🚀 Fast Path for Streams (All Platforms): Skip heavy probes, enrich via fast URL headers
+      if (isUrl) {
+        final basic = _getBasicInfo(filePath, fileSize, format);
+        return await _enrichWithUrlMetadata(basic, filePath);
+      }
+
       // Mobile: Use FFprobeKit from ffmpeg_kit_flutter_new_audio
       if (Platform.isAndroid || Platform.isIOS) {
         return await _getMobileInfo(filePath, fileSize, format);
@@ -255,12 +277,16 @@ class AudioInfoService {
         }
 
         if (_ffprobePath != null) {
-          return await _getDetailedInfo(filePath, fileSize, format);
+          final info = await _getDetailedInfo(filePath, fileSize, format);
+          
+          return info;
         }
       }
 
       // Fallback
-      return _getBasicInfo(filePath, fileSize, format);
+      final basic = _getBasicInfo(filePath, fileSize, format);
+      if (isUrl) return await _enrichWithUrlMetadata(basic, filePath);
+      return basic;
     } catch (e) {
       if (kDebugMode) print('AudioInfoService error: $e');
       return null;
@@ -344,6 +370,12 @@ class AudioInfoService {
 
   /// Get format from file path
   String _getFormatFromPath(String path) {
+    if (path.contains('/stream?') && path.contains('id=')) {
+      if (path.contains('quality=HIGH') || path.contains('quality=LOW')) {
+        return 'M4A';
+      }
+      return 'FLAC'; // Our VPS always pipes FLAC for Lossless/Hi-Res
+    }
     // Remove query parameters if it's a URL
     final purePath = path.split('?').first;
     final ext = purePath.split('.').last.toLowerCase();
@@ -510,6 +542,91 @@ class AudioInfoService {
     } catch (e) {
       if (kDebugMode) print('ffprobe error: $e');
       return _getBasicInfo(filePath, fileSize, format);
+    }
+  }
+
+  /// 🚀 NEW: Enrich AudioInfo using knowledge from the streaming URL
+  /// Now performs a HEAD request to snoops X-Headers for exact specs
+  Future<AudioInfo> _enrichWithUrlMetadata(AudioInfo info, String url) async {
+    final uri = Uri.parse(url);
+    final qualityParam = uri.queryParameters['quality']?.toUpperCase();
+
+    // 🚀 NEW: Snoop VPS headers for exact specs (Fast Path)
+    int? headerSampleRate;
+    int? headerBitDepth;
+    
+    if (url.contains('${Uri.parse(Env.tidalApiUrl).host}/stream')) {
+      try {
+        final response = await http.head(uri).timeout(const Duration(seconds: 1));
+        final srate = response.headers['x-audio-sample-rate'];
+        final bdepth = response.headers['x-audio-bit-depth'];
+        if (srate != null) headerSampleRate = int.tryParse(srate);
+        if (bdepth != null) headerBitDepth = int.tryParse(bdepth);
+      } catch (e) {
+        // Silent fail, use estimates
+      }
+    }
+
+    if (qualityParam == null && headerSampleRate == null) return info;
+
+    int? sampleRate = headerSampleRate ?? info.sampleRate;
+    int? bitDepth = headerBitDepth ?? info.bitDepth;
+    int? bitrate = info.bitrate;
+
+    if (qualityParam == 'HI_RES_LOSSLESS') {
+      sampleRate ??= 96000;
+      bitDepth ??= 24;
+      bitrate ??= (sampleRate > 48000) ? 3000 : 1500; 
+    } else if (qualityParam == 'LOSSLESS') {
+      sampleRate ??= 44100;
+      bitDepth ??= 16;
+      bitrate ??= 850; 
+    } else if (qualityParam == 'HIGH') {
+      bitrate ??= 320;
+    }
+
+    final bool isLossy = (qualityParam == 'HIGH' || qualityParam == 'LOW');
+
+    return AudioInfo(
+      format: info.format == 'STREAM' || info.format.contains('/') 
+          ? (isLossy ? 'M4A' : 'FLAC') 
+          : info.format,
+      codec: info.codec == 'stream' || info.codec.contains('/') 
+          ? (isLossy ? 'aac' : 'flac') 
+          : info.codec,
+      bitrate: bitrate,
+      sampleRate: sampleRate,
+      channels: info.channels ?? 2,
+      bitDepth: bitDepth,
+      fileSize: info.fileSize,
+      duration: info.duration,
+    );
+  }
+
+  /// 🚀 NEW: Helper to find the potential cache path for a song
+  Future<String?> _checkCachePath(SongModel song) async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      // Use the same logic as FlacDownloaderService/FilenameHelper
+      final sanitized = song.title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_') + 
+                        " - " + 
+                        song.artist.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+      
+      final cacheDir = Directory('${tempDir.path}/SimpleMusicCache');
+      if (await cacheDir.exists()) {
+        final flacFile = File('${cacheDir.path}/$sanitized.flac');
+        if (await flacFile.exists() && await flacFile.length() > 1024) {
+          return flacFile.path;
+        }
+        
+        final m4aFile = File('${cacheDir.path}/$sanitized.m4a');
+        if (await m4aFile.exists() && await m4aFile.length() > 1024) {
+          return m4aFile.path;
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 }

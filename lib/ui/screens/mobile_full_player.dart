@@ -8,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart'; // 🚀 QR Code
 import '../../providers/player_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/timer_provider.dart';
+import '../../providers/equalizer_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/lyrics_provider.dart'; // 🚀 For mini lyrics preview
 import '../../services/canvas_service.dart';
@@ -226,6 +227,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     final playerState = ref.watch(playerProvider);
     final notifier = ref.read(playerProvider.notifier);
     final settings = ref.watch(settingsProvider);
+    final eq = ref.watch(equalizerProvider);
     final song = playerState.currentSong;
 
     final hasVideo =
@@ -395,7 +397,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                               size: 20,
                             ),
                             const SizedBox(width: 12),
-                            Text(l10n.equalizer,
+                            Text('${l10n.equalizer} (${eq.isEnabled ? "On" : "Off"})',
                                 style: const TextStyle(color: Colors.white)),
                           ],
                         ),

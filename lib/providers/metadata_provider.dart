@@ -191,23 +191,34 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
               ext,
               shouldLoadImages ? metadata.picture?.data : null);
 
-          // 🚀 DSD/DSF FALLBACK
+          // 🚀 REPLAYGAIN EXTRACTION (ffprobe fallback)
+          Map<String, String> tags = {};
+          double? replayGain;
+          try {
+            tags = await AudioInfoService().getTags(file.path);
+            String? gainStr = tags['REPLAYGAIN_TRACK_GAIN'] ?? tags['replaygain_track_gain'];
+            if (gainStr != null) {
+              // Format usually like "-7.51 dB" or just "-7.51"
+              replayGain = double.tryParse(gainStr.replaceAll('dB', '').trim());
+            }
+          } catch (_) {}
+          
+          final songWithGain = song.copyWith(replayGain: replayGain);
           if (ext == '.dsf' || ext == '.dff') {
-            if (song.artist == "Unknown Artist" ||
-                song.album == "Unknown Album") {
-              final tags = await AudioInfoService().getTags(file.path);
+            if (songWithGain.artist == "Unknown Artist" ||
+                songWithGain.album == "Unknown Album") {
               if (tags.isNotEmpty) {
-                final updatedSong = song.copyWith(
-                  title: tags['title'] ?? tags['TITLE'] ?? song.title,
-                  artist: tags['artist'] ?? tags['ARTIST'] ?? song.artist,
-                  album: tags['album'] ?? tags['ALBUM'] ?? song.album,
+                final updatedSong = songWithGain.copyWith(
+                  title: tags['title'] ?? tags['TITLE'] ?? songWithGain.title,
+                  artist: tags['artist'] ?? tags['ARTIST'] ?? songWithGain.artist,
+                  album: tags['album'] ?? tags['ALBUM'] ?? songWithGain.album,
                 );
                 newSongs.add(updatedSong);
                 continue; // Skip the regular add below
               }
             }
           }
-          newSongs.add(song);
+          newSongs.add(songWithGain);
         } catch (e) {
           // 🚀 CRITICAL FAIL FALLBACK
           final ext = p.extension(file.path).toLowerCase();

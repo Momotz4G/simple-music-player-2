@@ -329,14 +329,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.4+1"
-  equalizer_flutter:
-    dependency: "direct main"
-    description:
-      name: equalizer_flutter
-      sha256: "3ce96b49a944c36772c0a21aeca2a163b4e1f1306361cfb3e7a3ce648bd46d9e"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.1"
   equatable:
     dependency: transitive
     description:

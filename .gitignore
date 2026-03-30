@@ -58,3 +58,8 @@ tidal-api/
 
 # Helper scripts
 cleanup_pocketbase.dart
+
+*.hprof
+*.backup
+*.dll
+search_output.json

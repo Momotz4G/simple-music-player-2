@@ -122,7 +122,7 @@ class MainShell extends ConsumerStatefulWidget {
   ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends ConsumerState<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserver {
   final UpdateService _updateService = UpdateService();
   // 🚀 GlobalKey for drawer control on mobile
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -143,7 +143,13 @@ class _MainShellState extends ConsumerState<MainShell> {
 
       // 🚀 CLEANUP OLD UPDATE APKs (Free ~300MB after successful update)
       UpdateService.cleanupOldUpdates();
+
+      // 🚀 CHECK FOR INTERRUPTED UPDATES (Android)
+      _checkPendingUpdate();
     });
+
+    // 🚀 LISTEN FOR APP LIFECYCLE (To resume update after permission grant)
+    WidgetsBinding.instance.addObserver(this);
 
     // 🚀 LISTEN FOR BULK DOWNLOAD ERRORS (Ban/Limit)
     BulkDownloadService().errorNotifier.addListener(_onBulkDownloadError);
@@ -383,6 +389,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _connectivityTimer?.cancel(); // 🚀 Cancel connectivity monitor
     BulkDownloadService().errorNotifier.removeListener(_onBulkDownloadError);
     YoutubeDownloaderService()
@@ -423,7 +430,67 @@ class _MainShellState extends ConsumerState<MainShell> {
   Future<void> _checkForUpdates() async {
     final release = await _updateService.checkForUpdate();
     if (release != null && mounted) {
-      _showUpdateDialog(release);
+      // 🚀 Only show update dialog if we DON'T have a pending APK already
+      final pendingApk = await _updateService.getPendingUpdatePath();
+      if (pendingApk == null) {
+        _showUpdateDialog(release);
+      }
+    }
+  }
+
+  // 🚀 RESUME PENDING UPDATE (Android)
+  Future<void> _checkPendingUpdate() async {
+    if (!Platform.isAndroid) return;
+
+    final pendingPath = await _updateService.getPendingUpdatePath();
+    if (pendingPath != null && mounted) {
+      print("🚀 Pending update found: $pendingPath");
+      _showResumeUpdateDialog(pendingPath);
+    }
+  }
+
+  void _showResumeUpdateDialog(String filePath) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        title: const Text("Finish Update"),
+        content: const Text(
+          "An update was already downloaded. Would you like to install it now?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Later"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _updateService.installExistingApk(filePath);
+            },
+            child: const Text("Install Now"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 🚀 When returning to app (e.g. from Permission Settings), 
+    // check if we have a pending update to resume!
+    if (state == AppLifecycleState.resumed && Platform.isAndroid) {
+      _checkPendingUpdateAuto();
+    }
+  }
+
+  Future<void> _checkPendingUpdateAuto() async {
+    final pendingPath = await _updateService.getPendingUpdatePath();
+    if (pendingPath != null) {
+      // If we are resumed, just try to open installer again silently
+      // This is helpful if the user just clicked "Allow" in Settings and hit Back.
+      _updateService.installExistingApk(pendingPath);
     }
   }
 

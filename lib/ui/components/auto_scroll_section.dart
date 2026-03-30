@@ -4,13 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/song_model.dart';
-import '../../models/song_metadata.dart';
-import '../../models/youtube_search_result.dart';
 import '../../providers/player_provider.dart';
-import '../../providers/settings_provider.dart';
-import '../../services/smart_download_service.dart';
 import 'smart_art.dart';
-import 'music_notification.dart';
 import 'song_context_menu.dart';
 
 class AutoScrollSection extends ConsumerStatefulWidget {
@@ -33,10 +28,8 @@ class AutoScrollSection extends ConsumerStatefulWidget {
 
 class _AutoScrollSectionState extends ConsumerState<AutoScrollSection> {
   final ScrollController _scrollController = ScrollController();
-  final SmartDownloadService _smartService = SmartDownloadService();
   Timer? _timer;
   bool _isUserInteracting = false;
-  bool _isRestoring = false;
 
   final double _itemWidth = 140.0;
   final double _gap = 16.0;
@@ -79,87 +72,8 @@ class _AutoScrollSectionState extends ConsumerState<AutoScrollSection> {
   }
 
   // SMART PLAY LOGIC (Restores file if missing)
-  Future<void> _handleSongTap(SongModel song) async {
-    if (_isRestoring) return;
-
-    final file = File(song.filePath);
-
-    // CASE 1: File exists -> PLAY
-    if (await file.exists()) {
-      ref.read(playerProvider.notifier).playSong(song);
-      return;
-    }
-
-    // CASE 2: File Missing -> RESTORE
-    setState(() => _isRestoring = true);
-
-    // Show Glass Notification so user knows something is happening
-    if (!mounted) return;
-    showCenterNotification(context,
-        label: "RESTORING",
-        title: song.title,
-        subtitle: "Re-buffering...",
-        artPath: song.onlineArtUrl // Use online URL since file is gone
-        );
-
-    try {
-      final meta = SongMetadata(
-        title: song.title,
-        artist: song.artist,
-        album: song.album,
-        year: "",
-        genre: "",
-        durationSeconds: song.duration.toInt(),
-        albumArtUrl: song.onlineArtUrl ?? "",
-        isrc: song.isrc,
-      );
-
-      // Perform Just-In-Time YouTube Search if URL is missing or invalid (Spotify)
-      String finalUrl = song.sourceUrl ?? "";
-      if (finalUrl.isEmpty || finalUrl.contains("spotify.com")) {
-        print("🔍 Searching YouTube for: ${song.artist} - ${song.title}");
-        final match = await _smartService.searchYouTubeForMatch(meta);
-        if (match != null && match.youtubeMatches.isNotEmpty) {
-          finalUrl = match.youtubeMatches.first.url;
-          print("✅ Found YouTube Match: $finalUrl");
-        } else {
-          throw Exception("No YouTube match found.");
-        }
-      }
-
-      final ytResult = YoutubeSearchResult(
-        title: song.title,
-        artist: song.artist,
-        duration: "",
-        url: finalUrl,
-        thumbnailUrl: song.onlineArtUrl ?? "",
-      );
-
-      final streamingQuality = ref.read(settingsProvider).streamingQuality;
-      final restoredSong = await _smartService.cacheAndPlay(
-        video: ytResult,
-        metadata: meta,
-        onProgress: (_) {},
-        streamingQuality: streamingQuality,
-      );
-
-      if (restoredSong != null) {
-        if (mounted) {
-          ref.read(playerProvider.notifier).playSong(restoredSong);
-          // Update to "Now Playing"
-          showCenterNotification(context,
-              label: "NOW PLAYING",
-              title: restoredSong.title,
-              subtitle: restoredSong.artist,
-              artPath: restoredSong.filePath,
-              onlineArtUrl: restoredSong.onlineArtUrl);
-        }
-      }
-    } catch (e) {
-      print("Restore failed: $e");
-    } finally {
-      if (mounted) setState(() => _isRestoring = false);
-    }
+  void _handleSongTap(SongModel song) {
+    ref.read(playerProvider.notifier).playSong(song);
   }
 
   @override

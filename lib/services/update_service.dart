@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../models/download_progress.dart';
 
 class UpdateService {
@@ -296,6 +297,9 @@ class UpdateService {
         );
 
         await subscription.asFuture();
+
+        // 🚀 MARK AS PENDING Update before attempting install
+        await _markPendingUpdate(filePath);
       } else {
         print("Failed to download update: ${response.statusCode}");
         throw Exception("Failed to download update");
@@ -334,6 +338,9 @@ class UpdateService {
         if (result) {
           print("APK installer opened successfully");
 
+          // 🚀 CLEAR pending update once opened
+          await _clearPendingUpdate();
+
           // Mark this file for cleanup after restart
           await _markFileForCleanup(filePath);
 
@@ -342,12 +349,16 @@ class UpdateService {
           progressNotifier.value = null;
         } else {
           print("Failed to open APK installer");
+          
+          // 🚀 DO NOT clear progress if we failed, user might be in settings
           progressNotifier.value = DownloadProgress(
             receivedMB: 0,
             totalMB: 0,
             progress: 1.0,
-            status: "Failed to open installer. Check Downloads.",
+            status: "Installer failed to open. Check permissions.",
           );
+          
+          // Keep it for a bit then clear UI but keep the pending file
           await Future.delayed(const Duration(seconds: 3));
           progressNotifier.value = null;
         }
@@ -415,6 +426,14 @@ class UpdateService {
     if (!Platform.isAndroid) return false;
 
     try {
+      // 🚀 Explicitly check for Install Unknown Apps permission (Android 8+)
+      // This gives a better heads-up if the user is about to be sent to Settings.
+      final status = await Permission.requestInstallPackages.status;
+      if (!status.isGranted) {
+        print("⚠️ Install Unknown Apps permission not granted.");
+        // We still call OpenFilex because it triggers the Android Intent to the settings page!
+      }
+
       // Use open_filex to open the APK
       // This triggers the Android package installer dialog
       final result = await OpenFilex.open(filePath);
@@ -435,6 +454,39 @@ class UpdateService {
     } catch (e) {
       print("Error marking for cleanup: $e");
     }
+  }
+
+  // 🚀 PENDING UPDATE PERSISTENCE
+  Future<void> _markPendingUpdate(String filePath) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('pending_update_apk', filePath);
+    print("🚀 Marked pending update APK: $filePath");
+  }
+
+  Future<void> _clearPendingUpdate() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('pending_update_apk');
+    print("🚀 Cleared pending update APK marker.");
+  }
+
+  Future<String?> getPendingUpdatePath() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('pending_update_apk');
+    if (path != null && File(path).existsSync()) {
+      return path;
+    }
+    return null;
+  }
+
+  /// Triggers the external installer for an existing file
+  Future<void> installExistingApk(String filePath) async {
+    print("🚀 Resuming installation of: $filePath");
+    await _finishInstallation(
+      // Mocked components
+      _DummyIOSink(),
+      http.Client(),
+      filePath, 
+    );
   }
 
   /// Call this on app startup to clean up old update files
@@ -458,6 +510,34 @@ class UpdateService {
       print("Error cleaning up old updates: $e");
     }
   }
+}
+
+// 🚀 Helper to call _finishInstallation with existing file
+class _DummyIOSink implements IOSink {
+  @override
+  void add(List<int> data) {}
+  @override
+  void addError(Object error, [StackTrace? stackTrace]) {}
+  @override
+  Future addStream(Stream<List<int>> stream) async {}
+  @override
+  Future close() async {}
+  @override
+  get done => Future.value();
+  @override
+  Future flush() async {}
+  @override
+  void write(Object? object) {}
+  @override
+  void writeAll(Iterable objects, [String separator = ""]) {}
+  @override
+  void writeCharCode(int charCode) {}
+  @override
+  void writeln([Object? object = ""]) {}
+  @override
+  set encoding(Encoding _encoding) {}
+  @override
+  Encoding get encoding => utf8;
 }
 
 // DownloadProgress class moved to models/download_progress.dart

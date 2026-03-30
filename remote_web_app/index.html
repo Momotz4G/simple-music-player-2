@@ -249,6 +249,9 @@
         // Track previous state for change detection
         let prevShuffle = false;
         let prevLoopMode = 0;
+        let prevSearchResults = "";
+        let prevQueue = "";
+        let prevAlbumDetails = "";
 
         // UI ELEMENTS
         const setupScreen = document.getElementById('setup-screen');
@@ -616,6 +619,10 @@
         }
 
         function renderQueue(queue) {
+            const queueJson = JSON.stringify(queue);
+            if (queueJson === prevQueue) return;
+            prevQueue = queueJson;
+
             const container = document.getElementById('queue-list');
             container.innerHTML = '';
 
@@ -674,6 +681,10 @@
         }
 
         function renderSearchResults(results) {
+            const resultsJson = JSON.stringify(results);
+            if (resultsJson === prevSearchResults) return;
+            prevSearchResults = resultsJson;
+
             const container = document.getElementById('search-results');
             container.innerHTML = '';
 
@@ -735,6 +746,10 @@
         }
 
         function renderAlbumDetails(data) {
+            const albumJson = JSON.stringify(data);
+            if (albumJson === prevAlbumDetails) return;
+            prevAlbumDetails = albumJson;
+
             const container = document.getElementById('album-track-list');
             container.innerHTML = '';
 

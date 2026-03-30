@@ -8,83 +8,60 @@ import kotlin.concurrent.thread
 
 /**
  * UsbIsoTransfer - Handles isochronous USB transfers for real-time audio streaming to USB DACs.
- * 
- * Isochronous transfers are required for USB Audio Class devices because they:
- * 1. Guarantee bandwidth for real-time audio data
- * 2. Provide timing guarantees (no retry on errors)
- * 3. Are the only transfer type suitable for audio streaming
+ *
+ * Uses native JNI (UsbIsoJni) to submit isochronous URBs via Linux usbdevfs IOCTLs,
+ * since Android's Java USB Host API does not expose isochronous transfers.
+ *
+ * Architecture:
+ *   Transfer Thread:
+ *     1. Fill URB buffer with audio data (via callback)
+ *     2. Submit URB to kernel via JNI
+ *     3. Reap completed URB
+ *     4. Repeat with next URB slot (triple-buffered)
  */
 class UsbIsoTransfer(
     private val connection: UsbDeviceConnection,
     private val endpoint: UsbEndpoint,
+    private val audioInterface: UsbInterface,
     private val sampleRate: Int,
     private val bitDepth: Int = 16,
     private val channels: Int = 2
 ) {
     companion object {
         private const val TAG = "UsbIsoTransfer"
-        
-        // USB Audio timing constants
-        private const val USB_FRAME_INTERVAL_MS = 1 // USB microframes every 125µs, but we work in 1ms chunks
-        private const val MAX_PACKETS_PER_URB = 8
-        
-        // Buffer states
-        private const val STATE_FREE = 0
-        private const val STATE_QUEUED = 1
-        private const val STATE_COMPLETED = 2
-        
-        // USB recipient types (not in UsbConstants)
-        private const val USB_RECIP_INTERFACE = 0x01
-        private const val USB_RECIP_ENDPOINT = 0x02
+
+        // USB Audio timing: 1ms frame interval for full-speed, 125µs for high-speed
+        // We use 1 packet per URB for simplest timing
+        private const val PACKETS_PER_URB = 1
     }
 
+    private val isoJni = UsbIsoJni()
     private var isRunning = false
     private var transferThread: Thread? = null
-    
-    // Audio buffer management
+
+    // Audio format calculations
     private val bytesPerSample = bitDepth / 8
-    private val bytesPerFrame = bytesPerSample * channels
-    private val samplesPerPacket = sampleRate / 1000 // Samples per 1ms USB frame
+    private val bytesPerFrame = bytesPerSample * channels  // "frame" = one sample across all channels
+    private val samplesPerPacket = sampleRate / 1000        // Samples per 1ms USB frame
     private val bytesPerPacket = samplesPerPacket * bytesPerFrame
-    
-    // Double buffering for continuous playback
-    private val bufferSize = bytesPerPacket * MAX_PACKETS_PER_URB * 2
-    private val audioBuffer = ByteBuffer.allocateDirect(bufferSize).order(ByteOrder.LITTLE_ENDIAN)
-    
+
     // Callback for requesting more audio data
     private var audioDataCallback: ((ByteBuffer, Int) -> Int)? = null
-    
+
     // Statistics
     private var totalFramesTransferred = 0L
     private var underrunCount = 0
-    
+
     /**
-     * Configuration for audio stream
-     */
-    data class AudioConfig(
-        val sampleRate: Int,
-        val bitDepth: Int,
-        val channels: Int
-    ) {
-        override fun toString(): String = "${sampleRate}Hz/${bitDepth}bit/${channels}ch"
-    }
-    
-    /**
-     * Set the callback for requesting audio data
-     * The callback should fill the provided buffer and return the number of bytes written
+     * Set the callback for requesting audio data.
+     * The callback should fill the provided buffer and return the number of bytes written.
      */
     fun setAudioDataCallback(callback: (ByteBuffer, Int) -> Int) {
         audioDataCallback = callback
     }
 
     /**
-     * Start isochronous audio streaming
-     * Note: For Android's USB Host API, we use bulkTransfer as a workaround
-     * since the standard API doesn't directly expose isochronous transfers.
-     * 
-     * True isochronous transfers would require JNI with IOCTL calls.
-     * This implementation provides a working solution that may have
-     * slightly higher latency but achieves bit-perfect audio output.
+     * Start isochronous audio streaming via JNI.
      */
     fun start(): Boolean {
         if (isRunning) {
@@ -92,41 +69,86 @@ class UsbIsoTransfer(
             return false
         }
 
-        Log.d(TAG, "Starting isochronous transfer: ${sampleRate}Hz, ${bitDepth}bit, ${channels}ch")
-        Log.d(TAG, "Bytes per packet: $bytesPerPacket, Max packet size: ${endpoint.maxPacketSize}")
-
-        // Claim the audio interface
-        val iface = findAudioInterface()
-        if (iface == null) {
-            Log.e(TAG, "Could not find audio interface")
+        val fd = connection.fileDescriptor
+        if (fd < 0) {
+            Log.e(TAG, "Invalid USB device file descriptor: $fd")
             return false
         }
 
-        if (!connection.claimInterface(iface, true)) {
-            Log.e(TAG, "Failed to claim USB interface")
+        Log.i(TAG, "Starting isochronous transfer: ${sampleRate}Hz, ${bitDepth}bit, ${channels}ch")
+        Log.i(TAG, "Bytes per packet: $bytesPerPacket, Max packet size: ${endpoint.maxPacketSize}")
+        Log.i(TAG, "Interface: #${audioInterface.id}, Endpoint: 0x${endpoint.address.toString(16)}")
+
+        // Step 1: Claim the audio interface via JNI (bypasses Android's claimInterface)
+        val claimResult = isoJni.claimInterface(fd, audioInterface.id)
+        if (claimResult < 0) {
+            Log.e(TAG, "Failed to claim interface ${audioInterface.id}: error $claimResult")
+            // Try Android API as fallback
+            if (!connection.claimInterface(audioInterface, true)) {
+                Log.e(TAG, "Fallback claimInterface also failed")
+                return false
+            }
+            Log.i(TAG, "Claimed interface via Android API fallback")
+        }
+
+        // Step 2: Set alternate setting if needed (alternate setting 1 is typically the active audio setting)
+        // Alternate setting 0 = zero-bandwidth (idle), setting 1+ = active with specific format
+        val altResult = isoJni.setInterface(fd, audioInterface.id, audioInterface.alternateSetting.coerceAtLeast(1))
+        if (altResult < 0) {
+            Log.w(TAG, "setInterface failed (may be OK for some DACs): error $altResult")
+        }
+
+        // Step 3: Initialize isochronous transfer context
+        val actualPacketSize = bytesPerPacket.coerceAtMost(endpoint.maxPacketSize)
+        val initResult = isoJni.init(
+            fd = fd,
+            endpointAddr = endpoint.address,
+            maxPacketSize = endpoint.maxPacketSize,
+            numPackets = PACKETS_PER_URB,
+            packetSize = actualPacketSize
+        )
+
+        if (!initResult) {
+            Log.e(TAG, "Failed to initialize native isochronous context")
             return false
         }
 
+        // Step 4: Set sample rate on the endpoint via USB Audio Class control request
+        setSampleRate(sampleRate)
+
+        // Step 5: Start the transfer thread
         isRunning = true
+        totalFramesTransferred = 0
+        underrunCount = 0
         startTransferThread()
+
         return true
     }
 
     /**
-     * Stop isochronous audio streaming
+     * Stop isochronous audio streaming.
      */
     fun stop() {
-        Log.d(TAG, "Stopping isochronous transfer. Total frames: $totalFramesTransferred, Underruns: $underrunCount")
+        Log.d(TAG, "Stopping transfer. Frames: $totalFramesTransferred, Underruns: $underrunCount")
         isRunning = false
-        
-        transferThread?.join(1000)
+
+        // Cancel pending URBs
+        isoJni.cancelAll()
+
+        // Wait for transfer thread to finish
+        transferThread?.join(2000)
         transferThread = null
-        
-        // Release the interface
-        val iface = findAudioInterface()
-        if (iface != null) {
-            connection.releaseInterface(iface)
+
+        // Release interface
+        val fd = connection.fileDescriptor
+        if (fd >= 0) {
+            // Set alternate setting 0 (zero-bandwidth / idle)
+            isoJni.setInterface(fd, audioInterface.id, 0)
+            isoJni.releaseInterface(fd, audioInterface.id)
         }
+
+        // Clean up native resources
+        isoJni.dispose()
     }
 
     /**
@@ -148,127 +170,140 @@ class UsbIsoTransfer(
     }
 
     /**
-     * Main transfer thread - continuously sends audio data to USB device
+     * Main transfer thread - continuously sends audio data to USB device via isochronous URBs.
+     *
+     * Uses a triple-buffered approach:
+     * 1. Fill URB N with audio data
+     * 2. Submit URB N
+     * 3. While URB N is transferring, fill URB N+1
+     * 4. Reap completed URB (gets recycled)
+     * 5. Repeat
      */
     private fun startTransferThread() {
-        transferThread = thread(name = "UsbIsoTransfer") {
-            Log.d(TAG, "Transfer thread started")
-            
-            val packet = ByteArray(endpoint.maxPacketSize)
-            val packetBuffer = ByteBuffer.wrap(packet).order(ByteOrder.LITTLE_ENDIAN)
-            
-            val intervalNanos = (1_000_000_000L / sampleRate) * samplesPerPacket
-            var nextTransferTime = System.nanoTime()
-            
+        transferThread = thread(name = "UsbIsoTransfer", priority = Thread.MAX_PRIORITY) {
+            Log.d(TAG, "Transfer thread started (priority: ${Thread.currentThread().priority})")
+
+            val numUrbs = isoJni.getNumUrbs()
+            val urbBufferSize = isoJni.getUrbBufferSize()
+            val packetBuffer = ByteBuffer.allocateDirect(urbBufferSize).order(ByteOrder.LITTLE_ENDIAN)
+            val silencePacket = ByteArray(urbBufferSize) // Pre-allocated silence buffer
+
+            // Prime the pump: submit initial URBs
+            var initialSubmits = 0
+            for (i in 0 until numUrbs) {
+                packetBuffer.clear()
+                val bytesRead = audioDataCallback?.invoke(packetBuffer, bytesPerPacket) ?: 0
+
+                val data = if (bytesRead > 0) {
+                    val arr = ByteArray(bytesRead)
+                    packetBuffer.flip()
+                    packetBuffer.get(arr)
+                    arr
+                } else {
+                    silencePacket
+                }
+
+                val submitResult = isoJni.submitUrb(i, data, data.size)
+                if (submitResult < 0) {
+                    Log.e(TAG, "Initial submit failed for URB $i: $submitResult")
+                    break
+                }
+                initialSubmits++
+            }
+
+            if (initialSubmits == 0) {
+                Log.e(TAG, "Failed to submit any initial URBs")
+                isRunning = false
+                return@thread
+            }
+
+            Log.d(TAG, "Primed $initialSubmits URBs, entering transfer loop")
+
+            // Main transfer loop
             while (isRunning) {
                 try {
-                    packetBuffer.clear()
-                    
-                    // Request audio data from callback
-                    val bytesRead = audioDataCallback?.invoke(packetBuffer, bytesPerPacket) ?: 0
-                    
-                    if (bytesRead > 0) {
-                        // Send data to USB device
-                        // Using bulkTransfer as Android USB API workaround
-                        // For true isochronous, we'd need JNI with IOCTL
-                        val sent = connection.bulkTransfer(
-                            endpoint,
-                            packet,
-                            bytesRead,
-                            100 // timeout ms
-                        )
-                        
-                        if (sent > 0) {
-                            totalFramesTransferred += sent / bytesPerFrame
-                        } else if (sent < 0) {
-                            Log.w(TAG, "USB transfer failed: $sent")
+                    // Reap a completed URB
+                    val completedUrb = isoJni.reapUrb()
+                    if (completedUrb < 0) {
+                        if (isRunning) {
+                            Log.w(TAG, "reapUrb failed: $completedUrb")
+                            Thread.sleep(1)
                         }
+                        continue
+                    }
+
+                    totalFramesTransferred += bytesPerPacket / bytesPerFrame
+
+                    // Fill the completed URB with new audio data and resubmit
+                    packetBuffer.clear()
+                    val bytesRead = audioDataCallback?.invoke(packetBuffer, bytesPerPacket) ?: 0
+
+                    val data: ByteArray
+                    val dataLen: Int
+
+                    if (bytesRead > 0) {
+                        data = ByteArray(bytesRead)
+                        packetBuffer.flip()
+                        packetBuffer.get(data)
+                        dataLen = bytesRead
                     } else {
-                        // No data available - underrun
+                        // Underrun - send silence
                         underrunCount++
-                        // Send silence to prevent audio glitches
-                        packet.fill(0)
-                        connection.bulkTransfer(endpoint, packet, bytesPerPacket, 100)
+                        data = silencePacket
+                        dataLen = bytesPerPacket
                     }
-                    
-                    // Timing control for consistent playback
-                    nextTransferTime += intervalNanos
-                    val sleepNanos = nextTransferTime - System.nanoTime()
-                    if (sleepNanos > 0) {
-                        Thread.sleep(sleepNanos / 1_000_000, (sleepNanos % 1_000_000).toInt())
-                    } else {
-                        // We're running behind, reset timing
-                        nextTransferTime = System.nanoTime()
+
+                    val submitResult = isoJni.submitUrb(completedUrb, data, dataLen)
+                    if (submitResult < 0) {
+                        Log.e(TAG, "Re-submit failed for URB $completedUrb: $submitResult")
+                        if (isRunning) {
+                            // Try to recover by re-initializing
+                            Thread.sleep(10)
+                        }
                     }
-                    
                 } catch (e: Exception) {
                     Log.e(TAG, "Transfer error: ${e.message}")
                     if (!isRunning) break
                     Thread.sleep(10)
                 }
             }
-            
-            Log.d(TAG, "Transfer thread ended")
+
+            Log.d(TAG, "Transfer thread ended. Total frames: $totalFramesTransferred")
         }
     }
 
     /**
-     * Find the audio streaming interface from the USB device
-     */
-    private fun findAudioInterface(): UsbInterface? {
-        // The endpoint knows its interface, but we need to find it via the device
-        // This is done by checking the endpoint address
-        return null // Will be set properly when opening the device
-    }
-    
-    /**
-     * Configure alternate setting for specific audio format
-     * Different alternate settings support different sample rates/bit depths
-     */
-    fun setAlternateSetting(alternateSetting: Int): Boolean {
-        // Control transfer to set alternate setting
-        // bRequest = SET_INTERFACE (0x0B)
-        // wValue = alternate setting
-        // wIndex = interface number
-        val result = connection.controlTransfer(
-            UsbConstants.USB_TYPE_STANDARD or USB_RECIP_INTERFACE,
-            0x0B, // SET_INTERFACE
-            alternateSetting,
-            0, // interface number - would need to be determined from the device
-            null,
-            0,
-            1000
-        )
-        
-        return result >= 0
-    }
-    
-    /**
-     * Set the sample rate on the USB device
-     * Uses USB Audio Class SET_CUR request
+     * Set the sample rate on the USB device endpoint.
+     * Uses USB Audio Class SET_CUR request for Sampling Frequency Control.
      */
     fun setSampleRate(targetSampleRate: Int): Boolean {
-        // Pack sample rate as 3 bytes (USB Audio Class format)
+        // Pack sample rate as 3 bytes (USB Audio Class 1.0 format)
         val sampleRateData = ByteArray(3)
         sampleRateData[0] = (targetSampleRate and 0xFF).toByte()
         sampleRateData[1] = ((targetSampleRate shr 8) and 0xFF).toByte()
         sampleRateData[2] = ((targetSampleRate shr 16) and 0xFF).toByte()
-        
+
         // Control transfer: SET_CUR for Sampling Frequency Control
-        // bmRequestType: Class-specific, Interface, Host-to-Device
+        // bmRequestType: Class-specific, Endpoint, Host-to-Device (0x22)
         // bRequest: SET_CUR (0x01)
-        // wValue: 0x0100 (Sampling Frequency Control)
+        // wValue: 0x0100 (Sampling Frequency Control selector)
         // wIndex: Endpoint address
         val result = connection.controlTransfer(
-            UsbConstants.USB_TYPE_CLASS or USB_RECIP_ENDPOINT or UsbConstants.USB_DIR_OUT,
-            0x01, // SET_CUR
+            0x22,  // USB_TYPE_CLASS | USB_RECIP_ENDPOINT | USB_DIR_OUT
+            0x01,  // SET_CUR
             0x0100, // Sampling Frequency Control
             endpoint.address,
             sampleRateData,
             sampleRateData.size,
             1000
         )
-        
+
+        if (result >= 0) {
+            Log.i(TAG, "Set sample rate to $targetSampleRate Hz")
+        } else {
+            Log.w(TAG, "Failed to set sample rate (may be fixed-rate DAC): result=$result")
+        }
+
         return result >= 0
     }
 }

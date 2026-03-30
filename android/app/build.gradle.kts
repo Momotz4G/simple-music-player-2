@@ -10,6 +10,13 @@ android {
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
+    // JNI: Build native isochronous USB transfer library
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/jni/CMakeLists.txt")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

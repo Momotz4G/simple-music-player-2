@@ -4,6 +4,7 @@ import '../../services/audio_info_service.dart';
 import '../../services/android_audio_service.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/player_provider.dart';
+import '../../providers/equalizer_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -77,6 +78,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
   Widget build(BuildContext context) {
     // 1. Read Settings
     final settings = ref.watch(settingsProvider);
+    final eq = ref.watch(equalizerProvider);
     final l10n = AppLocalizations.of(context)!;
     final isExclusive = settings.wasapiExclusive;
     final String? currentDeviceId = settings.audioDeviceId;
@@ -217,7 +219,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${l10n.pathLabel}: ${widget.filePath ?? l10n.unknown}",
+                            "${l10n.pathLabel}: ${widget.filePath?.startsWith('http') == true ? 'Tidal Server Stream' : (widget.filePath ?? l10n.unknown)}",
                             style: TextStyle(
                                 color: Colors.grey[500], fontSize: 11),
                             maxLines: 2,
@@ -240,7 +242,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                       title: l10n.engineLabel,
                       isActive: false,
                       content: _buildStateText(
-                        _bitPerfectEnabled || isExclusive
+                        (_bitPerfectEnabled || isExclusive) && !eq.isEnabled
                             ? "Disabled (Bit-Perfect)"
                             : "Disabled",
                         l10n,
@@ -248,10 +250,10 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                     ),
                     _buildNode(
                       icon: Icons.tune,
-                      iconColor: Colors.grey,
+                      iconColor: eq.isEnabled ? Colors.green : Colors.grey,
                       title: l10n.eqLabel,
-                      isActive: false,
-                      content: _buildStateText("Disabled", l10n),
+                      isActive: eq.isEnabled,
+                      content: _buildStateText(eq.isEnabled ? "Enabled" : "Disabled", l10n),
                     ),
                     _buildNode(
                       icon: Icons.graphic_eq,

@@ -155,6 +155,16 @@ class UsbAudioPlugin(private val context: Context) : MethodChannel.MethodCallHan
                 result.success(true)
             }
 
+            "seek" -> {
+                val positionMs = call.argument<Int>("positionMs")?.toLong()
+                if (positionMs == null) {
+                    result.error("INVALID_ARGS", "positionMs required", null)
+                    return
+                }
+                usbAudioPlayer.seek(positionMs)
+                result.success(true)
+            }
+
             // ====== Status & Info ======
             "getState" -> {
                 result.success(usbAudioPlayer.getState().name)

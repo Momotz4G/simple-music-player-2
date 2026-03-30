@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\MEKEW\source\repos\Simple_Music_Player_New_Gen\simple_music_player_2\cpp_audio_engine\src\audio_engine.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\MEKEW\source\repos\Simple_Music_Player_New_Gen\simple_music_player_2\cpp_audio_engine\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{F2B0BB6B-0EF5-378C-B1E5-0AD406F41BE2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

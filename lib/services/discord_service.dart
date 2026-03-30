@@ -58,14 +58,21 @@ class DiscordService {
     _monitorTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       if (!_isEnabled) return;
 
-      // If already connected, do nothing
-      if (_isConnected) return;
-
       // If currently trying to connect, wait
       if (_isConnecting) return;
 
       // Check if Discord Process exists
       final isRunning = await _isDiscordProcessRunning();
+
+      // Ensure we mark it disconnected if Discord was forcefully closed
+      if (_isConnected && !isRunning) {
+        DebugLogService().info("[Discord] Discord process disappeared. Marking disconnected.");
+        _isConnected = false;
+        return;
+      }
+
+      // If already connected and running, do nothing
+      if (_isConnected) return;
 
       if (isRunning) {
         DebugLogService()
@@ -141,14 +148,9 @@ class DiscordService {
     _lastTotal = total;
     _lastImageUrl = imageUrl;
 
-    DebugLogService().info(
-        "[Discord] updatePresence: ${song.title} | connected=$_isConnected | enabled=$_isEnabled");
-
     // Only send if actually connected
     if (_isConnected) {
       _performUpdate();
-    } else {
-      DebugLogService().info("[Discord] Skipping update - not connected yet");
     }
   }
 

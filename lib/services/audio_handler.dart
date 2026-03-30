@@ -77,7 +77,7 @@ class MusicHandler extends BaseAudioHandler {
   @override
   Future<void> seek(Duration position) async {
     final NativeMusicService _musicService = NativeMusicService();
-    await _musicService.seek(position.inSeconds.toDouble());
+    await _musicService.seek(position);
   }
 
   @override

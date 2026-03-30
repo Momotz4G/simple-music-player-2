@@ -1,0 +1,3 @@
+C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/audio_engine.dir
+C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/ZERO_CHECK.dir

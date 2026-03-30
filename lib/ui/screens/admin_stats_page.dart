@@ -21,10 +21,12 @@ class AdminStatsPage extends StatelessWidget {
     return null;
   }
 
-  // Helper to format date
+  // Helper to format date in Jakarta Time (GMT+7)
   String _formatDate(DateTime? date) {
     if (date == null) return "Never";
-    return "${date.year}-${date.month}-${date.day} ${date.hour}:${date.minute}";
+    // 🚀 SYNC: Use the same GMT+7 offset as the Server Clock
+    final jakartaTime = date.toUtc().add(const Duration(hours: 7));
+    return DateFormat('yyyy-MM-dd HH:mm').format(jakartaTime);
   }
 
   @override
@@ -70,7 +72,8 @@ class AdminStatsPage extends StatelessWidget {
           final activeUsers = docs.where((user) {
             final timestamp = _parseTimestamp(user.data['last_active']);
             if (timestamp == null) return false;
-            return DateTime.now().difference(timestamp).inMinutes < 2;
+            // 🚀 FIX: Must use .toUtc() to match the timestamp from PocketBase
+            return DateTime.now().toUtc().difference(timestamp).inMinutes < 2;
           }).length;
 
           return Column(
@@ -95,6 +98,7 @@ class AdminStatsPage extends StatelessWidget {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: DataTable(
+                      columnSpacing: 25, // 🚀 Tight outer pads
                       columns: const [
                         DataColumn(label: Text('#')), // NUMBER COLUMN
                         DataColumn(label: Text('User ID')),
@@ -103,6 +107,7 @@ class AdminStatsPage extends StatelessWidget {
                         DataColumn(label: Text('Downloads')),
                         DataColumn(
                             label: Text('Quota Left')), //  QUOTA REMAINING
+                        DataColumn(label: Text('Version')), // 🚀 NEW
                         DataColumn(label: Text('Last Active')),
                         DataColumn(label: Text('Action')),
                       ],
@@ -137,11 +142,20 @@ class AdminStatsPage extends StatelessWidget {
                         return DataRow(cells: [
                           DataCell(Text((index + 1).toString())), // ROW NUMBER
                           DataCell(
-                            Row(
+                            SizedBox(
+                              width: 300, // 🚀 Force User ID wide to fill screen width
+                              child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.computer,
-                                    size: 16, color: Colors.grey),
+                                Builder(builder: (context) {
+                                  final os = data['os']?.toString().toLowerCase() ?? '';
+                                  final isMobile = os == 'android' || os == 'ios';
+                                  return Icon(
+                                    isMobile ? Icons.smartphone : Icons.computer,
+                                    size: 16,
+                                    color: isMobile ? Colors.blue : Colors.grey,
+                                  );
+                                }),
                                 const SizedBox(width: 8),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,6 +173,7 @@ class AdminStatsPage extends StatelessWidget {
                                   ],
                                 ),
                               ],
+                            ),
                             ),
                           ),
                           DataCell(Text((data['play_count'] ?? 0).toString())),
@@ -212,6 +227,7 @@ class AdminStatsPage extends StatelessWidget {
                               ],
                             ),
                           ),
+                          DataCell(Text(data['client_version']?.toString() ?? '—')), // 🚀 NEW
                           DataCell(
                             Builder(builder: (context) {
                               final timestamp =
@@ -219,6 +235,7 @@ class AdminStatsPage extends StatelessWidget {
                               if (timestamp == null) return const Text("Never");
 
                               final isOnline = DateTime.now()
+                                      .toUtc() // 🚀 FIX: Compare UTC to UTC
                                       .difference(timestamp)
                                       .inMinutes <
                                   2;

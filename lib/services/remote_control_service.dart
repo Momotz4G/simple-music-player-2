@@ -57,9 +57,9 @@ class RemoteControlService {
     });
 
     // 2. Setup Polling Fallback (Reliability)
-    // Run every 5 seconds to catch missed events if Realtime fails
+    // Run every 1.5 seconds to ensure fast remote control feeling if Realtime SSE drops
     _pollingTimer?.cancel();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _pollingTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) async {
       if (_userId == null) return;
       final sessionData = await PocketBaseService().getSessionData();
       if (sessionData != null) {
@@ -70,11 +70,10 @@ class RemoteControlService {
 
   final DateTime _serviceStartTime = DateTime.now();
 
-  DateTime? _lastBroadcastTime; // 🚀 Track last broadcast to ignore echoes
-
+  DateTime? _lastShuffleChangeTime;
+  DateTime? _lastLoopChangeTime;
   void _checkAndProcessCommand(
       Map<String, dynamic> data, Function(String, dynamic) onCommand) {
-    debugPrint("📡 [Remote] Raw Data: $data");
 
     final now = DateTime.now();
 
@@ -82,12 +81,16 @@ class RemoteControlService {
     final msSinceStart = now.difference(_serviceStartTime).inMilliseconds;
     final isStartupPeriod = msSinceStart < 5000;
 
-    // 2. BROADCAST COOLDOWN: Ignore sync for 3 seconds after we sent an update
-    // This prevents the "Echo Effect" where the server sends back old data before processing our update
-    final msSinceBroadcast = _lastBroadcastTime != null
-        ? now.difference(_lastBroadcastTime!).inMilliseconds
+    // 2. STATE COOLDOWNS: Ignore syncs for only the specific properties we recently changed
+    final msSinceShuffle = _lastShuffleChangeTime != null
+        ? now.difference(_lastShuffleChangeTime!).inMilliseconds
         : 999999;
-    final isBroadcastCooldown = msSinceBroadcast < 3000;
+    final msSinceLoop = _lastLoopChangeTime != null
+        ? now.difference(_lastLoopChangeTime!).inMilliseconds
+        : 999999;
+
+    final isShuffleCooldown = msSinceShuffle < 3000;
+    final isLoopCooldown = msSinceLoop < 3000;
 
     // 🚀 Check if this is an empty/newly created session (no active song)
     // If it is, DO NOT adopt its default false/0 values because it will reset the local player
@@ -95,7 +98,7 @@ class RemoteControlService {
     final isNewEmptySession = title == null || title.isEmpty;
 
     // 🚀 SAFE SYNC (Loop Breaker Pattern for Shuffle/Loop)
-    // Only dispatch if state DIFFERS from what we last sent (ignores echoes).
+    // Only dispatch if state DIFFERS from what we last sent AND is not in isolated cooldown.
     final newShuffle = data['is_shuffle'] as bool?;
     final newLoop = data['loop_mode'] as int?;
 
@@ -103,22 +106,33 @@ class RemoteControlService {
     bool shuffleChanged = newShuffle != null && newShuffle != _lastShuffle;
     bool loopChanged = newLoop != null && newLoop != _lastLoop;
 
-    // Reject sync if it's an empty session (brand new pocketbase record with default values)
-    if (!isNewEmptySession && (shuffleChanged || loopChanged)) {
+    // Reject sync if it's an empty session
+    if (!isNewEmptySession) {
       if (isStartupPeriod) {
-        debugPrint(
-            "📡 [Remote] Sync IGNORED (startup cooldown): Shuffle=$newShuffle, Loop=$newLoop");
-      } else if (isBroadcastCooldown) {
-        debugPrint(
-            "📡 [Remote] Sync IGNORED (broadcast cooldown): Shuffle=$newShuffle, Loop=$newLoop");
+        debugPrint("📡 [Remote] Sync IGNORED (startup cooldown)");
       } else {
-        // After startup and cooldown, accept server sync commands
-        if (shuffleChanged) _lastShuffle = newShuffle;
-        if (loopChanged) _lastLoop = newLoop;
-        hasNewState = true;
+        // Evaluate Shuffle
+        if (shuffleChanged) {
+          if (isShuffleCooldown) {
+            debugPrint("📡 [Remote] Shuffle Sync IGNORED (cooldown): $newShuffle");
+          } else {
+            _lastShuffleChangeTime = DateTime.now(); // 🚀 Prevent stale data echo from polling
+            _lastShuffle = newShuffle;
+            hasNewState = true;
+          }
+        }
+        
+        // Evaluate Loop
+        if (loopChanged) {
+          if (isLoopCooldown) {
+            debugPrint("📡 [Remote] Loop Sync IGNORED (cooldown): $newLoop");
+          } else {
+            _lastLoopChangeTime = DateTime.now(); // 🚀 Prevent stale data echo from polling
+            _lastLoop = newLoop;
+            hasNewState = true;
+          }
+        }
       }
-    } else if (isNewEmptySession && (shuffleChanged || loopChanged)) {
-      debugPrint("📡 [Remote] Sync IGNORED (new empty session): Shuffle=$newShuffle, Loop=$newLoop");
     }
 
     if (hasNewState) {
@@ -189,18 +203,22 @@ class RemoteControlService {
   }) {
     if (_userId == null) return;
 
-    _lastBroadcastTime = DateTime.now(); // 🚀 Record Broadcast Time
-
     final data = <String, dynamic>{};
     if (title != null) data['current_title'] = title;
     if (artist != null) data['current_artist'] = artist;
     if (isPlaying != null) data['is_playing'] = isPlaying;
     if (volume != null) data['volume'] = volume;
     if (isShuffle != null) {
+      if (_lastShuffle != isShuffle) {
+        _lastShuffleChangeTime = DateTime.now();
+      }
       _lastShuffle = isShuffle; // Loop Breaker: Update local state
       data['is_shuffle'] = isShuffle;
     }
     if (loopMode != null) {
+      if (_lastLoop != loopMode) {
+        _lastLoopChangeTime = DateTime.now();
+      }
       _lastLoop = loopMode; // Loop Breaker: Update local state
       data['loop_mode'] = loopMode;
     }

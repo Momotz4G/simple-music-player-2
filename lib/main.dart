@@ -109,8 +109,8 @@ Future<void> main() async {
     JustAudioMediaKit.bufferSize = 128 * 1024 * 1024; // 128MB Cache
     JustAudioMediaKit.demuxerMaxBackBytes =
         64 * 1024 * 1024; // 64MB Back buffer
-    JustAudioMediaKit.demuxerReadaheadSecs = 15.0; // 15 seconds readahead
-    JustAudioMediaKit.audioBuffer = 2.0; // 2 seconds audio buffer
+    JustAudioMediaKit.demuxerReadaheadSecs = 30.0; // 30 seconds readahead (Up from 15)
+    JustAudioMediaKit.audioBuffer = 5.0; // 5 seconds audio buffer (Up from 2)
     JustAudioMediaKit.audioPitchCorrection = false; // Save CPU for DSD
     JustAudioMediaKit.audioResampleMaxOutputSampleRate =
         192000; // Cap to 192kHz if hardware/CPU is struggling
@@ -118,7 +118,7 @@ Future<void> main() async {
   // 🚀 FIX: Do NOT pass android: true — this would replace the native ExoPlayer
   // backend with media_kit (FFmpeg/mpv), which causes playback hangs on Android.
   // DSD on Android is handled separately via USB Audio bypass.
-  JustAudioMediaKit.ensureInitialized();
+  JustAudioMediaKit.ensureInitialized(macOS: true);
 
   // 🚀 LOGGING SYSTEM BRIDGE
   // Connect hierarchical 'logging' package (used by MediaKit fork) to our internal DebugLogService

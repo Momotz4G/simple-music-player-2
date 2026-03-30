@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../env/env.dart';
 import 'debug_log_service.dart';
 
 enum TidalApiStatus {
@@ -22,7 +23,7 @@ class TidalService {
   /// Ideally this should stay in sync with FlacDownloaderService.
   List<String> getServers() {
     return [
-      'https://tidal-api.stephanus-dev.online', // Cloudflare domain (Primary)
+      Env.tidalApiUrl, // Primary VPS
       'https://triton.squid.wtf', // Priority Fallback
       'https://tnm.ngrok.app', // ngrok proxy
       'https://api.mizu.moe', // mizu.moe instance
@@ -39,7 +40,7 @@ class TidalService {
   Future<Map<String, dynamic>> checkServerStatus(String serverUrl) async {
     try {
       final uri = Uri.parse(serverUrl);
-      final response = await _client.get(uri).timeout(const Duration(seconds: 5));
+      final response = await _client.get(uri).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

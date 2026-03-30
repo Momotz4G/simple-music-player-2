@@ -79,6 +79,7 @@ class SongContextMenuRegion extends ConsumerWidget {
                             state: state,
                             notifier: notifier,
                             textColor: textColor,
+                            popOnSave: true,
                           ),
                     ),
                     actions: [
@@ -129,6 +130,7 @@ class SongContextMenuRegion extends ConsumerWidget {
                                 state: state,
                                 notifier: notifier,
                                 textColor: textColor,
+                                popOnSave: true,
                               ),
                         ),
                       ],

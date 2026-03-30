@@ -11,12 +11,14 @@ class MetadataEditorPanel extends StatefulWidget {
   final MetadataState state;
   final MetadataNotifier notifier;
   final Color textColor;
+  final bool popOnSave;
 
   const MetadataEditorPanel({
     super.key,
     required this.state,
     required this.notifier,
     required this.textColor,
+    this.popOnSave = false,
   });
 
   @override
@@ -233,7 +235,9 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
                           icon: Icons.check_circle_outline,
                           centered: true,
                         );
-                        Navigator.pop(context);
+                        if (widget.popOnSave) {
+                          Navigator.pop(context);
+                        }
                       } else {
                         showCenterNotification(
                           context,

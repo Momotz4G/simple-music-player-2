@@ -23,6 +23,7 @@ import '../services/smart_download_service.dart';
 import '../services/windows_taskbar_service.dart';
 import '../services/flac_downloader_service.dart';
 import '../services/debug_log_service.dart'; // 🚀 IMPORT
+import '../env/env.dart'; // 🚀 IMPORT ENV FOR API KEY
 import '../models/song_metadata.dart';
 import 'stats_provider.dart';
 import 'history_provider.dart';
@@ -79,7 +80,10 @@ class PlayerState {
     this.dominantColor,
     this.endlessQueueEnabled = true, // Enabled by default
     this.isBuffering = false,
+    this.audioSessionId,
   });
+
+  final int? audioSessionId;
 
   PlayerState copyWith({
     bool? isPlaying,
@@ -98,6 +102,7 @@ class PlayerState {
     Color? dominantColor,
     bool? endlessQueueEnabled,
     bool? isBuffering,
+    int? audioSessionId,
   }) {
     return PlayerState(
       isPlaying: isPlaying ?? this.isPlaying,
@@ -116,6 +121,7 @@ class PlayerState {
       dominantColor: dominantColor ?? this.dominantColor,
       endlessQueueEnabled: endlessQueueEnabled ?? this.endlessQueueEnabled,
       isBuffering: isBuffering ?? this.isBuffering,
+      audioSessionId: audioSessionId ?? this.audioSessionId,
     );
   }
 }
@@ -138,7 +144,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   bool _useUsbAudioBypass = false;
   UsbDacDevice? _connectedUsbDac;
 
-  Stream<Duration> get positionStream => _musicService.player.positionStream;
+  Stream<Duration> get positionStream => _musicService.positionStream;
 
   // CRITICAL FOR EQUALIZER: Expose Session ID
   int? get audioSessionId => _musicService.player.androidAudioSessionId;
@@ -180,6 +186,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   
   int _playRequestToken = 0; // 🚀 Guard against outdated async plays
   int _preloadRequestToken = 0; // 🚀 Guard against outdated async preloads (e.g. queue changes)
+  int _lastDiscordSyncSeconds = -1; // 🚀 Discord 30s Sync Tracker
 
   PlayerNotifier(this._musicService, this.ref) : super(PlayerState()) {
     _autoQueueService = AutoQueueService();
@@ -285,7 +292,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           // This triggers the same flow as clicking a song from home page
           DebugLogService().info(
               "[Init] File missing/cloud - triggering playSong for rebuffering...");
-          await playSong(lastSong, skipFinalize: true);
+          await playSong(lastSong,
+              skipFinalize: true,
+              initialPosition: lastPosition > 0
+                  ? Duration(seconds: lastPosition.round())
+                  : null);
           // Pause immediately since we only want to prepare, not auto-play
           await _musicService.pause();
           state = state.copyWith(isPlaying: false);
@@ -397,6 +408,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       _extractPalette(state.currentSong!);
     }
 
+    _musicService.activePlayerStream.listen((player) {
+      state = state.copyWith(audioSessionId: player.androidAudioSessionId);
+      DebugLogService().info("[Player] Active Session ID: ${player.androidAudioSessionId}");
+    });
+
     _musicService.durationStream.listen((duration) {
       // 🚀 FIX: Ignore duration updates during loop transition to prevent UI blink
       if (_isLooping) return;
@@ -404,6 +420,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       if (duration != null) {
         // 🚀 Use millisecond precision to avoid truncation artifacts
         state = state.copyWith(totalDuration: duration.inMilliseconds / 1000.0);
+        _updateDiscord(); // 🚀 Sync: Update Discord as soon as duration resolves
       }
     });
 
@@ -478,6 +495,15 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
       }
 
+      // 🚀 Discord Sync: Update every 30 seconds to keep rich presence accurate and check connection health
+      final posInSeconds = currentSecs.toInt();
+      if (posInSeconds > 0 && posInSeconds % 30 == 0 && state.isPlaying) {
+        if (_lastDiscordSyncSeconds != posInSeconds) {
+          _lastDiscordSyncSeconds = posInSeconds;
+          _updateDiscord();
+        }
+      }
+
       // Stats Logic
       if (DateTime.now().difference(_lastSongChangeTime).inSeconds < 2) return;
 
@@ -532,6 +558,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _musicService.playbackEventStream.listen((event) {
       // Normal playback events can be ignored as they are handled elsewhere
     }, onError: (error, stackTrace) {
+      if (_musicService.isSeeking) return; // 🚀 Ignore during Android absolute seeks
       DebugLogService().error("🚨 Async Playback Error: $error");
       
       if (_isHandlingCompletion) return; // Already transitioning
@@ -556,7 +583,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       // that only occurs when MediaKit/MPV kills the player mid-playback (e.g. AAC decode error).
       // The platform player has been disposed — we must recreate it and skip to next.
       if (processingState == ja.ProcessingState.idle && isPlaying && state.isPlaying) {
-        if (_isHandlingCompletion || _isLooping || _isRecoveringFromCrash) return; // Already handling
+        // 🚀 FIX: Ignore idle state if a new song is currently being loaded to prevent false positives during fast skips.
+        // CRITICAL: _musicService.isLoading is now set TRUE at the very top of NMS.play() (before stop/setAudioSource),
+        // so it covers the full source-switching window including the idle+true transition on Android.
+        if (_isHandlingCompletion || _isLooping || _isRecoveringFromCrash || _musicService.isSeeking || _musicService.isLoading) return;
         DebugLogService().error("🚨 CRASH DETECTED: Player in impossible state (idle + playing). Recovering...");
         _isRecoveringFromCrash = true;
 
@@ -581,6 +611,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
       if (processingState == ja.ProcessingState.completed) {
         if (_isHandlingCompletion) return;
+        // 🚀 FIX: Ignore spurious `completed` events emitted by just_audio on Android
+        // when setAudioSource() is called during source switching (e.g. user taps new song).
+        // This is the root cause of the "skip-to-next" bug: the player briefly reports
+        // `completed` while transitioning sources on certain Android versions.
+        // Since NMS.play() now sets _isLoading=true immediately, this flag covers
+        // the full source-switching window including any spurious completed events.
+        if (_musicService.isLoading) return;
         _isHandlingCompletion = true;
 
         // 🚀 MOBILE FIX: On Android/iOS, wait for the audio buffer to drain
@@ -588,11 +625,19 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         final settings = ref.read(settingsProvider);
         final useDelay = !settings.gaplessPlayback && settings.crossfadeDuration < 0.1;
 
+        // 🚀 Capture token to detect stale handlers (e.g. if user manually skips during the 1s delay)
+        final completionToken = _playRequestToken;
         Future.delayed(
           (Platform.isWindows || Platform.isLinux || Platform.isMacOS || !useDelay)
               ? Duration.zero
               : const Duration(seconds: 1),
           () {
+            // Abort if a new explicit play request started during the delay
+            if (_playRequestToken != completionToken) {
+              DebugLogService().info("🎵 PLAYER: Completion handler aborted - new song started during delay.");
+              _isHandlingCompletion = false;
+              return;
+            }
             if (state.loopMode == ja.LoopMode.one) {
               _forceLoopOne();
             } else {
@@ -731,7 +776,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   // 🚀 SERIALIZED DOWNLOAD HELPER
   // Ensures only 1 download happens at a time (e.g. current song + preload) to save bandwidth
   Future<void> _safeCacheSong(SongMetadata meta,
-      {String? youtubeUrl, int? preloadToken}) async {
+      {String? youtubeUrl, String? streamUrl, int? preloadToken}) async {
     while (_preloadLock != null) {
       await _preloadLock!.future;
     }
@@ -744,12 +789,58 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     _preloadLock = Completer<void>();
     try {
-      await _smartService.cacheSong(meta, youtubeUrl: youtubeUrl);
+      await _smartService.cacheSong(meta, youtubeUrl: youtubeUrl, streamUrl: streamUrl);
+      
+      // 🚀 HOT-SWAP: If the currently playing song was just cached, update its model
+      if (state.currentSong != null && 
+          state.currentSong!.title == meta.title && 
+          state.currentSong!.artist == meta.artist) {
+        
+        final cachedPath = await _smartService.getPredictedCachePath(meta);
+        if (await File(cachedPath).exists() && await File(cachedPath).length() > 1024) {
+          print("✅ HOT-SWAP: ${meta.title} cached while playing. Updating model to local path.");
+          final updatedSong = state.currentSong!.copyWith(filePath: cachedPath);
+          _updateSongInState(state.currentSong!, updatedSong);
+        }
+      }
     } finally {
       final c = _preloadLock;
       _preloadLock = null;
       c?.complete();
     }
+  }
+
+  /// 🚀 NEW: Synchronize a song update across the entire player state (Current, Playlist, Queue)
+  void _updateSongInState(SongModel oldSong, SongModel newSong) {
+    // 1. Update Currently Playing
+    if (state.currentSong?.filePath == oldSong.filePath && 
+        state.currentSong?.title == oldSong.title) {
+      state = state.copyWith(currentSong: newSong);
+    }
+
+    // 2. Update Playlist
+    final playlist = List<SongModel>.from(state.playlist);
+    int pIdx = playlist.indexOf(oldSong);
+    if (pIdx == -1) {
+      pIdx = playlist.indexWhere((s) => s.filePath == oldSong.filePath && s.title == oldSong.title);
+    }
+    if (pIdx != -1) {
+      playlist[pIdx] = newSong;
+      state = state.copyWith(playlist: playlist);
+    }
+
+    // 3. Update User Queue
+    final userQueue = List<SongModel>.from(state.userQueue);
+    int qIdx = userQueue.indexOf(oldSong);
+    if (qIdx == -1) {
+      qIdx = userQueue.indexWhere((s) => s.filePath == oldSong.filePath && s.title == oldSong.title);
+    }
+    if (qIdx != -1) {
+      userQueue[qIdx] = newSong;
+      state = state.copyWith(userQueue: userQueue);
+    }
+    
+    _saveQueueState();
   }
 
   Future<void> insertSongNext(SongModel song) async {
@@ -1122,6 +1213,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
   // JIT CACHE HELPER
   Future<SongModel> _ensureFileExists(SongModel song) async {
+    final isHttp = song.filePath.startsWith('http://') || song.filePath.startsWith('https://');
+    if (isHttp) return song; // 🚀 ALREADY A STREAMING URL
+
     // 🚀 ONLY skip if we have a VALID local file (> 1KB)
     if (song.filePath != "cloud_stream") {
       final f = File(song.filePath);
@@ -1142,9 +1236,16 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       }
     }
 
-    // File is missing OR was a cloud stream - attempt to cache it
+    // File is missing OR was a cloud stream - attempt to stream it instantly
     print(
-        "⚠️ File missing or cloud_stream: ${song.filePath}. Triggering JIT Cache...");
+        "⚠️ File missing or cloud_stream: ${song.filePath}. Triggering JIT Stream...");
+
+    final streamUrl = await _getJitStreamUrl(song);
+    if (streamUrl != null) {
+      print("✅ JIT Stream Ready! Piping audio live from: $streamUrl");
+      return song.copyWith(filePath: streamUrl);
+    }
+
     final meta = SongMetadata(
       title: song.title,
       artist: song.artist,
@@ -1159,7 +1260,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       deezerId: song.deezerId,
     );
 
-    // Attempt Cache (this will search YouTube if sourceUrl is missing/stale)
+    // Attempt Cache (Fallback if stream fails)
     await _smartService.cacheSong(meta, youtubeUrl: song.sourceUrl);
 
     final cachedPath = await _smartService.getPredictedCachePath(meta);
@@ -1239,6 +1340,23 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         return;
       }
 
+      // 🚀 Guard: Check if file was already cached by a previous preload
+      // (e.g. 10% checkpoint cached it, now 35% fires — no need to re-download)
+      final preCheckMeta = SongMetadata(
+        title: nextSong.title,
+        artist: nextSong.artist,
+        album: nextSong.album,
+        albumArtUrl: nextSong.onlineArtUrl ?? "",
+        durationSeconds: nextSong.duration.toInt(),
+        year: "",
+        genre: "",
+      );
+      final preCheckPath = await _smartService.getPredictedCachePath(preCheckMeta);
+      if (await File(preCheckPath).exists() && await File(preCheckPath).length() > 1024) {
+        print("⏭️ PRELOAD: ${nextSong.title} already cached at $preCheckPath, skipping...");
+        return;
+      }
+
       _preloadingTitle = nextSong.title;
       print("🚀 PRELOAD: Preloading next song: ${nextSong.title}");
 
@@ -1293,25 +1411,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
               isrc: isrc,
             );
 
-            int pIdx = state.playlist.indexOf(originalSong);
-            if (pIdx == -1) {
-              pIdx = state.playlist.indexWhere((s) => s.filePath == originalSong.filePath && s.title == originalSong.title);
-            }
-            if (pIdx != -1) {
-              final newP = List<SongModel>.from(state.playlist);
-              newP[pIdx] = nextSong;
-              state = state.copyWith(playlist: newP);
-            }
-
-            int uIdx = state.userQueue.indexOf(originalSong);
-            if (uIdx == -1) {
-              uIdx = state.userQueue.indexWhere((s) => s.filePath == originalSong.filePath && s.title == originalSong.title);
-            }
-            if (uIdx != -1) {
-              final newU = List<SongModel>.from(state.userQueue);
-              newU[uIdx] = nextSong;
-              state = state.copyWith(userQueue: newU);
-            }
+            _updateSongInState(originalSong, nextSong);
           }
         } catch (e) {
           print("⏭️ PRELOAD: Metadata enrichment failed completely: $e");
@@ -1342,20 +1442,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       if (await File(resolvedPath).exists() && await File(resolvedPath).length() > 1024) {
         print("✅ PRELOAD SUCCESS: Updating model with $resolvedPath");
         final updatedNext = nextSong.copyWith(filePath: resolvedPath);
-        
-        // Update state
-        int pIdx = state.playlist.indexOf(nextSong);
-        if (pIdx != -1) {
-          final newP = List<SongModel>.from(state.playlist);
-          newP[pIdx] = updatedNext;
-          state = state.copyWith(playlist: newP);
-        }
-        int uIdx = state.userQueue.indexOf(nextSong);
-        if (uIdx != -1) {
-          final newU = List<SongModel>.from(state.userQueue);
-          newU[uIdx] = updatedNext;
-          state = state.copyWith(userQueue: newU);
-        }
+        _updateSongInState(nextSong, updatedNext);
       }
 
       _preloadingTitle = null; // Clear guard after completion
@@ -1377,6 +1464,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     final prevSong = state.playlist[prevIndex];
     if (await File(prevSong.filePath).exists()) return;
+
+    // 🚀 Guard: Skip if we are currently streaming a live song (Bandwidth congestion protection)
+    final isStreaming = state.currentSong?.filePath.startsWith('http') ?? false;
+    if (isStreaming) {
+      print("⏭️ PRELOAD PREV: Bandwidth Protection - Skipping preload while streaming");
+      return;
+    }
 
     print("🚀 PRELOAD PREV: ${prevSong.title}");
 
@@ -1462,12 +1556,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (await File(resolvedPath).exists() && await File(resolvedPath).length() > 1024) {
       print("✅ PRELOAD PREV SUCCESS: Updating model with $resolvedPath");
       final updatedPrev = prevSong.copyWith(filePath: resolvedPath);
-      int pIdx = state.playlist.indexOf(prevSong);
-      if (pIdx != -1) {
-        final newP = List<SongModel>.from(state.playlist);
-        newP[pIdx] = updatedPrev;
-        state = state.copyWith(playlist: newP);
-      }
+      _updateSongInState(prevSong, updatedPrev);
     }
   }
 
@@ -1475,7 +1564,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   Future<void> playSong(SongModel song,
       {List<SongModel>? newQueue,
       bool skipFinalize = false,
-      bool forceReload = false}) async {
+      bool forceReload = false,
+      Duration? initialPosition}) async {
     final currentToken = ++_playRequestToken; // 🚀 Register new play request
 
     // 🚀 Reset completion guard on explicit play
@@ -1553,71 +1643,101 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (_playlistIndex == -1) _playlistIndex = 0;
 
     // JIT CACHING CHECK
-    // 🐛 FIX: If the local file exists, ALWAYS play it directly.
-    // Quality upgrade should only apply when streaming (file doesn't exist).
-    // This ensures local library songs are never re-downloaded with FLAC quality setting.
-    final fileExists = await File(song.filePath).exists();
+    // 🚀 FIX: If the local file exists OR is already a streaming URL, play it directly.
+    final isHttp = song.filePath.startsWith('http://') || song.filePath.startsWith('https://');
+    bool fileExists = isHttp || await File(song.filePath).exists();
 
     if (!fileExists) {
-      print(
-          "⚠️ Play Error: File not found at ${song.filePath}. Attempting JIT Cache...");
+      print("⚠️ Stream Cache Miss: ${song.filePath}. Attempting JIT...");
       state = state.copyWith(isBuffering: true); // 🚀 BUFFER START
-      final meta = SongMetadata(
-        title: song.title,
-        artist: song.artist,
-        album: song.album,
-        albumArtUrl: song.onlineArtUrl ?? "",
-        durationSeconds: song.duration.toInt(),
-        year: "",
-        genre: "",
-        isrc: song.isrc,
-        spotifyId: song.spotifyId,
-        spotifyArtistId: song.spotifyArtistId,
-        deezerId: song.deezerId,
-      );
-      print("🚀 JIT Cache Triggered for: ${song.title}");
-      if (song.isrc != null) print("   ✅ Using ISRC: ${song.isrc}");
+      
+      // 🚀 1. TRY JIT STREAMING FIRST
+      bool streamedInstantly = false;
+      try {
+        final streamUrl = await _getJitStreamUrl(song);
+        if (streamUrl != null) {
+          print("✅ JIT Stream Ready! Piping audio live from: $streamUrl");
+          song = song.copyWith(filePath: streamUrl);
+          streamedInstantly = true;
+        }
 
-      // We use safeCacheSong to serialize downloads
-      await _safeCacheSong(meta, youtubeUrl: song.sourceUrl);
-      if (currentToken != _playRequestToken) {
-        print("⚠️ Play request superseded during JIT. Aborting play.");
-        return;
+        if (streamedInstantly) {
+          // 🚀 Trigger background cache for the streamed song (non-blocking)
+          final streamMeta = SongMetadata(
+            title: song.title,
+            artist: song.artist,
+            album: song.album,
+            albumArtUrl: song.onlineArtUrl ?? "",
+            durationSeconds: song.duration.toInt(),
+            year: "",
+            genre: "",
+            isrc: song.isrc,
+            spotifyId: song.spotifyId,
+            spotifyArtistId: song.spotifyArtistId,
+            deezerId: song.deezerId,
+          );
+          _safeCacheSong(streamMeta, youtubeUrl: song.sourceUrl, streamUrl: streamUrl);
+        }
+      } catch (e) {
+        print("⚠️ JIT Stream Failed: $e.");
       }
+
+      // 🚀 2. FALLBACK TO BACKGROUND CACHING
+      if (!streamedInstantly) {
+        print("Falling back to background cache.");
+        final meta = SongMetadata(
+          title: song.title,
+          artist: song.artist,
+          album: song.album,
+          albumArtUrl: song.onlineArtUrl ?? "",
+          durationSeconds: song.duration.toInt(),
+          year: "",
+          genre: "",
+          isrc: song.isrc,
+          spotifyId: song.spotifyId,
+          spotifyArtistId: song.spotifyArtistId,
+          deezerId: song.deezerId,
+        );
+        print("🚀 JIT Cache Triggered for: ${song.title}");
+
+        // We use safeCacheSong to serialize downloads
+        await _safeCacheSong(meta, youtubeUrl: song.sourceUrl);
+        if (currentToken != _playRequestToken) {
+          print("⚠️ Play request superseded during JIT. Aborting play.");
+          return;
+        }
+
+        // CHECK IF CACHED FILE EXISTS
+        final cachedPath = await _smartService.getPredictedCachePath(meta);
+        if (await File(cachedPath).exists()) {
+          print("✅ JIT Cache Successful! Switching path to: $cachedPath");
+          song = song.copyWith(filePath: cachedPath);
+        } else {
+          print("❌ JIT Cache Failed.");
+          // Fallback to cloud_stream if everything else fails
+          if (song.sourceUrl != null && song.sourceUrl!.isNotEmpty) {
+             song = song.copyWith(filePath: "cloud_stream");
+          } else {
+             print("❌ No source URL available for fallback. Skipping.");
+             if (skipFinalize || newQueue != null || state.playlist.isNotEmpty) {
+                playNext(autoPlay: true);
+                return;
+             }
+          }
+        }
+      }
+      
       state = state.copyWith(isBuffering: false); // 🚀 BUFFER END
-
-      // CHECK IF CACHED FILE EXISTS
-      // (Path might differ from song.filePath)
-      final cachedPath = await _smartService.getPredictedCachePath(meta);
-      if (await File(cachedPath).exists()) {
-        print("✅ JIT Cache Successful! Switching path to: $cachedPath");
-        // Update song object with new path
-        song = song.copyWith(filePath: cachedPath);
-
-        // Update in Playlist/Queue if possible (optional but good for consistency)
-        // We won't iterate the whole list here to avoid performance hit,
-        // but we ensure 'currentSong' gets the valid path.
-      } else if (!await File(song.filePath).exists()) {
-        print("❌ JIT Cache Failed. Skipping.");
-        if (skipFinalize) {
-          playNext(autoPlay: true);
-          return;
-        }
-        if (newQueue != null || state.playlist.isNotEmpty) {
-          playNext(autoPlay: true);
-          return;
-        }
-      }
     }
 
-    final isSameSong = state.currentSong?.filePath == song.filePath;
-    if (isSameSong && !forceReload) {
+     final isSameSong = state.currentSong?.filePath == song.filePath;
+    if (isSameSong && !forceReload && initialPosition == null) {
       // USB Audio bypass for seek
       if (_useUsbAudioBypass) {
         await UsbAudioService.seek(0);
         if (!state.isPlaying) await _resumeUsbAudio();
       } else {
-        await _musicService.seek(0);
+        await _musicService.seek(Duration.zero);
         if (!state.isPlaying) await _musicService.resume();
       }
     } else {
@@ -1630,12 +1750,21 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           print("🎧 USB Audio Bypass: Playing via USB DAC");
         } else {
           print("⚠️ USB Audio Bypass: Falling back to normal playback");
-          await _musicService.play(song);
+          await _musicService.play(song, initialPosition: initialPosition);
         }
       } else {
         final settings = ref.read(settingsProvider);
         // 🚀 FIX: Crossfade is for CHANGING song only. If it's the same song (Repeat One reload), force 0.0 crossfade.
-        await _musicService.play(song, crossfadeDuration: (isSameSong || skipFinalize) ? 0.0 : settings.crossfadeDuration);
+        if (currentToken != _playRequestToken) return;
+        final success = await _musicService.play(song,
+            crossfadeDuration: (isSameSong || skipFinalize) ? 0.0 : settings.crossfadeDuration,
+            initialPosition: initialPosition);
+        if (currentToken != _playRequestToken) return;
+        if (!success) {
+          print("❌ Play Song Failed. Skipping...");
+          playNext(autoPlay: true);
+          return;
+        }
       }
     }
     _updateDiscord();
@@ -1672,157 +1801,83 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     
     final settings = ref.read(settingsProvider);
 
-    // 1. Check User Queue (Priority)
+    // 1. Check Play Next queue (userQueue)
     if (state.userQueue.isNotEmpty) {
       var nextSong = state.userQueue.first;
-      // Save to history
-      DebugLogService().info(
-          "🎵 PLAYER: playNext (UserQueue) calling addToHistory for: ${nextSong.title}");
-      ref.read(historyProvider.notifier).addToHistory(
-            song: nextSong,
-            youtubeUrl: nextSong.sourceUrl,
-            artUrl: nextSong.onlineArtUrl,
-          );
-
       state = state.copyWith(userQueue: state.userQueue.sublist(1));
-      _saveQueueState(); // SAVE QUEUE
+      _saveQueueState();
 
       // _isSwitchingSong = true;
       state = state.copyWith(currentSong: nextSong, isPlaying: true);
 
-      // EXTRACT COLOR
+      // EXTRACT COLOR (Immediate for UI snappiness)
       _extractPalette(nextSong);
 
-      // 🚀 CHECK FOR PRELOADED/CACHED FILE FIRST (Even if not cloud_stream, to pick up fresh FLACs)
-      final meta = SongMetadata(
-        title: nextSong.title,
-        artist: nextSong.artist,
-        album: nextSong.album,
-        albumArtUrl: nextSong.onlineArtUrl ?? "",
-        durationSeconds: nextSong.duration.toInt(),
-        year: "",
-        genre: "",
-        spotifyId: nextSong.spotifyId,
-        spotifyArtistId: nextSong.spotifyArtistId,
-        deezerId: nextSong.deezerId,
-      );
-      final cachedPath = await _smartService.getPredictedCachePath(meta);
-      print("🔍 Checking cache path: $cachedPath");
-      final cacheFile = File(cachedPath);
-      if (await cacheFile.exists()) {
-        final size = await cacheFile.length();
-        if (size > 1024) {
-          print("✅ Found valid preloaded cache! (${(size / 1024 / 1024).toStringAsFixed(2)}MB)");
-          nextSong = nextSong.copyWith(filePath: cachedPath);
-          // Update currentSong state with resolved path
+      // JIT CACHING CHECK FOR USER QUEUE
+      final isHttpByPath = nextSong.filePath.startsWith('http') || nextSong.filePath.startsWith('https');
+      if (!isHttpByPath && !File(nextSong.filePath).existsSync()) {
+        state = state.copyWith(isBuffering: true);
+        print("⚠️ Play Next: File not found at ${nextSong.filePath}. Attempting JIT Stream...");
+        
+        final streamUrl = await _getJitStreamUrl(nextSong);
+        if (streamUrl != null) {
+          print("✅ JIT Stream Ready! Piping audio live from: $streamUrl");
+          nextSong = nextSong.copyWith(filePath: streamUrl);
           state = state.copyWith(currentSong: nextSong);
+          // Background cache non-blocking
+          _safeCacheSong(
+            SongMetadata(
+              title: nextSong.title,
+              artist: nextSong.artist,
+              album: nextSong.album,
+              albumArtUrl: nextSong.onlineArtUrl ?? "",
+              durationSeconds: nextSong.duration.toInt(),
+            ),
+            youtubeUrl: nextSong.sourceUrl,
+          );
         } else {
-          print("⚠️ Cache file too small ($size bytes), ignoring corrupt preload: $cachedPath");
-          // Delete the corrupted 0-byte file to allow fresh download
-          try {
-            await cacheFile.delete();
-          } catch (e) {}
-        }
-      }
+          print("⚠️ JIT Stream Failed. Falling back to background cache.");
+          final meta = SongMetadata(
+            title: nextSong.title,
+            artist: nextSong.artist,
+            album: nextSong.album,
+            albumArtUrl: nextSong.onlineArtUrl ?? "",
+            durationSeconds: nextSong.duration.toInt(),
+          );
+          await _safeCacheSong(meta, youtubeUrl: nextSong.sourceUrl);
+          if (currentToken != _playRequestToken) return;
 
-      // ☁️ GUARD: Bypass File Checks for Cloud Streams (if still cloud_stream)
-      if (nextSong.filePath == "cloud_stream") {
-        final success = await _musicService.play(nextSong, crossfadeDuration: settings.crossfadeDuration);
-        if (!success) {
-          _consecutiveSkipCount++;
-          print("❌ Play Next (Cloud) Failed. Skip #$_consecutiveSkipCount...");
-          if (_consecutiveSkipCount >= _maxConsecutiveSkips) {
-            print("🛑 Max skips reached. Stopping playback.");
-            _consecutiveSkipCount = 0;
-            state = state.copyWith(isPlaying: false);
-            return;
+          final cachedPath = await _smartService.getPredictedCachePath(meta);
+          if (await File(cachedPath).exists()) {
+            nextSong = nextSong.copyWith(filePath: cachedPath);
+            state = state.copyWith(currentSong: nextSong);
           }
-          playNext(autoPlay: true);
-          return;
         }
-        _updateDiscord();
-        _broadcastRemoteState();
-        _preloadNextSong(); // ✅ Enable Preload for Queue
-        _isHandlingCompletion = false; // 🚀 Clear completion guard
-        return;
+        state = state.copyWith(isBuffering: false);
       }
 
-      // JIT CACHING CHECK
-      // 🚀 FIX: If local file exists, play directly. No quality upgrade for local files.
-      final fileExists = File(nextSong.filePath).existsSync();
-
-      if (!fileExists) {
-        state = state.copyWith(isBuffering: true); // 🚀 BUFFER START
-        print(
-            "⚠️ Play Next: File not found at ${nextSong.filePath}. Attempting JIT Cache...");
-        final meta = SongMetadata(
-          title: nextSong.title,
-          artist: nextSong.artist,
-          album: nextSong.album,
-          albumArtUrl: nextSong.onlineArtUrl ?? "",
-          durationSeconds: nextSong.duration.toInt(),
-          year: "",
-          genre: "",
-          spotifyId: nextSong.spotifyId,
-          spotifyArtistId: nextSong.spotifyArtistId,
-          deezerId: nextSong.deezerId,
-        );
-        await _safeCacheSong(meta, youtubeUrl: nextSong.sourceUrl);
-        if (currentToken != _playRequestToken) {
-          print("⚠️ Play request superseded during JIT. Aborting play.");
-          return;
-        }
-        state = state.copyWith(isBuffering: false); // 🚀 BUFFER END
-
-        // CHECK IF CACHED FILE EXISTS (Path might differ from nextSong.filePath)
-        final cachedPath = await _smartService.getPredictedCachePath(meta);
-        if (await File(cachedPath).exists()) {
-          print("✅ JIT Cache Successful! Switching path to: $cachedPath");
-          // Update song object with new path
-          nextSong = nextSong.copyWith(filePath: cachedPath);
-          // 🚀 Update currentSong so player bar detects filePath change and re-fetches audio info
-          state = state.copyWith(currentSong: nextSong);
-        }
-      }
-
-      // VERIFY FILE EXISTS
-      if (!File(nextSong.filePath).existsSync()) {
-        print("❌ Play Next Error: File missing after JIT. Skipping.");
-        // Recursively try next song
-        playNext(autoPlay: true);
-        return;
-      }
-
+      if (currentToken != _playRequestToken) return;
       final success = await _musicService.play(nextSong, crossfadeDuration: settings.crossfadeDuration);
+      if (currentToken != _playRequestToken) return;
       if (!success) {
-        _consecutiveSkipCount++;
-        print("❌ Play Next (File) Failed. Skip #$_consecutiveSkipCount...");
-        if (_consecutiveSkipCount >= _maxConsecutiveSkips) {
-          print("🛑 Max skips reached. Stopping playback.");
-          _consecutiveSkipCount = 0;
-          state = state.copyWith(isPlaying: false);
-          return;
-        }
+        print("❌ Play User Queue (File) Failed. Skipping...");
         playNext(autoPlay: true);
         return;
       }
       _updateDiscord();
-      _broadcastRemoteState(); // Sync Next Song Change
+      _broadcastRemoteState();
 
       // TRIGGER PRELOAD
       _preloadNextSong();
-      _isHandlingCompletion = false; // 🚀 Clear completion guard
+      _isHandlingCompletion = false;
       return;
     }
 
     // 2. Check Playlist
     if (state.playlist.isNotEmpty) {
-      int nextIndex = _playlistIndex + 1;
-      if (nextIndex < state.playlist.length) {
-        // Still have songs in playlist
-        _playlistIndex = nextIndex;
-        var nextSong = state.playlist[nextIndex];
-        // Save to history
+      if (_playlistIndex < state.playlist.length - 1) {
+        _playlistIndex++;
+        var nextSong = state.playlist[_playlistIndex];
         ref.read(historyProvider.notifier).addToHistory(
               song: nextSong,
               youtubeUrl: nextSong.sourceUrl,
@@ -1835,85 +1890,46 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         // EXTRACT COLOR
         _extractPalette(nextSong);
 
-        // 🚀 CHECK FOR PRELOADED/CACHED FILE FIRST
-        if (nextSong.filePath == "cloud_stream") {
-          final meta = SongMetadata(
-            title: nextSong.title,
-            artist: nextSong.artist,
-            album: nextSong.album,
-            albumArtUrl: nextSong.onlineArtUrl ?? "",
-            durationSeconds: nextSong.duration.toInt(),
-            year: "",
-            genre: "",
-            spotifyId: nextSong.spotifyId,
-            spotifyArtistId: nextSong.spotifyArtistId,
-            deezerId: nextSong.deezerId,
-          );
-          final cachedPath = await _smartService.getPredictedCachePath(meta);
-          if (await File(cachedPath).exists()) {
-            print("✅ Found preloaded cache! Using: $cachedPath");
-            nextSong = nextSong.copyWith(filePath: cachedPath);
+        // JIT CACHING CHECK FOR PLAYLIST
+        final isHttpByPath = nextSong.filePath.startsWith('http') || nextSong.filePath.startsWith('https');
+        if (!isHttpByPath && !File(nextSong.filePath).existsSync()) {
+          state = state.copyWith(isBuffering: true);
+          print("⚠️ Play Playlist: File not found at ${nextSong.filePath}. Attempting JIT...");
+          
+          final streamUrl = await _getJitStreamUrl(nextSong);
+          if (streamUrl != null) {
+            print("✅ JIT Stream Ready! (Playlist)");
+            nextSong = nextSong.copyWith(filePath: streamUrl);
             state = state.copyWith(currentSong: nextSong);
+            _safeCacheSong(SongMetadata(
+              title: nextSong.title,
+              artist: nextSong.artist,
+              album: nextSong.album,
+              albumArtUrl: nextSong.onlineArtUrl ?? "",
+              durationSeconds: nextSong.duration.toInt(),
+            ), youtubeUrl: nextSong.sourceUrl);
+          } else {
+            final meta = SongMetadata(
+              title: nextSong.title,
+              artist: nextSong.artist,
+              album: nextSong.album,
+              albumArtUrl: nextSong.onlineArtUrl ?? "",
+              durationSeconds: nextSong.duration.toInt(),
+            );
+            await _safeCacheSong(meta, youtubeUrl: nextSong.sourceUrl);
+            if (currentToken != _playRequestToken) return;
+            final cachedPath = await _smartService.getPredictedCachePath(meta);
+            if (await File(cachedPath).exists()) {
+              nextSong = nextSong.copyWith(filePath: cachedPath);
+              state = state.copyWith(currentSong: nextSong);
+            }
           }
+          state = state.copyWith(isBuffering: false);
         }
 
-        // ☁️ GUARD: Bypass File Checks for Cloud Streams (if still cloud_stream)
-        if (nextSong.filePath == "cloud_stream") {
-          final success = await _musicService.play(nextSong, crossfadeDuration: settings.crossfadeDuration);
-          if (!success) {
-            print("❌ Play Playlist (Cloud) Failed. Skipping...");
-            playNext(autoPlay: true);
-            return;
-          }
-          _updateDiscord();
-          _preloadNextSong();
-          _checkEndlessQueue();
-          _isHandlingCompletion = false; // 🚀 Clear completion guard
-          return;
-        }
-
-        // JIT CACHING CHECK
-        // 🚀 FIX: If local file exists, play directly. No quality upgrade for local files.
-        final fileExists = File(nextSong.filePath).existsSync();
-
-        if (!fileExists) {
-          print(
-              "⚠️ Play Next: File not found at ${nextSong.filePath}. Attempting JIT Cache...");
-          final meta = SongMetadata(
-            title: nextSong.title,
-            artist: nextSong.artist,
-            album: nextSong.album,
-            albumArtUrl: nextSong.onlineArtUrl ?? "",
-            durationSeconds: nextSong.duration.toInt(),
-            year: "",
-            genre: "",
-            spotifyId: nextSong.spotifyId,
-            spotifyArtistId: nextSong.spotifyArtistId,
-            deezerId: nextSong.deezerId,
-          );
-          // JIT CACHING CHECK
-          state = state.copyWith(isBuffering: true); // 🚀 BUFFER START
-          DebugLogService()
-              .info("🔄 PLAYER: JIT Buffering Started for ${nextSong.title}");
-          await _safeCacheSong(meta);
-          if (currentToken != _playRequestToken) {
-            print("⚠️ Play request superseded during JIT. Aborting play.");
-            return;
-          }
-          state = state.copyWith(isBuffering: false); // 🚀 BUFFER END
-          DebugLogService().info("✅ PLAYER: JIT Buffering Finished");
-
-          // CHECK IF CACHED FILE EXISTS
-          final cachedPath = await _smartService.getPredictedCachePath(meta);
-          if (await File(cachedPath).exists()) {
-            print("✅ JIT Cache Successful! Switching path to: $cachedPath");
-            nextSong = nextSong.copyWith(filePath: cachedPath);
-            // 🚀 Update currentSong so player bar detects filePath change and re-fetches audio info
-            state = state.copyWith(currentSong: nextSong);
-          }
-        }
-
+        if (currentToken != _playRequestToken) return;
         final success = await _musicService.play(nextSong, crossfadeDuration: settings.crossfadeDuration);
+        if (currentToken != _playRequestToken) return;
         if (!success) {
           print("❌ Play Playlist (File) Failed. Skipping...");
           playNext(autoPlay: true);
@@ -1926,10 +1942,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
         // ENDLESS QUEUE CHECK
         _checkEndlessQueue();
-        _isHandlingCompletion = false; // 🚀 Clear completion guard
+        _isHandlingCompletion = false; 
         return;
       } else if (state.loopMode == ja.LoopMode.all) {
-        // Loop back to beginning
         _playlistIndex = 0;
         var nextSong = state.playlist[0];
         ref.read(historyProvider.notifier).addToHistory(
@@ -1938,34 +1953,46 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
               artUrl: nextSong.onlineArtUrl,
             );
 
-        // _isSwitchingSong = true;
         state = state.copyWith(currentSong: nextSong, isPlaying: true);
         _extractPalette(nextSong);
 
-        if (!File(nextSong.filePath).existsSync()) {
-          final meta = SongMetadata(
-            title: nextSong.title,
-            artist: nextSong.artist,
-            album: nextSong.album,
-            albumArtUrl: nextSong.onlineArtUrl ?? "",
-            durationSeconds: nextSong.duration.toInt(),
-            year: "",
-            genre: "",
-          );
-          await _safeCacheSong(meta);
-          if (currentToken != _playRequestToken) {
-            print("⚠️ Play request superseded during JIT. Aborting play.");
-            return;
+        // JIT CHECK FOR LOOP ALL
+        final isHttpByPath = nextSong.filePath.startsWith('http') || nextSong.filePath.startsWith('https');
+        if (!isHttpByPath && !File(nextSong.filePath).existsSync()) {
+          state = state.copyWith(isBuffering: true);
+          final streamUrl = await _getJitStreamUrl(nextSong);
+          if (streamUrl != null) {
+             nextSong = nextSong.copyWith(filePath: streamUrl);
+             state = state.copyWith(currentSong: nextSong);
+             _safeCacheSong(SongMetadata(
+                title: nextSong.title,
+                artist: nextSong.artist,
+                album: nextSong.album,
+                albumArtUrl: nextSong.onlineArtUrl ?? "",
+                durationSeconds: nextSong.duration.toInt(),
+              ), youtubeUrl: nextSong.sourceUrl);
+          } else {
+            final meta = SongMetadata(
+              title: nextSong.title,
+              artist: nextSong.artist,
+              album: nextSong.album,
+              albumArtUrl: nextSong.onlineArtUrl ?? "",
+              durationSeconds: nextSong.duration.toInt(),
+            );
+            await _safeCacheSong(meta, youtubeUrl: nextSong.sourceUrl);
+            if (currentToken != _playRequestToken) return;
+            final cachedPath = await _smartService.getPredictedCachePath(meta);
+            if (await File(cachedPath).exists()) {
+              nextSong = nextSong.copyWith(filePath: cachedPath);
+              state = state.copyWith(currentSong: nextSong);
+            }
           }
-          final cachedPath = await _smartService.getPredictedCachePath(meta);
-          if (await File(cachedPath).exists()) {
-            nextSong = nextSong.copyWith(filePath: cachedPath);
-            // 🚀 Update currentSong so player bar detects filePath change and re-fetches audio info
-            state = state.copyWith(currentSong: nextSong);
-          }
+          state = state.copyWith(isBuffering: false);
         }
 
+        if (currentToken != _playRequestToken) return;
         final success = await _musicService.play(nextSong, crossfadeDuration: settings.crossfadeDuration);
+        if (currentToken != _playRequestToken) return;
         if (!success) {
           print("❌ Play Loop (File) Failed. Skipping...");
           playNext(autoPlay: true);
@@ -1974,10 +2001,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _updateDiscord();
         _preloadNextSong();
         _checkEndlessQueue();
-        _isHandlingCompletion = false; // 🚀 Clear completion guard
+        _isHandlingCompletion = false; 
         return;
       }
-      // Playlist exhausted, fall through to check recommendationQueue
     }
 
     // 3. Check Recommendation Queue (Endless Queue)
@@ -1985,78 +2011,67 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       print("🎵 Playing from recommendation queue...");
       var nextSong = state.recommendationQueue.first;
 
-      // Save to history
       ref.read(historyProvider.notifier).addToHistory(
             song: nextSong,
             youtubeUrl: nextSong.sourceUrl,
             artUrl: nextSong.onlineArtUrl,
           );
 
-      // Remove from recommendation queue
       state = state.copyWith(
         recommendationQueue: state.recommendationQueue.sublist(1),
       );
       _saveQueueState();
 
-      // _isSwitchingSong = true;
       state = state.copyWith(currentSong: nextSong, isPlaying: true);
-
-      // EXTRACT COLOR
       _extractPalette(nextSong);
 
-      // JIT CACHING CHECK
-      if (!File(nextSong.filePath).existsSync()) {
-        print(
-            "⚠️ Recommendation song: File not found. Attempting JIT Cache...");
-        final meta = SongMetadata(
-          title: nextSong.title,
-          artist: nextSong.artist,
-          album: nextSong.album,
-          albumArtUrl: nextSong.onlineArtUrl ?? "",
-          durationSeconds: nextSong.duration.toInt(),
-          year: "",
-          genre: "",
-        );
-        await _smartService.cacheSong(meta, youtubeUrl: nextSong.sourceUrl);
-        if (currentToken != _playRequestToken) {
-          print("⚠️ Play request superseded during JIT. Aborting play.");
-          return;
-        }
-
-        final cachedPath = await _smartService.getPredictedCachePath(meta);
-        if (await File(cachedPath).exists()) {
-          print("✅ JIT Cache Successful! Switching path to: $cachedPath");
-          nextSong = nextSong.copyWith(filePath: cachedPath);
-          // 🚀 Update currentSong so player bar detects filePath change and re-fetches audio info
+      // JIT CACHING CHECK FOR RECOMMENDATIONS
+      final isHttpByPath = nextSong.filePath.startsWith('http') || nextSong.filePath.startsWith('https');
+      if (!isHttpByPath && !File(nextSong.filePath).existsSync()) {
+        state = state.copyWith(isBuffering: true);
+        final streamUrl = await _getJitStreamUrl(nextSong);
+        if (streamUrl != null) {
+          nextSong = nextSong.copyWith(filePath: streamUrl);
           state = state.copyWith(currentSong: nextSong);
+        } else {
+          final meta = SongMetadata(
+            title: nextSong.title,
+            artist: nextSong.artist,
+            album: nextSong.album,
+            albumArtUrl: nextSong.onlineArtUrl ?? "",
+            durationSeconds: nextSong.duration.toInt(),
+          );
+          await _safeCacheSong(meta, youtubeUrl: nextSong.sourceUrl);
+          if (currentToken != _playRequestToken) return;
+          final cachedPath = await _smartService.getPredictedCachePath(meta);
+          if (await File(cachedPath).exists()) {
+            nextSong = nextSong.copyWith(filePath: cachedPath);
+            state = state.copyWith(currentSong: nextSong);
+          }
         }
+        state = state.copyWith(isBuffering: false);
       }
 
-      // VERIFY FILE EXISTS
-      if (!File(nextSong.filePath).existsSync()) {
-        print("❌ Recommendation song Error: File missing. Skipping.");
+      if (currentToken != _playRequestToken) return;
+      final success = await _musicService.play(nextSong, crossfadeDuration: settings.crossfadeDuration);
+      if (currentToken != _playRequestToken) return;
+      if (!success) {
+        print("❌ Play Recommendation Failed. Skipping...");
         playNext(autoPlay: true);
         return;
       }
-
-      await _musicService.play(nextSong, crossfadeDuration: settings.crossfadeDuration);
       _updateDiscord();
       _broadcastRemoteState();
-
-      // TRIGGER PRELOAD
       _preloadNextSong();
-
-      // CHECK FOR MORE RECOMMENDATIONS
       _checkEndlessQueue();
-      _isHandlingCompletion = false; // 🚀 Clear completion guard
+      _isHandlingCompletion = false; 
       return;
     }
 
     // 4. No more songs - pause
     state = state.copyWith(isPlaying: false);
     await _musicService.pause();
-    _isHandlingCompletion = false; // 🚀 Clear completion guard
-    return;
+    _isHandlingCompletion = false; 
   }
 
   // --- ENDLESS QUEUE ---
@@ -2087,6 +2102,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
   /// Check if we need to fetch more songs for endless queue
   Future<void> _checkEndlessQueue() async {
+    // 🚀 NEW: Delay recommendations fetch by 3 seconds to prioritize initial audio buffering
+    await Future.delayed(const Duration(seconds: 3));
+
     print("🔍 Endless Queue: Checking...");
     print("   - Enabled: ${state.endlessQueueEnabled}");
     print("   - Current Song: ${state.currentSong?.title}");
@@ -2157,7 +2175,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   Future<void> playPrevious() async {
     final pos = await _musicService.player.position;
     if (pos.inSeconds > 3) {
-      await _musicService.seek(0);
+      await _musicService.seek(Duration.zero);
       // 🚀 Update Discord to reset timelapse when restarting song
       _updateDiscord();
       return;
@@ -2177,7 +2195,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _playlistIndex = state.playlist.length - 1;
       } else {
         // Otherwise just restart the current song
-        await _musicService.seek(0);
+        await _musicService.seek(Duration.zero);
         // 🚀 Update Discord to reset timelapse when restarting song
         _updateDiscord();
         return;
@@ -2205,6 +2223,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     // EXTRACT COLOR (Safe now)
     _extractPalette(readySong);
 
+    if (currentToken != _playRequestToken) return;
     _musicService.play(readySong);
     _updateDiscord();
     _broadcastRemoteState(); // Sync Prev Song Change
@@ -2223,7 +2242,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   }
 
   Future<void> seek(double seconds) async {
-    await _musicService.seek(seconds);
+    await _musicService.seek(Duration(milliseconds: (seconds * 1000).toInt()));
     _lastLogPosition = seconds;
     _updateDiscord();
   }
@@ -2339,8 +2358,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   Future<void> _updateDiscord() async {
     if (state.currentSong != null) {
       final song = state.currentSong!;
+      
+      // Fallback for duration if player hasn't loaded metadata yet
+      final effectiveDuration = state.totalDuration > 0 
+          ? state.totalDuration 
+          : song.duration;
 
-      if (song.filePath != _lastProcessedSongPath) {
+      if (song.filePath != _lastProcessedSongPath || (state.totalDuration == 0 && song.duration > 0)) {
         _lastProcessedSongPath = song.filePath;
         _cachedDiscordImage = null;
 
@@ -2351,16 +2375,15 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           song,
           state.isPlaying,
           Duration(seconds: state.currentPosition.toInt()),
-          Duration(seconds: state.totalDuration.toInt()),
-          imageUrl: initialArt, // Use existing art immediately if available
+          Duration(seconds: effectiveDuration.toInt()),
+          imageUrl: initialArt,
         );
 
-        // Cache the initial art if available
         if (initialArt != null && initialArt.isNotEmpty) {
           _cachedDiscordImage = initialArt;
         }
 
-        // Fetch higher quality art from APIs (async update)
+        // Fetch higher quality art from APIs
         SpotifyService.getTrackImage(song.title, song.artist).then((artUrl) async {
           if (artUrl != null && artUrl.isNotEmpty) {
             _cachedDiscordImage = artUrl;
@@ -2368,11 +2391,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
               song,
               state.isPlaying,
               Duration(seconds: state.currentPosition.toInt()),
-              Duration(seconds: state.totalDuration.toInt()),
+              Duration(seconds: effectiveDuration.toInt()),
               imageUrl: artUrl,
             );
           } else {
-            // FALLBACK TO DEEZER
             final deezerUrl = await DeezerService.getTrackImage(song.title, song.artist);
             if (deezerUrl != null && deezerUrl.isNotEmpty) {
               _cachedDiscordImage = deezerUrl;
@@ -2380,43 +2402,28 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
                 song,
                 state.isPlaying,
                 Duration(seconds: state.currentPosition.toInt()),
-                Duration(seconds: state.totalDuration.toInt()),
+                Duration(seconds: effectiveDuration.toInt()),
                 imageUrl: deezerUrl,
               );
             }
           }
-        }).catchError((e) {
-          print("Discord Art Error: $e");
-          return null;
-        });
+        }).catchError((e) => print("Discord Art Error: $e"));
       } else {
         _discordService.updatePresence(
           song,
           state.isPlaying,
           Duration(seconds: state.currentPosition.toInt()),
-          Duration(seconds: state.totalDuration.toInt()),
+          Duration(seconds: effectiveDuration.toInt()),
           imageUrl: _cachedDiscordImage,
         );
       }
     } else {
       _discordService.clearPresence();
     }
-    // SYNC REMOTE CONTROL STATE
-    if (state.currentSong != null) {
-      _remoteService.broadcastState(
-        title: state.currentSong!.title,
-        artist: state.currentSong!.artist,
-        isPlaying: state.isPlaying,
-        volume: state.volume,
-        positionSeconds: state.currentPosition.toInt(),
-        durationSeconds: state.totalDuration.toInt(),
-        artUrl: state.currentSong!.onlineArtUrl,
-        filePath: state.currentSong!.filePath, // PASS LOCAL PATH
-      );
-    }
-
-    _updateTaskbar(); // SYNC TASKBAR
-    _saveSettings(); // SAVE STATE
+    
+    _broadcastRemoteState(); // Trigger remote sync
+    _updateTaskbar();
+    _saveSettings();
   }
 
   Future<void> _saveSettings() async {
@@ -2494,17 +2501,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     switch (action) {
       case 'play':
-        // Direct resume without force-reload logic
-        if (!state.isPlaying) {
-          DebugLogService().info("[Remote] Executing RESUME");
-          await _musicService.resume();
-        }
+        DebugLogService().info("[Remote] Executing RESUME");
+        await _musicService.resume();
         break;
       case 'pause':
-        if (state.isPlaying) {
-          DebugLogService().info("[Remote] Executing PAUSE");
-          await _musicService.pause();
-        }
+        DebugLogService().info("[Remote] Executing PAUSE");
+        await _musicService.pause();
         break;
       case 'next':
         playNext();
@@ -2733,8 +2735,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       queueData.add({
         'title': song.title,
         'artist': song.artist,
-        'albumArt': song.onlineArtUrl, // Simplified key for web
-        'isCustom': true, // Flag to show "Queued" badge
+        'albumArt': song.onlineArtUrl,
+        'isCustom': true,
       });
     }
 
@@ -2746,7 +2748,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (queueData.length < limit &&
         currentIndex >= 0 &&
         currentIndex < state.playlist.length) {
-      // Start from next song
       for (int i = currentIndex + 1; i < state.playlist.length; i++) {
         if (queueData.length >= limit) break;
         final song = state.playlist[i];
@@ -2759,19 +2760,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       }
     }
 
-    DebugLogService().info(
-        "📢 Broadcasting Queue: ${queueData.length} items (User: ${state.userQueue.length}, Playlist: ${state.playlist.length})");
-
-    DebugLogService().info(
-        "📢 Broadcasting State: Shuffle=${state.isShuffle}, Loop=${state.loopMode.name} (Index: ${state.loopMode.index})");
-
     // 🚀 SYNC FIX: Ensure we send actual player status, not potentially stale state.
-    // Brief desync between state.isPlaying and player.playing is expected
-    // during song transitions and self-corrects within milliseconds.
     final actualPlaying = _musicService.player.playing;
 
     // 🚀 LOCAL SONG METADATA SUPPORT
-    // For local songs without online art URL, fetch from Spotify API
     String? artUrlToSend = state.currentSong?.onlineArtUrl;
 
     if ((artUrlToSend == null || artUrlToSend.isEmpty) &&
@@ -2780,33 +2772,27 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       final artist = state.currentSong!.artist;
       final title = state.currentSong!.title;
 
-      // Only try Spotify lookup if we have valid metadata
       if (artist.isNotEmpty &&
           artist != "Unknown Artist" &&
           title.isNotEmpty &&
           title != "Unknown Title") {
-        // Check cache first
         final cachedArt = _getCachedArtUrl(artist, title);
         if (cachedArt != null) {
           artUrlToSend = cachedArt;
         } else {
-          // Trigger async lookup for next broadcast
           _fetchAndCacheArt(artist, title);
         }
       }
     }
 
-    // Fallback display values for local songs with missing metadata
     String? displayTitle = state.currentSong?.title;
     String? displayArtist = state.currentSong?.artist;
     if (displayTitle == null ||
         displayTitle.isEmpty ||
         displayTitle == "Unknown Title") {
-      // Extract filename as fallback
       if (state.currentSong?.filePath != null &&
           state.currentSong!.filePath != "cloud_stream") {
-        displayTitle =
-            state.currentSong!.filePath.split('/').last.split('\\').last;
+        displayTitle = state.currentSong!.filePath.split('/').last.split('\\').last;
         final dotIndex = displayTitle.lastIndexOf('.');
         if (dotIndex > 0) displayTitle = displayTitle.substring(0, dotIndex);
       }
@@ -2820,16 +2806,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _remoteService.broadcastState(
       title: displayTitle,
       artist: displayArtist,
-      isPlaying: actualPlaying, // 🚀 TRUTH FROM METAL
+      isPlaying: actualPlaying,
       volume: state.volume,
       isShuffle: state.isShuffle,
       loopMode: state.loopMode == ja.LoopMode.off
           ? 0
-          : (state.loopMode == ja.LoopMode.all
-              ? 1
-              : 2), // 0: off, 1: all, 2: one (Explicit mapping for Web App)
+          : (state.loopMode == ja.LoopMode.all ? 1 : 2),
       positionSeconds: state.currentPosition.toInt(),
-      durationSeconds: state.totalDuration.toInt(),
+      durationSeconds: state.totalDuration > 0 ? state.totalDuration.toInt() : state.currentSong?.duration.toInt() ?? 0,
       artUrl: artUrlToSend,
       filePath: state.currentSong?.filePath,
       queue: queueData,
@@ -2923,6 +2907,37 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (_useUsbAudioBypass) {
       await UsbAudioService.stop();
     }
+  }
+
+  // --- JIT STREAMING HELPER ---
+
+  /// Resolves a Tidal Stream URL based on user quality settings.
+  /// Returns null if no match found or error occurs.
+  Future<String?> _getJitStreamUrl(SongModel song) async {
+    try {
+      final flacService = FlacDownloaderService();
+      final tidalId = await flacService.getTidalTrackIdBySearch(song.title, song.artist);
+      
+      if (tidalId != null) {
+        final settings = ref.read(settingsProvider);
+        // Default to HIGH (AAC/m4a) to honor user settings unless lossless is explicitly requested
+        String tidalQuality = 'HIGH';
+        
+        if (settings.streamingQuality == 'lossless') {
+          tidalQuality = 'HI_RES_LOSSLESS';
+        } else if (settings.streamingQuality == 'high' || settings.streamingQuality == 'standard') {
+          tidalQuality = 'HIGH';
+        }
+        
+        // 🚀 Quality override: if user selected high/standard, never give them lossless
+        final streamUrl = '${Env.tidalApiUrl}/stream?id=$tidalId&quality=$tidalQuality&key=${Env.tidalApiKey}';
+        print("🔗 JIT Stream URL resolved: $streamUrl (Quality: $tidalQuality)");
+        return streamUrl;
+      }
+    } catch (e) {
+      print("⚠️ JIT Stream Resolution Failed: $e");
+    }
+    return null;
   }
 }
 

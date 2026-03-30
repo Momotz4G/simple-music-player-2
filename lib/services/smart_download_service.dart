@@ -416,7 +416,7 @@ class SmartDownloadService {
 
   // BACKGROUND CACHE (PRELOAD) FUNCTION
   // Now respects streaming quality for FLAC support
-  Future<void> cacheSong(SongMetadata metadata, {String? youtubeUrl}) async {
+  Future<void> cacheSong(SongMetadata metadata, {String? youtubeUrl, String? streamUrl}) async {
     DebugLogService()
         .info("📥 SmartDownload: cacheSong called for ${metadata.title}");
     final fileName = FilenameHelper.sanitize("${metadata.artist} - ${metadata.title}");
@@ -521,6 +521,18 @@ class SmartDownloadService {
       } else {
         print("Preload: Existing file corrupted, deleting: ${file.path}");
         await file.delete();
+      }
+    }
+
+    // 📺 STREAM URL PATH: Download directly from VPS stream for HIGH/STANDARD consistency
+    if (streamingQuality != 'lossless' && streamUrl != null) {
+      print("🎧 Preload: Downloading directly from Stream URL instead of YouTube...");
+      final success = await _downloadFromStreamUrl(streamUrl, cachePath);
+      if (success) {
+        print("✓ Preload: Stream downloaded successfully for ${metadata.title}");
+        return; 
+      } else {
+        print("⚠️ Preload: Stream download failed, falling back to YouTube...");
       }
     }
 
@@ -706,10 +718,12 @@ class SmartDownloadService {
     }
 
     // Download via FLAC service
-    // 🚀 NEW: Prioritize Tidal Direct Search
+    // 🚀 PRIORITY ORDER: Tidal Direct Search → Deezer Direct → song.link fallback
+    // Tidal Direct Search is fastest (no song.link dependency, parallel server probing)
     FlacDownloadResult result = FlacDownloadResult.failed("Pending Evaluation");
-    
-    debugPrint("🚀 Prioritizing Direct Tidal Search...");
+
+    // 🚀 STAGE 1: Direct Tidal Search (fastest path - no song.link required)
+    debugPrint("🚀 Stage 1: Searching Tidal directly for lossless match...");
     try {
       final tidalId = await _flacService.getTidalTrackIdBySearch(metadata.title, metadata.artist);
       if (tidalId != null) {
@@ -719,6 +733,7 @@ class SmartDownloadService {
             outputPath: outputPath,
             quality: 'HI_RES_LOSSLESS',
             onProgress: onProgress,
+            timeoutSeconds: 60,
          );
          
          if (file == null) {
@@ -728,93 +743,49 @@ class SmartDownloadService {
                outputPath: outputPath,
                quality: 'LOSSLESS',
                onProgress: onProgress,
+               timeoutSeconds: 60,
             );
          }
 
          if (file != null) {
-            result = FlacDownloadResult.success(file, 'tidal_api_direct');
+            result = FlacDownloadResult.success(file, "tidal_direct_search");
          }
       }
     } catch (e) {
       debugPrint("❌ Tidal Direct Search error: $e");
     }
 
-    // Check if we have a direct Deezer ID to skip search
-    if (!result.success && hasDeezerId) {
-      debugPrint("🚀 Using Direct Deezer ID: ${metadata.deezerId}");
-      final deezerUrl =
-          "https://www.deezer.com/track/${metadata.deezerId}"; // Construct URL for downloader
-      final downloadedFile = await _flacService.downloadFromDeezer(
-        deezerUrl: deezerUrl,
-        outputPath: outputPath,
-        trackName: metadata.title,
-        artistName: metadata.artist,
-        albumName: metadata.album,
-        onProgress: onProgress,
-      );
+    // 🚀 STAGE 2: Try Direct IDs (Deezer direct / Spotify-based song.link)
+    // Only attempt song.link path with a timeout when streaming to avoid stalling
+    if (!result.success && (hasSpotifyId || hasDeezerId)) {
+      debugPrint("🚀 Stage 2: Attempting platform download via existing IDs...");
+      try {
+        final directResultFuture = _flacService.downloadFlac(
+          spotifyTrackId: flacMeta.spotifyId ?? '',
+          outputPath: outputPath,
+          isrc: flacMeta.isrc,
+          trackName: flacMeta.title,
+          artistName: flacMeta.artist,
+          albumName: flacMeta.album,
+          onProgress: onProgress,
+          timeoutSeconds: isStreaming ? 10 : 30,
+        );
 
-      if (downloadedFile != null) {
-        result = FlacDownloadResult.success(downloadedFile, 'deezer_direct');
-      } else {
-        // 🚀 DEEZER FALLBACK: If direct download fails (522), try finding alternate links via song.link
-        debugPrint(
-            "⚠️ Deezer Direct Failed. Attempting Cross-Platform Fallback (Tidal)...");
-        try {
-          final streamUrls =
-              await _flacService.getStreamingUrlsFromSpecificUrl(deezerUrl);
-
-          if (streamUrls != null && streamUrls.tidalUrl != null) {
-            debugPrint("✓ Found Tidal Alternate Link: ${streamUrls.tidalUrl}");
-            // Try Tidal Hi-Res first, then LOSSLESS fallback
-            var tidalFile = await _flacService.downloadFromTidalWithQuality(
-              tidalUrl: streamUrls.tidalUrl!,
-              outputPath: outputPath,
-              quality: 'HI_RES_LOSSLESS',
-              onProgress: onProgress,
-            );
-
-            if (tidalFile == null) {
-              debugPrint("⚠️ Tidal Hi-Res fallback failed. Trying LOSSLESS...");
-              tidalFile = await _flacService.downloadFromTidalWithQuality(
-                tidalUrl: streamUrls.tidalUrl!,
-                outputPath: outputPath,
-                quality: 'LOSSLESS',
-                onProgress: onProgress,
-              );
-            }
-
-            if (tidalFile != null) {
-              result = FlacDownloadResult.success(tidalFile, 'tidal_fallback');
-            } else {
-              result = FlacDownloadResult.failed(
-                  "Deezer failed & Tidal fallback failed");
-            }
-          } else {
-            result = FlacDownloadResult.failed(
-                "Deezer failed & No Tidal alternate found");
-          }
-        } catch (e) {
-          result = FlacDownloadResult.failed("Deezer failed: $e");
+        // When streaming, cap song.link-dependent path to 15s to avoid hanging
+        final directResult = isStreaming
+            ? await directResultFuture.timeout(const Duration(seconds: 15),
+                onTimeout: () => FlacDownloadResult.failed("song.link timeout"))
+            : await directResultFuture;
+      
+        if (directResult.success && directResult.file != null) {
+          result = directResult;
+        } else {
+          debugPrint("⚠️ Stage 2 failed, trying more fallbacks...");
         }
-      }
-    }
-
-    // Fallback to Spotify-based search (standard flow)
-    // 🚀 CRITICAL FIX: Don't crash if Spotify ID is null (e.g. 429 error)
-    if (!result.success && flacMeta.spotifyId != null) {
-      result = await _flacService.downloadFlac(
-        spotifyTrackId: flacMeta.spotifyId!,
-        outputPath: outputPath,
-        isrc: flacMeta.isrc,
-        trackName: flacMeta.title,
-        artistName: flacMeta.artist,
-        albumName: flacMeta.album,
-        onProgress: onProgress,
-      );
-    } else if (!result.success && flacMeta.spotifyId == null) {
-      // If we STILL don't have Spotify ID, and Deezer failed, update error message
-      if (result.error?.contains("Pending") == true || result.error?.contains("Deezer failed") == true || result.error?.contains("Tidal failed") == true) {
-         result = FlacDownloadResult.failed("Lossless Direct Failed (Tidal/Deezer) & No Spotify ID available for cascading-search fallback. Check if your API/Tunnel is down (530 error).");
+      } on TimeoutException {
+        debugPrint("⏱️ Stage 2: song.link path timed out (streaming mode)");
+      } catch (e) {
+        debugPrint("⚠️ Stage 2: Direct ID download failed: $e");
       }
     }
 
@@ -892,6 +863,24 @@ class SmartDownloadService {
 
     debugPrint('❌ FLAC Download failed: ${result.error}');
     return null;
+  }
+
+  Future<bool> _downloadFromStreamUrl(String url, String cachePath) async {
+    try {
+      final client = http.Client();
+      final request = http.Request('GET', Uri.parse(url));
+      final response = await client.send(request).timeout(const Duration(seconds: 15));
+      
+      if (response.statusCode == 200) {
+        final file = File(cachePath);
+        final sink = file.openWrite();
+        await response.stream.pipe(sink);
+        return true;
+      }
+    } catch (e) {
+      if (kDebugMode) print('Stream download error: $e');
+    }
+    return false;
   }
 
   /// Check if FLAC download is available for this track

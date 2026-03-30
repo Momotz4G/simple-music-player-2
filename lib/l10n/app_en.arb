@@ -865,7 +865,7 @@
   "bitDepthLabel": "Bit Depth",
   "channelsLabel": "Channels",
   "fileSizeLabel": "File Size",
-  "fileLocation": "File Location",
+  "fileLocation": "Audio Source",
   "audioSource": "Audio Source",
   "pathLabel": "Path",
   "inputLabel": "Input",

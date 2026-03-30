@@ -3107,7 +3107,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileLocation.
   ///
   /// In en, this message translates to:
-  /// **'File Location'**
+  /// **'Audio Source'**
   String get fileLocation;
 
   /// No description provided for @audioSource.

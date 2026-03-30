@@ -50,7 +50,7 @@ class TidalStatusNotifier extends AsyncNotifier<TidalStatusState> {
 
   void _startPolling() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+    _timer = Timer.periodic(const Duration(seconds: 60), (timer) async {
       state = const AsyncLoading();
       state = await AsyncValue.guard(() => _fetchStatus());
     });
