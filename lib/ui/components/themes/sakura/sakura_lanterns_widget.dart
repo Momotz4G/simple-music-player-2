@@ -47,7 +47,7 @@ class _LanternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final wirePaint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
+      ..color = Colors.black.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -74,11 +74,11 @@ class _LanternPainter extends CustomPainter {
 
     // Lantern Body
     final bodyPaint = Paint()
-      ..color = lanternColor.withOpacity(0.9 * flicker)
+      ..color = lanternColor.withValues(alpha: 0.9 * flicker)
       ..style = PaintingStyle.fill;
 
     final glowPaint = Paint()
-      ..color = lanternColor.withOpacity(0.4 * flicker)
+      ..color = lanternColor.withValues(alpha: 0.4 * flicker)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
 
     final rect =
@@ -93,7 +93,7 @@ class _LanternPainter extends CustomPainter {
 
     // Draw Top/Bottom caps
     final capPaint = Paint()
-      ..color = Colors.black.withOpacity(0.6)
+      ..color = Colors.black.withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(
@@ -103,14 +103,14 @@ class _LanternPainter extends CustomPainter {
 
     // Hanging wire
     final hangerPaint = Paint()
-      ..color = Colors.black.withOpacity(0.4)
+      ..color = Colors.black.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     canvas.drawLine(pos.translate(0, -5), pos.translate(0, 5), hangerPaint);
 
     // Tassel
     final tasselPaint = Paint()
-      ..color = Colors.redAccent.withOpacity(0.6)
+      ..color = Colors.redAccent.withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     canvas.drawLine(pos.translate(0, 27), pos.translate(0, 35), tasselPaint);

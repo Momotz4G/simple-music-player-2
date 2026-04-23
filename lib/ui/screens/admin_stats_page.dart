@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/metrics_service.dart';
+import '../../services/pocketbase_service.dart';
 
 class AdminStatsPage extends StatelessWidget {
   final String role; // 'admin' or 'viewer'
@@ -36,8 +37,17 @@ class AdminStatsPage extends StatelessWidget {
         title: Text(isAdmin ? "Admin Dashboard" : "Dashboard (View Only)"),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: const [
-          Center(
+        actions: [
+          if (isAdmin)
+             Padding(
+               padding: const EdgeInsets.only(right: 8.0),
+               child: IconButton(
+                 icon: const Icon(Icons.campaign),
+                 tooltip: "Broadcast Message",
+                 onPressed: () => _showBroadcastDialog(context),
+               ),
+             ),
+          const Center(
             child: Padding(
               padding: EdgeInsets.only(right: 24.0),
               child: _ServerClockWidget(),
@@ -67,8 +77,6 @@ class AdminStatsPage extends StatelessWidget {
           }
 
           // 🚀 METRICS AGGREGATION
-          final totalUsersDisplayed =
-              docs.length; // Preview count (limited to 100)
           final activeUsers = docs.where((user) {
             final timestamp = _parseTimestamp(user.data['last_active']);
             if (timestamp == null) return false;
@@ -390,6 +398,76 @@ class AdminStatsPage extends StatelessWidget {
       ),
     );
   }
+
+  void _showBroadcastDialog(BuildContext context) {
+    final textController = TextEditingController();
+    bool isSending = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.campaign, color: Colors.blue),
+              SizedBox(width: 8),
+              Text("Global Broadcast"),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Send a push notification to all online users.", style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: textController,
+                decoration: const InputDecoration(
+                  labelText: "Message",
+                  border: OutlineInputBorder(),
+                  hintText: "Enter your announcement here...",
+                ),
+                maxLines: 3,
+                maxLength: 200,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSending ? null : () => Navigator.pop(ctx),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: isSending
+                  ? null
+                  : () async {
+                      if (textController.text.trim().isEmpty) return;
+                      setState(() => isSending = true);
+                      try {
+                        await PocketBaseService().sendGlobalBroadcast(textController.text.trim());
+                        if (ctx.mounted) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(content: Text("✅ Broadcast sent to all users!")),
+                          );
+                        }
+                      } catch (e) {
+                         setState(() => isSending = false);
+                         if (ctx.mounted) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              SnackBar(content: Text("❌ Failed: $e")),
+                            );
+                         }
+                      }
+                    },
+              child: isSending
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text("Send Now"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // Isolated Widget to prevent full page rebuilds every second
@@ -427,10 +505,10 @@ class _ServerClockWidgetState extends State<_ServerClockWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border:
-            Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+            Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

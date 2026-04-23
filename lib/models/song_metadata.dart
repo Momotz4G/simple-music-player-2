@@ -12,6 +12,7 @@ class SongMetadata {
   final String? spotifyId; // Spotify track ID for FLAC matching
   final String? spotifyArtistId; // Spotify artist ID for recommendations
   final String? deezerId; // Deezer track ID for direct FLAC match
+  final String? youtubeUrl; // YouTube URL if sourced from YouTube
 
   SongMetadata({
     required this.title,
@@ -27,6 +28,7 @@ class SongMetadata {
     this.spotifyId,
     this.spotifyArtistId,
     this.deezerId,
+    this.youtubeUrl,
   });
 
   SongMetadata copyWith({
@@ -43,6 +45,7 @@ class SongMetadata {
     String? spotifyId,
     String? spotifyArtistId,
     String? deezerId,
+    String? youtubeUrl,
   }) {
     return SongMetadata(
       title: title ?? this.title,
@@ -58,6 +61,7 @@ class SongMetadata {
       spotifyId: spotifyId ?? this.spotifyId,
       spotifyArtistId: spotifyArtistId ?? this.spotifyArtistId,
       deezerId: deezerId ?? this.deezerId,
+      youtubeUrl: youtubeUrl ?? this.youtubeUrl,
     );
   }
 
@@ -76,6 +80,7 @@ class SongMetadata {
       'spotifyId': spotifyId,
       'spotifyArtistId': spotifyArtistId,
       'deezerId': deezerId,
+      'youtubeUrl': youtubeUrl,
     };
   }
 }

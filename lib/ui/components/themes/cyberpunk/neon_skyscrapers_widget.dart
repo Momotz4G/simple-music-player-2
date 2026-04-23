@@ -40,9 +40,9 @@ class _SkyscraperPainter extends CustomPainter {
   }
 
   void _drawNeonWindows(Canvas canvas, Rect rect, Random random) {
-    final cyanPaint = Paint()..color = const Color(0xFF00FFFF).withOpacity(0.4);
+    final cyanPaint = Paint()..color = const Color(0xFF00FFFF).withValues(alpha: 0.4);
     final magentaPaint = Paint()
-      ..color = const Color(0xFFFF00FF).withOpacity(0.4);
+      ..color = const Color(0xFFFF00FF).withValues(alpha: 0.4);
 
     final int cols = 3 + random.nextInt(4);
     final int rows = 10 + random.nextInt(15);
@@ -61,7 +61,7 @@ class _SkyscraperPainter extends CustomPainter {
           // Occasional Glow
           if (random.nextDouble() > 0.8) {
             final glowPaint = Paint()
-              ..color = paint.color.withOpacity(0.2)
+              ..color = paint.color.withValues(alpha: 0.2)
               ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
             canvas.drawRect(
                 Rect.fromLTWH(wx - 2, wy - 2, wWidth + 4, wHeight + 4),

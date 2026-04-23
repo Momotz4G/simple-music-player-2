@@ -13,6 +13,9 @@ import '../../services/hybrid_service.dart';
 import '../../services/tidal_service.dart';
 import '../../providers/tidal_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/youtube_downloader_service.dart';
+import '../../models/song_model.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -42,11 +45,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _l10n = AppLocalizations.of(context)!;
-    if (_currentStatus.isEmpty ||
-        _currentStatus == 'Ready. Search for a song.') {
-      _currentStatus = _l10n.readySearchSong;
+    final newL10n = AppLocalizations.of(context)!;
+    
+    // 🚀 Robust Locale Switching: Update status if it's currently a "ready" or "offline" string
+    // This fixes the bug where it gets "stuck" in a previous language.
+    if (_currentStatus.isEmpty || 
+        _currentStatus == _l10n.readySearchSong || 
+        _currentStatus == _l10n.offline ||
+        _currentStatus == 'Ready. Search for a song.' ||
+        _currentStatus == 'Offline') {
+      _currentStatus = newL10n.readySearchSong;
     }
+    
+    _l10n = newL10n;
   }
 
   @override
@@ -128,20 +139,57 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     _debounce = Timer(const Duration(milliseconds: 300), () async {
       setState(() => _isLoadingSuggestions = true);
 
+      final settings = ref.read(settingsProvider);
+      final isYoutube = settings.searchEngine == SearchEngine.youtube;
+
       try {
-        final results = await HybridService.searchAll(query, limit: 5);
-        if (mounted && _isSuggesting) {
-          setState(() {
-            _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? <SongMetadata>[];
-            _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? <AlbumModel>[];
-            _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? <ArtistModel>[];
-            _isLoadingSuggestions = false;
-          });
+        if (isYoutube) {
+          final ytService = YoutubeDownloaderService();
+          final results = await ytService.searchVideo(query);
+          if (mounted && _isSuggesting) {
+            setState(() {
+              _songSuggestions = results.map((yt) => SongMetadata(
+                title: yt.title,
+                artist: yt.artist,
+                album: "YouTube",
+                durationSeconds: _parseDuration(yt.duration),
+                albumArtUrl: yt.thumbnailUrl,
+                youtubeUrl: yt.url,
+              )).toList();
+              _albumSuggestions = [];
+              _artistSuggestions = [];
+              _isLoadingSuggestions = false;
+            });
+          }
+        } else {
+          final results = await HybridService.searchAll(query, limit: 5);
+          if (mounted && _isSuggesting) {
+            setState(() {
+              _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? <SongMetadata>[];
+              _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? <AlbumModel>[];
+              _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? <ArtistModel>[];
+              _isLoadingSuggestions = false;
+            });
+          }
         }
       } catch (e) {
         if (mounted) setState(() => _isLoadingSuggestions = false);
       }
     });
+  }
+
+  int _parseDuration(String duration) {
+    try {
+      final parts = duration.split(':');
+      if (parts.length == 2) {
+        return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+      } else if (parts.length == 3) {
+        return int.parse(parts[0]) * 3600 + int.parse(parts[1]) * 60 + int.parse(parts[2]);
+      }
+      return 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   void _onSuggestionSelected(dynamic item) {
@@ -198,33 +246,64 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
     // 🚀 Show loading state
     setState(() {
-      _currentStatus = _l10n.searchingSpotifyFor(keyword);
+      final settings = ref.read(settingsProvider);
+      final engineName = settings.searchEngine == SearchEngine.youtube ? "YouTube" : "Spotify";
+      _currentStatus = _l10n.searchingEngine(engineName, keyword);
       _isLoadingSuggestions = true;
       _isSuggesting = true; // Keep suggestion list visible
     });
 
     try {
-      // 🚀 Use searchAll to get Songs, Albums, Artists (5 each)
-      final results = await HybridService.searchAll(keyword, limit: 5);
+      final settings = ref.read(settingsProvider);
+      if (settings.searchEngine == SearchEngine.youtube) {
+        final ytService = YoutubeDownloaderService();
+        final results = await ytService.searchVideo(keyword);
 
-      if (mounted) {
-        setState(() {
-          _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? <SongMetadata>[];
-          _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? <AlbumModel>[];
-          _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? <ArtistModel>[];
-          _isLoadingSuggestions = false;
+        if (mounted) {
+          setState(() {
+            _songSuggestions = results.map((yt) => SongMetadata(
+              title: yt.title,
+              artist: yt.artist,
+              album: "YouTube",
+              durationSeconds: _parseDuration(yt.duration),
+              albumArtUrl: yt.thumbnailUrl,
+              youtubeUrl: yt.url,
+            )).toList();
+            _albumSuggestions = [];
+            _artistSuggestions = [];
+            _isLoadingSuggestions = false;
 
-          final songCount = _songSuggestions.length;
-          final albumCount = _albumSuggestions.length;
-          final artistCount = _artistSuggestions.length;
+            final songCount = _songSuggestions.length;
+            if (songCount > 0) {
+              _currentStatus = _l10n.foundYoutubeResults(songCount);
+            } else {
+              _currentStatus = _l10n.noYoutubeResults;
+            }
+          });
+        }
+      } else {
+        // 🚀 Use searchAll to get Songs, Albums, Artists (5 each)
+        final results = await HybridService.searchAll(keyword, limit: 5);
 
-          if (songCount + albumCount + artistCount > 0) {
-            _currentStatus =
-                _l10n.foundResults(songCount, albumCount, artistCount);
-          } else {
-            _currentStatus = _l10n.noSpotifyResults;
-          }
-        });
+        if (mounted) {
+          setState(() {
+            _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? <SongMetadata>[];
+            _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? <AlbumModel>[];
+            _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? <ArtistModel>[];
+            _isLoadingSuggestions = false;
+
+            final songCount = _songSuggestions.length;
+            final albumCount = _albumSuggestions.length;
+            final artistCount = _artistSuggestions.length;
+
+            if (songCount + albumCount + artistCount > 0) {
+              _currentStatus =
+                  _l10n.foundResults(songCount, albumCount, artistCount);
+            } else {
+              _currentStatus = _l10n.noSpotifyResults;
+            }
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -298,7 +377,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               onSubmitted: (_) => _runSearch(),
               decoration: InputDecoration(
                 labelText: _l10n.songTitleKeyword,
-                hintText: _l10n.searchSpotifyHint,
+                hintText: ref.watch(settingsProvider).searchEngine == SearchEngine.youtube 
+                  ? _l10n.searchYoutubeHint 
+                  : _l10n.searchSpotifyHint,
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(Icons.search,

@@ -10,7 +10,6 @@ class HybridService {
   static Future<List<SongMetadata>> searchSongs(String query,
       {int limit = 10}) async {
     try {
-      print("HybridService: Trying Spotify for '$query'...");
       // Use searchMetadata to avoid N+1 genre lookups that trigger rate limits
 
       final maps = await SpotifyService.searchMetadata(query);

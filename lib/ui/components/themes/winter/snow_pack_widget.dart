@@ -16,11 +16,11 @@ class _SnowPackPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.9)
+      ..color = Colors.white.withValues(alpha: 0.9)
       ..style = PaintingStyle.fill;
 
     final shadowPaint = Paint()
-      ..color = const Color(0xFFE0F2F1).withOpacity(0.3) // Soften shadow
+      ..color = const Color(0xFFE0F2F1).withValues(alpha: 0.3) // Soften shadow
       ..style = PaintingStyle.fill;
 
     final path = Path();

@@ -1,261 +1,19 @@
 {
-  "browse": "Explorar",
-  "search": "Buscar",
-  "history": "Historial",
-  "stats": "Estadísticas",
-  "library": "Biblioteca",
-  "playlists": "Listas de reproducción",
-  "artists": "Artistas",
-  "albums": "Álbumes",
-  "folders": "Carpetas",
-  "local_library": "Biblioteca local",
-  "downloads": "Descargas",
-  "metadata_editor": "Editor de metadatos",
-  "editMetadata": "Editar metadatos",
-  "success": "Éxito",
-  "enableAlphabetIndexer": "Activar indexador de desplazamiento alfabético",
-  "enableAlphabetIndexerSubtitle": "Mostrar indexación de barra lateral A-Z en la vista de lista móvil",
-  "metadataUpdated": "Metadatos actualizados",
-  "failedToUpdateMetadata": "Error al actualizar metadatos",
-  "toggleLyrics": "Alternar Letras",
-  "settings": "Ajustes",
-  "navigation": "Navegación",
-  "system": "Sistema",
-  "language": "Idioma",
-  "english": "Inglés",
-  "indonesian": "Indonesio",
-  "korean": "Coreano",
-  "japanese": "Japonés",
-  "chinese": "Chino",
-  "spanish": "Español",
-  "french": "Francés",
-  "german": "Alemán",
-  "portuguese": "Portugués",
-  "thai": "Tailandés",
-  "vietnamese": "Vietnamita",
-  "arabic": "Árabe",
-  "russian": "Ruso",
-  "hindi": "Hindi",
-  "appearance": "Apariencia",
-  "atmospheres": "Atmósferas",
-  "none": "Ninguna",
-  "winter": "Invierno",
-  "autumn": "Otoño",
-  "rainyCity": "Ciudad lluviosa",
-  "sakura": "Sakura",
-  "lunarNewYear": "Año Nuevo Lunar",
-  "cyberpunk": "Cyberpunk",
-  "underwater": "Bajo el agua",
-  "nordicAurora": "Aurora nórdica",
-  "galacticSpace": "Espacio galáctico",
-  "desertMirage": "Espejismo del desierto",
-  "general": "General",
-  "darkMode": "Modo oscuro",
-  "lockedAtmosphere": "Bloqueado mientras una atmósfera está activa",
-  "useDarkTheme": "Usar tema oscuro",
-  "syncThemeAlbumArt": "Sincronizar tema con portada",
-  "tintBackground": "Tiñe el fondo y el visualizador con el color de la canción",
-  "accentColor": "Color de acento",
-  "chooseAccentColor": "Elige tu color estático favorito",
-  "contentRegion": "Región de contenido",
-  "setCountryReleases": "Establecer país para lanzamientos y listas",
-  "unitedStates": "Estados Unidos",
-  "indonesia": "Indonesia",
-  "southKorea": "Corea del Sur",
-  "japan": "Japón",
-  "unitedKingdom": "Reino Unido",
-  "brazil": "Brasil",
-  "visualizer": "Visualizador",
-  "enableBarVisualizer": "Activar visualizador de barras",
-  "showAnimatedWaves": "Mostrar ondas animadas en la barra del reproductor",
-  "opacity": "Opacidad",
-  "visualizerStyle": "Estilo del visualizador",
-  "chooseAnimationType": "Elige el tipo de animación",
-  "spectrumBars": "Barras de espectro",
-  "fluidWave": "Onda fluida",
-  "circularPulse": "Pulso circular",
-  "rainbowMode": "Modo arcoíris",
-  "useMixedColors": "Usar colores mezclados (prioridad a la sincronización)",
-  "integration": "Integración",
-  "discordRPC": "Discord Rich Presence",
-  "showStatusDiscord": "Mostrar estado en Discord",
-  "tidalApiStatus": "Tidal API",
-  "online": "En línea",
-  "unauthorize": "No autorizado",
-  "offlineStatus": "Fuera de línea",
-  "checkInternetConnection": "Verifica tu conexión a internet",
-  "autoClearCache": "Limpiar caché automáticamente",
-  "autoClearDisabled": "Desactivado",
-  "autoClearOnClose": "Al cerrar la app",
-  "autoClearAfter24h": "Después de 24 horas",
-  "autoClearAfter7d": "Después de 7 días",
-  "autoClearEvery30m": "Cada 30 min (Solo al escuchar)",
-  "musicFolderLocation": "Ubicación de la carpeta de música",
-  "noFolderSelected": "Ninguna carpeta seleccionada",
-  "change": "Cambiar",
-  "expand": "Expandir",
-  "ignoreSubfolderScan": "Ignorar escaneo de subcarpetas",
-  "onlyScanSelected": "Solo escanear carpetas seleccionadas (por defecto encendido)",
-  "importAdditionalPaths": "Importar rutas adicionales",
-  "addFoldersScan": "Añadir carpetas para escanear",
-  "add": "Añadir",
-  "singleTracks": "Pistas individuales",
-  "unsavedChanges": "Cambios sin guardar",
-  "playlistAlbumTracks": "Pistas de lista de reproducción / álbum",
-  "audioFormat": "Formato de audio",
-  "preferredOutputFormat": "Formato de salida preferido para descargas",
-  "flacNote": "Nota: FLAC solo está disponible para descargas de pistas individuales. Las descargas masivas de listas de reproducción usarán formato M4A.",
-  "downloadLocation": "Ubicación de descarga",
-  "resetToDefault": "Restablecer por defecto",
-  "changeFolder": "Cambiar carpeta",
-  "streaming": "Streaming",
-  "streamingQuality": "Calidad de streaming",
-  "standardQuality": "Estándar (MP3)",
-  "highQuality": "Alta calidad (M4A)",
-  "losslessQuality": "Sin pérdida (Auto)",
-  "standardDesc": "MP3 - Archivo más pequeño, almacenamiento en búfer más rápido",
-  "highDesc": "M4A - Mejor audio, rendimiento equilibrado",
-  "losslessDesc": "FLAC - Calidad sin pérdida de Deezer/Tidal",
-  "selectStreamingQuality": "Seleccionar calidad de streaming",
-  "losslessNote": "Transmitirá FLAC sin pérdida de Deezer/Tidal si está disponible. Recurrirá a M4A si no es así.",
-  "playback": "Reproducción",
-  "endlessQueue": "Cola interminable",
-  "autoAddSimilar": "Añadir canciones similares automáticamente cuando la cola esté terminando",
-  "gaplessPlayback": "Reproducción sin Pausas",
-  "gaplessPlaybackDesc": "Elimina el silencio entre las pistas",
-  "crossfade": "Crossfade",
-  "crossfadeDesc": "Fundido entre pistas ({seconds} s)",
-  "@crossfadeDesc": {
-    "placeholders": {
-      "seconds": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter24h": {
+    "description": "Option to clear cache every 24 hours"
   },
-  "disableRomanization": "Desactivar romanización",
-  "hideRomajiPinyin": "No mostrar Romaji/Pinyin debajo de letras en coreano, japonés o chino",
-  "translationLanguage": "Idioma de traducción",
-  "targetLanguageLyrics": "Idioma de destino para la traducción de letras",
-  "disableCanvas": "Desactivar Canvas",
-  "hideCanvas": "No mostrar videos de Spotify Canvas, mostrar portada en su lugar",
-  "wasapiExclusive": "Modo exclusivo WASAPI",
-  "bitPerfectWindows": "Audio bit-perfect con frecuencia de muestreo automática (requiere reinicio)",
-  "audiophileDAC": "Activar cuando se reproduzca en DACs audiófilos (requiere reinicio)",
-  "android14BitPerfect": "Android 14+ Bit-Perfect",
-  "bypassSystemMixer": "Omitir el mezclador del sistema para USB DAC",
-  "requiresAndroid14": "Requiere Android 14+ y un USB DAC",
-  "bitPerfectEnabled": "Modo bit-perfect activado. El control de volumen puede no funcionar.",
-  "audioOutputDevice": "Dispositivo de salida de audio",
-  "loadingDevices": "Cargando dispositivos...",
-  "systemDefault": "Predeterminado del sistema",
-  "exclusiveWarning": "Advertencia: El modo exclusivo funciona mejor si seleccionas un dispositivo específico arriba en lugar de usar el predeterminado.",
-  "dataCleanup": "Datos y limpieza",
-  "resetLibraryPath": "Restablecer ruta de la biblioteca",
-  "unlinkFolder": "Desvincular carpeta y borrar lista de canciones",
-  "resetLibraryTitle": "¿Restablecer biblioteca?",
-  "resetLibraryContent": "Esto eliminará la carpeta actual del reproductor. Tus archivos reales no se borrarán.",
-  "resetPath": "Restablecer ruta",
-  "clearStreamingCache": "Borrar caché de streaming",
-  "freeUpSpace": "Liberar espacio (Actual: {size})",
-  "resetStatistics": "Restablecer estadísticas",
-  "clearPlayHistory": "Borrar historial de reproducción y tiempo de escucha",
-  "resetStatsTitle": "¿Restablecer estadísticas?",
-  "resetStatsContent": "Esta acción no se puede deshacer.\\nTodos los conteos de reproducción y tiempo de escucha se perderán para siempre.",
-  "resetEverything": "Restablecer todo",
-  "debugging": "Depuración",
-  "showDebugButton": "Mostrar botón de depuración flotante",
-  "toggleDebugButton": "Alternar consola de depuración flotante",
-  "community": "Comunidad",
-  "donate": "Donar",
-  "joinUs": "Únete a nosotros",
-  "usbAudioBypass": "USB Audio Bypass (Beta) - Salida directa DAC para Android 13 y versiones anteriores",
-  "comingSoon": "Próximamente",
-  "underDevelopment": "Esta función está en desarrollo",
-  "version": "Versión",
-  "restartRequired": "Reinicio necesario",
-  "restartContent": "Se requiere reiniciar la aplicación para aplicar los cambios del dispositivo de salida de audio.\\n\\n¿Reiniciar ahora?",
-  "later": "Más tarde",
-  "restartNow": "Reiniciar ahora",
-  "applyOnRestart": "Los cambios se aplicarán al reiniciar.",
-  "autoRestartNotSupported": "El reinicio automático no es compatible. Por favor, reinicia manualmente.",
-  "enterAdminCode": "Por favor ingresa el código de acceso de administrador",
-  "accessCode": "Código de acceso",
-  "cancel": "Cancelar",
-  "access": "Acceso",
-  "invalidCode": "Código de acceso inválido",
-  "formatSaved": "¡Formato guardado!",
-  "addedFolder": "Carpeta añadida: {folder}",
-  "removedFolder": "Carpeta eliminada: {folder}",
-  "downloadPathUpdated": "Ruta de descarga actualizada: {path}",
-  "downloadPathReset": "Ruta de descarga restablecida al valor por defecto.",
-  "libraryPathReset": "Ruta de la biblioteca restablecida.",
-  "cacheCleared": "¡Caché borrada con éxito!",
-  "changesApplyRestart": "Los cambios se aplicarán al reiniciar.",
-  "changeLanguage": "Cambiar idioma de la aplicación",
-  "unlinkFolderClear": "Desvincular carpeta y borrar lista de canciones",
-  "enterAdminAccessCode": "Por favor ingresa el código de acceso de administrador",
-  "invalidAccessCode": "Código de acceso inválido",
-  "androidBitPerfect": "Android 14+ Bit-Perfect",
-  "customDevice": "Dispositivo personalizado",
-  "exclusiveModeWarning": "Advertencia: El modo exclusivo funciona mejor si seleccionas un dispositivo específico arriba en lugar de usar el predeterminado.",
-  "@freeUpSpace": {
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter7d": {
+    "description": "Option to clear cache every 7 days"
   },
-  "statisticsReset": "Estadísticas restablecidas.",
-  "toggleDebugConsole": "Alternar consola de depuración flotante",
-  "usbAudioBypassBeta": "USB Audio Bypass (Beta) - Salida directa DAC para Android 13 y versiones anteriores",
-  "connectedUsbDacs": "DACs USB conectados:",
-  "scanning": "Escaneando...",
-  "scan": "Escanear",
-  "noUsbDacDetected": "No se detectó ningún USB DAC. Conecta un dispositivo de audio USB y toca Escanear.",
-  "connected": "Conectado",
-  "connect": "Conectar",
-  "failedToConnectDac": "Error al conectar con el DAC. Comprueba los permisos USB.",
-  "connectedToDac": "Conectado a {deviceName} - Omisión USB activada",
-  "@connectedToDac": {
-    "placeholders": {
-      "deviceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearCache": {
+    "description": "Auto clear cache setting section"
   },
-  "changingAudioDeviceRestart": "Se requiere reiniciar la aplicación para aplicar los cambios del dispositivo de salida de audio.\\n\\n¿Reiniciar ahora?",
-  "translateLyrics": "Traducir letras",
-  "viewQueue": "Ver cola",
-  "loadingLyrics": "Cargando letras...",
-  "noLyricsAvailable": "No hay letras disponibles",
-  "noSyncedLyricsFound": "No se encontraron letras sincronizadas",
-  "justEnjoyVibes": "Solo disfruta de la música.",
-  "scrollForLyrics": "Desliza para ver las letras",
-  "switchingTo": "Cambiando a",
-  "metadataEditorInfo": "Puedes buscar y corregir rápidamente en el Editor de Metadatos.",
-  "metadataEditorNote": "Nota: Después de que el estado indique \"Guardado con éxito\", el arte del álbum puede cambiar. Esto no significa que no se haya guardado, sino que es un problema de caché dentro de la aplicación que estamos corrigiendo. Puedes confirmarlo en un explorador de archivos.",
-  "close": "Cerrar",
-  "permissionRequired": "Permiso requerido",
-  "permissionRequiredDesc": "Se requiere el permiso de \"Acceso a todos los archivos\" para editar etiquetas. Esto permitirá modificar tus archivos de música directamente.",
-  "grantPermission": "Otorgar permiso",
-  "files": "Archivos",
-  "editor": "Editor",
-  "clearImported": "Borrar importados",
-  "libraryData": "Datos de la biblioteca",
-  "externalFiles": "Archivos externos",
-  "addFiles": "Añadir archivos",
-  "addFolder": "Añadir carpeta",
-  "selectSongToEdit": "Selecciona una canción de la lista para editar",
-  "fixAll": "Corregir todos",
-  "autoTagTitle": "⚠️ ¿Auto-etiquetar {sourceName}?",
-  "@autoTagTitle": {
-    "placeholders": {
-      "sourceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearDisabled": {
+    "description": "Option to disable auto clear cache"
   },
-  "autoTagContent": "Esto buscará todas las {count} canciones de \"{sourceName}\" en Spotify y sobrescribirá las etiquetas automáticamente.\\n\\nEsta acción no se puede deshacer.",
+  "@autoClearOnClose": {
+    "description": "Option to clear cache when app closes"
+  },
   "@autoTagContent": {
     "placeholders": {
       "count": {
@@ -266,108 +24,72 @@
       }
     }
   },
-  "startBulkProcess": "Iniciar proceso por lotes",
-  "title": "Título",
-  "artist": "Artista",
-  "album": "Álbum",
-  "genre": "Género",
-  "year": "Año",
-  "trackNumber": "Número de pista",
-  "discNumber": "Número de disco",
-  "autoFixComingSoon": "Auto-corrección (Próximamente)",
-  "manualSearch": "Búsqueda manual",
-  "revert": "Revertir",
-  "saveChangesToFile": "Guardar cambios en el archivo",
-  "searchSpotify": "Buscar en Spotify",
-  "searchHint": "Buscar...",
-  "selectMatch": "Seleccionar coincidencia",
-  "upNext": "Siguiente canción",
-  "fetchingLossless": "Obteniendo sin pérdida...",
-  "noMusicPlaying": "No hay música sonando",
-  "refreshList": "Refrescar lista",
-  "noDownloadsFound": "No se encontraron descargas",
-  "play": "Reproducir",
-  "showInFolder": "Mostrar en carpeta",
-  "delete": "Eliminar",
-  "deleteFileTitle": "¿Eliminar archivo?",
-  "deleteFileContent": "¿Estás seguro de que quieres eliminar \"{filename}\"?\\nEsta acción no se puede deshacer.",
-  "downloadedTo": "Descargado en: {path}",
-  "folderPath": "Carpeta: {path}",
-  "errorDeleting": "Error al eliminar: {error}",
-  "ok": "OK",
-  "searchSongs": "Buscar canciones...",
-  "noResultsFound": "No se encontraron resultados",
-  "refreshLibrary": "Refrescar biblioteca",
-  "shuffleAll": "Aleatorio todo",
-  "switchToListView": "Cambiar a vista de lista",
-  "switchToGridView": "Cambiar a vista de cuadrícula",
-  "songsLoadedCount": "Cargadas {count} canciones...",
-  "grantAccess": "Otorgar acceso",
-  "selectDifferentFolder": "Seleccionar otra carpeta",
-  "selectFolder": "Seleccionar carpeta",
-  "noSongsInFolder": "No se encontraron canciones en esta carpeta.",
-  "queueUpdated": "Cola actualizada",
-  "playingNext": "Reproduciendo a continuación",
-  "addedToQueue": "Añadido a la cola",
-  "playingTrack": "Reproduciendo pista",
-  "error": "Error",
-  "noPlaylistsFound": "No se encontraron listas de reproducción",
-  "addToPlaylist": "Añadir a lista de reproducción",
-  "songAlreadyInPlaylist": "La canción ya está en la lista de reproducción",
-  "addedToPlaylistSuccess": "Añadido a la lista de reproducción",
-  "alreadyInLikedSongs": "Ya está en canciones que te gustan",
-  "addedToLikedSongs": "Añadido a canciones que te gustan",
-  "likedSongs": "Canciones que te gustan",
-  "preparingDownload": "Preparando descarga",
-  "fetchingMetadataSpotify": "Obteniendo metadatos de Spotify...",
-  "preparingDownloadNotification": "Preparando descarga",
-  "downloadStarted": "Descarga iniciada",
-  "downloading": "Descargando",
-  "preparingDownloadFormat": "Preparando descarga ({format})...",
-  "searching": "Buscando...",
-  "findingBestMatchYoutube": "Buscando la mejor coincidencia en YouTube...",
-  "downloadingFlac": "Descargando FLAC",
-  "fetchingLosslessAudio": "Obteniendo audio sin pérdida...",
-  "downloadComplete": "Descarga completada",
-  "flacSavedToDownloads": "FLAC guardado en la carpeta de descargas",
-  "downloadCompleteNotification": "Descarga completada",
-  "flacUnavailable": "FLAC no disponible",
-  "flacUnavailableDesc": "FLAC no está disponible, falló la descarga. Intenta cambiar los ajustes.",
-  "flacUnavailableNotification": "FLAC no disponible",
-  "changeFormatInSettings": "Por favor cambia el formato de salida en ajustes",
-  "flacError": "Error FLAC",
-  "couldNotDownloadFlac": "No se pudo descargar FLAC.",
-  "downloadingFormat": "Descargando {format}",
-  "savedAsFormat": "Guardado como {format}",
-  "downloadFailed": "Descarga fallida",
-  "downloadError": "Error de descarga",
-  "playNext": "Reproducir siguiente",
-  "addToQueue": "Añadir a la cola",
-  "addToFavorite": "Añadir a favoritos",
-  "goToArtist": "Ir al artista",
-  "download": "Descargar",
-  "noAlbumsFound": "No se encontraron álbumes",
-  "moreOptions": "Más opciones",
-  "titleLabel": "Título",
-  "artistLabel": "Artista",
-  "albumLabel": "Álbum",
-  "downloadAll": "Descargar todo",
-  "albumRemovedFromPlaylists": "Álbum eliminado de listas de reproducción",
-  "albumAddedToPlaylists": "Álbum añadido a listas de reproducción",
-  "startedDownloadingAll": "Se inició la descarga de todas las canciones...",
-  "playingFromAlbum": "Reproduciendo desde el álbum",
-  "unknownArtist": "Artista desconocido",
-  "songsCount": "{count} canciones",
-  "@songsCount": {
+  "@autoTagTitle": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@automaticTitleLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@consecutivePlaysTooltip": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "@deleteFileContent": {
     "placeholders": {
       "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@deviceNameLabel": {
+    "placeholders": {
+      "deviceName": {
         "type": "String"
       }
     }
@@ -379,9 +101,9 @@
       }
     }
   },
-  "@folderPath": {
+  "@downloadingFormat": {
     "placeholders": {
-      "path": {
+      "format": {
         "type": "String"
       }
     }
@@ -393,71 +115,6 @@
       }
     }
   },
-  "@songsLoadedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "@preparingDownloadFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@downloadingFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@savedAsFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "libraryNotLoaded": "Biblioteca no cargada.",
-  "noArtistsFound": "No se encontraron artistas.",
-  "goToLocalLibraryToSelect": "Ve a \"Biblioteca local\" para seleccionar una carpeta de música.",
-  "popularOnSpotify": "Popular en Spotify",
-  "songsInLibrary": "{count} canciones en la biblioteca",
-  "@songsInLibrary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "shuffle": "Aleatorio",
-  "shufflingArtist": "Modo aleatorio para {artistName}...",
-  "@shufflingArtist": {
-    "placeholders": {
-      "artistName": {
-        "type": "String"
-      }
-    }
-  },
-  "showMore": "Mostrar más",
-  "showLess": "Mostrar menos",
-  "discography": "Discografía",
-  "seeAll": "Ver todo",
-  "deletePlaylistPermanentConfirm": "¿Estás seguro de que quieres eliminar esta lista de reproducción? (Esta acción no se puede deshacer)",
-  "publicSharing": "Compartir públicamente",
-  "publicSharingDesc": "Cualquiera con el código puede importar esta lista de reproducción.",
-  "publicSharingDisabledDesc": "Desactivado. Actívalo para compartir con otros.",
-  "failedEnableSharing": "Error al activar el uso compartido. Compruebe la conexión.",
-  "failedDisableSharing": "Error al desactivar el uso compartido.",
-  "disablingSharingWarning": "Al desactivar el uso compartido se eliminarán permanentemente el código y los datos del servidor para ahorrar espacio.",
-  "invalidSpotifyUrl": "URL de lista de reproducción de Spotify no válida",
-  "invalidYoutubeMusicUrl": "URL de lista de reproducción de YouTube Music no válida",
-  "fetchingPlaylistInfo": "Obteniendo información de la lista de reproducción...",
-  "failedFetchPlaylistInfo": "No se pudo obtener la información de la lista de reproducción",
-  "fetchingTracksFrom": "Obteniendo pistas de \"{name}\"...",
   "@fetchingTracksFrom": {
     "placeholders": {
       "name": {
@@ -465,133 +122,20 @@
       }
     }
   },
-  "noTracksFound": "No se encontraron pistas en la lista de reproducción",
-  "creatingPlaylistWithTracks": "Creando lista de reproducción con {count} pistas...",
-  "@creatingPlaylistWithTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "importedTracks": "¡{count} pistas importadas correctamente!",
-  "@importedTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "importFailed": "Error de importación: {error}",
-  "@importFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "fetchingSharedPlaylist": "Obteniendo lista de reproducción compartida...",
-  "playlistNotFoundOrError": "Lista de reproducción no encontrada o error del servidor",
-  "parsingPlaylistData": "Analizando datos de la lista de reproducción...",
-  "importedPlaylistName": "¡\"{name}\" importada correctamente!",
-  "@importedPlaylistName": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "codeMust6Digits": "El código debe tener 6 dígitos",
-  "fetchingPlaylist": "Obteniendo lista de reproducción...",
-  "importViaCode": "Importar mediante código",
-  "enterShareCode": "Introduzca el código de uso compartido de 6 dígitos",
-  "importChoice": "Importar",
-  "newPlaylist": "Nueva lista de reproducción",
-  "noPlaylistsYet": "Aún no hay listas de reproducción",
-  "createPlaylist": "Crear lista de reproducción",
-  "emptyPlaylist": "Lista vacía",
-  "emptyPlaylistSubtitle": "Crear una nueva lista vacía",
-  "importFromSpotify": "Importar de Spotify",
-  "importFromSpotifySubtitle": "Pega un enlace de lista de Spotify",
-  "importFromYoutubeMusic": "Importar de YouTube Music",
-  "importFromYoutubeMusicSubtitle": "Pega un enlace de lista de YouTube Music",
-  "playlistNameHint": "Nombre de la lista",
-  "importSpotifyPlaylist": "Importar lista de Spotify",
-  "importYoutubeMusicPlaylist": "Importar lista de YouTube Music",
-  "deletePlaylistTitle": "¿Eliminar lista de reproducción?",
-  "deletePlaylistConfirm": "¿Estás seguro de que quieres eliminar \"{name}\"?",
-  "@deletePlaylistConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "playlistNotFound": "Lista de reproducción no encontrada",
-  "noSongsAdded": "No se han añadido canciones aún",
-  "deleteDownloadsTitle": "¿Eliminar descargas?",
-  "deleteDownloadsConfirm": "Esto eliminará todas las canciones descargadas en este dispositivo para esta lista de reproducción.",
-  "allDownloadsRemoved": "Todas las descargas eliminadas",
-  "rename": "Renombrar",
-  "removeFromPlaylist": "Eliminar de la lista",
-  "renamePlaylist": "Renombrar lista de reproducción",
-  "listeningStats": "Estadísticas de escucha",
-  "topArtist": "Artista top",
-  "mostListened": "Más escuchado",
-  "timeListened": "Tiempo escuchado",
-  "totalPlays": "Reproducciones totales",
-  "minutes": "minutos",
-  "tracks": "pistas",
-  "songs": "canciones",
-  "noStatsYet": "Aún no hay estadísticas.",
-  "noArtistStatsYet": "Aún no hay estadísticas de artistas.",
-  "plays": "reproducciones",
-  "min": "min",
-  "share": "Compartir",
-  "savedTo": "Guardado en \"{path}\"",
-  "@savedTo": {
+  "@folderPath": {
     "placeholders": {
       "path": {
         "type": "String"
       }
     }
   },
-  "myTopTrackOn": "¡Mi {header} en Simple Player! 🎵",
-  "@myTopTrackOn": {
+  "@foundExistingAccount": {
     "placeholders": {
-      "header": {
+      "name": {
         "type": "String"
       }
     }
   },
-  "fileMissingHistory": "Falta el archivo y no está en el historial.",
-  "restoring": "Restaurando",
-  "reBuffering": "Almacenando en búfer...",
-  "nowPlaying": "Reproduciendo ahora",
-  "recentlyPlayed": "Reproducidas recientemente",
-  "clearHistory": "Borrar historial",
-  "noHistoryYet": "Aún no hay historial",
-  "cloud": "Nube",
-  "cached": "En caché",
-  "searchingStatus": "Buscando",
-  "findingStream": "Buscando origen de streaming...",
-  "noStreamMatch": "No se encontró ninguna coincidencia en streaming.",
-  "errorSearchingStream": "Error al buscar streaming.",
-  "rebufferingFromCloud": "Almacenando en búfer desde la nube...",
-  "musicSearch": "Búsqueda de música",
-  "songTitleKeyword": "Título de canción o palabra clave",
-  "searchSpotifyHint": "Buscar en Spotify...",
-  "readySearchSong": "Listo. Busca una canción.",
-  "searchingSpotifyFor": "Buscando \"{keyword}\" en Spotify...",
-  "@searchingSpotifyFor": {
-    "placeholders": {
-      "keyword": {
-        "type": "String"
-      }
-    }
-  },
-  "offline": "Desconectado",
-  "foundResults": "Encontradas {songCount} canciones, {albumCount} álbumes y {artistCount} artistas.",
   "@foundResults": {
     "placeholders": {
       "songCount": {
@@ -605,76 +149,27 @@
       }
     }
   },
-  "noSpotifyResults": "No se encontraron resultados en Spotify.",
-  "searchFailedStatus": "Fallo de búsqueda: {error}",
-  "@searchFailedStatus": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "noInternetConnection": "Sin conexión a internet",
-  "checkNetworkTryAgain": "Comprueba tu red e inténtalo de nuevo",
-  "noSuggestionsFound": "No se encontraron sugerencias.",
-  "statusWithText": "Estado: {status}",
-  "@statusWithText": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
-  "goodMorning": "Buenos días",
-  "goodAfternoon": "Buenas tardes",
-  "goodEvening": "Buenas noches",
-  "jumpBackIn": "Vuelve a escuchar",
-  "yourTopMix": "Tu mix top",
-  "youMayLike": "Te puede gustar",
-  "yourPlaylists": "Tus listas de reproducción",
-  "quickMix": "Mix rápido",
-  "madeForYou": "Hecho para ti",
-  "rediscover": "Redescubrir",
-  "doYouRemember": "¿Recuerdas esto?",
-  "countSongs": "{count, plural, =1{1 canción} other{{count} canciones}}",
-  "@countSongs": {
+  "@foundYoutubeResults": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "savePlaylistTitle": "¿Guardar \"{title}\"?",
-  "@savePlaylistTitle": {
+  "@freeUpSpace": {
     "placeholders": {
-      "title": {
+      "size": {
         "type": "String"
       }
     }
   },
-  "savePlaylistContent": "Esto creará una nueva lista de reproducción basada en estas canciones.",
-  "savedAs": "¡Guardado como \"{name}\"!",
-  "@savedAs": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "save": "Guardar",
-  "searchSongsOrAlbumsAndArtistsHint": "Busca canciones, álbumes o artistas...",
-  "playQueue": "Cola de reproducción",
-  "downloadSong": "Descargar canción",
-  "sleepTimer": "Temporizador de apagado",
-  "minutesDuration": "{count, plural, =1{1 minuto} other{{count} minutos}}",
-  "@minutesDuration": {
+  "@fromLibraryCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "hoursDuration": "{count, plural, =1{1 hora} other{{count} horas}}",
   "@hoursDuration": {
     "placeholders": {
       "count": {
@@ -682,14 +177,52 @@
       }
     }
   },
-  "customTime": "Tiempo personalizado",
-  "turnOffTimer": "Apagar temporizador",
-  "musicWillStopIn": "La música se detendrá en {label}",
-  "stopTimer": "Parar temporizador ({time})",
-  "@stopTimer": {
+  "@importFailed": {
     "placeholders": {
-      "time": {
+      "error": {
         "type": "String"
+      }
+    }
+  },
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@last30DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@last7DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@listenMinutesTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -700,73 +233,76 @@
       }
     }
   },
-  "setCustomTimer": "Establecer temporizador personalizado",
-  "enterDuration": "Introduce la duración...",
-  "hourShort": "h",
-  "minuteShort": "min",
-  "secondShort": "seg",
-  "timerSetForHours": "Temporizador establecido para dentro de {count} horas",
-  "@timerSetForHours": {
+  "@myTopTrackOn": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForMinutes": "Temporizador establecido para dentro de {count} minutos",
-  "@timerSetForMinutes": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForSeconds": "Temporizador establecido para dentro de {count} segundos",
-  "@timerSetForSeconds": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "start": "Empezar",
-  "errorCouldNotCreateSession": "Error: No se pudo crear la sesión.",
-  "scanToControlPlayback": "Escanea para controlar la reproducción con tu teléfono.",
-  "session": "Sesión: {id}",
-  "@session": {
-    "placeholders": {
-      "id": {
+      "header": {
         "type": "String"
       }
     }
   },
-  "loadingCanvas": "Cargando Canvas...",
-  "searchingSpotify": "Buscando en Spotify...",
-  "fetchingCanvas": "Obteniendo Canvas...",
-  "nowPlayingHeader": "Sonando ahora",
-  "nowPlayingSection": "Sonando ahora",
-  "upNextSection": "A continuación",
-  "recommendationsSection": "Recomendaciones",
-  "fromLibrarySection": "De la biblioteca",
-  "queueIsEmpty": "La cola está vacía",
-  "historySection": "Historial",
-  "upNextCount": "A continuación ({count})",
-  "@upNextCount": {
+  "@notRank": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@opacityLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@playCountLabel": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "fromLibraryCount": "De la biblioteca ({count})",
-  "@fromLibraryCount": {
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@rankActive": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@rankLabel": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@reachDailyPlaysTooltip": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "recommendationsCount": "Recomendaciones ({count})",
+  "@reachSpecificArtistTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@reachWeeklyPlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@recommendationsCount": {
     "placeholders": {
       "count": {
@@ -774,78 +310,65 @@
       }
     }
   },
-  "noSongPlaying": "No hay canción sonando",
-  "selectTrackToStart": "Selecciona una pista para empezar",
-  "importLabel": "Importar",
-  "saveLabel": "Guardar",
-  "refreshLabel": "Refrescar",
-  "hideTranslation": "Ocultar traducción",
-  "translateLabel": "Traducir",
-  "lyricsByLRCLIB": "Letras por LRCLIB",
-  "importLyricsFile": "Importar archivo de letras",
-  "overwriteLrcWarning": "Ya existe un archivo .lrc local para esta canción.\\n¿Quieres sobrescribirlo?",
-  "saveLrcPrompt": "¿Quieres guardar la letra actual como un archivo .lrc junto al audio?",
-  "overwrite": "Sobrescribir",
-  "lyricsSavedSuccess": "Letras guardadas en archivo .lrc",
-  "lyricsSaveError": "Error al guardar las letras",
-  "equalizer": "Ecualizador",
-  "trackDetails": "Detalles de la pista",
-  "audioQuality": "Calidad de audio",
-  "formatLabel": "Formato",
-  "codecLabel": "Códec",
-  "bitrateLabel": "Tasa de bits",
-  "sampleRateLabel": "Freq. de muestreo",
-  "bitDepthLabel": "Profundidad de bits",
-  "channelsLabel": "Canales",
-  "fileSizeLabel": "Tamaño del archivo",
-  "fileLocation": "Ubicación del archivo",
-  "audioSource": "Origen del audio",
-  "pathLabel": "Ruta",
-  "inputLabel": "Entrada",
-  "engineLabel": "Motor",
-  "eqLabel": "EQ",
-  "dspLabel": "DSP",
-  "androidMixer": "Mezclador de Android",
-  "bypassedBitPerfect": "Omitido (Bit-Perfect)",
-  "resamplingLabel": "Resampleo",
-  "activeNoResampling": "Activo (No es necesario resamplear)",
-  "nativeRate": "Freq. nativa",
-  "signalOutput": "Salida de señal",
-  "outputLabel": "Salida",
-  "samplingRateLabel": "Tasa de muestreo",
-  "bitsLabel": "Bits",
-  "statusLabel": "Estado",
-  "unknown": "Desconocido",
-  "unknownDevice": "Dispositivo desconocido",
-  "sharedMode": "Compartido",
-  "exclusiveMode": "Exclusivo",
-  "androidAudioTrack": "Android AudioTrack",
-  "songInformation": "Información de la canción",
-  "selectVersion": "Seleccionar versión",
-  "searchYoutubeHint": "Buscar en YouTube...",
-  "androidAudioEffectsNote": "Nota: Los efectos de audio solo están disponibles en dispositivos Android.",
-  "deletePreset": "Eliminar ajuste",
-  "saveAsNewPreset": "Guardar como nuevo ajuste",
-  "savePreset": "Guardar ajuste",
-  "enterPresetName": "Introduce nombre de ajuste (ej: Mis Bajos)",
-  "presetSaved": "¡Ajuste guardado!",
-  "miniPlayer": "Mini reproductor",
-  "listeningParty": "Fiesta de escucha",
-  "audioOutput": "Salida de audio",
-  "lyricsTooltip": "Letras",
-  "queueTooltip": "Cola",
-  "moreOptionsTooltip": "Más opciones",
-  "muteTooltip": "Silenciar",
-  "unmuteTooltip": "Desactivar silencio",
-  "fullScreenPlayerTooltip": "Reproductor a pantalla completa",
-  "importLyricsTooltip": "Importar letras",
-  "saveLyricsTooltip": "Guardar letras",
-  "refreshLyricsTooltip": "Refrescar letras",
-  "translateLyricsTooltip": "Traducir letras",
-  "sharePlaylist": "Compartir lista de reproducción",
-  "deletePlaylist": "Eliminar lista de reproducción",
-  "importViaCodeSubtitle": "Importar una lista de reproducción compartida por un amigo",
-  "sharePlaylistTitle": "Compartir \"{name}\"",
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingEngine": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      },
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "@sharePlaylistTitle": {
     "placeholders": {
       "name": {
@@ -853,16 +376,858 @@
       }
     }
   },
-  "generatingShareCode": "Generando código de uso compartido...",
-  "failedToGenerateCode": "Error al generar el código de uso compartido. Compruebe la conexión.",
-  "playlistReadyShare": "¡Tu lista de reproducción está lista para compartir!",
-  "copyCode": "Copiar código",
+  "@showAllTitles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@switchingTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@todayLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@top3GlobalTooltip": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "@topGlobalTooltip": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@unlockedCountLabel": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@updateAvailableVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@updateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutEducationalPurpose": "Esta aplicación ha sido desarrollada únicamente con fines individuales y educativos.",
+  "aboutLicenses": "Acerca de y Licencias",
+  "aboutNotForCommercial": "No apto para uso comercial.",
+  "accentColor": "Color de acento",
+  "access": "Acceso",
+  "accessCode": "Código de acceso",
+  "accountDataMergeDesc": "Al sincronizar, tu nombre de perfil y avatar se actualizarán, pero los minutos de escucha de tu dispositivo actual se fusionarán con éxito en el total de la cuenta.",
+  "accountLinked": "Cuenta vinculada",
+  "accountLinkedSuccessfully": "¡Cuenta vinculada con éxito!",
+  "achievementsUnlocked": "Logros desbloqueados",
+  "activeNoResampling": "Activo (No es necesario resamplear)",
+  "add": "Añadir",
+  "addFiles": "Añadir archivos",
+  "addFolder": "Añadir carpeta",
+  "addFoldersScan": "Añadir carpetas para escanear",
+  "addToFavorite": "Añadir a favoritos",
+  "addToPlaylist": "Añadir a lista de reproducción",
+  "addToQueue": "Añadir a la cola",
+  "addedFolder": "Carpeta añadida: {folder}",
+  "addedToLikedSongs": "Añadido a canciones que te gustan",
+  "addedToPlaylistSuccess": "Añadido a la lista de reproducción",
+  "addedToQueue": "Añadido a la cola",
+  "album": "Álbum",
+  "albumAddedToPlaylists": "Álbum añadido a listas de reproducción",
+  "albumLabel": "Álbum",
+  "albumRemovedFromPlaylists": "Álbum eliminado de listas de reproducción",
+  "albums": "Álbumes",
+  "allDownloadsRemoved": "Todas las descargas eliminadas",
+  "allRightsReserved": "Todos los derechos reservados.",
+  "allTime": "Todo el tiempo",
+  "alreadyInLikedSongs": "Ya está en canciones que te gustan",
+  "android14BitPerfect": "Android 14+ Bit-Perfect",
+  "androidAudioEffectsNote": "Nota: Los efectos de audio solo están disponibles en dispositivos Android.",
+  "androidAudioTrack": "Android AudioTrack",
+  "androidBitPerfect": "Android 14+ Bit-Perfect",
+  "androidMixer": "Mezclador de Android",
+  "appearance": "Apariencia",
+  "applyOnRestart": "Los cambios se aplicarán al reiniciar.",
+  "arabic": "Árabe",
+  "artist": "Artista",
+  "artistLabel": "Artista",
+  "artists": "Artistas",
+  "atmospheres": "Atmósferas",
+  "audioFormat": "Formato de audio",
+  "audioOutput": "Salida de audio",
+  "audioOutputDevice": "Dispositivo de salida de audio",
+  "audioQuality": "Calidad de audio",
+  "audioSource": "Origen del audio",
+  "audiophileDAC": "Activar cuando se reproduzca en DACs audiófilos (requiere reinicio)",
+  "autoAddSimilar": "Añadir canciones similares automáticamente cuando la cola esté terminando",
+  "autoClearAfter24h": "Después de 24 horas",
+  "autoClearAfter7d": "Después de 7 días",
+  "autoClearCache": "Limpiar caché automáticamente",
+  "autoClearDisabled": "Desactivado",
+  "autoClearEvery30m": "Cada 30 min (Solo al escuchar)",
+  "autoClearOnClose": "Al cerrar la app",
+  "autoFixComingSoon": "Auto-corrección (Próximamente)",
+  "autoRestartNotSupported": "El reinicio automático no es compatible. Por favor, reinicia manualmente.",
+  "autoTagContent": "Esto buscará todas las {count} canciones de \"{sourceName}\" en Spotify y sobrescribirá las etiquetas automáticamente.\\n\\nEsta acción no se puede deshacer.",
+  "autoTagTitle": "⚠️ ¿Auto-etiquetar {sourceName}?",
+  "automatic": "Automático",
+  "automaticTitleLabel": "Automático: {title}",
+  "autumn": "Otoño",
+  "avatarPickerDesc": "Selecciona una plantilla o importa tu propia foto",
+  "beFirstToClaim": "¡Sé el primero en reclamar el primer puesto!",
+  "behavioralHeader": "LOGROS DE COMPORTAMIENTO",
+  "behavioralTitles": "DE COMPORTAMIENTO",
+  "binariesUpdateRequired": "Actualización de binarios requerida",
+  "bitDepthLabel": "Profundidad de bits",
+  "bitPerfectEnabled": "Modo bit-perfect activado. El control de volumen puede no funcionar.",
+  "bitPerfectWindows": "Audio bit-perfect con frecuencia de muestreo automática (requiere reinicio)",
+  "bitrateLabel": "Tasa de bits",
+  "bitsLabel": "Bits",
+  "brazil": "Brasil",
+  "browse": "Explorar",
+  "bypassSystemMixer": "Omitir el mezclador del sistema para USB DAC",
+  "bypassedBitPerfect": "Omitido (Bit-Perfect)",
+  "cacheCleared": "¡Caché borrada con éxito!",
+  "cached": "En caché",
+  "cancel": "Cancelar",
+  "championChampionTooltip": "Logra el Top 1 Global por 5 semanas diferentes",
+  "change": "Cambiar",
+  "changeFolder": "Cambiar carpeta",
+  "changeFormatInSettings": "Por favor cambia el formato de salida en ajustes",
+  "changeLabel": "CAMBIAR",
+  "changeLanguage": "Cambiar idioma de la aplicación",
+  "changesApplyRestart": "Los cambios se aplicarán al reiniciar.",
+  "changingAudioDeviceRestart": "Se requiere reiniciar la aplicación para aplicar los cambios del dispositivo de salida de audio.\\n\\n¿Reiniciar ahora?",
+  "channelsLabel": "Canales",
+  "checkAgain": "Comprobar de nuevo",
+  "checkInternetConnection": "Verifica tu conexión a internet",
+  "checkNetworkTryAgain": "Comprueba tu red e inténtalo de nuevo",
+  "chinese": "Chino",
+  "chooseAccentColor": "Elige tu color estático favorito",
+  "chooseAnimationType": "Elige el tipo de animación",
+  "chooseArtist": "ELEGIR ARTISTA",
+  "chooseAvatar": "Elegir avatar",
+  "chooseYourTitle": "Elige tu título",
+  "circularPulse": "Pulso circular",
+  "clearAll": "Borrar todo",
+  "clearHistory": "Borrar historial",
+  "clearImported": "Borrar importados",
+  "clearMetadataCache": "Borrar caché de metadatos y arte",
+  "clearPlayHistory": "Borrar historial de reproducción y tiempo de escucha",
+  "clearStreamingCache": "Borrar caché de streaming",
+  "close": "Cerrar",
+  "cloud": "Nube",
   "codeCopied": "¡Código copiado al portapapeles!",
-  "shareCodeUsage": "Dale este código de 6 dígitos a un amigo para que importe esta lista de reproducción.",
-  "filters": "Filtros",
-  "fileName": "Nombre de archivo",
+  "codeMust6Digits": "El código debe tener 6 dígitos",
+  "codecLabel": "Códec",
+  "comingSoon": "Próximamente",
+  "community": "Comunidad",
+  "competitiveTitles": "COMPETITIVO",
+  "confirm": "Confirmar",
+  "connect": "Conectar",
+  "connectToADevice": "Conectar a un dispositivo",
+  "connected": "Conectado",
+  "connectedToDac": "Conectado a {deviceName} - Omisión USB activada",
+  "connectedUsbDacs": "DACs USB conectados:",
+  "connecting": "Conectando...",
+  "connectionLostLeaderboard": "Conexión perdida",
+  "connectionLostLeaderboardDesc": "La Clasificación Global requiere una conexión activa para sincronizar tus estadísticas y obtener los rankings mundiaux.",
+  "consecutivePlaysTooltip": "Escucha la misma canción {count} veces seguidas",
+  "contentRegion": "Región de contenido",
+  "copyCode": "Copiar código",
+  "couldNotDownloadFlac": "No se pudo descargar FLAC.",
+  "countSongs": "{count, plural, =1{1 canción} other{{count} canciones}}",
+  "createPlaylist": "Crear lista de reproducción",
+  "creatingPlaylistWithTracks": "Creando lista de reproducción con {count} pistas...",
+  "crossfade": "Crossfade",
+  "crossfadeDesc": "Fundido entre pistas ({seconds} s)",
+  "crownedChampionTitlesHeader": "TÍTULOS DE CAMPEÓN CORONADO",
+  "customDevice": "Dispositivo personalizado",
+  "customSelected": "Selección personalizada",
+  "customTime": "Tiempo personalizado",
+  "cyberpunk": "Cyberpunk",
+  "daily": "Diario",
+  "darkMode": "Modo oscuro",
+  "dataCleanup": "Datos y limpieza",
   "dataUsage": "Uso de datos",
-  "todayLabel": "Hoy: {size}",
+  "daysShort": "D",
+  "debugging": "Depuración",
+  "delete": "Eliminar",
+  "deleteDownloadsConfirm": "Esto eliminará todas las canciones descargadas en este dispositivo para esta lista de reproducción.",
+  "deleteDownloadsTitle": "¿Eliminar descargas?",
+  "deleteFileContent": "¿Estás seguro de que quieres eliminar \"{filename}\"?\\nEsta acción no se puede deshacer.",
+  "deleteFileTitle": "¿Eliminar archivo?",
+  "deletePlaylist": "Eliminar lista de reproducción",
+  "deletePlaylistConfirm": "¿Estás seguro de que quieres eliminar \"{name}\"?",
+  "deletePlaylistPermanentConfirm": "¿Estás seguro de que quieres eliminar esta lista de reproducción? (Esta acción no se puede deshacer)",
+  "deletePlaylistTitle": "¿Eliminar lista de reproducción?",
+  "deletePreset": "Eliminar ajuste",
+  "desertMirage": "Espejismo del desierto",
+  "developerExclusiveTooltip": "Exclusivo para los desarrolladores de esta aplicación",
+  "deviceNameLabel": "Dispositivo: {deviceName}",
+  "disableCanvas": "Desactivar Canvas",
+  "disableRomanization": "Desactivar romanización",
+  "disablingSharingWarning": "Al desactivar el uso compartido se eliminarán permanentemente el código y los datos del servidor para ahorrar espacio.",
+  "discNumber": "Número de disco",
+  "discography": "Discografía",
+  "discordRPC": "Discord Rich Presence",
+  "doYouRemember": "¿Recuerdas esto?",
+  "donate": "Donar",
+  "download": "Descargar",
+  "downloadAll": "Descargar todo",
+  "downloadComplete": "Descarga completada",
+  "downloadCompleteNotification": "Descarga completada",
+  "downloadError": "Error de descarga",
+  "downloadFailed": "Descarga fallida",
+  "downloadLocation": "Ubicación de descarga",
+  "downloadPathReset": "Ruta de descarga restablecida al valor por defecto.",
+  "downloadPathUpdated": "Ruta de descarga actualizada: {path}",
+  "downloadSong": "Descargar canción",
+  "downloadStarted": "Descarga iniciada",
+  "downloadedTo": "Descargado en: {path}",
+  "downloading": "Descargando",
+  "downloadingFlac": "Descargando FLAC",
+  "downloadingFormat": "Descargando {format}",
+  "downloadingUpdate": "Descargando actualización",
+  "downloads": "Descargas",
+  "dspLabel": "DSP",
+  "editMetadata": "Editar metadatos",
+  "editNickname": "Editar apodo",
+  "editor": "Editor",
+  "emptyMailbox": "Vaciar buzón",
+  "emptyMailboxDesc": "Esto eliminará todos los mensajes permanentemente.",
+  "emptyMailboxTitle": "¿Vaciar buzón?",
+  "emptyPlaylist": "Lista vacía",
+  "emptyPlaylistSubtitle": "Crear una nueva lista vacía",
+  "enableAlphabetIndexer": "Activar indexador de desplazamiento alfabético",
+  "enableAlphabetIndexerSubtitle": "Mostrar indexación de barra lateral A-Z en la vista de lista móvil",
+  "enableBarVisualizer": "Activar visualizador de barras",
+  "endlessQueue": "Cola interminable",
+  "engineLabel": "Motor",
+  "english": "Inglés",
+  "enterAdminAccessCode": "Por favor ingresa el código de acceso de administrador",
+  "enterAdminCode": "Por favor ingresa el código de acceso de administrador",
+  "enterDuration": "Introduce la duración...",
+  "enterPresetName": "Introduce nombre de ajuste (ej: Mis Bajos)",
+  "enterShareCode": "Introduzca el código de uso compartido de 6 dígitos",
+  "eqLabel": "EQ",
+  "equalizer": "Ecualizador",
+  "equipTitle": "EQUIPAR TÍTULO",
+  "equipped": "EQUIPADO",
+  "error": "Error",
+  "errorCouldNotCreateSession": "Error: No se pudo crear la sesión.",
+  "errorDeleting": "Error al eliminar: {error}",
+  "errorSearchingStream": "Error al buscar streaming.",
+  "exclusiveMode": "Exclusivo",
+  "exclusiveModeWarning": "Advertencia: El modo exclusivo funciona mejor si seleccionas un dispositivo específico arriba en lugar de usar el predeterminado.",
+  "exclusiveTitles": "EXCLUSIVO",
+  "exclusiveTitlesHeader": "TÍTULOS EXCLUSIVOS",
+  "exclusiveWarning": "Advertencia: El modo exclusivo funciona mejor si seleccionas un dispositivo específico arriba en lugar de usar el predeterminado.",
+  "exitApp": "Salir",
+  "expand": "Expandir",
+  "externalFiles": "Archivos externos",
+  "fadingAtEnd": "Temporizador de sueño: Desvaneciéndose al final de la pista...",
+  "failedDisableSharing": "Error al desactivar el uso compartido.",
+  "failedEnableSharing": "Error al activar el uso compartido. Compruebe la conexión.",
+  "failedFetchPlaylistInfo": "No se pudo obtener la información de la lista de reproducción",
+  "failedToConnectDac": "Error al conectar con el DAC. Comprueba los permisos USB.",
+  "failedToGenerateCode": "Error al generar el código de uso compartido. Compruebe la conexión.",
+  "failedToSetAvatar": "Error al establecer la plantilla de avatar",
+  "failedToUpdateMetadata": "Error al actualizar metadatos",
+  "favoriteTrack": "Canción favorita",
+  "fetchingCanvas": "Obteniendo Canvas...",
+  "fetchingLossless": "Obteniendo sin pérdida...",
+  "fetchingLosslessAudio": "Obteniendo audio sin pérdida...",
+  "fetchingMetadataSpotify": "Obteniendo metadatos de Spotify...",
+  "fetchingPlaylist": "Obteniendo lista de reproducción...",
+  "fetchingPlaylistInfo": "Obteniendo información de la lista de reproducción...",
+  "fetchingSharedPlaylist": "Obteniendo lista de reproducción compartida...",
+  "fetchingTracksFrom": "Obteniendo pistas de \"{name}\"...",
+  "fileLocation": "Ubicación del archivo",
+  "fileMissingHistory": "Falta el archivo y no está en el historial.",
+  "fileName": "Nombre de archivo",
+  "fileSizeLabel": "Tamaño del archivo",
+  "files": "Archivos",
+  "filters": "Filtros",
+  "findingBestMatchYoutube": "Buscando la mejor coincidencia en YouTube...",
+  "findingStream": "Buscando origen de streaming...",
+  "finishUpdate": "Finalizar actualización",
+  "finishes": "Posiciones",
+  "fixAll": "Corregir todos",
+  "flacError": "Error FLAC",
+  "flacNote": "Nota: FLAC solo está disponible para descargas de pistas individuales. Las descargas masivas de listas de reproducción usarán formato M4A.",
+  "flacSavedToDownloads": "FLAC guardado en la carpeta de descargas",
+  "flacUnavailable": "FLAC no disponible",
+  "flacUnavailableDesc": "FLAC no está disponible, falló la descarga. Intenta cambiar los ajustes.",
+  "flacUnavailableNotification": "FLAC no disponible",
+  "fluidWave": "Onda fluida",
+  "folderPath": "Carpeta: {path}",
+  "folders": "Carpetas",
+  "formatLabel": "Formato",
+  "formatSaved": "¡Formato guardado!",
+  "foundExistingAccount": "Encontramos una cuenta existente para '{name}'.",
+  "foundResults": "Encontradas {songCount} canciones, {albumCount} álbumes y {artistCount} artistas.",
+  "foundYoutubeResults": "Se encontraron {count} resultados en YouTube",
+  "freeUpSpace": "Liberar espacio (Actual: {size})",
+  "french": "Francés",
+  "fromLibraryCount": "De la biblioteca ({count})",
+  "fromLibrarySection": "De la biblioteca",
+  "fullScreenPlayerTooltip": "Reproductor a pantalla completa",
+  "galacticSpace": "Espacio galáctico",
+  "gaplessPlayback": "Reproducción sin Pausas",
+  "gaplessPlaybackDesc": "Elimina el silencio entre las pistas",
+  "general": "General",
+  "generatingShareCode": "Generando código de uso compartido...",
+  "genre": "Género",
+  "german": "Alemán",
+  "globalLeaderboard": "Clasificación Global",
+  "globalMailbox": "Buzón global",
+  "globalRank": "Rango Global",
+  "globalRankings": "Clasificaciones globales",
+  "globalRankingsDesc": "¡Mira los mejores oyentes diarios, semanales y de todos los tiempos!",
+  "goToArtist": "Ir al artista",
+  "goToLocalLibraryToSelect": "Ve a \"Biblioteca local\" para seleccionar una carpeta de música.",
+  "goodAfternoon": "Buenas tardes",
+  "goodEvening": "Buenas noches",
+  "goodMorning": "Buenos días",
+  "googleAccount": "Cuenta de Google",
+  "grantAccess": "Otorgar acceso",
+  "grantPermission": "Otorgar permiso",
+  "hallOfFameHeader": "LOGROS DEL SALÓN DE LA FAMA",
+  "hallOfFameTitles": "SALÓN DE LA FAMA",
+  "hideCanvas": "No mostrar videos de Spotify Canvas, mostrar portada en su lugar",
+  "hideRomajiPinyin": "No mostrar Romaji/Pinyin debajo de letras en coreano, japonés o chino",
+  "hideTranslation": "Ocultar traducción",
+  "highDesc": "M4A - Mejor audio, rendimiento equilibrado",
+  "highQuality": "Alta calidad (M4A)",
+  "hindi": "Hindi",
+  "history": "Historial",
+  "historySection": "Historial",
+  "home": "Inicio",
+  "hourShort": "h",
+  "hoursDuration": "{count, plural, =1{1 hora} other{{count} horas}}",
+  "hoursShort": "H",
+  "ignoreSubfolderScan": "Ignorar escaneo de subcarpetas",
+  "importAdditionalPaths": "Importar rutas adicionales",
+  "importChoice": "Importar",
+  "importFailed": "Error de importación: {error}",
+  "importFromGallery": "Importar de la galería",
+  "importFromSpotify": "Importar de Spotify",
+  "importFromSpotifySubtitle": "Pega un enlace de lista de Spotify",
+  "importFromYoutubeMusic": "Importar de YouTube Music",
+  "importFromYoutubeMusicSubtitle": "Pega un enlace de lista de YouTube Music",
+  "importLabel": "Importar",
+  "importLyricsFile": "Importar archivo de letras",
+  "importLyricsTooltip": "Importar letras",
+  "importSpotifyPlaylist": "Importar lista de Spotify",
+  "importViaCode": "Importar mediante código",
+  "importViaCodeSubtitle": "Importar una lista de reproducción compartida por un amigo",
+  "importYoutubeMusicPlaylist": "Importar lista de YouTube Music",
+  "importedPlaylistName": "¡\"{name}\" importada correctamente!",
+  "importedTracks": "¡{count} pistas importadas correctamente!",
+  "indonesia": "Indonesia",
+  "indonesian": "Indonesio",
+  "inputLabel": "Entrada",
+  "installNow": "Instalar ahora",
+  "integration": "Integración",
+  "invalidAccessCode": "Código de acceso inválido",
+  "invalidCode": "Código de acceso inválido",
+  "invalidSpotifyUrl": "URL de lista de reproducción de Spotify no válida",
+  "invalidYoutubeMusicUrl": "URL de lista de reproducción de YouTube Music no válida",
+  "japan": "Japón",
+  "japanese": "Japonés",
+  "joinUs": "Únete a nosotros",
+  "jumpBackIn": "Vuelve a escuchar",
+  "justEnjoyVibes": "Solo disfruta de la música.",
+  "korean": "Coreano",
+  "language": "Idioma",
+  "last30DaysLabel": "Últimos 30 días: {size}",
   "last7DaysLabel": "Últimos 7 días: {size}",
-  "last30DaysLabel": "Últimos 30 días: {size}"
+  "later": "Más tarde",
+  "library": "Biblioteca",
+  "libraryData": "Datos de la biblioteca",
+  "libraryNotLoaded": "Biblioteca no cargada.",
+  "libraryPathReset": "Ruta de la biblioteca restablecida.",
+  "likedSongs": "Canciones que te gustan",
+  "linkAccount": "Vincular cuenta",
+  "linkAccountDesc": "Sincroniza y restaura tu progreso con Google",
+  "listenMinutesTooltip": "Escucha {minutes} minutos de música",
+  "listeningParty": "Fiesta de escucha",
+  "listeningStats": "Estadísticas de escucha",
+  "loadingCanvas": "Cargando Canvas...",
+  "loadingDevices": "Cargando dispositivos...",
+  "loadingError": "Error al cargar los detalles. Por favor, inténtelo de nuevo.",
+  "loadingLyrics": "Cargando letras...",
+  "localPlayHistorySaved": "Tu historial de reproducción local no se borrará.",
+  "local_library": "Biblioteca local",
+  "lockedAtmosphere": "Bloqueado mientras una atmósfera está activa",
+  "losslessDesc": "FLAC - Calidad sin pérdida de Deezer/Tidal",
+  "losslessNote": "Transmitirá FLAC sin pérdida de Deezer/Tidal si está disponible. Recurrirá a M4A si no es así.",
+  "losslessQuality": "Sin pérdida (Auto)",
+  "lunarNewYear": "Año Nuevo Lunar",
+  "lyricsByLRCLIB": "Letras por LRCLIB",
+  "lyricsSaveError": "Error al guardar las letras",
+  "lyricsSavedSuccess": "Letras guardadas en archivo .lrc",
+  "lyricsTooltip": "Letras",
+  "madeForYou": "Hecho para ti",
+  "manualSearch": "Búsqueda manual",
+  "mergeAccountData": "¿Fusionar datos de la cuenta?",
+  "metadataCacheCleared": "Caché de metadatos borrada y reescaneo de biblioteca iniciado",
+  "metadataEditorInfo": "Puedes buscar y corregir rápidamente en el Editor de Metadatos.",
+  "metadataEditorNote": "Nota: Después de que el estado indique \"Guardado con éxito\", el arte del álbum puede cambiar. Esto no significa que no se haya guardado, sino que es un problema de caché dentro de la aplicación que estamos corrigiendo. Puedes confirmarlo en un explorador de archivos.",
+  "metadataUpdated": "Metadatos actualizados",
+  "metadata_editor": "Editor de metadatos",
+  "min": "min",
+  "minShortLabel": "min",
+  "miniPlayer": "Mini reproductor",
+  "minimizeToTray": "Minimizar a la bandeja",
+  "minimizeToTrayDescription": "Cerrar la app a la bandeja del sistema en lugar de salir",
+  "minsShort": "M",
+  "minsShortLabel": "min",
+  "minuteShort": "min",
+  "minutes": "minutos",
+  "minutesDuration": "{count, plural, =1{1 minuto} other{{count} minutos}}",
+  "moreOptions": "Más opciones",
+  "moreOptionsTooltip": "Más opciones",
+  "mostListened": "Más escuchado",
+  "mostListenedArtist": "Artista más escuchado",
+  "musicFolderLocation": "Ubicación de la carpeta de música",
+  "musicSearch": "Búsqueda de música",
+  "musicWillStopIn": "La música se detendrá en {label}",
+  "muteTooltip": "Silenciar",
+  "myTopTrackOn": "¡Mi {header} en Simple Player! 🎵",
+  "nativeRate": "Freq. nativa",
+  "navigation": "Navegación",
+  "newPlaylist": "Nueva lista de reproducción",
+  "nextTrack": "Siguiente pista",
+  "nicknameHint": "Introduce tu apodo",
+  "nicknameLabel": "Apodo",
+  "nicknameRequired": "Apodo Requerido",
+  "nicknameRequiredDesc": "¡Debes establecer un apodo personalizado primero para ver la clasificación global!",
+  "nicknameTakenDesc": "Este apodo ya está en uso globalmente. Por favor, elige otro.",
+  "nicknameTakenTitle": "Apodo ocupado",
+  "noAlbumsFound": "No se encontraron álbumes",
+  "noArtistStatsYet": "Aún no hay estadísticas de artistas.",
+  "noArtistsFound": "No se encontraron artistas.",
+  "noDownloadsFound": "No se encontraron descargas",
+  "noFolderSelected": "Ninguna carpeta seleccionada",
+  "noHistoryYet": "Aún no hay historial",
+  "noInternetConnection": "Sin conexión a internet",
+  "noLyricsAvailable": "No hay letras disponibles",
+  "noMessages": "No hay mensajes en tu buzón",
+  "noMusicPlaying": "No hay música sonando",
+  "noPlaylistsFound": "No se encontraron listas de reproducción",
+  "noPlaylistsYet": "Aún no hay listas de reproducción",
+  "noRankingsYet": "Todavía no hay clasificaciones para este período de tiempo.",
+  "noResultsFound": "No se encontraron resultados",
+  "noSongPlaying": "No hay canción sonando",
+  "noSongsAdded": "No se han añadido canciones aún",
+  "noSongsInFolder": "No se encontraron canciones en esta carpeta.",
+  "noSpotifyResults": "No se encontraron resultados en Spotify.",
+  "noStatsYet": "Aún no hay estadísticas.",
+  "noStreamMatch": "No se encontró ninguna coincidencia en streaming.",
+  "noSuggestionsFound": "No se encontraron sugerencias.",
+  "noSyncedLyricsFound": "No se encontraron letras sincronizadas",
+  "noTracksFound": "No se encontraron pistas en la lista de reproducción",
+  "noUsbDacDetected": "No se detectó ningún USB DAC. Conecta un dispositivo de audio USB y toca Escanear.",
+  "noUsersFound": "No se encontraron usuarios",
+  "noYoutubeResults": "No se encontraron resultados en YouTube",
+  "none": "Ninguna",
+  "nordicAurora": "Aurora nórdica",
+  "notRank": "No es rango {rank}",
+  "notRanked": "Sin rango",
+  "notRankedTop3": "FUERA DEL TOP 3",
+  "nowPlaying": "Reproduciendo ahora",
+  "nowPlayingHeader": "Sonando ahora",
+  "nowPlayingSection": "Sonando ahora",
+  "offline": "Desconectado",
+  "offlineStatus": "Fuera de línea",
+  "ok": "OK",
+  "online": "En línea",
+  "onlyScanSelected": "Solo escanear carpetas seleccionadas (por defecto encendido)",
+  "opacity": "Opacidad",
+  "opacityLabel": "Opacidad: {percent}%",
+  "openProfile": "Abrir Perfil",
+  "openSourceLicenses": "Licencias de código abierto",
+  "outputLabel": "Salida",
+  "overwrite": "Sobrescribir",
+  "overwriteLrcWarning": "Ya existe un archivo .lrc local para esta canción.\\n¿Quieres sobrescribirlo?",
+  "parsingPlaylistData": "Analizando datos de la lista de reproducción...",
+  "pathLabel": "Ruta",
+  "permissionRequired": "Permiso requerido",
+  "permissionRequiredDesc": "Se requiere el permiso de \"Acceso a todos los archivos\" para editar etiquetas. Esto permitirá modificar tus archivos de música directamente.",
+  "play": "Reproducir",
+  "playCountLabel": "{count} reproducciones",
+  "playNext": "Reproducir siguiente",
+  "playPause": "Reproducir / Pausa",
+  "playQueue": "Cola de reproducción",
+  "playback": "Reproducción",
+  "playbackError": "Error de reproducción",
+  "player": "Jugador",
+  "playingFromAlbum": "Reproduciendo desde el álbum",
+  "playingNext": "Reproduciendo a continuación",
+  "playingTrack": "Reproduciendo pista",
+  "playlistAlbumTracks": "Pistas de lista de reproducción / álbum",
+  "playlistNameHint": "Nombre de la lista",
+  "playlistNotFound": "Lista de reproducción no encontrada",
+  "playlistNotFoundOrError": "Lista de reproducción no encontrada o error del servidor",
+  "playlistReadyShare": "¡Tu lista de reproducción está lista para compartir!",
+  "playlists": "Listas de reproducción",
+  "plays": "reproducciones",
+  "popularOnSpotify": "Popular en Spotify",
+  "portuguese": "Portugués",
+  "preferredOutputFormat": "Formato de salida preferido para descargas",
+  "preparingDownload": "Preparando descarga",
+  "preparingDownloadFormat": "Preparando descarga ({format})...",
+  "preparingDownloadNotification": "Preparando descarga",
+  "presetSaved": "¡Ajuste guardado!",
+  "preview": "VISTA PREVIA",
+  "previousTrack": "Pista anterior",
+  "profileSettings": "Ajustes de perfil",
+  "profileStats": "Estadísticas del perfil",
+  "progress": "Progreso",
+  "publicSharing": "Compartir públicamente",
+  "publicSharingDesc": "Cualquiera con el código puede importar esta lista de reproducción.",
+  "publicSharingDisabledDesc": "Desactivado. Actívalo para compartir con otros.",
+  "queueIsEmpty": "La cola está vacía",
+  "queueTooltip": "Cola",
+  "queueUpdated": "Cola actualizada",
+  "quickMix": "Mix rápido",
+  "rainbowMode": "Modo arcoíris",
+  "rainyCity": "Ciudad lluviosa",
+  "rank": "Rango",
+  "rankActive": "Rango {rank} (Activo)",
+  "rankLabel": "RANGO {rank}",
+  "reBuffering": "Almacenando en búfer...",
+  "reachDailyPlaysTooltip": "Logra {count} reproducciones en un día",
+  "reachSpecificArtistTooltip": "Logra {minutes} minutos con un artista específico",
+  "reachWeeklyPlaysTooltip": "Logra {count} reproducciones en una semana",
+  "readySearchSong": "Listo. Busca una canción.",
+  "rebufferingFromCloud": "Almacenando en búfer desde la nube...",
+  "recentlyPlayed": "Reproducidas recientemente",
+  "recommendationsCount": "Recomendaciones ({count})",
+  "recommendationsSection": "Recomendaciones",
+  "rediscover": "Redescubrir",
+  "refreshLabel": "Refrescar",
+  "refreshLibrary": "Refrescar biblioteca",
+  "refreshList": "Refrescar lista",
+  "refreshLyricsTooltip": "Refrescar letras",
+  "removeAvatar": "Eliminar avatar actual",
+  "removeFromPlaylist": "Eliminar de la lista",
+  "removedFolder": "Carpeta eliminada: {folder}",
+  "rename": "Renombrar",
+  "renamePlaylist": "Renombrar lista de reproducción",
+  "repeats": "repeticiones",
+  "requiresAndroid14": "Requiere Android 14+ y un USB DAC",
+  "resamplingLabel": "Resampleo",
+  "reset": "Restablecer",
+  "resetDataUsage": "Restablecer uso de datos",
+  "resetDataUsageContent": "¿Está seguro de que desea restablecer el uso de datos? Esto no afecta a la música descargada.",
+  "resetEverything": "Restablecer todo",
+  "resetLibraryContent": "Esto eliminará la carpeta actual del reproductor. Tus archivos reales no se borrarán.",
+  "resetLibraryPath": "Restablecer ruta de la biblioteca",
+  "resetLibraryTitle": "¿Restablecer biblioteca?",
+  "resetPath": "Restablecer ruta",
+  "resetStatistics": "Restablecer estadísticas",
+  "resetStatsContent": "Esta acción no se puede deshacer.\\nTodos los conteos de reproducción y tiempo de escucha se perderán para siempre.",
+  "resetStatsTitle": "¿Restablecer estadísticas?",
+  "resetToAutomatic": "RESTABLECER A AUTOMÁTICO",
+  "resetToDefault": "Restablecer por defecto",
+  "resetUsage": "Restablecer uso",
+  "resetsIn": "SE REINICIA EN",
+  "restartContent": "Se requiere reiniciar la aplicación para aplicar los cambios del dispositivo de salida de audio.\\n\\n¿Reiniciar ahora?",
+  "restartNow": "Reiniciar ahora",
+  "restartRequired": "Reinicio necesario",
+  "restoring": "Restaurando",
+  "retryConnection": "Reintentar conexión",
+  "revert": "Revertir",
+  "russian": "Ruso",
+  "sakura": "Sakura",
+  "sampleRateLabel": "Freq. de muestreo",
+  "samplingRateLabel": "Tasa de muestreo",
+  "save": "Guardar",
+  "saveAsNewPreset": "Guardar como nuevo ajuste",
+  "saveChangesToFile": "Guardar cambios en el archivo",
+  "saveLabel": "Guardar",
+  "saveLrcPrompt": "¿Quieres guardar la letra actual como un archivo .lrc junto al audio?",
+  "saveLyricsTooltip": "Guardar letras",
+  "savePlaylistContent": "Esto creará una nueva lista de reproducción basada en estas canciones.",
+  "savePlaylistTitle": "¿Guardar \"{title}\"?",
+  "savePreset": "Guardar ajuste",
+  "savedAs": "¡Guardado como \"{name}\"!",
+  "savedAsFormat": "Guardado como {format}",
+  "savedTo": "Guardado en \"{path}\"",
+  "saving": "Guardando...",
+  "scan": "Escanear",
+  "scanToControlPlayback": "Escanea para controlar la reproducción con tu teléfono.",
+  "scanning": "Escaneando...",
+  "scrollForLyrics": "Desliza para ver las letras",
+  "search": "Buscar",
+  "searchEngine": "Motor de búsqueda",
+  "searchFailedStatus": "Fallo de búsqueda: {error}",
+  "searchHint": "Buscar...",
+  "searchSongs": "Buscar canciones...",
+  "searchSongsOrAlbumsAndArtistsHint": "Busca canciones, álbumes o artistas...",
+  "searchSpotify": "Buscar en Spotify",
+  "searchSpotifyHint": "Buscar en Spotify...",
+  "searchUsers": "Buscar usuarios...",
+  "searchYoutubeHint": "Buscar en YouTube...",
+  "searching": "Buscando...",
+  "searchingEngine": "Buscando en {engine} por '{keyword}'...",
+  "searchingSpotify": "Buscando en Spotify...",
+  "searchingSpotifyFor": "Buscando \"{keyword}\" en Spotify...",
+  "searchingStatus": "Buscando",
+  "secondShort": "seg",
+  "secsShort": "S",
+  "seeAll": "Ver todo",
+  "selectDifferentFolder": "Seleccionar otra carpeta",
+  "selectFolder": "Seleccionar carpeta",
+  "selectMatch": "Seleccionar coincidencia",
+  "selectSongToEdit": "Selecciona una canción de la lista para editar",
+  "selectStreamingQuality": "Seleccionar calidad de streaming",
+  "selectTrackToStart": "Selecciona una pista para empezar",
+  "selectVersion": "Seleccionar versión",
+  "session": "Sesión: {id}",
+  "setCountryReleases": "Establecer país para lanzamientos y listas",
+  "setCustomTimer": "Establecer temporizador personalizado",
+  "settings": "Ajustes",
+  "share": "Compartir",
+  "shareCodeUsage": "Dale este código de 6 dígitos a un amigo para que importe esta lista de reproducción.",
+  "sharePlaylist": "Compartir lista de reproducción",
+  "sharePlaylistTitle": "Compartir \"{name}\"",
+  "sharedMode": "Compartido",
+  "showAllTitles": "Mostrar todos los {count} títulos",
+  "showAnimatedWaves": "Mostrar ondas animadas en la barra del reproductor",
+  "showDebugButton": "Mostrar botón de depuración flotante",
+  "showInFolder": "Mostrar en carpeta",
+  "showLess": "Mostrar menos",
+  "showMore": "Mostrar más",
+  "showStatusDiscord": "Mostrar estado en Discord",
+  "showUnlockedOnly": "Mostrar solo desbloqueados",
+  "shuffle": "Aleatorio",
+  "shuffleAll": "Aleatorio todo",
+  "shufflingArtist": "Modo aleatorio para {artistName}...",
+  "signInWithGoogle": "Iniciar sesión con Google",
+  "signalOutput": "Salida de señal",
+  "singleTracks": "Pistas individuales",
+  "sleepTimer": "Temporizador de apagado",
+  "songAlreadyInPlaylist": "La canción ya está en la lista de reproducción",
+  "songInformation": "Información de la canción",
+  "songLabelUpper": "CANCIÓN",
+  "songTitleKeyword": "Título de canción o palabra clave",
+  "songs": "canciones",
+  "songsCount": "{count} canciones",
+  "songsInLibrary": "{count} canciones en la biblioteca",
+  "songsLoadedCount": "Cargadas {count} canciones...",
+  "southKorea": "Corea del Sur",
+  "spanish": "Español",
+  "spectrumBars": "Barras de espectro",
+  "spotify": "Spotify",
+  "standardDesc": "MP3 - Archivo más pequeño, almacenamiento en búfer más rápido",
+  "standardQuality": "Estándar (MP3)",
+  "start": "Empezar",
+  "startBulkProcess": "Iniciar proceso por lotes",
+  "startedDownloadingAll": "Se inició la descarga de todas las canciones...",
+  "stateDisabled": "Desactivado",
+  "stateEnabled": "Activado",
+  "statisticsReset": "Estadísticas restablecidas.",
+  "stats": "Estadísticas",
+  "statusLabel": "Estado",
+  "statusWithText": "Estado: {status}",
+  "stopTimer": "Parar temporizador ({time})",
+  "streaming": "Streaming",
+  "streamingQuality": "Calidad de streaming",
+  "success": "Éxito",
+  "superfanHeader": "LOGROS DE SUPERFAN",
+  "superfanTitles": "SUPERFAN",
+  "supportDeveloperTooltip": "Apoya al desarrollador para obtener el título exclusivo",
+  "switchToGridView": "Cambiar a vista de cuadrícula",
+  "switchToListView": "Cambiar a vista de lista",
+  "switchingTo": "Cambiando a",
+  "syncThemeAlbumArt": "Sincronizar tema con portada",
+  "system": "Sistema",
+  "systemDefault": "Predeterminado del sistema",
+  "targetLanguageLyrics": "Idioma de destino para la traducción de letras",
+  "thai": "Tailandés",
+  "tidalApiStatus": "Tidal API",
+  "timeBasedTitles": "BASADO EN EL TIEMPO",
+  "timeListened": "Tiempo escuchado",
+  "timeOverlordsHeader": "SOBERANOS DEL TIEMPO",
+  "timerSetForHours": "Temporizador establecido para dentro de {count} horas",
+  "timerSetForMinutes": "Temporizador establecido para dentro de {count} minutos",
+  "timerSetForSeconds": "Temporizador establecido para dentro de {count} segundos",
+  "tintBackground": "Tiñe el fondo y el visualizador con el color de la canción",
+  "title": "Título",
+  "titleLabel": "Título",
+  "todayLabel": "Hoy: {size}",
+  "toggleDebugButton": "Alternar consola de depuración flotante",
+  "toggleDebugConsole": "Alternar consola de depuración flotante",
+  "toggleLyrics": "Alternar Letras",
+  "top3GlobalTooltip": "Logra el Top 3 Global por {weeks} semanas",
+  "topArtist": "Artista top",
+  "topArtistAndTrack": "Mejor artista y pista",
+  "topArtists": "Top Artistas",
+  "topGlobalTooltip": "Logra el top {rank} global",
+  "topListeners": "Top Oyentes",
+  "totalMinutesStat": "Minutos totales",
+  "totalPlays": "Reproducciones totales",
+  "trackDetails": "Detalles de la pista",
+  "trackNumber": "Número de pista",
+  "tracks": "pistas",
+  "translateLabel": "Traducir",
+  "translateLyrics": "Traducir letras",
+  "translateLyricsTooltip": "Traducir letras",
+  "translationLanguage": "Idioma de traducción",
+  "turnOffTimer": "Apagar temporizador",
+  "unauthorize": "No autorizado",
+  "underDevelopment": "Esta función está en desarrollo",
+  "underwater": "Bajo el agua",
+  "unitedKingdom": "Reino Unido",
+  "unitedStates": "Estados Unidos",
+  "unknown": "Desconocido",
+  "unknownArtist": "Artista desconocido",
+  "unknownDevice": "Dispositivo desconocido",
+  "unlink": "Desvincular",
+  "unlinkAccount": "Desvincular cuenta",
+  "unlinkAccountDesc": "Tus estadísticas permanecerán en este dispositivo pero ya no se sincronizarán entre dispositivos.",
+  "unlinkAccountQuestion": "¿Desvincular cuenta?",
+  "unlinkFolder": "Desvincular carpeta y borrar lista de canciones",
+  "unlinkFolderClear": "Desvincular carpeta y borrar lista de canciones",
+  "unlockedCountLabel": "{unlocked} / {total} Desbloqueado",
+  "unmuteTooltip": "Desactivar silencio",
+  "unsavedChanges": "Cambios sin guardar",
+  "upNext": "Siguiente canción",
+  "upNextCount": "A continuación ({count})",
+  "upNextSection": "A continuación",
+  "updateAvailableTitle": "Actualización disponible",
+  "updateAvailableVersion": "Una nueva versión ({version}) está disponible.",
+  "updateFailed": "Error al actualizar: {error}",
+  "updateNow": "Actualizar ahora",
+  "updatePrompt": "¿Quieres descargarla e instalarla ahora?",
+  "updatingYtDlp": "Actualizando yt-dlp",
+  "usbAudioBypass": "USB Audio Bypass (Beta) - Salida directa DAC para Android 13 y versiones anteriores",
+  "usbAudioBypassBeta": "USB Audio Bypass (Beta) - Salida directa DAC para Android 13 y versiones anteriores",
+  "useDarkTheme": "Usar tema oscuro",
+  "useMixedColors": "Usar colores mezclados (prioridad a la sincronización)",
+  "verifiedDeveloper": "Desarrollador verificado",
+  "version": "Versión",
+  "versionLabel": "Versión {version}",
+  "vietnamese": "Vietnamita",
+  "viewQueue": "Ver cola",
+  "visualizer": "Visualizador",
+  "visualizerStyle": "Estilo del visualizador",
+  "wasapiExclusive": "Modo exclusivo WASAPI",
+  "weekly": "Semanal",
+  "weeks": "Semanas",
+  "winter": "Invierno",
+  "worldRanking": "Clasificación mundial",
+  "worldTopArtists": "Top Artistas Mundiales",
+  "year": "Año",
+  "youMayLike": "Te puede gustar",
+  "yourPlaylists": "Tus listas de reproducción",
+  "yourTopMix": "Tu mix top",
+  "youtube": "YouTube",
+  "ytDlpUpdateAvailable": "Una nueva versión de yt-dlp está disponible."
 }

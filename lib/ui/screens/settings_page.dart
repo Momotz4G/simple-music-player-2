@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
-import 'package:file_picker/file_picker.dart';
+import '../../utils/folder_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart'; // Import for device list
@@ -19,6 +19,8 @@ import '../../services/youtube_downloader_service.dart';
 import '../../services/metrics_service.dart';
 import '../../services/android_audio_service.dart'; // NEW
 import '../../services/usb_audio_service.dart'; // USB Audio for Android <14
+import '../../services/db_service.dart'; // ADDED
+import '../components/smart_art.dart';
 import 'admin_stats_page.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -30,6 +32,8 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   String _cacheSizeText = "";
+  int _metadataCacheCount = 0;
+  String _metadataCacheSize = "0.0 KB";
   String _versionText = "";
   final YoutubeDownloaderService _ytService = YoutubeDownloaderService();
 
@@ -44,11 +48,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _loadingAudioDevices = false;
   bool _isAndroidBitPerfectSupported = false; // NEW
 
-  // USB Audio for Android <14
-  List<UsbDacDevice> _usbDacs = [];
-  bool _loadingUsbDacs = false;
-  UsbDacDevice? _connectedDac;
-  bool _usbAudioEnabled = false;
+  // USB Audio for Android <14 (Temporarily placeholders to avoid compilation errors)
+  final List<UsbDacDevice> _usbDacs = [];
+  final bool _loadingUsbDacs = false;
 
   bool get _unsavedSingle => _formatCtrl.text != _savedPattern;
   bool get _unsavedPlaylist =>
@@ -125,9 +127,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _loadCacheSize() async {
     final size = await _ytService.getCacheSize();
+    final count = await DBService().getMetadataCacheCount();
+    final metadataSize = await DBService().getMetadataCacheSize();
     if (mounted) {
       setState(() {
         _cacheSizeText = size;
+        _metadataCacheCount = count;
+        _metadataCacheSize = metadataSize;
       });
     }
   }
@@ -176,7 +182,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Future<void> _pickDownloadPath(BuildContext context) async {
-    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    String? selectedDirectory = await FolderPicker.pickDirectory();
     if (selectedDirectory != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('custom_download_path', selectedDirectory);
@@ -207,9 +213,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(label,
           style: TextStyle(
@@ -410,7 +416,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     : AppLocalizations.of(context)!.useDarkTheme,
                 style: TextStyle(color: subtitleColor)),
             value: settings.isDarkMode,
-            activeColor: accentColor,
+            activeThumbColor: accentColor,
             // Disabled when an atmosphere is on
             onChanged: settings.atmosphereTheme != AtmosphereTheme.none
                 ? null
@@ -422,7 +428,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             subtitle: Text(AppLocalizations.of(context)!.tintBackground,
                 style: TextStyle(color: subtitleColor)),
             value: settings.syncThemeWithAlbumArt,
-            activeColor: accentColor,
+            activeThumbColor: accentColor,
             onChanged: (val) =>
                 settingsNotifier.toggleSyncThemeWithAlbumArt(val),
           ),
@@ -437,7 +443,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             child: Wrap(
               spacing: 12,
               children: accentColors.map((color) {
-                final isSelected = settings.accentColor.value == color.value;
+                final isSelected = settings.accentColor == color;
                 return GestureDetector(
                   onTap: () => settingsNotifier.setAccentColor(color),
                   child: Container(
@@ -454,7 +460,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       boxShadow: [
                         if (isSelected)
                           BoxShadow(
-                              color: color.withOpacity(0.6),
+                              color: color.withValues(alpha: 0.6),
                               blurRadius: 10,
                               spreadRadius: 2)
                       ],
@@ -538,7 +544,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             subtitle: Text(AppLocalizations.of(context)!.showAnimatedWaves,
                 style: TextStyle(color: subtitleColor)),
             value: settings.enableVisualizer,
-            activeColor: accentColor,
+            activeThumbColor: accentColor,
             onChanged: (val) => settingsNotifier.toggleVisualizer(val),
           ),
           if (settings.enableVisualizer) ...[
@@ -611,7 +617,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               subtitle: Text(AppLocalizations.of(context)!.useMixedColors,
                   style: TextStyle(color: subtitleColor)),
               value: settings.isVisualizerRainbow,
-              activeColor: accentColor,
+              activeThumbColor: accentColor,
               onChanged: (val) => settingsNotifier.toggleVisualizerRainbow(val),
             ),
           ],
@@ -627,8 +633,42 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             subtitle: Text(AppLocalizations.of(context)!.showStatusDiscord,
                 style: TextStyle(color: subtitleColor)),
             value: settings.enableDiscordRpc,
-            activeColor: accentColor,
+            activeThumbColor: accentColor,
             onChanged: (val) => settingsNotifier.toggleDiscordRpc(val),
+          ),
+          const SizedBox(height: 30),
+
+          // SEARCH ENGINE
+          // TODO: Use AppLocalizations.of(context)!.searchEngine once regenerated
+          Text(AppLocalizations.of(context)!.searchEngine.toUpperCase(),
+              style:
+                  TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Wrap(
+              spacing: 8,
+              children: [
+                _buildSearchEngineChip(
+                  context,
+                  title: AppLocalizations.of(context)!.spotify,
+                  icon: Icons.music_note_rounded,
+                  engine: SearchEngine.spotify,
+                  currentEngine: settings.searchEngine,
+                  settingsNotifier: settingsNotifier,
+                  activeColor: const Color(0xFF1DB954), // Spotify Green
+                ),
+                _buildSearchEngineChip(
+                  context,
+                  title: AppLocalizations.of(context)!.youtube,
+                  icon: Icons.play_circle_fill_rounded,
+                  engine: SearchEngine.youtube,
+                  currentEngine: settings.searchEngine,
+                  settingsNotifier: settingsNotifier,
+                  activeColor: const Color(0xFFFF0000), // YouTube Red
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 30),
 
@@ -644,7 +684,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     AppLocalizations.of(context)!.noFolderSelected,
                 style: TextStyle(color: subtitleColor)),
             trailing: TextButton(
-                onPressed: library.pickFolder,
+                onPressed: () async {
+                  try {
+                    String? result = await FolderPicker.pickDirectory();
+                    if (result != null) {
+                      // 🚀 Fire-and-forget: don't await so settings UI stays responsive
+                      library.setFolder(result);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("${AppLocalizations.of(context)!.musicFolderLocation}: $result")),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    debugPrint("⚠️ FilePicker Error: $e");
+                  }
+                },
                 child: Text(AppLocalizations.of(context)!.change,
                     style: TextStyle(color: accentColor))),
           ),
@@ -654,7 +709,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             subtitle: Text(AppLocalizations.of(context)!.onlyScanSelected,
                 style: TextStyle(color: subtitleColor)),
             value: settings.ignoreSubfolders,
-            activeColor: accentColor,
+            activeThumbColor: accentColor,
             onChanged: (val) => settingsNotifier.toggleIgnoreSubfolders(val),
           ),
           if (Platform.isAndroid || Platform.isIOS)
@@ -664,7 +719,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               subtitle: Text(AppLocalizations.of(context)!.enableAlphabetIndexerSubtitle,
                   style: TextStyle(color: subtitleColor)),
               value: settings.enableAlphabetIndexer,
-              activeColor: accentColor,
+              activeThumbColor: accentColor,
               onChanged: (val) => settingsNotifier.toggleAlphabetIndexer(val),
             ),
 
@@ -680,19 +735,27 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               label: Text(AppLocalizations.of(context)!.add,
                   style: TextStyle(color: accentColor)),
               onPressed: () async {
-                String? result = await FilePicker.platform.getDirectoryPath();
-                if (result != null) {
-                  await settingsNotifier.addMusicFolder(result);
-                  // Scan the newly added folder
-                  await library.scanAdditionalFolder(result);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(AppLocalizations.of(context)!
-                              .addedFolder(
-                                  result.split(Platform.pathSeparator).last))),
-                    );
+                try {
+                  String? result = await FolderPicker.pickDirectory();
+                  if (result != null) {
+                    await settingsNotifier.addMusicFolder(result);
+                    // Scan the newly added folder
+                    library.scanAdditionalFolder(result); // Fire and forget so we don't freeze the UI 
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(AppLocalizations.of(context)!
+                                .addedFolder(
+                                    result.split(Platform.pathSeparator).last))),
+                      );
+                    }
                   }
+                } catch (e) {
+                   if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Error picking folder: $e")),
+                      );
+                   }
                 }
               },
             ),
@@ -712,7 +775,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     message: folder, // Show full path on hover
                     child: Chip(
                       backgroundColor: isDark
-                          ? Colors.white.withOpacity(0.1)
+                          ? Colors.white.withValues(alpha: 0.1)
                           : Colors.grey[200],
                       avatar: Icon(Icons.folder, size: 18, color: accentColor),
                       label: Text(
@@ -886,7 +949,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       value: 'm4a',
                       child: Text(AppLocalizations.of(context)!.highQuality)),
                   DropdownMenuItem(value: 'aac', child: Text("AAC (Raw)")),
-                  DropdownMenuItem(
+                  const DropdownMenuItem(
                       value: 'flac', child: Text("FLAC (Lossless)")),
                 ],
                 onChanged: (String? newFormat) {
@@ -905,13 +968,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                    const Icon(Icons.info_outline, color: Colors.orange, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1031,13 +1094,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.high_quality, color: Colors.blue, size: 20),
+                    const Icon(Icons.high_quality, color: Colors.blue, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1071,7 +1134,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     subtitle: Text(AppLocalizations.of(context)!.autoAddSimilar,
                         style: TextStyle(color: subtitleColor)),
                     value: playerState.endlessQueueEnabled,
-                    activeColor: accentColor,
+                    activeThumbColor: accentColor,
                     onChanged: (_) => playerNotifier.toggleEndlessQueue(),
                   ),
                   SwitchListTile(
@@ -1081,7 +1144,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         AppLocalizations.of(context)!.gaplessPlaybackDesc,
                         style: TextStyle(color: subtitleColor)),
                     value: settings.gaplessPlayback,
-                    activeColor: accentColor,
+                    activeThumbColor: accentColor,
                     onChanged: (val) =>
                         settingsNotifier.toggleGaplessPlayback(val),
                   ),
@@ -1108,7 +1171,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           max: 12,
                           divisions: 120,
                           activeColor: accentColor,
-                          inactiveColor: accentColor.withOpacity(0.2),
+                          inactiveColor: accentColor.withValues(alpha: 0.2),
                           onChanged: (val) =>
                               settingsNotifier.setCrossfadeDuration(val),
                         ),
@@ -1125,7 +1188,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             subtitle: Text(AppLocalizations.of(context)!.hideRomajiPinyin,
                 style: TextStyle(color: subtitleColor)),
             value: settings.disableRomanization,
-            activeColor: accentColor,
+            activeThumbColor: accentColor,
             onChanged: (val) => settingsNotifier.toggleDisableRomanization(val),
           ),
           ListTile(
@@ -1208,7 +1271,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             subtitle: Text(AppLocalizations.of(context)!.hideCanvas,
                 style: TextStyle(color: subtitleColor)),
             value: settings.disableCanvas,
-            activeColor: accentColor,
+            activeThumbColor: accentColor,
             onChanged: (val) => settingsNotifier.toggleDisableCanvas(val),
           ),
 
@@ -1224,7 +1287,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 style: TextStyle(color: subtitleColor),
               ),
               value: settings.wasapiExclusive,
-              activeColor: accentColor,
+              activeThumbColor: accentColor,
               onChanged: (val) {
                 settingsNotifier.toggleWasapiExclusive(val);
                 _showRestartDialog(context);
@@ -1243,7 +1306,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 style: TextStyle(color: subtitleColor),
               ),
               value: settings.androidBitPerfect,
-              activeColor: accentColor,
+              activeThumbColor: accentColor,
               onChanged: _isAndroidBitPerfectSupported
                   ? (val) {
                       settingsNotifier.toggleAndroidBitPerfect(val);
@@ -1517,6 +1580,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             },
             dense: true,
           ),
+          if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) // Desktop only
+            SwitchListTile(
+              title: Text(AppLocalizations.of(context)!.minimizeToTray,
+                  style: TextStyle(color: textColor)),
+              subtitle: Text(AppLocalizations.of(context)!.minimizeToTrayDescription,
+                  style: TextStyle(color: subtitleColor)),
+              value: settings.minimizeToTrayOnClose,
+              activeThumbColor: accentColor,
+              onChanged: (val) => settingsNotifier.toggleMinimizeToTrayOnClose(val),
+            ),
           const SizedBox(height: 24),
 
           // DATA & CLEANUP
@@ -1608,29 +1681,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             trailing: IconButton(
               icon: const Icon(Icons.refresh_rounded, color: Colors.grey),
-              tooltip: "Reset Usage",
+              tooltip: AppLocalizations.of(context)!.resetUsage,
               onPressed: () {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
                     backgroundColor: Theme.of(context).cardColor,
-                    title: Text("Reset Data Usage",
+                    title: Text(AppLocalizations.of(context)!.resetDataUsage,
                         style: TextStyle(color: textColor)),
                     content: Text(
-                        "Are you sure you want to reset data usage? This does not affect downloaded music.",
+                        AppLocalizations.of(context)!.resetDataUsageContent,
                         style: TextStyle(color: textColor)),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         child:
-                            Text("Cancel", style: TextStyle(color: textColor)),
+                            Text(AppLocalizations.of(context)!.cancel, style: TextStyle(color: textColor)),
                       ),
                       TextButton(
                         onPressed: () {
                           ref.read(dataUsageProvider.notifier).reset();
                           Navigator.pop(context);
                         },
-                        child: const Text("Reset",
+                        child: Text(AppLocalizations.of(context)!.reset,
                             style: TextStyle(color: Colors.red)),
                       ),
                     ],
@@ -1650,15 +1723,35 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             onTap: () async {
               await _ytService.clearCache();
               if (context.mounted) {
-                setState(() {
-                  _cacheSizeText = "0.0 MB";
-                });
+                _loadCacheSize();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                       content:
                           Text(AppLocalizations.of(context)!.cacheCleared)),
                 );
+              }
+            },
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Icon(Icons.auto_awesome_motion_rounded, color: Colors.purple[400]),
+            title: Text(AppLocalizations.of(context)!.clearMetadataCache, 
+                style: TextStyle(color: textColor)),
+            subtitle: Text(
+                "$_metadataCacheCount items • $_metadataCacheSize",
+                style: TextStyle(color: subtitleColor)),
+            onTap: () async {
+              await DBService().clearMetadataCache();
+              SmartArt.clearAllMemoryCaches();
+              
+              // 🚀 Trigger full library rescan
+              ref.read(libraryProvider.notifier).refreshLibrary();
+              
+              if (context.mounted) {
                 _loadCacheSize();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(AppLocalizations.of(context)!.metadataCacheCleared)),
+                );
               }
             },
           ),
@@ -1720,7 +1813,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             subtitle: Text(AppLocalizations.of(context)!.toggleDebugConsole,
                 style: TextStyle(color: subtitleColor)),
             value: settings.showDebugButton,
-            activeColor: accentColor,
+            activeThumbColor: accentColor,
             onChanged: (val) => settingsNotifier.toggleShowDebugButton(val),
           ),
           const SizedBox(height: 30),
@@ -1822,7 +1915,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               child: Text(
                 _versionText,
                 style: TextStyle(
-                    color: subtitleColor?.withOpacity(0.5), fontSize: 12),
+                    color: subtitleColor?.withValues(alpha: 0.5), fontSize: 12),
               ),
             ),
           ),
@@ -1854,9 +1947,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: accentColor.withOpacity(0.3)),
+              border: Border.all(color: accentColor.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -1886,7 +1979,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               Flexible(
                 child: Text(
                   AppLocalizations.of(context)!.usbAudioBypass,
-                  style: TextStyle(color: textColor.withOpacity(0.5)),
+                  style: TextStyle(color: textColor.withValues(alpha: 0.5)),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -1894,9 +1987,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.2),
+                  color: Colors.orange.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
                 ),
                 child: Text(
                   AppLocalizations.of(context)!.comingSoon,
@@ -1911,159 +2004,70 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           subtitle: Text(
             AppLocalizations.of(context)!.underDevelopment,
-            style: TextStyle(color: subtitleColor?.withOpacity(0.5)),
+            style: TextStyle(color: subtitleColor?.withAlpha(128)),
           ),
           value: false,
-          activeColor: accentColor,
+          activeThumbColor: accentColor,
           onChanged: null, // Disabled
         ),
+        const SizedBox(height: 8),
 
-        // DAC List (when enabled) - Temporarily hidden while feature is under development
-        if (false && _usbAudioEnabled) ...[
-          // Scan button
+        // DAC List
+        if (_usbDacs.isEmpty && !_loadingUsbDacs)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    AppLocalizations.of(context)!.connectedUsbDacs,
-                    style: TextStyle(
-                      color: textColor,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: _loadingUsbDacs ? null : _scanForUsbDacs,
-                  icon: _loadingUsbDacs
-                      ? SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: accentColor,
-                          ),
-                        )
-                      : Icon(Icons.refresh, color: accentColor, size: 16),
-                  label: Text(
-                    _loadingUsbDacs
-                        ? AppLocalizations.of(context)!.scanning
-                        : AppLocalizations.of(context)!.scan,
-                    style: TextStyle(color: accentColor),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // DAC List
-          if (_usbDacs.isEmpty && !_loadingUsbDacs)
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: subtitleColor, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.noUsbDacDetected,
-                        style: TextStyle(color: subtitleColor, fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
               ),
-            )
-          else
-            ...List.generate(_usbDacs.length, (index) {
-              final dac = _usbDacs[index];
-              final isConnected = _connectedDac?.vendorId == dac.vendorId &&
-                  _connectedDac?.productId == dac.productId;
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: subtitleColor, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.noUsbDacDetected,
+                      style: TextStyle(color: subtitleColor, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...List.generate(_usbDacs.length, (index) {
+            final dac = _usbDacs[index];
 
-              return ListTile(
-                leading: Icon(
-                  Icons.speaker_rounded,
-                  color: isConnected ? Colors.green : accentColor,
+            return ListTile(
+              leading: Icon(
+                Icons.speaker_rounded,
+                color: accentColor,
+              ),
+              title: Text(
+                dac.deviceName,
+                style: TextStyle(color: textColor),
+              ),
+              subtitle: Text(
+                "VID:${dac.vendorId.toRadixString(16).toUpperCase()} PID:${dac.productId.toRadixString(16).toUpperCase()}",
+                style: TextStyle(color: subtitleColor, fontSize: 11),
+              ),
+              trailing: TextButton(
+                  onPressed: () {},
+                  child: Text(AppLocalizations.of(context)!.connect,
+                      style: TextStyle(color: accentColor)),
                 ),
-                title: Text(
-                  dac.deviceName,
-                  style: TextStyle(color: textColor),
-                ),
-                subtitle: Text(
-                  "VID:${dac.vendorId.toRadixString(16).toUpperCase()} PID:${dac.productId.toRadixString(16).toUpperCase()}",
-                  style: TextStyle(color: subtitleColor, fontSize: 11),
-                ),
-                trailing: isConnected
-                    ? Chip(
-                        label: Text(AppLocalizations.of(context)!.connected),
-                        backgroundColor: Colors.green.withOpacity(0.2),
-                        labelStyle: const TextStyle(
-                          color: Colors.green,
-                          fontSize: 11,
-                        ),
-                      )
-                    : TextButton(
-                        onPressed: () => _connectToDac(dac),
-                        child: Text(AppLocalizations.of(context)!.connect,
-                            style: TextStyle(color: accentColor)),
-                      ),
-              );
-            }),
-        ],
+            );
+          }),
 
         const SizedBox(height: 8),
       ],
     );
   }
 
-  Future<void> _scanForUsbDacs() async {
-    setState(() => _loadingUsbDacs = true);
-    try {
-      final dacs = await UsbAudioService.getConnectedDacs();
-      if (mounted) {
-        setState(() {
-          _usbDacs = dacs;
-          _loadingUsbDacs = false;
-        });
-      }
-    } catch (e) {
-      debugPrint("Error scanning USB DACs: $e");
-      if (mounted) setState(() => _loadingUsbDacs = false);
-    }
-  }
-
-  Future<void> _connectToDac(UsbDacDevice dac) async {
-    // Use the PlayerNotifier to enable bypass (this also opens the DAC)
-    final playerNotifier = ref.read(playerProvider.notifier);
-    final success = await playerNotifier.enableUsbAudioBypass(dac);
-    if (success) {
-      setState(() => _connectedDac = dac);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!
-                  .connectedToDac(dac.deviceName))),
-        );
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.failedToConnectDac)),
-        );
-      }
-    }
-  }
 
   // Admin Tap Logic
   int _adminTapCount = 0;
@@ -2217,7 +2221,42 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: isSelected ? activeColor : Colors.grey.withOpacity(0.3),
+          color: isSelected ? activeColor : Colors.grey.withValues(alpha: 0.3),
+        ),
+      ),
+      showCheckmark: false,
+    );
+  }
+
+  Widget _buildSearchEngineChip(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required SearchEngine engine,
+    required SearchEngine currentEngine,
+    required SettingsNotifier settingsNotifier,
+    required Color activeColor,
+  }) {
+    final bool isSelected = engine == currentEngine;
+    final Color textColor = isSelected ? Colors.white : Colors.grey;
+    final Color iconColor = isSelected ? Colors.white : activeColor;
+
+    return ChoiceChip(
+      label: Text(title,
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+      selected: isSelected,
+      onSelected: (val) {
+        if (val) {
+          settingsNotifier.setSearchEngine(engine);
+        }
+      },
+      avatar: Icon(icon, color: iconColor, size: 18),
+      selectedColor: activeColor,
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isSelected ? activeColor : Colors.grey.withValues(alpha: 0.3),
         ),
       ),
       showCheckmark: false,

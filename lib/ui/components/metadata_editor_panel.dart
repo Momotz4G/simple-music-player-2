@@ -153,7 +153,7 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
       label: Text(AppLocalizations.of(context)!.autoFixComingSoon),
       onPressed: null,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.purpleAccent.withOpacity(0.5),
+        backgroundColor: Colors.purpleAccent.withValues(alpha: 0.5),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 18),
         disabledBackgroundColor: Colors.grey[800],
@@ -246,7 +246,7 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
                               ? widget.state.statusMessage
                               : AppLocalizations.of(context)!.failedToUpdateMetadata,
                           icon: Icons.error_outline,
-                          backgroundColor: Colors.redAccent.withOpacity(0.9),
+                          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
                           centered: true,
                         );
                       }
@@ -308,7 +308,7 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
                       title: "Search Failed",
                       subtitle: e.toString(),
                       icon: Icons.error_outline,
-                      backgroundColor: Colors.redAccent.withOpacity(0.9),
+                      backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
                       centered: true,
                     );
                   }
@@ -329,7 +329,7 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
                   title: "Search Failed",
                   subtitle: e.toString(),
                   icon: Icons.error_outline,
-                  backgroundColor: Colors.redAccent.withOpacity(0.9),
+                  backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
                   centered: true,
                 );
               }

@@ -5,6 +5,7 @@ import '../../providers/library_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../services/spotify_service.dart';
 import '../../services/deezer_service.dart';
+import '../../services/db_service.dart';
 import '../../l10n/app_localizations.dart';
 
 class ArtistsPage extends ConsumerWidget {
@@ -15,8 +16,8 @@ class ArtistsPage extends ConsumerWidget {
     final libraryProviderInstance = ref.watch(libraryProvider);
     final groupedArtists = ref.watch(groupedArtistsProvider);
 
-    // 1. Loading State
-    if (libraryProviderInstance.isLoading) {
+    // 1. Loading State (from library provider)
+    if (libraryProviderInstance.isLoading && groupedArtists.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -47,15 +48,15 @@ class ArtistsPage extends ConsumerWidget {
     }
 
     // 3. The Grid
+    // 🚀 Note: Sorting is now handled synchronously for instant feedback
     final artists = groupedArtists.keys.toList();
-    artists.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: GridView.builder(
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 200,
-          childAspectRatio: 0.8, // Slightly taller for the name text
+          childAspectRatio: 0.8,
           crossAxisSpacing: 20,
           mainAxisSpacing: 20,
         ),
@@ -64,13 +65,11 @@ class ArtistsPage extends ConsumerWidget {
           final artistName = artists[index];
           final artistSongs = groupedArtists[artistName]!;
           final songCount = artistSongs.length;
-
-          // Grab a sample song to help Spotify find the correct artist ID
-          final anchorSong = artistSongs.isNotEmpty ? artistSongs.first : null;
+          final anchorSong =
+              artistSongs.isNotEmpty ? artistSongs.first : null;
 
           return InkWell(
             onTap: () {
-              // 🚀 FIX: Use Provider Navigation instead of Push
               ref.read(navigationStackProvider.notifier).push(
                     NavigationItem(
                       type: NavigationType.artist,
@@ -84,32 +83,31 @@ class ArtistsPage extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
             child: Column(
               children: [
-                // 🚀 SMART AVATAR WIDGET
                 Expanded(
                   child: AspectRatio(
                     aspectRatio: 1,
                     child: ArtistAvatar(
                       artistName: artistName,
-                      sampleTrack:
-                          anchorSong?.title, // Pass title for verification
+                      sampleTrack: anchorSong?.title,
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   artistName,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 14),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  AppLocalizations.of(context)!.songsCount(songCount),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                    fontSize: 12,
+                  "$songCount ${AppLocalizations.of(context)!.songs}",
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
                   ),
                 ),
               ],
@@ -121,139 +119,62 @@ class ArtistsPage extends ConsumerWidget {
   }
 }
 
-// ARTIST AVATAR WIDGET
-// Handles fetching, caching, and displaying Spotify Images
-class ArtistAvatar extends StatefulWidget {
+class ArtistAvatar extends ConsumerStatefulWidget {
   final String artistName;
-  final String? sampleTrack; // Used to anchor the search to the correct artist
+  final String? sampleTrack;
 
-  const ArtistAvatar({
-    super.key,
-    required this.artistName,
-    this.sampleTrack,
-  });
+  const ArtistAvatar({super.key, required this.artistName, this.sampleTrack});
 
   @override
-  State<ArtistAvatar> createState() => _ArtistAvatarState();
+  ConsumerState<ArtistAvatar> createState() => _ArtistAvatarState();
 }
 
-class _ArtistAvatarState extends State<ArtistAvatar> {
-  // Static cache to prevent re-fetching the same URL when scrolling
-  static final Map<String, String?> _urlCache = {};
-
-  String? _imageUrl;
-  bool _isLoading = true;
+class _ArtistAvatarState extends ConsumerState<ArtistAvatar> {
+  String? _cachedArtUrl;
 
   @override
   void initState() {
     super.initState();
-    _fetchImage();
+    _loadCache();
   }
 
-  Future<void> _fetchImage() async {
-    // 1. Check Memory Cache first
-    if (_urlCache.containsKey(widget.artistName)) {
-      if (mounted) {
-        setState(() {
-          _imageUrl = _urlCache[widget.artistName];
-          _isLoading = false;
-        });
-      }
-      return;
-    }
-
-    // RATE LIMIT FIX:
-    // Add a randomized delay (0-3000ms) to spread out requests over a longer window.
-    await Future.delayed(
-        Duration(milliseconds: (widget.artistName.hashCode % 3000)));
-
-    String? url;
+  Future<void> _loadCache() async {
     try {
-      // 2. Fetch from Spotify API (Deep Search)
-      url = await SpotifyService.getArtistImage(
-        artistName: widget.artistName,
-        trackTitle: widget.sampleTrack, // DEEP SEARCH ENABLED
-      );
-    } catch (e) {
-      print("⚠️ Spotify Artist Image error: $e");
-    }
-
-    // 3. Fallback to Deezer if Spotify returned null or threw error
-    if (url == null) {
-      print(
-          "⚠️ Spotify Image null/failed for ${widget.artistName}, trying Deezer...");
-      try {
-        final deezerArtist = await DeezerService.getArtist(widget.artistName);
-        if (deezerArtist != null && deezerArtist.imageUrl.isNotEmpty) {
-          url = deezerArtist.imageUrl;
-        }
-      } catch (e2) {
-        print("⚠️ Deezer Artist Image failed: $e2");
+      final cached = await DBService().getArtCache("profile:${widget.artistName}");
+      if (cached != null && cached.isNotEmpty && mounted) {
+        setState(() => _cachedArtUrl = cached);
       }
-    }
-
-    // Update Cache & State
-    if (url != null) {
-      _urlCache[widget.artistName] = url;
-    }
-
-    if (mounted) {
-      setState(() {
-        _imageUrl = url;
-        _isLoading = false;
-      });
-    }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // 🚀 Check Spotify then Deezer for artist art if local is missing
+    final spotifyArt = ref.watch(spotifyArtistArtProvider(widget.artistName));
+    final deezerArt = ref.watch(deezerArtistArtProvider(widget.artistName));
+
+    final artUrl = _cachedArtUrl ?? spotifyArt.value ?? deezerArt.value;
 
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isDark ? Colors.grey[850] : Colors.grey[200],
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: Colors.grey.withValues(alpha: 0.1),
+        image: artUrl != null
+            ? DecorationImage(
+                image: NetworkImage(artUrl),
+                fit: BoxFit.cover,
+              )
+            : null,
       ),
-      child: ClipOval(
-        child: _buildContent(isDark),
-      ),
-    );
-  }
-
-  Widget _buildContent(bool isDark) {
-    if (_isLoading) {
-      // Show small loading spinner inside the circle
-      return const Padding(
-        padding: EdgeInsets.all(32.0),
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-    }
-
-    if (_imageUrl != null && _imageUrl!.isNotEmpty) {
-      return Image.network(
-        _imageUrl!,
-        fit: BoxFit.cover,
-        // 🚀 MEMORY FIX: Force decoding to small size (thumbnail)
-        cacheWidth: 200,
-        errorBuilder: (c, e, s) => _buildPlaceholder(isDark),
-      );
-    }
-
-    return _buildPlaceholder(isDark);
-  }
-
-  Widget _buildPlaceholder(bool isDark) {
-    return Icon(
-      Icons.person,
-      size: 60,
-      color: isDark ? Colors.grey[700] : Colors.grey[400],
+      child: artUrl == null
+          ? Center(
+              child: Icon(
+                Icons.person_rounded,
+                size: 48,
+                color: Colors.grey.withValues(alpha: 0.5),
+              ),
+            )
+          : null,
     );
   }
 }

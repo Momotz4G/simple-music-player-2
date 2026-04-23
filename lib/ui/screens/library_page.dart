@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as p_path;
+import '../../utils/folder_picker.dart';
 
 import '../../providers/library_provider.dart';
 import '../../providers/player_provider.dart';
@@ -36,6 +39,8 @@ class LibraryPage extends ConsumerStatefulWidget {
 class _LibraryPageState extends ConsumerState<LibraryPage> {
   final TextEditingController _searchCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  Timer? _searchDebounce;
+  List<SongModel> _stableGridSongs = const [];
 
   @override
   void initState() {
@@ -117,7 +122,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        Icon(Icons.search, color: iconColor, size: 22),
+                        Icon(Icons.search, color: titleColor.withValues(alpha: 0.5), size: 22),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
@@ -125,14 +130,19 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                             decoration: InputDecoration(
                               hintText:
                                   AppLocalizations.of(context)!.searchSongs,
-                              hintStyle: const TextStyle(
-                                  color: Colors.grey, fontSize: 15),
+                              hintStyle: TextStyle(
+                                  color: titleColor.withValues(alpha: 0.3), fontSize: 15),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.only(bottom: 4),
                             ),
                             style: TextStyle(color: titleColor, fontSize: 15),
                             cursorColor: Theme.of(context).primaryColor,
-                            onChanged: (value) => library.search(value),
+                            onChanged: (value) {
+                              _searchDebounce?.cancel();
+                              _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+                                library.search(value);
+                              });
+                            },
                           ),
                         ),
                       ],
@@ -297,7 +307,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                 Container(
                   height: 20,
                   width: 1,
-                  color: iconColor?.withOpacity(0.3),
+                  color: iconColor?.withValues(alpha: 0.3),
                 ),
                 const SizedBox(width: 12),
 
@@ -505,145 +515,213 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
       bool isDark,
       Color textColor) {
     final settings = ref.watch(settingsProvider);
-    List<SongModel> displaySongs = ref.watch(sortedSongsProvider);
+    final hasTheme = settings.atmosphereTheme != AtmosphereTheme.none;
+    final titleColor = textColor; // Resolve titleColor errors in overlay
+
+    List<SongModel> displaySongs = ref.watch(displaySortedSongsProvider);
     if (presentationState.selectedFolderPath != null) {
       final groupedFolders = ref.watch(groupedFoldersProvider);
       displaySongs =
           groupedFolders[presentationState.selectedFolderPath!] ?? [];
     }
 
-    if (displaySongs.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.music_off_rounded, size: 48, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              presentationState.selectedFolderPath != null
-                  ? "No songs in folder '${p_path.basename(presentationState.selectedFolderPath!)}'"
-                  : AppLocalizations.of(context)!.noSongsInFolder,
-              style: TextStyle(color: textColor, fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            if (presentationState.selectedFolderPath != null)
-              OutlinedButton(
-                onPressed: () => ref
-                    .read(libraryPresentationProvider.notifier)
-                    .clearFolderFilter(),
-                child: const Text("Show All Songs"),
-              )
-            else
-              OutlinedButton(
-                onPressed: library.pickFolder,
-                child:
-                    Text(AppLocalizations.of(context)!.selectDifferentFolder),
-              ),
-          ],
-        ),
-      );
+    // 🚀 STABLE GRID: Cache last non-empty results so the grid/list
+    // retains its tiles instead of mass-disposing them (which deadlocks Win32).
+    if (displaySongs.isNotEmpty) {
+      _stableGridSongs = displaySongs;
     }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final gridSongs = _stableGridSongs;
+    return Stack(
       children: [
-        if (presentationState.selectedFolderPath != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Row(
-              children: [
-                Icon(Icons.folder_open_rounded,
-                    color: textColor.withValues(alpha: 0.5), size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  p_path.basename(presentationState.selectedFolderPath!),
-                  style: TextStyle(
-                      color: textColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (presentationState.selectedFolderPath != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.folder_open_rounded,
+                        color: textColor.withValues(alpha: 0.5), size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      p_path.basename(presentationState.selectedFolderPath!),
+                      style: TextStyle(
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
+                    ),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () => ref
+                          .read(libraryPresentationProvider.notifier)
+                          .clearFolderFilter(),
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                      label: const Text("Clear Filter"),
+                    ),
+                  ],
                 ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () => ref
-                      .read(libraryPresentationProvider.notifier)
-                      .clearFolderFilter(),
-                  icon: const Icon(Icons.close_rounded, size: 18),
-                  label: const Text("Clear Filter"),
-                ),
-              ],
-            ),
-          ),
-        Expanded(
-          child: Stack(
-            children: [
-              isGridView
-                  ? GridView.builder(
-                      key: const PageStorageKey('library_songs_grid'),
-                      padding: const EdgeInsets.only(bottom: 120),
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 200,
-                        childAspectRatio: 0.75,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                      ),
-                      itemCount: displaySongs.length,
-                      itemBuilder: (context, index) => SongGridTile(
-                        song: displaySongs[index],
-                        allSongs: displaySongs,
-                        isDark: isDark,
-                      ),
-                    )
-                  : ListView.separated(
-                      key: const PageStorageKey('library_songs_list'),
-                      controller: _scrollController,
-                      padding: EdgeInsets.only(
-                          bottom: 120,
-                          right: settings.enableAlphabetIndexer ? 30 : 0),
-                      itemCount: displaySongs.length,
-                      separatorBuilder: (ctx, i) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) => SongListTile(
-                        song: displaySongs[index],
-                        allSongs: displaySongs,
-                        index: index,
-                        isDark: isDark,
+              ),
+            Expanded(
+              child: Stack(
+                children: [
+                  // 🚀 STRUCTURAL PRESERVATION GRID:
+                  // This Grid/List remains in the tree at all times with the cached gridSongs.
+                  // It is visually hidden by the full-screen overlay below when search hits zero.
+                  isGridView
+                      ? GridView.builder(
+                          key: const PageStorageKey('library_songs_grid'),
+                          padding: const EdgeInsets.only(bottom: 120),
+                          gridDelegate:
+                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 200,
+                            childAspectRatio: 0.75,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                          itemCount: gridSongs.length,
+                          itemBuilder: (context, index) => SongGridTile(
+                            song: gridSongs[index],
+                            allSongs: gridSongs,
+                            isDark: isDark,
+                          ),
+                        )
+                      : ListView.separated(
+                          key: const PageStorageKey('library_songs_list'),
+                          controller: _scrollController,
+                          padding: EdgeInsets.only(
+                              bottom: 120,
+                              right: settings.enableAlphabetIndexer ? 30 : 0),
+                          itemCount: gridSongs.length,
+                          separatorBuilder: (ctx, i) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) => SongListTile(
+                            song: gridSongs[index],
+                            allSongs: gridSongs,
+                            index: index,
+                            isDark: isDark,
+                          ),
+                        ),
+
+                  // 🚀 PERMANENT INDEXER:
+                  // We NEVER remove the Indexer from the tree to avoid Win32 deadlocks.
+                  if (!isGridView && settings.enableAlphabetIndexer)
+                    Positioned(
+                      right: 2,
+                      top: 0,
+                      bottom: 110,
+                      width: 28,
+                      child: _AlphabetIndexer(
+                        songs: displaySongs,
+                        sortBy: presentationState.sortBy,
+                        onLetterSelected: (letter) {
+                          final index = displaySongs.indexWhere((s) {
+                            String matchStr = s.title;
+                            if (presentationState.sortBy ==
+                                LibrarySort.artist) {
+                              matchStr = s.artist;
+                            } else if (presentationState.sortBy ==
+                                LibrarySort.fileName) {
+                              matchStr = p_path.basename(s.filePath);
+                            }
+
+                            matchStr = matchStr.trim();
+                            if (matchStr.isEmpty) return false;
+                            final firstChar = matchStr[0].toUpperCase();
+                            if (letter == '#') {
+                              return RegExp(r'[^a-zA-Z]')
+                                  .hasMatch(firstChar);
+                            }
+                            return firstChar == letter;
+                          });
+                          if (index != -1) {
+                            _scrollController.jumpTo(index * 80.0);
+                          }
+                        },
                       ),
                     ),
-              if (!isGridView && settings.enableAlphabetIndexer)
-                Positioned(
-                  right: 2,
-                  top: 0,
-                  bottom: 110,
-                  width: 28,
-                  child: _AlphabetIndexer(
-                    songs: displaySongs,
-                    sortBy: presentationState.sortBy,
-                    onLetterSelected: (letter) {
-                      final index = displaySongs.indexWhere((s) {
-                        String matchStr = s.title;
-                        if (presentationState.sortBy == LibrarySort.artist) {
-                          matchStr = s.artist;
-                        } else if (presentationState.sortBy == LibrarySort.fileName) {
-                          matchStr = p_path.basename(s.filePath);
-                        }
-                        
-                        matchStr = matchStr.trim();
-                        if (matchStr.isEmpty) return false;
-                        final firstChar = matchStr[0].toUpperCase();
-                        if (letter == '#') {
-                          return RegExp(r'[^a-zA-Z]').hasMatch(firstChar);
-                        }
-                        return firstChar == letter;
-                      });
-                      if (index != -1) {
-                        _scrollController.jumpTo(index * 80.0);
-                      }
-                    },
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        // 🚀 FULL-VIEWPORT OVERLAY:
+        // By placing this in the outer Stack, we ignore the 32px horizontal padding
+        // of the parent Column and cover the entire screen edge-to-edge.
+        if (displaySongs.isEmpty)
+          Positioned.fill(
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  // 🚀 TRUE ATMOSPHERIC GLASS:
+                  // We match your grid cards exactly by using a dark tint in dark mode,
+                  // but with a lower alpha (0.08) to make it even smoother.
+                  color: hasTheme
+                      ? (isDark
+                          ? Colors.black.withValues(alpha: 0.08)
+                          : Colors.white.withValues(alpha: 0.1))
+                      : Theme.of(context)
+                          .scaffoldBackgroundColor
+                          .withValues(alpha: 0.85),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // 🚀 ICON THEMING: Use accent color for thematic pop
+                        Icon(Icons.music_off_rounded,
+                            size: 80, color: Theme.of(context).primaryColor.withValues(alpha: 0.9)),
+                        const SizedBox(height: 24),
+                        Text(
+                          presentationState.selectedFolderPath != null
+                              ? "No songs in folder '${p_path.basename(presentationState.selectedFolderPath!)}'"
+                              : AppLocalizations.of(context)!.noSongsInFolder,
+                          style: TextStyle(
+                              color: titleColor,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 10,
+                                )
+                              ]),
+                        ),
+                        const SizedBox(height: 24),
+                        if (presentationState.selectedFolderPath != null)
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.5)),
+                              foregroundColor: titleColor,
+                            ),
+                            onPressed: () => ref
+                                .read(libraryPresentationProvider.notifier)
+                                .clearFolderFilter(),
+                            child: const Text("Show All Songs"),
+                          )
+                        else
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.5)),
+                              foregroundColor: titleColor,
+                            ),
+                            onPressed: () async {
+                              final path = await FolderPicker.pickDirectory();
+                              if (path != null) {
+                                library.setFolder(path);
+                              }
+                            },
+                            child: Text(AppLocalizations.of(context)!
+                                .selectDifferentFolder),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-            ],
+              ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -934,7 +1012,12 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
             )
           else
             OutlinedButton.icon(
-              onPressed: library.pickFolder,
+              onPressed: () async {
+                final path = await FolderPicker.pickDirectory();
+                if (path != null) {
+                  library.setFolder(path);
+                }
+              },
               icon: const Icon(Icons.folder_open_rounded),
               label: Text(AppLocalizations.of(context)!.selectDifferentFolder),
             ),
@@ -947,7 +1030,12 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
       BuildContext context, LibraryProvider library, Color textColor) {
     return Center(
       child: OutlinedButton(
-        onPressed: library.pickFolder,
+        onPressed: () async {
+          final path = await FolderPicker.pickDirectory();
+          if (path != null) {
+            library.setFolder(path);
+          }
+        },
         style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Colors.grey),
             foregroundColor: textColor),
@@ -1332,6 +1420,44 @@ class _AlphabetIndexer extends StatefulWidget {
 class _AlphabetIndexerState extends State<_AlphabetIndexer> {
   final List<String> _alphabet = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   String? _activeLetter;
+  Set<String> _availableLetters = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _computeAvailableLetters();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AlphabetIndexer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.songs != oldWidget.songs || widget.sortBy != oldWidget.sortBy) {
+      _computeAvailableLetters();
+    }
+  }
+
+  void _computeAvailableLetters() {
+    final Set<String> letters = {};
+    for (final s in widget.songs) {
+      final str = _getSongSortString(s).trim();
+      if (str.isEmpty) continue;
+      
+      final firstChar = str[0].toUpperCase();
+      final codeUnit = firstChar.codeUnitAt(0);
+      
+      // A-Z is 65-90
+      if (codeUnit >= 65 && codeUnit <= 90) {
+        letters.add(firstChar);
+      } else {
+        letters.add('#');
+      }
+      
+      if (letters.length == 27) break; // Optimization: all found
+    }
+    setState(() {
+      _availableLetters = letters;
+    });
+  }
 
   String _getSongSortString(SongModel s) {
     switch (widget.sortBy) {
@@ -1378,16 +1504,7 @@ class _AlphabetIndexerState extends State<_AlphabetIndexer> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: _alphabet.map((letter) {
-                final isPresent = widget.songs.any((s) {
-                  final matchStr = _getSongSortString(s).trim();
-                  if (matchStr.isEmpty) return false;
-                  final firstChar = matchStr[0].toUpperCase();
-                  if (letter == '#') {
-                    return RegExp(r'[^a-zA-Z]').hasMatch(firstChar);
-                  }
-                  return firstChar == letter;
-                });
-
+                final isPresent = _availableLetters.contains(letter);
                 final isCurrent = _activeLetter == letter;
 
                 return Expanded(
@@ -1401,7 +1518,7 @@ class _AlphabetIndexerState extends State<_AlphabetIndexer> {
                             : isPresent
                                 ? Colors.white
                                 : Colors.white.withValues(alpha: 0.2),
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight:
                             isCurrent ? FontWeight.bold : FontWeight.normal,
                       ),

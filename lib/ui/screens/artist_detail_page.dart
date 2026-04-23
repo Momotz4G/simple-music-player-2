@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,8 +8,11 @@ import '../../providers/player_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../l10n/app_localizations.dart';
 
-import '../../services/hybrid_service.dart';
+import '../../services/vps_scraper_service.dart';
+import '../../services/db_service.dart';
+import '../../services/spotify_service.dart';
 import '../../services/wikipedia_service.dart';
+import '../../services/hybrid_service.dart';
 import '../../services/smart_download_service.dart';
 import '../components/song_card_overlay.dart';
 import '../components/song_context_menu.dart';
@@ -49,9 +53,32 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
   void initState() {
     super.initState();
     _isSpotifyMode = widget.songs.isEmpty;
-    _fetchArtistHeader();
+    _fetchArtistHeader(force: false);
     if (_isSpotifyMode) {
-      _fetchTopTracks();
+      _loadFromCache(); // 🚀 Instant load from DB
+      _fetchTopTracks(); // Background refresh
+    }
+  }
+
+  Future<void> _loadFromCache() async {
+    try {
+      final tracksJson = await DBService().getDataCache("artist_tracks:${widget.artistName}");
+      if (tracksJson != null && mounted) {
+        final List<dynamic> decoded = jsonDecode(tracksJson);
+        final models = decoded.map((j) => SongModel.fromJson(j)).toList();
+        setState(() => _topTracks = models);
+        debugPrint("✓ [ArtistDetail] Loaded ${models.length} tracks from cache");
+      }
+
+      final albumsJson = await DBService().getDataCache("artist_albums:${widget.artistName}");
+      if (albumsJson != null && mounted) {
+        final List<dynamic> decoded = jsonDecode(albumsJson);
+        final models = decoded.map((j) => AlbumModel.fromMap(j)).toList();
+        setState(() => _albums = models);
+        debugPrint("✓ [ArtistDetail] Loaded ${models.length} albums from cache");
+      }
+    } catch (e) {
+      debugPrint("⚠️ [ArtistDetail] Cache load error: $e");
     }
   }
 
@@ -69,7 +96,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
       });
 
       // RE-FETCH
-      _fetchArtistHeader();
+      _fetchArtistHeader(force: false);
       if (_isSpotifyMode) {
         _fetchTopTracks();
       }
@@ -77,82 +104,137 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
   }
 
   Future<void> _fetchTopTracks() async {
+    if (!mounted) return;
     setState(() => _isLoadingTracks = true);
 
-    // HYBRID SEARCH BY NAME (Handles ID lookup internally)
-    final tracks = await HybridService.getArtistTopTracks(widget.artistName);
+    try {
+      debugPrint("🔍 [ArtistDetail] Fetching Top Tracks for ${widget.artistName}...");
+      
+      // 1. FETCH TOP TRACKS
+      final tracks = await HybridService.getArtistTopTracks(widget.artistName);
+      
+      if (mounted) {
+        if (tracks.isNotEmpty) {
+          // Convert to SongModel with predicted paths
+          final songModels = await Future.wait(tracks.map((t) async {
+            final predictedPath = await _smartService.getPredictedCachePath(t);
+            return SongModel(
+              title: t.title,
+              artist: t.artist,
+              album: t.album,
+              filePath: predictedPath,
+              fileExtension: '.mp3',
+              duration: t.durationSeconds.toDouble(),
+              onlineArtUrl: t.albumArtUrl,
+              sourceUrl: null, // Will be resolved by JIT
+            );
+          }));
+          
+          setState(() {
+            _topTracks = songModels;
+          });
 
-    if (tracks.isNotEmpty) {
-      // Convert to SongModel with predicted paths
-      final songModels = await Future.wait(tracks.map((t) async {
-        final predictedPath = await _smartService.getPredictedCachePath(t);
-        return SongModel(
-          title: t.title,
-          artist: t.artist,
-          album: t.album,
-          filePath: predictedPath,
-          fileExtension: '.mp3',
-          duration: t.durationSeconds.toDouble(),
-          onlineArtUrl: t.albumArtUrl,
-          sourceUrl: null, // Will be resolved by JIT
-        );
-      }));
+          // 🚀 SAVE TO CACHE
+          final tracksJson = jsonEncode(songModels.map((s) => s.toJson()).toList());
+          DBService().saveDataCache("artist_tracks:${widget.artistName}", tracksJson);
+        } else {
+          debugPrint("⚠️ [ArtistDetail] No Top Tracks found for ${widget.artistName}");
+        }
+      }
 
-      // FETCH ALBUMS (Discography)
+      // 2. FETCH ALBUMS (Independent of tracks)
+      debugPrint("🔍 [ArtistDetail] Fetching Discography for ${widget.artistName}...");
       final albums = await HybridService.getArtistAlbums(widget.artistName);
-
+      
       if (mounted) {
         setState(() {
-          _topTracks = songModels;
           _albums = albums;
           _isLoadingTracks = false;
         });
+
+        // 🚀 SAVE TO CACHE
+        if (albums.isNotEmpty) {
+          final albumsJson = jsonEncode(albums.map((a) => a.toMap()).toList());
+          DBService().saveDataCache("artist_albums:${widget.artistName}", albumsJson);
+        }
+
+        if (albums.isEmpty) {
+          debugPrint("⚠️ [ArtistDetail] No Albums found for ${widget.artistName}");
+        }
       }
-    } else {
-      if (mounted) setState(() => _isLoadingTracks = false);
+    } catch (e) {
+      debugPrint("❌ [ArtistDetail] Error fetching artist data: $e");
+      if (mounted) {
+        setState(() => _isLoadingTracks = false);
+      }
     }
   }
 
-  Future<void> _fetchArtistHeader() async {
-    String? url;
+  Future<void> _fetchArtistHeader({bool force = false}) async {
+    String? cachedUrl;
+    final String cacheKey = "banner:${widget.artistName}";
 
-    // 1. Wikipedia (Priority 1)
-    url = await WikipediaService.getArtistImage(widget.artistName);
-
-    // 2. Spotify Banner (Priority 2)
-    if (url == null) {
-      // Used HybridService? Or specific Header logic?
-      // SpotifyService explicit Banner calls are fine as they might just fail gracefully.
-      // But we can try to wrap them.
-      // Let's keep direct Spotify for these heavy specific visuals, but add Try/Catch wrapper here if not present?
-      // Or better, let HybridService handle "getArtist" which returns image.
-
-      final artist = await HybridService.getArtist("unknown",
-          artistName: widget.artistName);
-      if (artist != null) {
-        url = artist.imageUrl;
+    // 🚀 PHASE 1: Load from Cache (Instant UI)
+    try {
+      cachedUrl = await DBService().getArtCache(cacheKey);
+      if (cachedUrl != null && cachedUrl.isNotEmpty && !force) {
+        if (mounted) {
+          setState(() => _headerImageUrl = cachedUrl);
+          _extractColors(cachedUrl!);
+        }
+        // Don't stop here! We will re-validate in the background (Phase 2)
       }
+    } catch (_) {}
 
-      /*
-      final artistId =
-          await SpotifyService.getArtistId(artistName: widget.artistName);
-      if (artistId != null) {
-        url = await SpotifyService.getFreshBannerUrl(artistId);
-
-        // 3. Spotify Profile (Priority 3)
-        url ??= await SpotifyService.getArtistImage(
-            artistName: widget.artistName, highQuality: true);
-      }
-      */
+    if (force) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Refreshing banner for ${widget.artistName}..."),
+          backgroundColor: Colors.blueGrey,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
 
-    if (mounted) {
-      setState(() {
-        _headerImageUrl = url;
-      });
-      if (url != null) {
-        _extractColors(url);
+    // 🚀 PHASE 2: Background Re-validation (Check for better/new banner)
+    try {
+      String? freshUrl;
+      final spotifyId = await SpotifyService.getArtistId(artistName: widget.artistName);
+      
+      if (spotifyId != null) {
+        final bannerData = await VpsScraperService.getArtistBanner(spotifyId);
+        freshUrl = bannerData['banner'] ?? bannerData['gallery'] ?? bannerData['profile'];
       }
+
+      // If VPS fails and we HAVE NO CACHE, try Wikipedia fallback
+      if (freshUrl == null && (_headerImageUrl == null || force)) {
+        freshUrl = await WikipediaService.getArtistImage(widget.artistName);
+      }
+
+      // Final fallback if still null and no UI image
+      if (freshUrl == null && (_headerImageUrl == null || force)) {
+        final artist = await HybridService.getArtist("unknown", artistName: widget.artistName);
+        freshUrl = artist?.imageUrl;
+      }
+
+      // 🚀 PHASE 3: Comparison & Update
+      if (freshUrl != null && freshUrl != cachedUrl) {
+        debugPrint("✨ Banner Updated for ${widget.artistName}: New URL found!");
+        
+        // 💾 ALWAYS save to database in background, even if user left the page
+        DBService().saveArtCache(cacheKey, freshUrl!);
+
+        if (mounted) {
+          setState(() {
+            _headerImageUrl = freshUrl;
+          });
+          _extractColors(freshUrl!);
+        }
+      } else {
+        debugPrint("✅ Banner for ${widget.artistName} is already up to date.");
+      }
+    } catch (e) {
+      debugPrint("⚠️ Background banner re-validation failed: $e");
     }
   }
 
@@ -298,17 +380,20 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                               final isNarrow = screenWidth < 500;
                               final fontSize = isNarrow ? 32.0 : 56.0;
 
-                              return Text(
-                                widget.artistName,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: fontSize,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -1.0,
-                                  height: 1.0,
+                              return GestureDetector(
+                                onLongPress: () => _fetchArtistHeader(force: true),
+                                child: Text(
+                                  widget.artistName,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: fontSize,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -1.0,
+                                    height: 1.0,
+                                  ),
+                                  maxLines: isNarrow ? 3 : 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: isNarrow ? 3 : 2,
-                                overflow: TextOverflow.ellipsis,
                               );
                             },
                           ),

@@ -1,261 +1,19 @@
 {
-  "browse": "تصفح",
-  "search": "بحث",
-  "history": "السجل",
-  "stats": "الإحصائيات",
-  "library": "المكتبة",
-  "playlists": "قوائم التشغيل",
-  "artists": "الفنانون",
-  "albums": "الألبومات",
-  "folders": "المجلدات",
-  "local_library": "المكتبة المحلية",
-  "downloads": "التنزيلات",
-  "metadata_editor": "محرر البيانات الوصفية",
-  "editMetadata": "تعديل البيانات الوصفية",
-  "success": "نجاح",
-  "enableAlphabetIndexer": "تمكين الفهرس الأبجدي للتمرير",
-  "enableAlphabetIndexerSubtitle": "إظهار الفهرسة في الشريط الجانبي A-Z على عرض القائمة المحمولة",
-  "metadataUpdated": "تم تحديث البيانات الوصفية",
-  "failedToUpdateMetadata": "فشل تحديث البيانات الوصفية",
-  "toggleLyrics": "تبديل الكلمات",
-  "settings": "الإعدادات",
-  "navigation": "التنقل",
-  "system": "النظام",
-  "language": "اللغة",
-  "english": "الإنجليزية",
-  "indonesian": "الإندونيسية",
-  "korean": "الكورية",
-  "japanese": "اليابانية",
-  "chinese": "الصينية",
-  "spanish": "الإسبانية",
-  "french": "الفرنسية",
-  "german": "الألمانية",
-  "portuguese": "البرتغالية (البرازيل)",
-  "thai": "التايلاندية",
-  "vietnamese": "الفيتنامية",
-  "arabic": "العربية",
-  "russian": "الروسية",
-  "hindi": "الهندية",
-  "appearance": "المظهر",
-  "atmospheres": "الأجواء",
-  "none": "بلا",
-  "winter": "الشتاء",
-  "autumn": "الخريف",
-  "rainyCity": "مدينة ممطرة",
-  "sakura": "ساكورا",
-  "lunarNewYear": "رأس السنة القمرية",
-  "cyberpunk": "سايبربانك",
-  "underwater": "تحت الماء",
-  "nordicAurora": "الشفق القطبي",
-  "galacticSpace": "الفضاء المجري",
-  "desertMirage": "سراب الصحراء",
-  "general": "عام",
-  "darkMode": "الوضع المظلم",
-  "lockedAtmosphere": "مغلق عندما تكون الأجواء نشطة",
-  "useDarkTheme": "استخدام المظهر المظلم",
-  "syncThemeAlbumArt": "مزامنة المظهر مع صورة الألبوم",
-  "tintBackground": "تلوين الخلفية والمصور بلون الأغنية",
-  "accentColor": "لون التمييز",
-  "chooseAccentColor": "اختر لونك الثابت المفضل",
-  "contentRegion": "منطقة المحتوى",
-  "setCountryReleases": "تعيين الدولة للإصدارات والتصنيفات",
-  "unitedStates": "الولايات المتحدة",
-  "indonesia": "إندونيسيا",
-  "southKorea": "كوريا الجنوبية",
-  "japan": "اليابان",
-  "unitedKingdom": "المملكة المتحدة",
-  "brazil": "البرازيل",
-  "visualizer": "المصور",
-  "enableBarVisualizer": "تفعيل المصور الشريطي",
-  "showAnimatedWaves": "إظهار أمواج متحركة في شريط التشغيل",
-  "opacity": "الشفافية",
-  "visualizerStyle": "نمط المصور",
-  "chooseAnimationType": "اختر نوع الرسوم المتحركة",
-  "spectrumBars": "أعمدة الطيف",
-  "fluidWave": "موجة سائلة",
-  "circularPulse": "نبض دائري",
-  "rainbowMode": "وضع قوس قزح",
-  "useMixedColors": "استخدام ألوان مختلطة (الأولوية للمزامنة)",
-  "integration": "التكامل",
-  "discordRPC": "حضور ديسكورد",
-  "showStatusDiscord": "إظهار الحالة على ديسكورد",
-  "tidalApiStatus": "Tidal API",
-  "online": "متصل",
-  "unauthorize": "غير مصرح",
-  "offlineStatus": "غير متصل",
-  "checkInternetConnection": "تحقق من اتصالك بالإنترنت",
-  "autoClearCache": "مسح ذاكرة التخزين المؤقت تلقائيًا",
-  "autoClearDisabled": "معطل",
-  "autoClearOnClose": "عند إغلاق التطبيق",
-  "autoClearAfter24h": "بعد 24 ساعة",
-  "autoClearAfter7d": "بعد 7 أيام",
-  "autoClearEvery30m": "كل 30 دقيقة (أثناء الاستماع فقط)",
-  "musicFolderLocation": "موقع مجلد الموسيقى",
-  "noFolderSelected": "لم يتم اختيار مجلد",
-  "change": "تغيير",
-  "expand": "توسيع",
-  "ignoreSubfolderScan": "تجاهل مسح المجلدات الفرعية",
-  "onlyScanSelected": "مسح المجلدات المختارة فقط (مفعل افتراضياً)",
-  "importAdditionalPaths": "استيراد مسارات إضافية",
-  "addFoldersScan": "إضافة مجلدات للمسح",
-  "add": "إضافة",
-  "singleTracks": "مقاطع فردية",
-  "unsavedChanges": "تغييرات غير محفوظة",
-  "playlistAlbumTracks": "مقاطع القائمة / الألبوم",
-  "audioFormat": "تنسيق الصوت",
-  "preferredOutputFormat": "تنسيق الإخراج المفضل للتنزيلات",
-  "flacNote": "ملاحظة: FLAC متاح فقط لتنزيلات المقاطع الفردية. تنزيلات قوائم التشغيل ستستخدم تنسيق M4A.",
-  "downloadLocation": "موقع التنزيل",
-  "resetToDefault": "إعادة الضبط للافتراضي",
-  "changeFolder": "تغيير المجلد",
-  "streaming": "البث",
-  "streamingQuality": "جودة البث",
-  "standardQuality": "قياسية (MP3)",
-  "highQuality": "جودة عالية (M4A)",
-  "losslessQuality": "بدون فقدان (آلي)",
-  "standardDesc": "MP3 - حجم أصغر، تحميل أسرع",
-  "highDesc": "M4A - صوت أفضل، أداء متوازن",
-  "losslessDesc": "FLAC - جودة بدون فقدان من Deezer/Tidal",
-  "selectStreamingQuality": "اختر جودة البث",
-  "losslessNote": "سيستخدم FLAC إذا توفر في Deezer/Tidal. وإلا، سيعود إلى M4A.",
-  "playback": "التشغيل",
-  "endlessQueue": "قائمة انتظار لا نهائية",
-  "autoAddSimilar": "إضافة أغاني مشابهة تلقائياً في نهاية القائمة",
-  "gaplessPlayback": "تشغيل بدون فواصل",
-  "gaplessPlaybackDesc": "إزالة الصمت بين المقاطع",
-  "crossfade": "الكروس فيد",
-  "crossfadeDesc": "تلاشي بين المقاطع ({seconds} ث)",
-  "@crossfadeDesc": {
-    "placeholders": {
-      "seconds": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter24h": {
+    "description": "Option to clear cache every 24 hours"
   },
-  "disableRomanization": "تعطيل الرومنة",
-  "hideRomajiPinyin": "عدم إظهار Romaji/Pinyin تحت الكلمات الكورية أو اليابانية أو الصينية",
-  "translationLanguage": "لغة الترجمة",
-  "targetLanguageLyrics": "اللغة المستهدفة لترجمة الكلمات",
-  "disableCanvas": "تعطيل Canvas",
-  "hideCanvas": "عدم إظهار فيديوهات Spotify Canvas، إظهار غلاف الألبوم بدلاً منها",
-  "wasapiExclusive": "وضع WASAPI الحصري",
-  "bitPerfectWindows": "صوت Bit-perfect مع معدل عينة آلي (يتطلب إعادة تشغيل)",
-  "audiophileDAC": "تفعيله عند التشغيل على DACs احترافية (يتطلب إعادة تشغيل)",
-  "android14BitPerfect": "Android 14+ Bit-Perfect",
-  "bypassSystemMixer": "تجاوز خلاط النظام لـ USB DAC",
-  "requiresAndroid14": "يتطلب Android 14+ و USB DAC",
-  "bitPerfectEnabled": "وضع Bit-perfect مفعل. قد لا يعمل التحكم في مستوى الصوت.",
-  "audioOutputDevice": "جهاز إخراج الصوت",
-  "loadingDevices": "جاري تحميل الأجهزة...",
-  "systemDefault": "افتراضي النظام",
-  "exclusiveWarning": "تحذير: الوضع الحصري يعمل بشكل أفضل إذا اخترت جهازاً محدداً أعلاه بدلاً من افتراضي النظام.",
-  "dataCleanup": "البيانات والتنظيف",
-  "resetLibraryPath": "إعادة ضبط مسار المكتبة",
-  "unlinkFolder": "إلغاء ربط المجلد وتنظيف قائمة الأغاني",
-  "resetLibraryTitle": "إعادة ضبط المكتبة؟",
-  "resetLibraryContent": "سيؤدي هذا إلى إزالة المجلد الحالي من المشغل. لن يتم حذف ملفاتك.",
-  "resetPath": "إعادة ضبط المسار",
-  "clearStreamingCache": "مسح ذاكرة البث المؤقتة",
-  "freeUpSpace": "توفير مساحة (الحالي: {size})",
-  "resetStatistics": "إعادة ضبط الإحصائيات",
-  "clearPlayHistory": "مسح السجل ووقت الاستماع",
-  "resetStatsTitle": "إعادة ضبط الإحصائيات؟",
-  "resetStatsContent": "هذا الإجراء لا يمكن التراجع عنه.\\nستفقد جميع أعداد مرات التشغيل والأوقات بشكل دائم.",
-  "resetEverything": "إعادة ضبط كل شيء",
-  "debugging": "التصحيح",
-  "showDebugButton": "إظهار زر التصحيح العائم",
-  "toggleDebugButton": "تبديل وحدة تحكم التصحيح العائمة",
-  "community": "المجتمع",
-  "donate": "تبرع",
-  "joinUs": "انضم إلينا",
-  "usbAudioBypass": "تجاوز صوت USB (بيتا) - إخراج DAC مباشر لـ Android 13 وما قبله",
-  "comingSoon": "قريباً",
-  "underDevelopment": "هذه الميزة قيد التطوير",
-  "version": "الإصدار",
-  "restartRequired": "إعادة التشغيل مطلوبة",
-  "restartContent": "مطلوب إعادة تشغيل التطبيق لتطبيق تغييرات جهاز الصوت.\\n\\nإعادة التشغيل الآن؟",
-  "later": "لاحقاً",
-  "restartNow": "إعادة التشغيل الآن",
-  "applyOnRestart": "سيتم تطبيق التغييرات في المرة القادمة التي يتم فيها تشغيل التطبيق.",
-  "autoRestartNotSupported": "إعادة التشغيل التلقائي غير مدعومة. يرجى إعادة التشغيل يدوياً.",
-  "enterAdminCode": "يرجى إدخال رمز الوصول الإداري",
-  "accessCode": "رمز الوصول",
-  "cancel": "إلغاء",
-  "access": "دخول",
-  "invalidCode": "رمز وصول غير صحيح",
-  "formatSaved": "تم حفظ التنسيق!",
-  "addedFolder": "تم إضافة المجلد: {folder}",
-  "removedFolder": "تم إزالة المجلد: {folder}",
-  "downloadPathUpdated": "تم تحديث مسار التنزيل: {path}",
-  "downloadPathReset": "تم إعادة ضبط مسار التنزيل للافتراضي.",
-  "libraryPathReset": "تم إعادة ضبط مسار المكتبة.",
-  "cacheCleared": "تم مسح الذاكرة المؤقتة بنجاح!",
-  "changesApplyRestart": "سيتم تطبيق التغييرات في المرة القادمة التي يتم فيها تشغيل التطبيق.",
-  "changeLanguage": "تغيير لغة التطبيق",
-  "unlinkFolderClear": "إلغاء ربط المجلد وتنظيف قائمة الأغاني",
-  "enterAdminAccessCode": "يرجى إدخال رمز الوصول الإداري",
-  "invalidAccessCode": "رمز وصول غير صحيح",
-  "androidBitPerfect": "Android 14+ Bit-Perfect",
-  "customDevice": "جهاز مخصص",
-  "exclusiveModeWarning": "تحذير: الوضع الحصري يعمل بشكل أفضل إذا اخترت جهازاً محدداً أعلاه بدلاً من افتراضي النظام.",
-  "@freeUpSpace": {
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter7d": {
+    "description": "Option to clear cache every 7 days"
   },
-  "statisticsReset": "تم إعادة ضبط الإحصائيات.",
-  "toggleDebugConsole": "تبديل وحدة تحكم التصحيح العائمة",
-  "usbAudioBypassBeta": "تجاوز صوت USB (بيتا) - إخراج DAC مباشر لـ Android 13 وما قبله",
-  "connectedUsbDacs": "أجهزة USB DAC المتصلة:",
-  "scanning": "جاري المسح...",
-  "scan": "مسح",
-  "noUsbDacDetected": "لم يتم اكتشاف USB DAC. قم بتوصيل جهاز صوت USB واضغط على مسح.",
-  "connected": "متصل",
-  "connect": "اتصال",
-  "failedToConnectDac": "فشل الاتصال بـ DAC. تحقق من أذونات USB.",
-  "connectedToDac": "متصل بـ {deviceName} - تم تفعيل تجاوز USB",
-  "@connectedToDac": {
-    "placeholders": {
-      "deviceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearCache": {
+    "description": "Auto clear cache setting section"
   },
-  "changingAudioDeviceRestart": "مطلوب إعادة تشغيل التطبيق لتطبيق تغيير جهاز الصوت.\\n\\nإعادة التشغيل الآن؟",
-  "translateLyrics": "ترجمة الكلمات",
-  "viewQueue": "عرض القائمة",
-  "loadingLyrics": "جاري تحميل الكلمات...",
-  "noLyricsAvailable": "لا توجد كلمات متاحة",
-  "noSyncedLyricsFound": "لم يتم العثور على كلمات متزامنة",
-  "justEnjoyVibes": "فقط استمتع بالأجواء.",
-  "scrollForLyrics": "قم بالتمرير لمشاهدة الكلمات",
-  "switchingTo": "التبديل إلى",
-  "metadataEditorInfo": "يمكنك البحث والتصحيح بسرعة في محرر البيانات الوصفية.",
-  "metadataEditorNote": "ملاحظة: بعد ظهور الحالة \"تم الحفظ بنجاح\"، قد تتغير صورة الألبوم. هذا ليس خطأ ولكنه مشكلة في ذاكرة التطبيق المؤقتة نعمل على حلها. تحقق من مدير الملفات.",
-  "close": "إغلاق",
-  "permissionRequired": "الإذن مطلوب",
-  "permissionRequiredDesc": "إذن \"الدخول إلى جميع الملفات\" مطلوب لتعديل البيانات الوصفية. هذا يسمح بتعديل ملفات الموسيقى الخاصة بك مباشرة.",
-  "grantPermission": "منح الإذن",
-  "files": "الملفات",
-  "editor": "المحرر",
-  "clearImported": "مسح المستورد",
-  "libraryData": "بيانات المكتبة",
-  "externalFiles": "ملفات خارجية",
-  "addFiles": "إضافة ملفات",
-  "addFolder": "إضافة مجلد",
-  "selectSongToEdit": "اختر أغنية من القائمة لتعديلها",
-  "fixAll": "إصلاح الكل",
-  "autoTagTitle": "⚠️ وسم تلقائي لـ {sourceName}؟",
-  "@autoTagTitle": {
-    "placeholders": {
-      "sourceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearDisabled": {
+    "description": "Option to disable auto clear cache"
   },
-  "autoTagContent": "سيؤدي هذا إلى البحث عن جميع الـ {count} أغنية من \"{sourceName}\" على Spotify واستبدال الوسوم تلقائياً.\\n\\nهذا الإجراء لا يمكن التراجع عنه.",
+  "@autoClearOnClose": {
+    "description": "Option to clear cache when app closes"
+  },
   "@autoTagContent": {
     "placeholders": {
       "count": {
@@ -266,151 +24,41 @@
       }
     }
   },
-  "startBulkProcess": "بدء عملية جماعية",
-  "title": "العنوان",
-  "artist": "الفنان",
-  "album": "الألبوم",
-  "genre": "النوع",
-  "year": "السنة",
-  "trackNumber": "رقم المقطع",
-  "discNumber": "رقم القرص",
-  "autoFixComingSoon": "إصلاح تلقائي (قريباً)",
-  "manualSearch": "بحث يدوي",
-  "revert": "رجوع",
-  "saveChangesToFile": "حفظ التغييرات في الملف",
-  "searchSpotify": "بحث في Spotify",
-  "searchHint": "بحث...",
-  "selectMatch": "اختر المطابقة",
-  "upNext": "التالي",
-  "fetchingLossless": "جاري جلب جودة بدون فقدان...",
-  "noMusicPlaying": "لا توجد موسيقى مشغلة",
-  "refreshList": "تحديث القائمة",
-  "noDownloadsFound": "لم يتم العثور على تنزيلات",
-  "play": "تشغيل",
-  "showInFolder": "إظهار في المجلد",
-  "delete": "حذف",
-  "deleteFileTitle": "حذف الملف؟",
-  "deleteFileContent": "هل أنت متأكد أنك تريد حذف \"{filename}\"؟\\nهذا الإجراء لا يمكن التراجع عنه.",
-  "downloadedTo": "تم التنزيل إلى: {path}",
-  "folderPath": "المجلد: {path}",
-  "errorDeleting": "خطأ أثناء الحذف: {error}",
-  "ok": "موافق",
-  "searchSongs": "بحث عن أغاني...",
-  "noResultsFound": "لم يتم العثور على نتائج",
-  "refreshLibrary": "تحديث المكتبة",
-  "shuffleAll": "تشغيل الكل عشوائياً",
-  "switchToListView": "التبديل إلى عرض القائمة",
-  "switchToGridView": "التبديل إلى عرض الشبكة",
-  "songsLoadedCount": "تم تحميل {count} أغنية...",
-  "grantAccess": "منح حق الوصول",
-  "selectDifferentFolder": "اختر مجلداً مختلفاً",
-  "selectFolder": "اختر مجلداً",
-  "noSongsInFolder": "لم يتم العثور على أغاني في هذا المجلد.",
-  "queueUpdated": "تم تحديث قائمة الانتظار",
-  "playingNext": "سيتم التشغيل تالياً",
-  "addedToQueue": "تمت الإضافة إلى قائمة الانتظار",
-  "playingTrack": "تشغيل المقطع",
-  "error": "خطأ",
-  "noPlaylistsFound": "لم يتم العثور على قوائم تشغيل",
-  "addToPlaylist": "إضافة إلى قائمة التشغيل",
-  "songAlreadyInPlaylist": "الأغنية موجودة بالفعل في قائمة التشغيل",
-  "addedToPlaylistSuccess": "تمت الإضافة إلى قائمة التشغيل",
-  "alreadyInLikedSongs": "موجودة بالفعل في الأغاني المعجب بها",
-  "addedToLikedSongs": "تمت الإضافة إلى الأغاني المعجب بها",
-  "likedSongs": "الأغاني المعجب بها",
-  "preparingDownload": "جاري تحضير التنزيل",
-  "fetchingMetadataSpotify": "جاري جلب البيانات من Spotify...",
-  "preparingDownloadNotification": "جاري تحضير التنزيل",
-  "downloadStarted": "بدأ التنزيل",
-  "downloading": "جاري التنزيل",
-  "preparingDownloadFormat": "جاري تحضير التنزيل ({format})...",
-  "searching": "جاري البحث...",
-  "findingBestMatchYoutube": "جاري البحث عن أفضل مطابقة على YouTube...",
-  "downloadingFlac": "جاري تنزيل FLAC",
-  "fetchingLosslessAudio": "جاري جلب صوت بدون فقدان...",
-  "downloadComplete": "اكتمل التنزيل",
-  "flacSavedToDownloads": "تم حفظ FLAC في مجلد التنزيلات",
-  "downloadCompleteNotification": "اكتمل التنزيل",
-  "flacUnavailable": "FLAC غير متاح",
-  "flacUnavailableDesc": "FLAC غير متاح، فشل التنزيل. حاول تغيير الإعدادات.",
-  "flacUnavailableNotification": "FLAC غير متاح",
-  "changeFormatInSettings": "يرجى تغيير تنسيق الإخراج في الإعدادات",
-  "flacError": "خطأ في FLAC",
-  "couldNotDownloadFlac": "لم يتم تنزيل FLAC.",
-  "downloadingFormat": "جاري تنزيل {format}",
-  "savedAsFormat": "تم الحفظ بصيغة {format}",
-  "downloadFailed": "فشل التنزيل",
-  "downloadError": "خطأ التنزيل",
-  "playNext": "تشغيل تالياً",
-  "addToQueue": "إضافة إلى قائمة الانتظار",
-  "addToFavorite": "إضافة إلى المفضلة",
-  "goToArtist": "الذهاب إلى الفنان",
-  "download": "تنزيل",
-  "noAlbumsFound": "لم يتم العثور على ألبومات",
-  "moreOptions": "خيارات إضافية",
-  "titleLabel": "العنوان",
-  "artistLabel": "الفنان",
-  "albumLabel": "الألبوم",
-  "downloadAll": "تنزيل الكل",
-  "albumRemovedFromPlaylists": "تمت إزالة الألبوم من قوائم التشغيل",
-  "albumAddedToPlaylists": "تمت إضافة الألبوم إلى قوائم التشغيل",
-  "startedDownloadingAll": "بدأ تنزيل جميع الأغاني...",
-  "playingFromAlbum": "التشغيل من الألبوم",
-  "unknownArtist": "فنان غير معروف",
-  "songsCount": "{count, plural, =1{أغنية واحدة} other{{count} أغنيات}}",
-  "libraryNotLoaded": "لم يتم تحميل المكتبة.",
-  "noArtistsFound": "لم يتم العثور على فنانين.",
-  "goToLocalLibraryToSelect": "اذهب إلى المكتبة المحلية لاختيار مجلد.",
-  "popularOnSpotify": "شائع على Spotify",
-  "songsInLibrary": "{count, plural, =1{أغنية واحدة} other{{count} أغنيات}} في المكتبة",
-  "shuffle": "عشوائي",
-  "shufflingArtist": "تشغيل أغاني {artistName} عشوائياً...",
-  "showMore": "إظهار المزيد",
-  "showLess": "إظهار أقل",
-  "discography": "قائمة الأعمال",
-  "seeAll": "مشاهدة الكل",
-  "newPlaylist": "قائمة تشغيل جديدة",
-  "noPlaylistsYet": "لا توجد قوائم تشغيل بعد",
-  "createPlaylist": "إنشاء قائمة تشغيل",
-  "emptyPlaylist": "قائمة تشغيل فارغة",
-  "emptyPlaylistSubtitle": "إنشاء قائمة تشغيل فارغة جديدة",
-  "importFromSpotify": "استيراد من Spotify",
-  "importFromSpotifySubtitle": "الصق رابط قائمة تشغيل Spotify",
-  "importFromYoutubeMusic": "استيراد من YouTube Music",
-  "importFromYoutubeMusicSubtitle": "الصق رابط قائمة تشغيل YouTube Music",
-  "playlistNameHint": "اسم قائمة التشغيل",
-  "importSpotifyPlaylist": "استيراد قائمة تشغيل Spotify",
-  "importYoutubeMusicPlaylist": "استيراد قائمة تشغيل YouTube Music",
-  "deletePlaylistTitle": "حذف قائمة التشغيل؟",
-  "deletePlaylistConfirm": "هل أنت متأكد أنك تريد حذف \"{name}\"؟",
-  "playlistNotFound": "قائمة التشغيل غير موجودة",
-  "noSongsAdded": "لم تتم إضافة أي أغاني بعد",
-  "deleteDownloadsTitle": "حذف التنزيلات؟",
-  "deleteDownloadsConfirm": "سيؤدي هذا إلى إزالة جميع الأغاني المنزلة على هذا الجهاز لهذه القائمة.",
-  "allDownloadsRemoved": "تمت إزالة جميع التنزيلات",
-  "rename": "إعادة تسمية",
-  "removeFromPlaylist": "إزالة من قائمة التشغيل",
-  "deletePlaylistPermanentConfirm": "هل أنت متأكد من رغبتك في حذف قائمة التشغيل هذه؟ (لا يمكن التراجع عن هذا الإجراء)",
-  "publicSharing": "المشاركة العلنية",
-  "publicSharingDesc": "يمكن لأي شخص لديه الرمز استيراد قائمة التشغيل هذه.",
-  "publicSharingDisabledDesc": "معطلة. قم بتفعيلها للمشاركة مع الآخرين.",
-  "failedEnableSharing": "فشل تفعيل المشاركة. تحقق من الاتصال.",
-  "failedDisableSharing": "فشل تعطيل المشاركة.",
-  "disablingSharingWarning": "سيعمل تعطيل المشاركة على حذف الرمز والبيانات نهائياً من الخادم لتوفير المساحة.",
-  "invalidSpotifyUrl": "رابط قائمة تشغيل Spotify غير صالح",
-  "invalidYoutubeMusicUrl": "رابط قائمة تشغيل YouTube Music غير صالح",
-  "fetchingPlaylistInfo": "جاري جلب معلومات قائمة التشغيل...",
-  "failedFetchPlaylistInfo": "تعذر جلب معلومات قائمة التشغيل",
-  "fetchingTracksFrom": "جاري جلب المقاطع من \"{name}\"...",
-  "@fetchingTracksFrom": {
+  "@autoTagTitle": {
     "placeholders": {
-      "name": {
+      "sourceName": {
         "type": "String"
       }
     }
   },
-  "noTracksFound": "لم يتم العثور على مقاطع في قائمة التشغيل",
-  "creatingPlaylistWithTracks": "جاري إنشاء قائمة تشغيل تضم {count} من المقاطع...",
+  "@automaticTitleLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@consecutivePlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@creatingPlaylistWithTracks": {
     "placeholders": {
       "count": {
@@ -418,15 +66,117 @@
       }
     }
   },
-  "importedTracks": "تم استيراد {count} من المقاطع بنجاح!",
-  "@importedTracks": {
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@deleteFileContent": {
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@deviceNameLabel": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadingFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@errorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@folderPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@foundExistingAccount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@foundResults": {
+    "placeholders": {
+      "songCount": {
+        "type": "int"
+      },
+      "albumCount": {
+        "type": "int"
+      },
+      "artistCount": {
+        "type": "int"
+      }
+    }
+  },
+  "@foundYoutubeResults": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "importFailed": "فشل الاستيراد: {error}",
+  "@freeUpSpace": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@fromLibraryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@hoursDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@importFailed": {
     "placeholders": {
       "error": {
@@ -434,10 +184,6 @@
       }
     }
   },
-  "fetchingSharedPlaylist": "جاري جلب قائمة التشغيل المشتركة...",
-  "playlistNotFoundOrError": "قائمة التشغيل غير موجودة أو حدث خطأ في الخادم",
-  "parsingPlaylistData": "جاري تحليل بيانات قائمة التشغيل...",
-  "importedPlaylistName": "تم استيراد \"{name}\" بنجاح!",
   "@importedPlaylistName": {
     "placeholders": {
       "name": {
@@ -445,176 +191,184 @@
       }
     }
   },
-  "codeMust6Digits": "يجب أن يتكون الرمز من 6 أرقام",
-  "fetchingPlaylist": "جاري جلب قائمة التشغيل...",
-  "importViaCode": "استيراد عبر الرمز",
-  "enterShareCode": "أدخل رمز المشاركة المكون من 6 أرقام",
-  "importChoice": "استيراد",
-  "listeningStats": "إحصائيات الاستماع",
-  "topArtist": "أفضل فنان",
-  "mostListened": "الأكثر استماعاً",
-  "timeListened": "وقت الاستماع",
-  "totalPlays": "إجمالي مرات التشغيل",
-  "minutes": "دقائق",
-  "tracks": "مقاطع",
-  "songs": "أغاني",
-  "noStatsYet": "لا توجد إحصائيات بعد.",
-  "noArtistStatsYet": "لا توجد إحصائيات للفنانين بعد.",
-  "plays": "مرات تشغيل",
-  "min": "دقيقة",
-  "share": "مشاركة",
-  "savedTo": "تم الحفظ في \"{path}\"",
-  "myTopTrackOn": "أغنيتي المفضلة على Simple Player! 🎵",
-  "fileMissingHistory": "الملف مفقود وغير موجود في السجل.",
-  "restoring": "جاري الاستعادة",
-  "reBuffering": "جاري التحميل...",
-  "nowPlaying": "مشغل الآن",
-  "recentlyPlayed": "تم تشغيلها مؤخراً",
-  "clearHistory": "مسح السجل",
-  "noHistoryYet": "لا يوجد سجل بعد",
-  "cloud": "سحابي",
-  "cached": "مخزن مؤقتاً",
-  "searchingStatus": "بحث",
-  "findingStream": "جاري البحث عن مصدر البث...",
-  "noStreamMatch": "لم يتم العثور على مطابقة للبث.",
-  "errorSearchingStream": "خطأ أثناء البحث عن البث.",
-  "rebufferingFromCloud": "إعادة التحميل من السحابة...",
-  "musicSearch": "البحث عن الموسيقى",
-  "songTitleKeyword": "العنوان أو كلمة مفتاحية",
-  "searchSpotifyHint": "بحث في Spotify...",
-  "readySearchSong": "جاهز. ابحث عن أغنية.",
-  "searchingSpotifyFor": "جاري البحث عن \"{keyword}\" في Spotify...",
-  "offline": "بدون اتصال",
-  "foundResults": "تم العثور على {songCount} أغاني، {albumCount} ألبومات، {artistCount} فنانين.",
-  "noSpotifyResults": "لم يتم العثور على نتائج من Spotify.",
-  "searchFailedStatus": "فشل البحث: {error}",
-  "noInternetConnection": "لا يوجد اتصال بالإنترنت",
-  "checkNetworkTryAgain": "تحقق من الشبكة وحاول مرة أخرى",
-  "noSuggestionsFound": "لم يتم العثور على اقتراحات.",
-  "statusWithText": "الحالة: {status}",
-  "goodMorning": "صباح الخير",
-  "goodAfternoon": "مساء الخير",
-  "goodEvening": "مساء الخير",
-  "jumpBackIn": "العودة للاستماع",
-  "yourTopMix": "أفضل ميكس لك",
-  "youMayLike": "قد يعجبك",
-  "yourPlaylists": "قوائم التشغيل الخاصة بك",
-  "quickMix": "ميكس سريع",
-  "madeForYou": "صنع لك",
-  "rediscover": "إعادة اكتشاف",
-  "doYouRemember": "هل تتذكر؟",
-  "countSongs": "{count, plural, =1{أغنية واحدة} other{{count} أغنيات}}",
-  "savePlaylistTitle": "حفظ \"{title}\"؟",
-  "savePlaylistContent": "سيؤدي هذا إلى إنشاء قائمة تشغيل جديدة بناءً على هذه الأغاني.",
-  "savedAs": "تم الحفظ باسم \"{name}\"!",
-  "save": "حفظ",
-  "searchSongsOrAlbumsAndArtistsHint": "بحث عن أغاني، ألبومات أو فنانين...",
-  "playQueue": "تشغيل القائمة",
-  "downloadSong": "تنزيل الأغنية",
-  "sleepTimer": "مؤقت النوم",
-  "minutesDuration": "{count, plural, =1{دقيقة واحدة} other{{count} دقائق}}",
-  "hoursDuration": "{count, plural, =1{ساعة واحدة} other{{count} ساعات}}",
-  "customTime": "وقت مخصص",
-  "turnOffTimer": "إيقاف المؤقت",
-  "musicWillStopIn": "ستتوقف الموسيقى خلال {label}",
-  "stopTimer": "إيقاف المؤقت ({time})",
-  "setCustomTimer": "ضبط مؤقت مخصص",
-  "enterDuration": "أدخل المدة...",
-  "hourShort": "ساعة",
-  "minuteShort": "دقيقة",
-  "secondShort": "ثانية",
-  "timerSetForHours": "تم ضبط المؤقت لمدة {count} ساعات",
-  "timerSetForMinutes": "تم ضبط المؤقت لمدة {count} دقائق",
-  "timerSetForSeconds": "تم ضبط المؤقت لمدة {count} ثواني",
-  "start": "بدء",
-  "errorCouldNotCreateSession": "خطأ: تعذر إنشاء الجلسة.",
-  "scanToControlPlayback": "امسح للتحكم في التشغيل بهاتفك.",
-  "session": "الجلسة: {id}",
-  "loadingCanvas": "جاري تحميل Canvas...",
-  "searchingSpotify": "جاري البحث في Spotify...",
-  "fetchingCanvas": "جاري جلب Canvas...",
-  "nowPlayingHeader": "مشغل الآن",
-  "nowPlayingSection": "مشغل الآن",
-  "upNextSection": "التالي",
-  "recommendationsSection": "توصيات",
-  "fromLibrarySection": "من المكتبة",
-  "queueIsEmpty": "قائمة الانتظار فارغة",
-  "historySection": "السجل",
-  "upNextCount": "التالي ({count})",
-  "fromLibraryCount": "من المكتبة ({count})",
-  "recommendationsCount": "توصيات ({count})",
-  "noSongPlaying": "لا توجد أغنية مشغلة",
-  "selectTrackToStart": "اختر مقطعاً للبدء",
-  "importLabel": "استيراد",
-  "saveLabel": "حفظ",
-  "refreshLabel": "تحديث",
-  "hideTranslation": "إخفاء الترجمة",
-  "translateLabel": "ترجمة",
-  "lyricsByLRCLIB": "الكلمات بواسطة LRCLIB",
-  "importLyricsFile": "استيراد ملف كلمات",
-  "overwriteLrcWarning": "يوجد ملف .lrc محلي للأغنية بالفعل.\\nهل تريد الاستبدال؟",
-  "saveLrcPrompt": "هل تريد حفظ الكلمات الحالية كملف .lrc بجانب الملف الصوتي؟",
-  "overwrite": "استبدال",
-  "lyricsSavedSuccess": "تم حفظ الكلمات في ملف .lrc",
-  "lyricsSaveError": "خطأ أثناء حفظ الكلمات",
-  "equalizer": "المعادل",
-  "trackDetails": "تفاصيل المقطع",
-  "audioQuality": "جودة الصوت",
-  "formatLabel": "التنسيق",
-  "codecLabel": "الترميز",
-  "bitrateLabel": "معدل البت",
-  "sampleRateLabel": "معدل العينة",
-  "bitDepthLabel": "عمق البت",
-  "channelsLabel": "القنوات",
-  "fileSizeLabel": "حجم الملف",
-  "fileLocation": "موقع الملف",
-  "audioSource": "مصدر الصوت",
-  "pathLabel": "المسار",
-  "inputLabel": "المدخلات",
-  "engineLabel": "المحرك",
-  "eqLabel": "EQ",
-  "dspLabel": "DSP",
-  "androidMixer": "خلاط أندرويد",
-  "bypassedBitPerfect": "تم التجاوز (Bit-Perfect)",
-  "resamplingLabel": "إعادة العينة",
-  "activeNoResampling": "نشط (بدون إعادة عينة)",
-  "nativeRate": "المعدل الأصلي",
-  "signalOutput": "إخراج الإشارة",
-  "outputLabel": "المخرجات",
-  "samplingRateLabel": "معدل العينة",
-  "bitsLabel": "Bits",
-  "statusLabel": "الحالة",
-  "unknown": "غير معروف",
-  "unknownDevice": "جهاز غير معروف",
-  "sharedMode": "مشترك",
-  "exclusiveMode": "حصري",
-  "androidAudioTrack": "Android AudioTrack",
-  "songInformation": "معلومات الأغنية",
-  "selectVersion": "اختر الإصدار",
-  "searchYoutubeHint": "بحث في YouTube...",
-  "androidAudioEffectsNote": "ملاحظة: التأثيرات الصوتية متاحة فقط على أندرويد.",
-  "deletePreset": "حذف الإعداد المسبق",
-  "saveAsNewPreset": "حفظ كإعداد مسبق جديد",
-  "savePreset": "حفظ الإعداد المسبق",
-  "enterPresetName": "أدخل اسم الإعداد المسبق (مثال: الباس الخاص بي)",
-  "presetSaved": "تم حفظ الإعداد المسبق!",
-  "miniPlayer": "المشغل المصغر",
-  "listeningParty": "حفلة استماع",
-  "audioOutput": "إخراج الصوت",
-  "lyricsTooltip": "كلمات الأغاني",
-  "queueTooltip": "قائمة الانتظار",
-  "moreOptionsTooltip": "خيارات إضافية",
-  "muteTooltip": "كتم الصوت",
-  "unmuteTooltip": "إلغاء الكتم",
-  "fullScreenPlayerTooltip": "المشغل بملء الشاشة",
-  "importLyricsTooltip": "استيراد كلمات",
-  "saveLyricsTooltip": "حفظ كلمات",
-  "refreshLyricsTooltip": "تحديث كلمات",
-  "translateLyricsTooltip": "ترجمة كلمات",
-  "sharePlaylist": "مشاركة قائمة التشغيل",
-  "deletePlaylist": "حذف قائمة التشغيل",
-  "importViaCodeSubtitle": "استيراد قائمة تشغيل مشتركة بواسطة صديق",
-  "sharePlaylistTitle": "مشاركة \"{name}\"",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@last30DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@last7DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@listenMinutesTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@musicWillStopIn": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@myTopTrackOn": {
+    "placeholders": {
+      "header": {
+        "type": "String"
+      }
+    }
+  },
+  "@notRank": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@opacityLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@playCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@rankActive": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@rankLabel": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@reachDailyPlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@reachSpecificArtistTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@reachWeeklyPlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@recommendationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingEngine": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      },
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "@sharePlaylistTitle": {
     "placeholders": {
       "name": {
@@ -622,17 +376,858 @@
       }
     }
   },
-  "generatingShareCode": "جاري إنشاء رمز المشاركة...",
-  "failedToGenerateCode": "فشل إنشاء رمز المشاركة. تحقق من الاتصال.",
-  "playlistReadyShare": "قائمة التشغيل الخاصة بك جاهزة للمشاركة!",
-  "copyCode": "نسخ الرمز",
+  "@showAllTitles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@switchingTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@todayLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@top3GlobalTooltip": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "@topGlobalTooltip": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@unlockedCountLabel": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@updateAvailableVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@updateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutEducationalPurpose": "تم تطوير هذا التطبيق للأغراض الفردية والتعليمية فقط.",
+  "aboutLicenses": "حول والتراخيص",
+  "aboutNotForCommercial": "ليس للاستخدام التجاري.",
+  "accentColor": "لون التمييز",
+  "access": "دخول",
+  "accessCode": "رمز الوصول",
+  "accountDataMergeDesc": "من خلال المزامنة، سيتم تحديث اسم ملفك الشخصي وصورتك الرمزية، ولكن سيتم دمج دقائق الاستماع الحالية لجهازك بنجاح في إجمالي الحساب.",
+  "accountLinked": "الحساب مرتبط",
+  "accountLinkedSuccessfully": "تم ربط الحساب بنجاح!",
+  "achievementsUnlocked": "الإنجازات المفتوحة",
+  "activeNoResampling": "نشط (بدون إعادة عينة)",
+  "add": "إضافة",
+  "addFiles": "إضافة ملفات",
+  "addFolder": "إضافة مجلد",
+  "addFoldersScan": "إضافة مجلدات للمسح",
+  "addToFavorite": "إضافة إلى المفضلة",
+  "addToPlaylist": "إضافة إلى قائمة التشغيل",
+  "addToQueue": "إضافة إلى قائمة الانتظار",
+  "addedFolder": "تم إضافة المجلد: {folder}",
+  "addedToLikedSongs": "تمت الإضافة إلى الأغاني المعجب بها",
+  "addedToPlaylistSuccess": "تمت الإضافة إلى قائمة التشغيل",
+  "addedToQueue": "تمت الإضافة إلى قائمة الانتظار",
+  "album": "الألبوم",
+  "albumAddedToPlaylists": "تمت إضافة الألبوم إلى قوائم التشغيل",
+  "albumLabel": "الألبوم",
+  "albumRemovedFromPlaylists": "تمت إزالة الألبوم من قوائم التشغيل",
+  "albums": "الألبومات",
+  "allDownloadsRemoved": "تمت إزالة جميع التنزيلات",
+  "allRightsReserved": "كل الحقوق محفوظة.",
+  "allTime": "كل الوقت",
+  "alreadyInLikedSongs": "موجودة بالفعل في الأغاني المعجب بها",
+  "android14BitPerfect": "Android 14+ Bit-Perfect",
+  "androidAudioEffectsNote": "ملاحظة: التأثيرات الصوتية متاحة فقط على أندرويد.",
+  "androidAudioTrack": "Android AudioTrack",
+  "androidBitPerfect": "Android 14+ Bit-Perfect",
+  "androidMixer": "خلاط أندرويد",
+  "appearance": "المظهر",
+  "applyOnRestart": "سيتم تطبيق التغييرات في المرة القادمة التي يتم فيها تشغيل التطبيق.",
+  "arabic": "العربية",
+  "artist": "الفنان",
+  "artistLabel": "الفنان",
+  "artists": "الفنانون",
+  "atmospheres": "الأجواء",
+  "audioFormat": "تنسيق الصوت",
+  "audioOutput": "إخراج الصوت",
+  "audioOutputDevice": "جهاز إخراج الصوت",
+  "audioQuality": "جودة الصوت",
+  "audioSource": "مصدر الصوت",
+  "audiophileDAC": "تفعيله عند التشغيل على DACs احترافية (يتطلب إعادة تشغيل)",
+  "autoAddSimilar": "إضافة أغاني مشابهة تلقائياً في نهاية القائمة",
+  "autoClearAfter24h": "بعد 24 ساعة",
+  "autoClearAfter7d": "بعد 7 أيام",
+  "autoClearCache": "مسح ذاكرة التخزين المؤقت تلقائيًا",
+  "autoClearDisabled": "معطل",
+  "autoClearEvery30m": "كل 30 دقيقة (أثناء الاستماع فقط)",
+  "autoClearOnClose": "عند إغلاق التطبيق",
+  "autoFixComingSoon": "إصلاح تلقائي (قريباً)",
+  "autoRestartNotSupported": "إعادة التشغيل التلقائي غير مدعومة. يرجى إعادة التشغيل يدوياً.",
+  "autoTagContent": "سيؤدي هذا إلى البحث عن جميع الـ {count} أغنية من \"{sourceName}\" على Spotify واستبدال الوسوم تلقائياً.\\n\\nهذا الإجراء لا يمكن التراجع عنه.",
+  "autoTagTitle": "⚠️ وسم تلقائي لـ {sourceName}؟",
+  "automatic": "تلقائي",
+  "automaticTitleLabel": "تلقائي: {title}",
+  "autumn": "الخريف",
+  "avatarPickerDesc": "اختر قالبًا أو استورد صورتك الخاصة",
+  "beFirstToClaim": "كن الأول للمطالبة بالمركز الأول!",
+  "behavioralHeader": "إنجازات سلوكية",
+  "behavioralTitles": "سلوكي",
+  "binariesUpdateRequired": "تحديث الملفات الثنائية مطلوب",
+  "bitDepthLabel": "عمق البت",
+  "bitPerfectEnabled": "وضع Bit-perfect مفعل. قد لا يعمل التحكم في مستوى الصوت.",
+  "bitPerfectWindows": "صوت Bit-perfect مع معدل عينة آلي (يتطلب إعادة تشغيل)",
+  "bitrateLabel": "معدل البت",
+  "bitsLabel": "Bits",
+  "brazil": "البرازيل",
+  "browse": "تصفح",
+  "bypassSystemMixer": "تجاوز خلاط النظام لـ USB DAC",
+  "bypassedBitPerfect": "تم التجاوز (Bit-Perfect)",
+  "cacheCleared": "تم مسح الذاكرة المؤقتة بنجاح!",
+  "cached": "مخزن مؤقتاً",
+  "cancel": "إلغاء",
+  "championChampionTooltip": "تصل للمركز الأول عالمياً لمدة 5 أسابيع مختلفة",
+  "change": "تغيير",
+  "changeFolder": "تغيير المجلد",
+  "changeFormatInSettings": "يرجى تغيير تنسيق الإخراج في الإعدادات",
+  "changeLabel": "تغيير",
+  "changeLanguage": "تغيير لغة التطبيق",
+  "changesApplyRestart": "سيتم تطبيق التغييرات في المرة القادمة التي يتم فيها تشغيل التطبيق.",
+  "changingAudioDeviceRestart": "مطلوب إعادة تشغيل التطبيق لتطبيق تغيير جهاز الصوت.\\n\\nإعادة التشغيل الآن؟",
+  "channelsLabel": "القنوات",
+  "checkAgain": "تحقق مرة أخرى",
+  "checkInternetConnection": "تحقق من اتصالك بالإنترنت",
+  "checkNetworkTryAgain": "تحقق من الشبكة وحاول مرة أخرى",
+  "chinese": "الصينية",
+  "chooseAccentColor": "اختر لونك الثابت المفضل",
+  "chooseAnimationType": "اختر نوع الرسوم المتحركة",
+  "chooseArtist": "اختر الفنان",
+  "chooseAvatar": "اختر الأفاتار",
+  "chooseYourTitle": "اختر لقبك",
+  "circularPulse": "نبض دائري",
+  "clearAll": "مسح الكل",
+  "clearHistory": "مسح السجل",
+  "clearImported": "مسح المستورد",
+  "clearMetadataCache": "مسح ذاكرة التخزين المؤقت للبيانات الوصفية والصور",
+  "clearPlayHistory": "مسح السجل ووقت الاستماع",
+  "clearStreamingCache": "مسح ذاكرة البث المؤقتة",
+  "close": "إغلاق",
+  "cloud": "سحابي",
   "codeCopied": "تم نسخ الرمز إلى الحافظة!",
-  "shareCodeUsage": "أعط هذا الرمز المكون من 6 أرقام لصديق لتمكينه من استيراد قائمة التشغيل هذه.",
-  "renamePlaylist": "إعادة تسمية قائمة التشغيل",
-  "filters": "مرشحات",
-  "fileName": "اسم الملف",
+  "codeMust6Digits": "يجب أن يتكون الرمز من 6 أرقام",
+  "codecLabel": "الترميز",
+  "comingSoon": "قريباً",
+  "community": "المجتمع",
+  "competitiveTitles": "تنافسي",
+  "confirm": "تأكيد",
+  "connect": "اتصال",
+  "connectToADevice": "الاتصال بجهاز",
+  "connected": "متصل",
+  "connectedToDac": "متصل بـ {deviceName} - تم تفعيل تجاوز USB",
+  "connectedUsbDacs": "أجهزة USB DAC المتصلة:",
+  "connecting": "جارٍ الاتصال...",
+  "connectionLostLeaderboard": "انقطع الاتصال",
+  "connectionLostLeaderboardDesc": "لوحة المتصدرين العالمية تتطلب اتصالاً نشطاً لمزامنة إحصائياتك وجلب التصنيفات العالمية.",
+  "consecutivePlaysTooltip": "استمع لنفس الأغنية {count} مرات متتالية للحصول عليه",
+  "contentRegion": "منطقة المحتوى",
+  "copyCode": "نسخ الرمز",
+  "couldNotDownloadFlac": "لم يتم تنزيل FLAC.",
+  "countSongs": "{count, plural, =1{أغنية واحدة} other{{count} أغنيات}}",
+  "createPlaylist": "إنشاء قائمة تشغيل",
+  "creatingPlaylistWithTracks": "جاري إنشاء قائمة تشغيل تضم {count} من المقاطع...",
+  "crossfade": "الكروس فيد",
+  "crossfadeDesc": "تلاشي بين المقاطع ({seconds} ث)",
+  "crownedChampionTitlesHeader": "ألقاب البطل المتوج",
+  "customDevice": "جهاز مخصص",
+  "customSelected": "مخصص محدد",
+  "customTime": "وقت مخصص",
+  "cyberpunk": "سايبربانك",
+  "daily": "يومي",
+  "darkMode": "الوضع المظلم",
+  "dataCleanup": "البيانات والتنظيف",
   "dataUsage": "استخدام البيانات",
-  "todayLabel": "اليوم: {size}",
+  "daysShort": "يوم",
+  "debugging": "التصحيح",
+  "delete": "حذف",
+  "deleteDownloadsConfirm": "سيؤدي هذا إلى إزالة جميع الأغاني المنزلة على هذا الجهاز لهذه القائمة.",
+  "deleteDownloadsTitle": "حذف التنزيلات؟",
+  "deleteFileContent": "هل أنت متأكد أنك تريد حذف \"{filename}\"؟\\nهذا الإجراء لا يمكن التراجع عنه.",
+  "deleteFileTitle": "حذف الملف؟",
+  "deletePlaylist": "حذف قائمة التشغيل",
+  "deletePlaylistConfirm": "هل أنت متأكد أنك تريد حذف \"{name}\"؟",
+  "deletePlaylistPermanentConfirm": "هل أنت متأكد من رغبتك في حذف قائمة التشغيل هذه؟ (لا يمكن التراجع عن هذا الإجراء)",
+  "deletePlaylistTitle": "حذف قائمة التشغيل؟",
+  "deletePreset": "حذف الإعداد المسبق",
+  "desertMirage": "سراب الصحراء",
+  "developerExclusiveTooltip": "حصرياً لمطوري هذا التطبيق",
+  "deviceNameLabel": "الجهاز: {deviceName}",
+  "disableCanvas": "تعطيل Canvas",
+  "disableRomanization": "تعطيل الرومنة",
+  "disablingSharingWarning": "سيعمل تعطيل المشاركة على حذف الرمز والبيانات نهائياً من الخادم لتوفير المساحة.",
+  "discNumber": "رقم القرص",
+  "discography": "قائمة الأعمال",
+  "discordRPC": "حضور ديسكورد",
+  "doYouRemember": "هل تتذكر؟",
+  "donate": "تبرع",
+  "download": "تنزيل",
+  "downloadAll": "تنزيل الكل",
+  "downloadComplete": "اكتمل التنزيل",
+  "downloadCompleteNotification": "اكتمل التنزيل",
+  "downloadError": "خطأ التنزيل",
+  "downloadFailed": "فشل التنزيل",
+  "downloadLocation": "موقع التنزيل",
+  "downloadPathReset": "تم إعادة ضبط مسار التنزيل للافتراضي.",
+  "downloadPathUpdated": "تم تحديث مسار التنزيل: {path}",
+  "downloadSong": "تنزيل الأغنية",
+  "downloadStarted": "بدأ التنزيل",
+  "downloadedTo": "تم التنزيل إلى: {path}",
+  "downloading": "جاري التنزيل",
+  "downloadingFlac": "جاري تنزيل FLAC",
+  "downloadingFormat": "جاري تنزيل {format}",
+  "downloadingUpdate": "جاري تنزيل التحديث",
+  "downloads": "التنزيلات",
+  "dspLabel": "DSP",
+  "editMetadata": "تعديل البيانات الوصفية",
+  "editNickname": "تعديل الاسم المستعار",
+  "editor": "المحرر",
+  "emptyMailbox": "صندوق بريد فارغ",
+  "emptyMailboxDesc": "سيؤدي هذا إلى حذف جميع الرسائل بشكل دائم.",
+  "emptyMailboxTitle": "إفراغ صندوق البريد؟",
+  "emptyPlaylist": "قائمة تشغيل فارغة",
+  "emptyPlaylistSubtitle": "إنشاء قائمة تشغيل فارغة جديدة",
+  "enableAlphabetIndexer": "تمكين الفهرس الأبجدي للتمرير",
+  "enableAlphabetIndexerSubtitle": "إظهار الفهرسة في الشريط الجانبي A-Z على عرض القائمة المحمولة",
+  "enableBarVisualizer": "تفعيل المصور الشريطي",
+  "endlessQueue": "قائمة انتظار لا نهائية",
+  "engineLabel": "المحرك",
+  "english": "الإنجليزية",
+  "enterAdminAccessCode": "يرجى إدخال رمز الوصول الإداري",
+  "enterAdminCode": "يرجى إدخال رمز الوصول الإداري",
+  "enterDuration": "أدخل المدة...",
+  "enterPresetName": "أدخل اسم الإعداد المسبق (مثال: الباس الخاص بي)",
+  "enterShareCode": "أدخل رمز المشاركة المكون من 6 أرقام",
+  "eqLabel": "EQ",
+  "equalizer": "المعادل",
+  "equipTitle": "تجهيز اللقب",
+  "equipped": "مجهز",
+  "error": "خطأ",
+  "errorCouldNotCreateSession": "خطأ: تعذر إنشاء الجلسة.",
+  "errorDeleting": "خطأ أثناء الحذف: {error}",
+  "errorSearchingStream": "خطأ أثناء البحث عن البث.",
+  "exclusiveMode": "حصري",
+  "exclusiveModeWarning": "تحذير: الوضع الحصري يعمل بشكل أفضل إذا اخترت جهازاً محدداً أعلاه بدلاً من افتراضي النظام.",
+  "exclusiveTitles": "حصري",
+  "exclusiveTitlesHeader": "ألقاب حصرية",
+  "exclusiveWarning": "تحذير: الوضع الحصري يعمل بشكل أفضل إذا اخترت جهازاً محدداً أعلاه بدلاً من افتراضي النظام.",
+  "exitApp": "إنهاء",
+  "expand": "توسيع",
+  "externalFiles": "ملفات خارجية",
+  "fadingAtEnd": "مؤقت النوم: يتلاشى في نهاية المقطع...",
+  "failedDisableSharing": "فشل تعطيل المشاركة.",
+  "failedEnableSharing": "فشل تفعيل المشاركة. تحقق من الاتصال.",
+  "failedFetchPlaylistInfo": "تعذر جلب معلومات قائمة التشغيل",
+  "failedToConnectDac": "فشل الاتصال بـ DAC. تحقق من أذونات USB.",
+  "failedToGenerateCode": "فشل إنشاء رمز المشاركة. تحقق من الاتصال.",
+  "failedToSetAvatar": "فشل في تعيين قالب الصورة الرمزية",
+  "failedToUpdateMetadata": "فشل تحديث البيانات الوصفية",
+  "favoriteTrack": "الأغنية المفضلة",
+  "fetchingCanvas": "جاري جلب Canvas...",
+  "fetchingLossless": "جاري جلب جودة بدون فقدان...",
+  "fetchingLosslessAudio": "جاري جلب صوت بدون فقدان...",
+  "fetchingMetadataSpotify": "جاري جلب البيانات من Spotify...",
+  "fetchingPlaylist": "جاري جلب قائمة التشغيل...",
+  "fetchingPlaylistInfo": "جاري جلب معلومات قائمة التشغيل...",
+  "fetchingSharedPlaylist": "جاري جلب قائمة التشغيل المشتركة...",
+  "fetchingTracksFrom": "جاري جلب المقاطع من \"{name}\"...",
+  "fileLocation": "موقع الملف",
+  "fileMissingHistory": "الملف مفقود وغير موجود في السجل.",
+  "fileName": "اسم الملف",
+  "fileSizeLabel": "حجم الملف",
+  "files": "الملفات",
+  "filters": "مرشحات",
+  "findingBestMatchYoutube": "جاري البحث عن أفضل مطابقة على YouTube...",
+  "findingStream": "جاري البحث عن مصدر البث...",
+  "finishUpdate": "إنهاء التحديث",
+  "finishes": "المراكز",
+  "fixAll": "إصلاح الكل",
+  "flacError": "خطأ في FLAC",
+  "flacNote": "ملاحظة: FLAC متاح فقط لتنزيلات المقاطع الفردية. تنزيلات قوائم التشغيل ستستخدم تنسيق M4A.",
+  "flacSavedToDownloads": "تم حفظ FLAC في مجلد التنزيلات",
+  "flacUnavailable": "FLAC غير متاح",
+  "flacUnavailableDesc": "FLAC غير متاح، فشل التنزيل. حاول تغيير الإعدادات.",
+  "flacUnavailableNotification": "FLAC غير متاح",
+  "fluidWave": "موجة سائلة",
+  "folderPath": "المجلد: {path}",
+  "folders": "المجلدات",
+  "formatLabel": "التنسيق",
+  "formatSaved": "تم حفظ التنسيق!",
+  "foundExistingAccount": "وجدنا حساباً موجوداً لـ '{name}'.",
+  "foundResults": "تم العثور على {songCount} أغاني، {albumCount} ألبومات، {artistCount} فنانين.",
+  "foundYoutubeResults": "تم العثور على {count} نتيجة على YouTube",
+  "freeUpSpace": "توفير مساحة (الحالي: {size})",
+  "french": "الفرنسية",
+  "fromLibraryCount": "من المكتبة ({count})",
+  "fromLibrarySection": "من المكتبة",
+  "fullScreenPlayerTooltip": "المشغل بملء الشاشة",
+  "galacticSpace": "الفضاء المجري",
+  "gaplessPlayback": "تشغيل بدون فواصل",
+  "gaplessPlaybackDesc": "إزالة الصمت بين المقاطع",
+  "general": "عام",
+  "generatingShareCode": "جاري إنشاء رمز المشاركة...",
+  "genre": "النوع",
+  "german": "الألمانية",
+  "globalLeaderboard": "لوحة المتصدرين العالمية",
+  "globalMailbox": "صندوق البريد العالمي",
+  "globalRank": "التصنيف العالمي",
+  "globalRankings": "الترتيب العالمي",
+  "globalRankingsDesc": "شاهد أفضل المستمعين يوميًا وأسبوعيًا وطوال الوقت!",
+  "goToArtist": "الذهاب إلى الفنان",
+  "goToLocalLibraryToSelect": "اذهب إلى المكتبة المحلية لاختيار مجلد.",
+  "goodAfternoon": "مساء الخير",
+  "goodEvening": "مساء الخير",
+  "goodMorning": "صباح الخير",
+  "googleAccount": "حساب Google",
+  "grantAccess": "منح حق الوصول",
+  "grantPermission": "منح الإذن",
+  "hallOfFameHeader": "إنجازات قاعة المشاهير",
+  "hallOfFameTitles": "قاعة المشاهير",
+  "hideCanvas": "عدم إظهار فيديوهات Spotify Canvas، إظهار غلاف الألبوم بدلاً منها",
+  "hideRomajiPinyin": "عدم إظهار Romaji/Pinyin تحت الكلمات الكورية أو اليابانية أو الصينية",
+  "hideTranslation": "إخفاء الترجمة",
+  "highDesc": "M4A - صوت أفضل، أداء متوازن",
+  "highQuality": "جودة عالية (M4A)",
+  "hindi": "الهندية",
+  "history": "السجل",
+  "historySection": "السجل",
+  "home": "الرئيسية",
+  "hourShort": "ساعة",
+  "hoursDuration": "{count, plural, =1{ساعة واحدة} other{{count} ساعات}}",
+  "hoursShort": "ساعة",
+  "ignoreSubfolderScan": "تجاهل مسح المجلدات الفرعية",
+  "importAdditionalPaths": "استيراد مسارات إضافية",
+  "importChoice": "استيراد",
+  "importFailed": "فشل الاستيراد: {error}",
+  "importFromGallery": "استيراد من المعرض",
+  "importFromSpotify": "استيراد من Spotify",
+  "importFromSpotifySubtitle": "الصق رابط قائمة تشغيل Spotify",
+  "importFromYoutubeMusic": "استيراد من YouTube Music",
+  "importFromYoutubeMusicSubtitle": "الصق رابط قائمة تشغيل YouTube Music",
+  "importLabel": "استيراد",
+  "importLyricsFile": "استيراد ملف كلمات",
+  "importLyricsTooltip": "استيراد كلمات",
+  "importSpotifyPlaylist": "استيراد قائمة تشغيل Spotify",
+  "importViaCode": "استيراد عبر الرمز",
+  "importViaCodeSubtitle": "استيراد قائمة تشغيل مشتركة بواسطة صديق",
+  "importYoutubeMusicPlaylist": "استيراد قائمة تشغيل YouTube Music",
+  "importedPlaylistName": "تم استيراد \"{name}\" بنجاح!",
+  "importedTracks": "تم استيراد {count} من المقاطع بنجاح!",
+  "indonesia": "إندونيسيا",
+  "indonesian": "الإندونيسية",
+  "inputLabel": "المدخلات",
+  "installNow": "تثبيت الآن",
+  "integration": "التكامل",
+  "invalidAccessCode": "رمز وصول غير صحيح",
+  "invalidCode": "رمز وصول غير صحيح",
+  "invalidSpotifyUrl": "رابط قائمة تشغيل Spotify غير صالح",
+  "invalidYoutubeMusicUrl": "رابط قائمة تشغيل YouTube Music غير صالح",
+  "japan": "اليابان",
+  "japanese": "اليابانية",
+  "joinUs": "انضم إلينا",
+  "jumpBackIn": "العودة للاستماع",
+  "justEnjoyVibes": "فقط استمتع بالأجواء.",
+  "korean": "الكورية",
+  "language": "اللغة",
+  "last30DaysLabel": "آخر 30 يومًا: {size}",
   "last7DaysLabel": "آخر 7 أيام: {size}",
-  "last30DaysLabel": "آخر 30 يومًا: {size}"
+  "later": "لاحقاً",
+  "library": "المكتبة",
+  "libraryData": "بيانات المكتبة",
+  "libraryNotLoaded": "لم يتم تحميل المكتبة.",
+  "libraryPathReset": "تم إعادة ضبط مسار المكتبة.",
+  "likedSongs": "الأغاني المعجب بها",
+  "linkAccount": "ربط الحساب",
+  "linkAccountDesc": "مزامنة واستعادة تقدمك باستخدام Google",
+  "listenMinutesTooltip": "استمع لـ {minutes} دقيقة من الموسيقى",
+  "listeningParty": "حفلة استماع",
+  "listeningStats": "إحصائيات الاستماع",
+  "loadingCanvas": "جاري تحميل Canvas...",
+  "loadingDevices": "جاري تحميل الأجهزة...",
+  "loadingError": "فشل تحميل التفاصيل. يرجى المحاولة مرة أخرى.",
+  "loadingLyrics": "جاري تحميل الكلمات...",
+  "localPlayHistorySaved": "لن يتم حذف سجل التشغيل المحلي الخاص بك.",
+  "local_library": "المكتبة المحلية",
+  "lockedAtmosphere": "مغلق عندما تكون الأجواء نشطة",
+  "losslessDesc": "FLAC - جودة بدون فقدان من Deezer/Tidal",
+  "losslessNote": "سيستخدم FLAC إذا توفر في Deezer/Tidal. وإلا، سيعود إلى M4A.",
+  "losslessQuality": "بدون فقدان (آلي)",
+  "lunarNewYear": "رأس السنة القمرية",
+  "lyricsByLRCLIB": "الكلمات بواسطة LRCLIB",
+  "lyricsSaveError": "خطأ أثناء حفظ الكلمات",
+  "lyricsSavedSuccess": "تم حفظ الكلمات في ملف .lrc",
+  "lyricsTooltip": "كلمات الأغاني",
+  "madeForYou": "صنع لك",
+  "manualSearch": "بحث يدوي",
+  "mergeAccountData": "دمج بيانات الحساب؟",
+  "metadataCacheCleared": "تم مسح ذاكرة التخزين المؤقت للبيانات الوصفية وبدأ إعادة فحص المكتبة",
+  "metadataEditorInfo": "يمكنك البحث والتصحيح بسرعة في محرر البيانات الوصفية.",
+  "metadataEditorNote": "ملاحظة: بعد ظهور الحالة \"تم الحفظ بنجاح\"، قد تتغير صورة الألبوم. هذا ليس خطأ ولكنه مشكلة في ذاكرة التطبيق المؤقتة نعمل على حلها. تحقق من مدير الملفات.",
+  "metadataUpdated": "تم تحديث البيانات الوصفية",
+  "metadata_editor": "محرر البيانات الوصفية",
+  "min": "دقيقة",
+  "minShortLabel": "دقيقة",
+  "miniPlayer": "المشغل المصغر",
+  "minimizeToTray": "تصغير إلى شريط النظام",
+  "minimizeToTrayDescription": "إغلاق التطبيق إلى شريط النظام بدلاً من الخروج",
+  "minsShort": "د",
+  "minsShortLabel": "دقائق",
+  "minuteShort": "دقيقة",
+  "minutes": "دقائق",
+  "minutesDuration": "{count, plural, =1{دقيقة واحدة} other{{count} دقائق}}",
+  "moreOptions": "خيارات إضافية",
+  "moreOptionsTooltip": "خيارات إضافية",
+  "mostListened": "الأكثر استماعاً",
+  "mostListenedArtist": "الفنان الأكثر استماعاً",
+  "musicFolderLocation": "موقع مجلد الموسيقى",
+  "musicSearch": "البحث عن الموسيقى",
+  "musicWillStopIn": "ستتوقف الموسيقى خلال {label}",
+  "muteTooltip": "كتم الصوت",
+  "myTopTrackOn": "أغنيتي المفضلة على Simple Player! 🎵",
+  "nativeRate": "المعدل الأصلي",
+  "navigation": "التنقل",
+  "newPlaylist": "قائمة تشغيل جديدة",
+  "nextTrack": "المسار التالي",
+  "nicknameHint": "أدخل اسمك المستعار",
+  "nicknameLabel": "الاسم المستعار",
+  "nicknameRequired": "الاسم المستعار مطلوب",
+  "nicknameRequiredDesc": "يجب عليك تعيين اسم مستعار مخصص أولاً لعرض لوحة المتصدرين العالمية!",
+  "nicknameTakenDesc": "هذا الاسم المستعار مستخدم بالفعل عالميًا. يرجى اختيار اسم آخر.",
+  "nicknameTakenTitle": "الاسم المستعار مأخوذ",
+  "noAlbumsFound": "لم يتم العثور على ألبومات",
+  "noArtistStatsYet": "لا توجد إحصائيات للفنانين بعد.",
+  "noArtistsFound": "لم يتم العثور على فنانين.",
+  "noDownloadsFound": "لم يتم العثور على تنزيلات",
+  "noFolderSelected": "لم يتم اختيار مجلد",
+  "noHistoryYet": "لا يوجد سجل بعد",
+  "noInternetConnection": "لا يوجد اتصال بالإنترنت",
+  "noLyricsAvailable": "لا توجد كلمات متاحة",
+  "noMessages": "لا توجد رسائل في صندوق بريدك",
+  "noMusicPlaying": "لا توجد موسيقى مشغلة",
+  "noPlaylistsFound": "لم يتم العثور على قوائم تشغيل",
+  "noPlaylistsYet": "لا توجد قوائم تشغيل بعد",
+  "noRankingsYet": "لا توجد تصنيفات بعد لهذه الفترة الزمنية.",
+  "noResultsFound": "لم يتم العثور على نتائج",
+  "noSongPlaying": "لا توجد أغنية مشغلة",
+  "noSongsAdded": "لم تتم إضافة أي أغاني بعد",
+  "noSongsInFolder": "لم يتم العثور على أغاني في هذا المجلد.",
+  "noSpotifyResults": "لم يتم العثور على نتائج من Spotify.",
+  "noStatsYet": "لا توجد إحصائيات بعد.",
+  "noStreamMatch": "لم يتم العثور على مطابقة للبث.",
+  "noSuggestionsFound": "لم يتم العثور على اقتراحات.",
+  "noSyncedLyricsFound": "لم يتم العثور على كلمات متزامنة",
+  "noTracksFound": "لم يتم العثور على مقاطع في قائمة التشغيل",
+  "noUsbDacDetected": "لم يتم اكتشاف USB DAC. قم بتوصيل جهاز صوت USB واضغط على مسح.",
+  "noUsersFound": "لم يتم العثور على مستخدم",
+  "noYoutubeResults": "لم يتم العثور على نتائج على YouTube",
+  "none": "بلا",
+  "nordicAurora": "الشفق القطبي",
+  "notRank": "ليس في الرتبة {rank}",
+  "notRanked": "غير مصنف",
+  "notRankedTop3": "ليس في المراكز الثلاثة الأولى",
+  "nowPlaying": "مشغل الآن",
+  "nowPlayingHeader": "مشغل الآن",
+  "nowPlayingSection": "مشغل الآن",
+  "offline": "بدون اتصال",
+  "offlineStatus": "غير متصل",
+  "ok": "موافق",
+  "online": "متصل",
+  "onlyScanSelected": "مسح المجلدات المختارة فقط (مفعل افتراضياً)",
+  "opacity": "الشفافية",
+  "opacityLabel": "الشفافية: {percent}%",
+  "openProfile": "فتح الملف الشخصي",
+  "openSourceLicenses": "تراخيص المصدر المفتوح",
+  "outputLabel": "المخرجات",
+  "overwrite": "استبدال",
+  "overwriteLrcWarning": "يوجد ملف .lrc محلي للأغنية بالفعل.\\nهل تريد الاستبدال؟",
+  "parsingPlaylistData": "جاري تحليل بيانات قائمة التشغيل...",
+  "pathLabel": "المسار",
+  "permissionRequired": "الإذن مطلوب",
+  "permissionRequiredDesc": "إذن \"الدخول إلى جميع الملفات\" مطلوب لتعديل البيانات الوصفية. هذا يسمح بتعديل ملفات الموسيقى الخاصة بك مباشرة.",
+  "play": "تشغيل",
+  "playCountLabel": "{count} تشغيل",
+  "playNext": "تشغيل تالياً",
+  "playPause": "تشغيل / إيقاف",
+  "playQueue": "تشغيل القائمة",
+  "playback": "التشغيل",
+  "playbackError": "خطأ في التشغيل",
+  "player": "اللاعب",
+  "playingFromAlbum": "التشغيل من الألبوم",
+  "playingNext": "سيتم التشغيل تالياً",
+  "playingTrack": "تشغيل المقطع",
+  "playlistAlbumTracks": "مقاطع القائمة / الألبوم",
+  "playlistNameHint": "اسم قائمة التشغيل",
+  "playlistNotFound": "قائمة التشغيل غير موجودة",
+  "playlistNotFoundOrError": "قائمة التشغيل غير موجودة أو حدث خطأ في الخادم",
+  "playlistReadyShare": "قائمة التشغيل الخاصة بك جاهزة للمشاركة!",
+  "playlists": "قوائم التشغيل",
+  "plays": "مرات تشغيل",
+  "popularOnSpotify": "شائع على Spotify",
+  "portuguese": "البرتغالية (البرازيل)",
+  "preferredOutputFormat": "تنسيق الإخراج المفضل للتنزيلات",
+  "preparingDownload": "جاري تحضير التنزيل",
+  "preparingDownloadFormat": "جاري تحضير التنزيل ({format})...",
+  "preparingDownloadNotification": "جاري تحضير التنزيل",
+  "presetSaved": "تم حفظ الإعداد المسبق!",
+  "preview": "معاينة",
+  "previousTrack": "المسار السابق",
+  "profileSettings": "إعدادات الملف الشخصي",
+  "profileStats": "إحصائيات الملف الشخصي",
+  "progress": "التقدم",
+  "publicSharing": "المشاركة العلنية",
+  "publicSharingDesc": "يمكن لأي شخص لديه الرمز استيراد قائمة التشغيل هذه.",
+  "publicSharingDisabledDesc": "معطلة. قم بتفعيلها للمشاركة مع الآخرين.",
+  "queueIsEmpty": "قائمة الانتظار فارغة",
+  "queueTooltip": "قائمة الانتظار",
+  "queueUpdated": "تم تحديث قائمة الانتظار",
+  "quickMix": "ميكس سريع",
+  "rainbowMode": "وضع قوس قزح",
+  "rainyCity": "مدينة ممطرة",
+  "rank": "الرتبة",
+  "rankActive": "الرتبة {rank} (نشط)",
+  "rankLabel": "الرتبة {rank}",
+  "reBuffering": "جاري التحميل...",
+  "reachDailyPlaysTooltip": "تصل لـ {count} تشغيل في يوم واحد للحصول عليه",
+  "reachSpecificArtistTooltip": "تصل لـ {minutes} دقيقة مع فنان معين للحصول عليه",
+  "reachWeeklyPlaysTooltip": "تصل لـ {count} تشغيل في أسبوع واحد للحصول عليه",
+  "readySearchSong": "جاهز. ابحث عن أغنية.",
+  "rebufferingFromCloud": "إعادة التحميل من السحابة...",
+  "recentlyPlayed": "تم تشغيلها مؤخراً",
+  "recommendationsCount": "توصيات ({count})",
+  "recommendationsSection": "توصيات",
+  "rediscover": "إعادة اكتشاف",
+  "refreshLabel": "تحديث",
+  "refreshLibrary": "تحديث المكتبة",
+  "refreshList": "تحديث القائمة",
+  "refreshLyricsTooltip": "تحديث كلمات",
+  "removeAvatar": "إزالة الأفاتار الحالي",
+  "removeFromPlaylist": "إزالة من قائمة التشغيل",
+  "removedFolder": "تم إزالة المجلد: {folder}",
+  "rename": "إعادة تسمية",
+  "renamePlaylist": "إعادة تسمية قائمة التشغيل",
+  "repeats": "تكرارات",
+  "requiresAndroid14": "يتطلب Android 14+ و USB DAC",
+  "resamplingLabel": "إعادة العينة",
+  "reset": "إعادة تعيين",
+  "resetDataUsage": "إعادة تعيين استخدام البيانات",
+  "resetDataUsageContent": "هل أنت متأكد من رغبتك في إعادة تعيين استخدام البيانات؟ لن يؤثر ذلك على الموسيقى التي تم تنزيلها.",
+  "resetEverything": "إعادة ضبط كل شيء",
+  "resetLibraryContent": "سيؤدي هذا إلى إزالة المجلد الحالي من المشغل. لن يتم حذف ملفاتك.",
+  "resetLibraryPath": "إعادة ضبط مسار المكتبة",
+  "resetLibraryTitle": "إعادة ضبط المكتبة؟",
+  "resetPath": "إعادة ضبط المسار",
+  "resetStatistics": "إعادة ضبط الإحصائيات",
+  "resetStatsContent": "هذا الإجراء لا يمكن التراجع عنه.\\nستفقد جميع أعداد مرات التشغيل والأوقات بشكل دائم.",
+  "resetStatsTitle": "إعادة ضبط الإحصائيات؟",
+  "resetToAutomatic": "إعادة تعيين إلى تلقائي",
+  "resetToDefault": "إعادة الضبط للافتراضي",
+  "resetUsage": "إعادة تعيين الاستخدام",
+  "resetsIn": "يعاد الضبط خلال",
+  "restartContent": "مطلوب إعادة تشغيل التطبيق لتطبيق تغييرات جهاز الصوت.\\n\\nإعادة التشغيل الآن؟",
+  "restartNow": "إعادة التشغيل الآن",
+  "restartRequired": "إعادة التشغيل مطلوبة",
+  "restoring": "جاري الاستعادة",
+  "retryConnection": "إعادة محاولة الاتصال",
+  "revert": "رجوع",
+  "russian": "الروسية",
+  "sakura": "ساكورا",
+  "sampleRateLabel": "معدل العينة",
+  "samplingRateLabel": "معدل العينة",
+  "save": "حفظ",
+  "saveAsNewPreset": "حفظ كإعداد مسبق جديد",
+  "saveChangesToFile": "حفظ التغييرات في الملف",
+  "saveLabel": "حفظ",
+  "saveLrcPrompt": "هل تريد حفظ الكلمات الحالية كملف .lrc بجانب الملف الصوتي؟",
+  "saveLyricsTooltip": "حفظ كلمات",
+  "savePlaylistContent": "سيؤدي هذا إلى إنشاء قائمة تشغيل جديدة بناءً على هذه الأغاني.",
+  "savePlaylistTitle": "حفظ \"{title}\"؟",
+  "savePreset": "حفظ الإعداد المسبق",
+  "savedAs": "تم الحفظ باسم \"{name}\"!",
+  "savedAsFormat": "تم الحفظ بصيغة {format}",
+  "savedTo": "تم الحفظ في \"{path}\"",
+  "saving": "جاري الحفظ...",
+  "scan": "مسح",
+  "scanToControlPlayback": "امسح للتحكم في التشغيل بهاتفك.",
+  "scanning": "جاري المسح...",
+  "scrollForLyrics": "قم بالتمرير لمشاهدة الكلمات",
+  "search": "بحث",
+  "searchEngine": "محرك البحث",
+  "searchFailedStatus": "فشل البحث: {error}",
+  "searchHint": "بحث...",
+  "searchSongs": "بحث عن أغاني...",
+  "searchSongsOrAlbumsAndArtistsHint": "بحث عن أغاني، ألبومات أو فنانين...",
+  "searchSpotify": "بحث في Spotify",
+  "searchSpotifyHint": "بحث في Spotify...",
+  "searchUsers": "البحث عن المستخدمين...",
+  "searchYoutubeHint": "بحث في YouTube...",
+  "searching": "جاري البحث...",
+  "searchingEngine": "جاري البحث في {engine} عن '{keyword}'...",
+  "searchingSpotify": "جاري البحث في Spotify...",
+  "searchingSpotifyFor": "جاري البحث عن \"{keyword}\" في Spotify...",
+  "searchingStatus": "بحث",
+  "secondShort": "ثانية",
+  "secsShort": "ث",
+  "seeAll": "عرض الكل",
+  "selectDifferentFolder": "اختر مجلداً مختلفاً",
+  "selectFolder": "اختر مجلداً",
+  "selectMatch": "اختر المطابقة",
+  "selectSongToEdit": "اختر أغنية من القائمة لتعديلها",
+  "selectStreamingQuality": "اختر جودة البث",
+  "selectTrackToStart": "اختر مقطعاً للبدء",
+  "selectVersion": "اختر الإصدار",
+  "session": "الجلسة: {id}",
+  "setCountryReleases": "تعيين الدولة للإصدارات والتصنيفات",
+  "setCustomTimer": "ضبط مؤقت مخصص",
+  "settings": "الإعدادات",
+  "share": "مشاركة",
+  "shareCodeUsage": "أعط هذا الرمز المكون من 6 أرقام لصديق لتمكينه من استيراد قائمة التشغيل هذه.",
+  "sharePlaylist": "مشاركة قائمة التشغيل",
+  "sharePlaylistTitle": "مشاركة \"{name}\"",
+  "sharedMode": "مشترك",
+  "showAllTitles": "إظهار كافة الألقاب {count}",
+  "showAnimatedWaves": "إظهار أمواج متحركة في شريط التشغيل",
+  "showDebugButton": "إظهار زر التصحيح العائم",
+  "showInFolder": "إظهار في المجلد",
+  "showLess": "عرض أقل",
+  "showMore": "إظهار المزيد",
+  "showStatusDiscord": "إظهار الحالة على ديسكورد",
+  "showUnlockedOnly": "إظهار المفتوح فقط",
+  "shuffle": "عشوائي",
+  "shuffleAll": "تشغيل الكل عشوائياً",
+  "shufflingArtist": "تشغيل أغاني {artistName} عشوائياً...",
+  "signInWithGoogle": "تسجيل الدخول باستخدام جوجل",
+  "signalOutput": "إخراج الإشارة",
+  "singleTracks": "مقاطع فردية",
+  "sleepTimer": "مؤقت النوم",
+  "songAlreadyInPlaylist": "الأغنية موجودة بالفعل في قائمة التشغيل",
+  "songInformation": "معلومات الأغنية",
+  "songLabelUpper": "أغنية",
+  "songTitleKeyword": "العنوان أو كلمة مفتاحية",
+  "songs": "أغاني",
+  "songsCount": "{count, plural, =1{أغنية واحدة} other{{count} أغنيات}}",
+  "songsInLibrary": "{count, plural, =1{أغنية واحدة} other{{count} أغنيات}} في المكتبة",
+  "songsLoadedCount": "تم تحميل {count} أغنية...",
+  "southKorea": "كوريا الجنوبية",
+  "spanish": "الإسبانية",
+  "spectrumBars": "أعمدة الطيف",
+  "spotify": "سبوتيفاي",
+  "standardDesc": "MP3 - حجم أصغر، تحميل أسرع",
+  "standardQuality": "قياسية (MP3)",
+  "start": "بدء",
+  "startBulkProcess": "بدء عملية جماعية",
+  "startedDownloadingAll": "بدأ تنزيل جميع الأغاني...",
+  "stateDisabled": "معطل",
+  "stateEnabled": "مفعل",
+  "statisticsReset": "تم إعادة ضبط الإحصائيات.",
+  "stats": "الإحصائيات",
+  "statusLabel": "الحالة",
+  "statusWithText": "الحالة: {status}",
+  "stopTimer": "إيقاف المؤقت ({time})",
+  "streaming": "البث",
+  "streamingQuality": "جودة البث",
+  "success": "نجاح",
+  "superfanHeader": "إنجازات المعجبين الخارقين",
+  "superfanTitles": "معجب خارق",
+  "supportDeveloperTooltip": "دعم المطور للحصول على لقب حصري",
+  "switchToGridView": "التبديل إلى عرض الشبكة",
+  "switchToListView": "التبديل إلى عرض القائمة",
+  "switchingTo": "التبديل إلى",
+  "syncThemeAlbumArt": "مزامنة المظهر مع صورة الألبوم",
+  "system": "النظام",
+  "systemDefault": "افتراضي النظام",
+  "targetLanguageLyrics": "اللغة المستهدفة لترجمة الكلمات",
+  "thai": "التايلاندية",
+  "tidalApiStatus": "Tidal API",
+  "timeBasedTitles": "القائمة على الوقت",
+  "timeListened": "وقت الاستماع",
+  "timeOverlordsHeader": "أسياد الوقت",
+  "timerSetForHours": "تم ضبط المؤقت لمدة {count} ساعات",
+  "timerSetForMinutes": "تم ضبط المؤقت لمدة {count} دقائق",
+  "timerSetForSeconds": "تم ضبط المؤقت لمدة {count} ثواني",
+  "tintBackground": "تلوين الخلفية والمصور بلون الأغنية",
+  "title": "العنوان",
+  "titleLabel": "العنوان",
+  "todayLabel": "اليوم: {size}",
+  "toggleDebugButton": "تبديل وحدة تحكم التصحيح العائمة",
+  "toggleDebugConsole": "تبديل وحدة تحكم التصحيح العائمة",
+  "toggleLyrics": "تبديل الكلمات",
+  "top3GlobalTooltip": "تصل لأفضل 3 عالمياً لمدة {weeks} أسابيع",
+  "topArtist": "أفضل فنان",
+  "topArtistAndTrack": "أفضل فنان ومسار",
+  "topArtists": "أفضل الفنانين",
+  "topGlobalTooltip": "تصل لأفضل {rank} عالمياً للحصول عليه",
+  "topListeners": "أفضل المستمعين",
+  "totalMinutesStat": "إجمالي الدقائق",
+  "totalPlays": "إجمالي مرات التشغيل",
+  "trackDetails": "تفاصيل المقطع",
+  "trackNumber": "رقم المقطع",
+  "tracks": "مقاطع",
+  "translateLabel": "ترجمة",
+  "translateLyrics": "ترجمة الكلمات",
+  "translateLyricsTooltip": "ترجمة كلمات",
+  "translationLanguage": "لغة الترجمة",
+  "turnOffTimer": "إيقاف المؤقت",
+  "unauthorize": "غير مصرح",
+  "underDevelopment": "هذه الميزة قيد التطوير",
+  "underwater": "تحت الماء",
+  "unitedKingdom": "المملكة المتحدة",
+  "unitedStates": "الولايات المتحدة",
+  "unknown": "غير معروف",
+  "unknownArtist": "فنان غير معروف",
+  "unknownDevice": "جهاز غير معروف",
+  "unlink": "إلغاء الربط",
+  "unlinkAccount": "إلغاء ربط الحساب",
+  "unlinkAccountDesc": "ستبقى إحصائياتك على هذا الجهاز ولكن لن يتم مزامنتها عبر الأجهزة بعد الآن.",
+  "unlinkAccountQuestion": "إلغاء ربط الحساب؟",
+  "unlinkFolder": "إلغاء ربط المجلد وتنظيف قائمة الأغاني",
+  "unlinkFolderClear": "إلغاء ربط المجلد وتنظيف قائمة الأغاني",
+  "unlockedCountLabel": "{unlocked} / {total} تم إلغاء القفل",
+  "unmuteTooltip": "إلغاء الكتم",
+  "unsavedChanges": "تغييرات غير محفوظة",
+  "upNext": "التالي",
+  "upNextCount": "التالي ({count})",
+  "upNextSection": "التالي",
+  "updateAvailableTitle": "التحديث متاح",
+  "updateAvailableVersion": "إصدار جديد ({version}) متاح.",
+  "updateFailed": "فشل التحديث: {error}",
+  "updateNow": "تحديث الآن",
+  "updatePrompt": "هل تريد تنزيله وتثبيته الآن؟",
+  "updatingYtDlp": "جاري تحديث yt-dlp",
+  "usbAudioBypass": "تجاوز صوت USB (بيتا) - إخراج DAC مباشر لـ Android 13 وما قبله",
+  "usbAudioBypassBeta": "تجاوز صوت USB (بيتا) - إخراج DAC مباشر لـ Android 13 وما قبله",
+  "useDarkTheme": "استخدام المظهر المظلم",
+  "useMixedColors": "استخدام ألوان مختلطة (الأولوية للمزامنة)",
+  "verifiedDeveloper": "مطور معتمد",
+  "version": "الإصدار",
+  "versionLabel": "الإصدار {version}",
+  "vietnamese": "الفيتنامية",
+  "viewQueue": "عرض القائمة",
+  "visualizer": "المصور",
+  "visualizerStyle": "نمط المصور",
+  "wasapiExclusive": "وضع WASAPI الحصري",
+  "weekly": "أسبوعي",
+  "weeks": "أسابيع",
+  "winter": "الشتاء",
+  "worldRanking": "التصنيف العالمي",
+  "worldTopArtists": "أفضل الفنانين عالمياً",
+  "year": "السنة",
+  "youMayLike": "قد يعجبك",
+  "yourPlaylists": "قوائم التشغيل الخاصة بك",
+  "yourTopMix": "أفضل ميكس لك",
+  "youtube": "يوتيوب",
+  "ytDlpUpdateAvailable": "تحديث yt-dlp متاح."
 }

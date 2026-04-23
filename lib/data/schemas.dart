@@ -15,7 +15,7 @@ class Song {
 
   late String title;
   late String artist;
-  late String? album;
+  String? album;
 
   late double duration; // Stored in seconds
 
@@ -71,8 +71,8 @@ class HistoryEntry {
   late bool isStream; // Was it a stream or a local file?
 
   // Extended Metadata
-  late String? spotifyId;
-  late String? deezerId;
+  String? spotifyId;
+  String? deezerId;
 }
 
 @collection
@@ -83,17 +83,68 @@ class SavedStat {
   late String statId; // The hash ID we used before
 
   late String title;
+
   late String artist;
   late String album;
 
   late int playCount;
   late int totalSeconds;
+  
+  DateTime? lastPlayed; // 📅 NEW: Tracked for daily/weekly totals
 
   late String lastKnownPath;
 
   // METADATA PERSISTENCE
-  late String? onlineArtUrl;
-  late String? youtubeUrl;
-  late String? spotifyId;
-  late String? deezerId;
+  String? onlineArtUrl;
+  String? youtubeUrl;
+  String? spotifyId;
+  String? deezerId;
+}
+
+@collection
+class MailboxMessage {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true)
+  String? remoteId; // PocketBase record ID for deduplication
+
+  late String message;
+  
+  @Index()
+  late DateTime timestamp;
+
+  @Index()
+  bool isRead = false;
+}
+
+@collection
+class DeletedMailboxMessage {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true)
+  late String remoteId;
+}
+
+@collection
+class OnlineArtCache {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: true)
+  late String key; // artist:ArtistName or track:ArtistName-TrackTitle
+
+  late String url;
+
+  late DateTime lastUpdated;
+}
+
+@collection
+class OnlineDataCache {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: true)
+  late String key; // artist_tracks:ArtistName or artist_albums:ArtistName
+
+  late String json;
+
+  late DateTime lastUpdated;
 }

@@ -19,7 +19,8 @@ enum LibraryView {
   settings,
   albumDetail,
   artistDetail,
-  tools
+  tools,
+  leaderboard
 }
 
 enum LibraryFilter { songs, folders, artists, albums }
@@ -118,80 +119,87 @@ final libraryPresentationProvider = StateNotifierProvider<
   return LibraryPresentationNotifier();
 });
 
-/// Provides a list of songs sorted by the user's preference
-final sortedSongsProvider = Provider<List<SongModel>>((ref) {
-  final library = ref.watch(libraryProvider);
-  final presentationState = ref.watch(libraryPresentationProvider);
-  final songs = List<SongModel>.from(library.songs);
+// -------------------------------------------------------------------
+// --- SYNC PROVIDERS FOR INSTANT UPDATES ---
+// -------------------------------------------------------------------
 
-  switch (presentationState.sortBy) {
+/// Provides a list of songs sorted by the user's preference (Synchronous for speed)
+/// 🚀 Uses allSongs (unfiltered) to avoid re-sorting on every search keystroke.
+/// 🚀 Uses .select((p) => p.allSongs) so it ONLY rebuilds when the actual library changes, NOT when searching!
+final sortedSongsProvider = Provider<List<SongModel>>((ref) {
+  final allSongs = ref.watch(libraryProvider.select((p) => p.allSongs));
+  final presentationState = ref.watch(libraryPresentationProvider);
+
+  if (allSongs.isEmpty) return [];
+
+  final List<SongModel> songs = List<SongModel>.from(allSongs);
+  final LibrarySort sortBy = presentationState.sortBy;
+  final bool isSortDescending = presentationState.isSortDescending;
+
+  switch (sortBy) {
     case LibrarySort.title:
-      songs.sort(
-          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+      // Compare strings efficiently without allocating new lowercase strings for every comparison
+      songs.sort((a, b) => a.title.compareTo(b.title));
       break;
     case LibrarySort.artist:
-      songs.sort(
-          (a, b) => a.artist.toLowerCase().compareTo(b.artist.toLowerCase()));
+      songs.sort((a, b) => a.artist.compareTo(b.artist));
       break;
     case LibrarySort.fileName:
       songs.sort((a, b) {
-        final nameA = p.basename(a.filePath).toLowerCase();
-        final nameB = p.basename(b.filePath).toLowerCase();
-        return nameA.compareTo(nameB);
+        return p.basename(a.filePath).compareTo(p.basename(b.filePath));
       });
       break;
   }
 
-  if (presentationState.isSortDescending) {
+  if (isSortDescending) {
     return songs.reversed.toList();
   }
   return songs;
 });
 
-// -------------------------------------------------------------------
-// --- PROVIDER FOR ARTISTS PAGE ---
-// -------------------------------------------------------------------
+final displaySortedSongsProvider = Provider<List<SongModel>>((ref) {
+  // 🚀 MASTER SOURCE: Use the already-sorted list as the base for filtering.
+  // This physically guarantees the result is sorted without ever calling `.sort()` again.
+  final allSortedSongs = ref.watch(sortedSongsProvider);
+  final hasSearchQuery = ref.watch(libraryProvider.select((p) => p.hasSearchQuery));
+  
+  if (!hasSearchQuery) return allSortedSongs;
+
+  // 🚀 FAST FILTER: Simply filter the sorted master list.
+  // The results stay in the correct relative sorted order automatically!
+  final query = ref.watch(libraryProvider.select((p) => p.searchQuery)).toLowerCase();
+  
+  return allSortedSongs.where((song) => song.searchKey.contains(query)).toList();
+});
 
 /// Provides a Map of Artist Name -> List of SongModel objects by that artist.
 final groupedArtistsProvider = Provider<Map<String, List<SongModel>>>((ref) {
-  final songs = ref.watch(sortedSongsProvider);
-
-  // Return empty if no songs found
-  if (songs.isEmpty) {
-    return const {};
-  }
+  final songs = ref.watch(displaySortedSongsProvider);
+  if (songs.isEmpty) return const {};
 
   final Map<String, List<SongModel>> grouped = {};
-
   for (var song in songs) {
-    // Group songs by Artist name, using 'Unknown Artist' as a fallback
     final artist =
         (song.artist.isNotEmpty ? song.artist : 'Unknown Artist').trim();
-
     if (!grouped.containsKey(artist)) {
       grouped[artist] = [];
     }
     grouped[artist]!.add(song);
   }
 
-  // Debug log to confirm it only runs once at the end
-  // print("🎨 Grouping Artists: Processed ${grouped.length} artists.");
+  // 🚀 Alphabetical Sort for Artist Names
+  final sortedKeys = grouped.keys.toList()
+    ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
-  return grouped;
+  return {for (final key in sortedKeys) key: grouped[key]!};
 });
-
-// -------------------------------------------------------------------
-// --- PROVIDER FOR ALBUMS PAGE ---
-// -------------------------------------------------------------------
 
 /// Provides a Map of Album Name -> List of SongModel objects in that album.
 final groupedAlbumsProvider = Provider<Map<String, List<SongModel>>>((ref) {
-  final songs = ref.watch(sortedSongsProvider);
-
+  final songs = ref.watch(displaySortedSongsProvider);
   if (songs.isEmpty) return const {};
 
   final Map<String, List<SongModel>> grouped = {};
-
   for (final song in songs) {
     final album = (song.album.isNotEmpty ? song.album : "Unknown Album").trim();
     if (!grouped.containsKey(album)) {
@@ -199,43 +207,29 @@ final groupedAlbumsProvider = Provider<Map<String, List<SongModel>>>((ref) {
     }
     grouped[album]!.add(song);
   }
-
-  // Sort albums alphabetically
   final sortedKeys = grouped.keys.toList()
     ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-
   return {for (final key in sortedKeys) key: grouped[key]!};
 });
 
-// -------------------------------------------------------------------
-// --- PROVIDER FOR FOLDERS PAGE ---
-// -------------------------------------------------------------------
-
 /// Provides a Map of Folder Name -> List of SongModel objects in that folder.
 final groupedFoldersProvider = Provider<Map<String, List<SongModel>>>((ref) {
-  final songs = ref.watch(sortedSongsProvider);
-
+  final songs = ref.watch(displaySortedSongsProvider);
   if (songs.isEmpty) return const {};
 
   final Map<String, List<SongModel>> grouped = {};
-
   for (final song in songs) {
-    // 🚀 Use FULL PATH as key to avoid name collisions (e.g., ArtistA/Album1 vs ArtistB/Album1)
     final folderPath = p.dirname(song.filePath);
-
     if (!grouped.containsKey(folderPath)) {
       grouped[folderPath] = [];
     }
     grouped[folderPath]!.add(song);
   }
-
-  // Sort by folder name (basename) but keep full path as key
   final sortedKeys = grouped.keys.toList()
     ..sort((a, b) {
       final nameA = p.basename(a).toLowerCase();
       final nameB = p.basename(b).toLowerCase();
       return nameA.compareTo(nameB);
     });
-
   return {for (final key in sortedKeys) key: grouped[key]!};
 });

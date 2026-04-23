@@ -28,19 +28,11 @@ class QueueSheet extends ConsumerWidget {
     // FULL LIST GENERATION (Lazy Loaded via Slivers)
     List<SongModel> upNextFromLibrary = [];
 
-    if (currentSong != null && playlist.isNotEmpty) {
-      int currentIndex =
-          playlist.indexWhere((s) => s.filePath == currentSong.filePath);
-
-      if (currentIndex == -1) {
-        // Fallback for when filePath is changed by JIT streaming/caching
-        currentIndex =
-            playlist.indexWhere((s) => s.title == currentSong.title);
-      }
-
+    if (playlist.isNotEmpty) {
+      int currentIndex = notifier.currentPlaylistIndex;
       final bool isLoopAll = playerState.loopMode == ja.LoopMode.all;
 
-      if (currentIndex != -1) {
+      if (currentIndex >= 0 && currentIndex < playlist.length) {
         final int fullPlaylistLength = playlist.length;
         final int itemsToDisplay = fullPlaylistLength;
 
@@ -53,7 +45,7 @@ class QueueSheet extends ConsumerWidget {
             break;
           }
 
-          if (playlist[nextIndex].filePath != currentSong.filePath) {
+          if (playlist[nextIndex].filePath != currentSong?.filePath) {
             upNextFromLibrary.add(playlist[nextIndex]);
           }
         }
@@ -83,7 +75,7 @@ class QueueSheet extends ConsumerWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 spreadRadius: 2,
               )
@@ -108,7 +100,7 @@ class QueueSheet extends ConsumerWidget {
                               width: 40,
                               height: 4,
                               decoration: BoxDecoration(
-                                color: subTextColor!.withOpacity(0.3),
+                                color: subTextColor!.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -209,13 +201,15 @@ class QueueSheet extends ConsumerWidget {
                       ),
                     ],
 
-                    // 3. FROM LIBRARY
+                    // 3. FROM LIBRARY / PLAYING FROM (Remote)
                     if (upNextFromLibrary.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.only(top: 16),
                           child: _buildSectionHeader(
-                              "${l10n.fromLibrarySection} (${totalLibraryCount})",
+                              notifier.isMaster
+                                  ? "${l10n.fromLibrarySection} ($totalLibraryCount)"
+                                  : "${l10n.fromLibrarySection} ($totalLibraryCount)",
                               subTextColor,
                               context),
                         ),
@@ -339,7 +333,7 @@ class QueueSheet extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: isNowPlaying
           ? BoxDecoration(
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               border: Border(
                 left: BorderSide(color: accentColor, width: 4),
               ),

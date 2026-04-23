@@ -77,13 +77,13 @@ class _AutumnLightsPainter extends CustomPainter {
 
       final double flicker =
           sin(animationValue * 2 * pi + (i * 0.5)) * 0.2 + 0.8;
-      final Color amberColor = Colors.amber.withOpacity(flicker);
+      final Color amberColor = Colors.amber.withValues(alpha: flicker);
 
       final paint = Paint()
         ..color = amberColor
         ..style = PaintingStyle.fill;
       final glowPaint = Paint()
-        ..color = amberColor.withOpacity(0.3)
+        ..color = amberColor.withValues(alpha: 0.3)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
 
       // Lantern shape (rectangle)

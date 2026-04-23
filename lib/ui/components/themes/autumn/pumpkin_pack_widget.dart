@@ -27,7 +27,7 @@ class _PumpkinPackPainter extends CustomPainter {
     for (int i = 0; i < 5; i++) {
       final double moundX = size.width * (0.1 + i * 0.2);
       final paint = Paint()
-        ..color = leafColors[i % leafColors.length].withOpacity(0.6);
+        ..color = leafColors[i % leafColors.length].withValues(alpha: 0.6);
 
       final Path moundPath = Path()
         ..moveTo(moundX - 60, yBase)
@@ -48,7 +48,7 @@ class _PumpkinPackPainter extends CustomPainter {
       ..color = const Color(0xFF2E7D32)
       ..style = PaintingStyle.fill;
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.1)
+      ..color = Colors.black.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 

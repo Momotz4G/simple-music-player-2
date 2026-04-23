@@ -12,6 +12,9 @@ class MusicHandler extends BaseAudioHandler {
   // Callbacks for queue navigation (since NativeMusicService doesn't know about Queue)
   VoidCallback? onSkipNext;
   VoidCallback? onSkipPrevious;
+  VoidCallback? onPlay;
+  VoidCallback? onPause;
+  Function(Duration)? onSeek;
 
   MusicHandler(this._playbackEventStream) {
     // Only listening to the active stream provided by NativeMusicService
@@ -59,14 +62,22 @@ class MusicHandler extends BaseAudioHandler {
 
   @override
   Future<void> play() async {
-    final NativeMusicService _musicService = NativeMusicService();
-    await _musicService.resume();
+    if (onPlay != null) {
+      onPlay?.call();
+    } else {
+      final NativeMusicService _musicService = NativeMusicService();
+      await _musicService.resume();
+    }
   }
 
   @override
   Future<void> pause() async {
-    final NativeMusicService _musicService = NativeMusicService();
-    await _musicService.pause();
+    if (onPause != null) {
+      onPause?.call();
+    } else {
+      final NativeMusicService _musicService = NativeMusicService();
+      await _musicService.pause();
+    }
     playbackState.add(playbackState.value.copyWith(
       processingState: AudioProcessingState.ready,
       playing: false,
@@ -76,8 +87,12 @@ class MusicHandler extends BaseAudioHandler {
 
   @override
   Future<void> seek(Duration position) async {
-    final NativeMusicService _musicService = NativeMusicService();
-    await _musicService.seek(position);
+    if (onSeek != null) {
+      onSeek?.call(position);
+    } else {
+      final NativeMusicService _musicService = NativeMusicService();
+      await _musicService.seek(position);
+    }
   }
 
   @override

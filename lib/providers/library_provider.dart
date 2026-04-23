@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import '../utils/folder_picker.dart';
 import 'package:path/path.dart' as p;
-import 'package:metadata_god/metadata_god.dart';
+import '../services/metadata_service.dart';
+import '../services/cue_parser_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar/isar.dart';
+import 'package:metadata_god/metadata_god.dart' show Metadata;
 
 // Imports for Database
 import '../data/schemas.dart'; // The Isar Schema
@@ -13,8 +17,6 @@ import 'db_provider.dart'; // To access the DB Service
 import '../services/db_service.dart'; // 🚀 IMPORT DBService class
 import '../models/song_model.dart';
 import 'settings_provider.dart'; // 🚀 IMPORT SettingsState
-import '../services/audio_info_service.dart';
-import '../services/art_cache_service.dart'; // 🚀 Art Cache
 
 class LibraryProvider extends ChangeNotifier {
   final Ref ref; // We need Ref to talk to other providers (DB)
@@ -32,8 +34,13 @@ class LibraryProvider extends ChangeNotifier {
   String? _error;
   bool _isPermissionDenied = false;
   bool _disposed = false; // 🚀 Track disposal state
+  int _scanToken = 0; // 🚀 Cancellation token for scan operations
 
   List<SongModel> get songs => _searchQuery.isEmpty ? _songs : _filteredSongs;
+  List<SongModel> get allSongs => _songs; // 🚀 Unfiltered — for grouped providers
+  String get searchQuery => _searchQuery; // 🚀 Public getter for efficient presentation filtering
+  bool get hasSearchQuery => _searchQuery.isNotEmpty; // 🚀 UI can distinguish empty search vs empty library
+  int get totalSongCount => _songs.length; // 🚀 Total before filtering
   bool get isLoading => _isLoading;
   String? get selectedFolder => _selectedFolder;
   String? get error => _error;
@@ -49,7 +56,9 @@ class LibraryProvider extends ChangeNotifier {
     '.aac',
     '.opus',
     '.dsf',
-    '.dff'
+    '.dff',
+    '.aiff',
+    '.aif'
   ];
 
   LibraryProvider(this.ref) {
@@ -189,17 +198,26 @@ class LibraryProvider extends ChangeNotifier {
     } else {
       _filteredSongs = List.from(_songs);
     }
-    _safeNotify();
+    
+    debugPrint("📂 [_fetchFromDatabase] Finished! allSongs: ${allSongs.length}, filteredToFolder: ${_songs.length}");
+    // 🚀 Only notify if search() didn't already do it — prevents double notification per batch
+    if (_searchQuery.isEmpty) {
+      _safeNotify();
+    }
   }
 
   SongModel _mapToModel(Song dbSong) {
+    // 🚀 CUE SUPPORT: Extract the real audio file extension for CUE virtual paths
+    final effectivePath = CuePath.isCuePath(dbSong.path)
+        ? CuePath.extractAudioPath(dbSong.path)
+        : dbSong.path;
     return SongModel(
       title: dbSong.title,
       artist: dbSong.artist,
       album: dbSong.album ?? "Unknown Album",
       duration: dbSong.duration,
       filePath: dbSong.path,
-      fileExtension: p.extension(dbSong.path),
+      fileExtension: p.extension(effectivePath),
       year: dbSong.year,
       trackNumber: dbSong.trackNumber,
       discNumber: dbSong.discNumber,
@@ -208,169 +226,255 @@ class LibraryProvider extends ChangeNotifier {
     );
   }
 
-  void search(String query) {
+  Future<void> search(String query) async {
+    if (_searchQuery == query) return;
     _searchQuery = query;
-    if (query.isEmpty) {
-      _filteredSongs = List.from(_songs);
-    } else {
-      final lowerQuery = query.toLowerCase();
-      _filteredSongs = _songs.where((song) {
-        return song.title.toLowerCase().contains(lowerQuery) ||
-            song.artist.toLowerCase().contains(lowerQuery) ||
-            song.album.toLowerCase().contains(lowerQuery);
-      }).toList();
+    _safeNotify(); // Notify display providers to perform the filter ONCE.
+  }
+
+  /// Called from UI after the user has already picked a folder via FilePicker.
+  /// This avoids a known file_picker deadlock when getDirectoryPath() is called
+  /// from a ChangeNotifier provider context with bitsdojo_window on Windows.
+  Future<void> setFolder(String path) async {
+    debugPrint("📂 [setFolder] Setting folder: $path");
+
+    try {
+      final dbService = ref.read(dbServiceProvider);
+      final settings = ref.read(settingsProvider);
+
+      final canonicalPath = p.canonicalize(path);
+      _selectedFolder = canonicalPath;
+      final prefs = await SharedPreferences.getInstance();
+      if (_disposed) return;
+      await prefs.setString('saved_music_folder', canonicalPath);
+      _error = null;
+      _isPermissionDenied = false;
+      
+      // 🚀 Cancel any in-progress scan
+      _scanToken++;
+      
+      // 🚀 IMMEDIATE UI REFRESH — don't block
+      _songs = [];
+      _filteredSongs = [];
+      _isLoading = true;
+      _safeNotify();
+      debugPrint("📂 [setFolder] UI state cleared. Firing background work...");
+      
+      // 🚀 NON-BLOCKING: Fire DB fetch and scan in background
+      // This prevents the UI hang when changing folders.
+      _fetchFromDatabase(dbService, settings).then((_) {
+        if (!_disposed) {
+          _scanFolder(canonicalPath, dbService, settings);
+        }
+      });
+      
+      debugPrint("📂 [setFolder] Method completed — UI thread released.");
+    } catch (e, stack) {
+      debugPrint("❌ [setFolder] ERROR: $e");
+      debugPrint("❌ [setFolder] Stack: $stack");
+      _error = "Set folder failed: $e";
+      _safeNotify();
     }
-    _safeNotify();
   }
 
-  Future<void> pickFolder() async {
-    // 🚀 Capture dependencies at ENTRY
-    final dbService = ref.read(dbServiceProvider);
-    final settings = ref.read(settingsProvider);
-
-    String? result = await FilePicker.platform.getDirectoryPath();
-    if (_disposed || result == null) return;
-
-    final canonicalPath = p.canonicalize(result);
-    _selectedFolder = canonicalPath;
-    final prefs = await SharedPreferences.getInstance();
-    if (_disposed) return;
-    await prefs.setString('saved_music_folder', canonicalPath);
-    _error = null;
-    _isPermissionDenied = false;
-    await _scanFolder(canonicalPath, dbService, settings);
-  }
 
   Future<void> _scanFolder(
       String path, DBService dbService, SettingsState settings) async {
-    if (_isLoading) return;
+    if (_isLoading && _selectedFolder == path) {
+       // Allow if triggered from setFolder (isLoading already true)
+       // but guard against duplicate concurrent scans on same path
+    }
+    
+    // 🚀 Capture token at start for cancellation
+    final myToken = _scanToken;
+    
     _isLoading = true;
     _error = null;
     _isPermissionDenied = false;
     _safeNotify();
 
     try {
+      debugPrint("🔍 [_scanFolder] Target path: $path (token: $myToken)");
       final dir = Directory(path);
       if (await dir.exists()) {
-        if (_disposed) return;
-        final List<FileSystemEntity> entities = await dir
-            .list(recursive: !_ignoreSubfolders, followLinks: false)
-            .toList();
-        if (_disposed) return;
-
-        List<Song> batchToAdd = [];
-
-        for (final entity in entities) {
+        if (_disposed || _scanToken != myToken) return;
+        
+        debugPrint("🔍 [_scanFolder] Directory exists. Starting directory walk...");
+        final existingSongs = await dbService.getAllSongs();
+        debugPrint("🔍 [_scanFolder] Fetched ${existingSongs.length} existing songs from DB.");
+        final existingPaths = existingSongs.map((s) => p.canonicalize(s.path)).toSet();
+        
+        // Use `await for` instead of `.toList()` to prevent ANR via massive memory buffer block
+        final List<String> pathsToProcess = [];
+        final List<String> cueFilesToProcess = []; // 🚀 CUE SUPPORT
+        
+        // Listen to the directory stream and yield frequently to avoid freezing the UI Isolate
+        int filesScanned = 0;
+        await for (final FileSystemEntity entity in dir.list(
+          recursive: !_ignoreSubfolders, 
+          followLinks: false
+        )) {
+          if (_disposed || _scanToken != myToken) return;
+          filesScanned++;
+          
           if (entity is File) {
             String extension = p.extension(entity.path).toLowerCase();
             if (_audioExtensions.contains(extension)) {
-              Song? newSong = await _processFileForDB(entity, extension);
-              if (_disposed) return;
-
-              if (newSong != null) {
-                batchToAdd.add(newSong);
-              }
-
-              if (batchToAdd.length >= 50) {
-                await dbService.saveSongs(batchToAdd);
-                if (_disposed) return;
-                batchToAdd.clear();
+              final canonicalPath = p.canonicalize(entity.path);
+              if (!existingPaths.contains(canonicalPath)) {
+                pathsToProcess.add(entity.path);
               }
             }
+            // 🚀 CUE SUPPORT: Also collect .cue files for parsing
+            if (extension == '.cue') {
+              cueFilesToProcess.add(entity.path);
+            }
+          }
+          // Yield to the event loop so the UI doesn't hang
+          if (filesScanned % 100 == 0) {
+            await Future.delayed(Duration.zero);
           }
         }
+        
+        debugPrint("🔍 [_scanFolder] Found ${pathsToProcess.length} NEW track paths, ${cueFilesToProcess.length} CUE sheets out of total recursive file scope.");
 
-        if (batchToAdd.isNotEmpty) {
-          await dbService.saveSongs(batchToAdd);
-          if (_disposed) return;
+        if (pathsToProcess.isEmpty && cueFilesToProcess.isEmpty) {
+           _isLoading = false;
+           _safeNotify();
+           return;
         }
+
+        // 🚀 Processing in chunks of 20 (reduced from 50 to limit ffprobe pressure)
+        for (int i = 0; i < pathsToProcess.length; i += 20) {
+          if (_disposed || _scanToken != myToken) return;
+          
+          final end = (i + 20 < pathsToProcess.length) ? i + 20 : pathsToProcess.length;
+          final chunk = pathsToProcess.sublist(i, end);
+          
+          final metadataBatch = await MetadataService().readMetadataBatch(chunk);
+          
+          List<Song> batchToAdd = [];
+          for (int j = 0; j < chunk.length; j++) {
+            final filePath = chunk[j];
+            final metadata = metadataBatch[j];
+            final ext = p.extension(filePath).toLowerCase();
+            
+            final Song song = _mapMetadataToSong(filePath, metadata, ext);
+            
+            // 🚀 DSD tags are already handled by MetadataService._readMetadataViaFFprobe()
+            // via the combined getTagsAndInfo() call — no extra ffprobe needed here.
+            
+            batchToAdd.add(song);
+          }
+
+          if (batchToAdd.isNotEmpty) {
+            await dbService.saveSongs(batchToAdd);
+            debugPrint("🔍 [_scanFolder] Saved chunk index $i to DB (${batchToAdd.length} songs)");
+            await _fetchFromDatabase(dbService, settings);
+            _safeNotify();
+          }
+          await Future.delayed(Duration.zero);
+        }
+
+        // =====================================================================
+        // 🚀 CUE SHEET PROCESSING: Parse .cue files and create virtual tracks
+        // =====================================================================
+        if (cueFilesToProcess.isNotEmpty) {
+          debugPrint("🎵 [_scanFolder] Processing ${cueFilesToProcess.length} CUE sheets...");
+          final cueParser = CueParserService();
+
+          for (final cuePath in cueFilesToProcess) {
+            if (_disposed || _scanToken != myToken) return;
+
+            final tracks = await cueParser.parseCueFile(cuePath);
+            if (tracks.isEmpty) continue;
+
+            debugPrint("🎵 [_scanFolder] CUE: ${p.basename(cuePath)} → ${tracks.length} tracks");
+
+            List<Song> cueBatch = [];
+            for (final track in tracks) {
+              // Build the virtual CUE path
+              final virtualPath = CuePath.encode(
+                track.audioFileName,
+                track.startOffset,
+                track.endOffset,
+              );
+
+              // Skip if already in DB
+              if (existingPaths.contains(virtualPath)) continue;
+
+              final song = Song()
+                ..path = virtualPath
+                ..title = track.title
+                ..artist = track.performer
+                ..album = track.albumTitle ?? "Unknown Album"
+                ..duration = track.trackDuration?.inSeconds.toDouble() ?? 0.0
+                ..trackNumber = track.trackNumber
+                ..discNumber = track.discNumber
+                ..year = track.year
+                ..genre = track.genre
+                ..dateAdded = DateTime.now();
+
+              cueBatch.add(song);
+            }
+
+            if (cueBatch.isNotEmpty) {
+              await dbService.saveSongs(cueBatch);
+              debugPrint("🎵 [_scanFolder] Saved ${cueBatch.length} CUE virtual tracks from ${p.basename(cuePath)}");
+              await _fetchFromDatabase(dbService, settings);
+              _safeNotify();
+            }
+            await Future.delayed(Duration.zero);
+          }
+        }
+        
+        debugPrint("✅ [_scanFolder] Fully completed batching ${pathsToProcess.length} tracks + ${cueFilesToProcess.length} CUE sheets.");
       } else {
         _error = "Directory does not exist or access denied.";
       }
     } catch (e) {
       print("Scan Error: $e");
       _error = "Scan failed: $e";
-      if (e.toString().contains("Permission denied") ||
-          e.toString().contains("os_error: 13")) {
-        _isPermissionDenied = true;
-        _error = "Permission Denied. Please grant Storage access.";
+    } finally {
+      if (_scanToken == myToken) {
+        await _fetchFromDatabase(dbService, settings);
+        _isLoading = false;
+        _safeNotify();
       }
     }
-
-    await _fetchFromDatabase(dbService, settings);
-    _isLoading = false;
-    _safeNotify();
   }
 
-  Future<Song?> _processFileForDB(File file, String extension) async {
-    try {
-      final metadata = await MetadataGod.readMetadata(file: file.path);
-      final canonicalPath = p.canonicalize(file.path);
+  Song _mapMetadataToSong(String filePath, Metadata? metadata, String ext) {
+    final song = Song()
+      ..path = p.canonicalize(filePath)
+      ..dateAdded = DateTime.now();
 
-      final song = Song()
-        ..path = canonicalPath
-        ..title = metadata.title ?? p.basenameWithoutExtension(file.path)
-        ..artist = metadata.artist ?? "Unknown Artist"
-        ..album = metadata.album ?? "Unknown Album"
-        ..duration = (metadata.durationMs ?? 0) / 1000.0
-        ..year = metadata.year?.toString()
-        ..trackNumber = metadata.trackNumber
-        ..discNumber = metadata.discNumber
-        ..genre = metadata.genre
-        ..dateAdded = DateTime.now();
-
-      if (metadata.picture != null) {
-        ArtCacheService().saveArt(canonicalPath, metadata.picture!.data);
-      }
-
-      if (extension == '.dsf' || extension == '.dff') {
-        if (song.artist == "Unknown Artist" || song.album == "Unknown Album") {
-          final tags = await AudioInfoService().getTags(file.path);
-          if (tags.isNotEmpty) {
-            song.title = tags['title'] ?? tags['TITLE'] ?? song.title;
-            song.artist = tags['artist'] ?? tags['ARTIST'] ?? song.artist;
-            song.album = tags['album'] ?? tags['ALBUM'] ?? song.album;
-            song.year =
-                tags['date'] ?? tags['DATE'] ?? tags['year'] ?? song.year;
-            song.genre = tags['genre'] ?? tags['GENRE'] ?? song.genre;
-          }
-        }
-      }
-
-      return song;
-    } catch (e) {
-      if (extension == '.dsf' || extension == '.dff') {
-        try {
-          final tags = await AudioInfoService().getTags(file.path);
-          final canonicalPath = p.canonicalize(file.path);
-          if (tags.isNotEmpty) {
-            return Song()
-              ..path = canonicalPath
-              ..title = tags['title'] ??
-                  tags['TITLE'] ??
-                  p.basenameWithoutExtension(file.path)
-              ..artist = tags['artist'] ?? tags['ARTIST'] ?? "Unknown Artist"
-              ..album = tags['album'] ?? tags['ALBUM'] ?? "Unknown Album"
-              ..duration = 0.0
-              ..year = tags['date'] ?? tags['DATE'] ?? tags['year']
-              ..genre = tags['genre'] ?? tags['GENRE']
-              ..dateAdded = DateTime.now();
-          }
-        } catch (_) {}
-      }
-      final canonicalPath = p.canonicalize(file.path);
-      return Song()
-        ..path = canonicalPath
-        ..title = p.basenameWithoutExtension(file.path)
-        ..artist = "Unknown Artist"
-        ..album = "Unknown Album"
-        ..duration = 0.0
-        ..dateAdded = DateTime.now();
+    if (metadata == null) {
+      song.title = p.basenameWithoutExtension(filePath);
+      song.artist = "Unknown Artist";
+      song.album = "Unknown Album";
+      song.duration = 0.0;
+    } else {
+      song.title = (metadata.title != null && metadata.title!.isNotEmpty)
+          ? metadata.title!
+          : p.basenameWithoutExtension(filePath);
+      song.artist = (metadata.artist != null && metadata.artist!.isNotEmpty)
+          ? metadata.artist!
+          : "Unknown Artist";
+      song.album = (metadata.album != null && metadata.album!.isNotEmpty)
+          ? metadata.album!
+          : "Unknown Album";
+      song.duration = (metadata.durationMs ?? 0) / 1000.0;
+      song.trackNumber = metadata.trackNumber;
+      song.discNumber = metadata.discNumber;
+      song.year = metadata.year?.toString();
+      song.genre = metadata.genre;
     }
+    return song;
   }
+
 
   Future<void> refreshLibrary() async {
-    // 🚀 Capture dependencies at ENTRY
     final dbService = ref.read(dbServiceProvider);
     final settings = ref.read(settingsProvider);
     final additionalFolders = settings.additionalMusicFolders;
@@ -380,7 +484,7 @@ class LibraryProvider extends ChangeNotifier {
       if (_disposed) return;
     }
     for (final folder in additionalFolders) {
-      await _scanFolder(folder, dbService, settings);
+      await _scanFolder(p.canonicalize(folder), dbService, settings);
       if (_disposed) return;
     }
     if (_selectedFolder == null && additionalFolders.isEmpty) {
@@ -389,16 +493,13 @@ class LibraryProvider extends ChangeNotifier {
   }
 
   Future<void> scanAdditionalFolder(String path) async {
-    // 🚀 Capture dependencies at ENTRY
     final dbService = ref.read(dbServiceProvider);
     final settings = ref.read(settingsProvider);
     await _scanFolder(p.canonicalize(path), dbService, settings);
   }
 
   Future<void> updateSingleSong(SongModel newSong) async {
-    // 🚀 Capture dependencies at ENTRY
     final dbService = ref.read(dbServiceProvider);
-    final settings = ref.read(settingsProvider);
     final isar = await dbService.db;
 
     await isar.writeTxn(() async {
@@ -421,14 +522,13 @@ class LibraryProvider extends ChangeNotifier {
     final index = _songs.indexWhere((s) => s.filePath == newSong.filePath);
     if (index != -1) {
       _songs[index] = newSong;
-      if (_searchQuery.isNotEmpty) {
-        search(_searchQuery);
-      } else {
-        _filteredSongs = List.from(_songs);
-      }
+      _sortSongs();
+      _filteredSongs = List.from(_songs);
       _safeNotify();
     }
   }
+
+  static final RegExp _splitPattern = RegExp(r'(\d+)|(\D+)');
 
   void _sortSongs() {
     _songs.sort((a, b) =>
@@ -438,11 +538,11 @@ class LibraryProvider extends ChangeNotifier {
   int _naturalCompare(String a, String b) {
     a = a.toLowerCase();
     b = b.toLowerCase();
-    final RegExp splitPattern = RegExp(r'(\d+)|(\D+)');
+    
     final matchesA =
-        splitPattern.allMatches(a).map((m) => m.group(0)!).toList();
+        _splitPattern.allMatches(a).map((m) => m.group(0)!).toList();
     final matchesB =
-        splitPattern.allMatches(b).map((m) => m.group(0)!).toList();
+        _splitPattern.allMatches(b).map((m) => m.group(0)!).toList();
 
     int i = 0;
     while (i < matchesA.length && i < matchesB.length) {
@@ -463,7 +563,6 @@ class LibraryProvider extends ChangeNotifier {
   }
 
   Future<void> resetLibrary() async {
-    // 🚀 Capture dependencies at ENTRY
     final dbService = ref.read(dbServiceProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
 
@@ -475,9 +574,6 @@ class LibraryProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     if (_disposed) return;
     await prefs.remove('saved_music_folder');
-
-    // This call modifies settingsProvider effectively invalidating watchers,
-    // but since we no longer 'watch', LibraryProvider stays alive!
     await settingsNotifier.clearAllMusicFolders();
     if (_disposed) return;
 
@@ -490,7 +586,6 @@ class LibraryProvider extends ChangeNotifier {
   }
 }
 
-// 🚀 FINAL FIX: No more watch here!
 final libraryProvider = ChangeNotifierProvider<LibraryProvider>((ref) {
   return LibraryProvider(ref);
 });

@@ -136,7 +136,7 @@ class _FireworksPainter extends CustomPainter {
       if (!f.exploded) {
         // Rocket trail
         final paint = Paint()
-          ..color = f.color.withOpacity(0.8)
+          ..color = f.color.withValues(alpha: 0.8)
           ..strokeWidth = 3
           ..style = PaintingStyle.fill;
         canvas.drawCircle(
@@ -148,7 +148,7 @@ class _FireworksPainter extends CustomPainter {
         for (final p in f.particles) {
           if (p.life > 0) {
             final paint = Paint()
-              ..color = f.color.withOpacity(p.life)
+              ..color = f.color.withValues(alpha: p.life)
               ..style = PaintingStyle.fill;
             canvas.drawCircle(
                 Offset(centerX + p.x, centerY + p.y), 2 * p.life, paint);

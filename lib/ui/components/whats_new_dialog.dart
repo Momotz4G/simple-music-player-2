@@ -69,16 +69,16 @@ class _WhatsNewDialogState extends State<WhatsNewDialog> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.05),
+            Colors.white.withValues(alpha: 0.1),
+            Colors.white.withValues(alpha: 0.05),
           ],
         ),
         borderGradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            accentColor.withOpacity(0.5),
-            accentColor.withOpacity(0.2),
+            accentColor.withValues(alpha: 0.5),
+            accentColor.withValues(alpha: 0.2),
           ],
         ),
         child: Material(
@@ -93,7 +93,7 @@ class _WhatsNewDialogState extends State<WhatsNewDialog> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.2),
+                        color: accentColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child:
@@ -152,8 +152,8 @@ class _WhatsNewDialogState extends State<WhatsNewDialog> {
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    slide.color.withOpacity(0.3),
-                                    slide.color.withOpacity(0),
+                                    slide.color.withValues(alpha: 0.3),
+                                    slide.color.withValues(alpha: 0),
                                   ],
                                 ),
                               ),
@@ -178,7 +178,7 @@ class _WhatsNewDialogState extends State<WhatsNewDialog> {
                               slide.description,
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 height: 1.5,
                               ),
                             ),
@@ -196,14 +196,14 @@ class _WhatsNewDialogState extends State<WhatsNewDialog> {
                               child: Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: SingleChildScrollView(
                                   child: Text(
                                     slide.description,
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                       height: 1.6,
                                       fontFamily: 'monospace',
                                     ),
@@ -238,7 +238,7 @@ class _WhatsNewDialogState extends State<WhatsNewDialog> {
                             decoration: BoxDecoration(
                               color: _currentPage == index
                                   ? accentColor
-                                  : Colors.white.withOpacity(0.2),
+                                  : Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),

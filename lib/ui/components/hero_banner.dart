@@ -132,12 +132,12 @@ class _HeroBannerState extends State<HeroBanner> {
   Widget _buildNavButton(
       {required IconData icon, required VoidCallback onTap}) {
     return Material(
-      color: Colors.black.withOpacity(0.3), // Semi-transparent dark background
+      color: Colors.black.withValues(alpha: 0.3), // Semi-transparent dark background
       shape: const CircleBorder(),
       child: InkWell(
         borderRadius: BorderRadius.circular(50),
         onTap: onTap,
-        hoverColor: Colors.white.withOpacity(0.2),
+        hoverColor: Colors.white.withValues(alpha: 0.2),
         child: Container(
           padding: const EdgeInsets.all(8),
           child: Icon(icon, color: Colors.white, size: 28),
@@ -153,7 +153,7 @@ class _HeroBannerState extends State<HeroBanner> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -174,8 +174,8 @@ class _HeroBannerState extends State<HeroBanner> {
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.transparent,
-                  Colors.black.withOpacity(0.2),
-                  Colors.black.withOpacity(0.8),
+                  Colors.black.withValues(alpha: 0.2),
+                  Colors.black.withValues(alpha: 0.8),
                 ],
                 stops: const [0.3, 0.6, 1.0],
               ),

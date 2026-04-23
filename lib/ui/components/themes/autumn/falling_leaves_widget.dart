@@ -103,7 +103,7 @@ class _LeafPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (var leaf in leaves) {
       final paint = Paint()
-        ..color = leaf.color.withOpacity(0.8)
+        ..color = leaf.color.withValues(alpha: 0.8)
         ..style = PaintingStyle.fill;
 
       canvas.save();
@@ -124,7 +124,7 @@ class _LeafPainter extends CustomPainter {
 
       // Draw a center line
       final veinPaint = Paint()
-        ..color = Colors.black.withOpacity(0.2)
+        ..color = Colors.black.withValues(alpha: 0.2)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1;
       canvas.drawLine(Offset(0, -s / 2), Offset(0, s / 2), veinPaint);

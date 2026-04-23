@@ -1,261 +1,19 @@
 {
-  "browse": "둘러보기",
-  "search": "검색",
-  "history": "기록",
-  "stats": "통계",
-  "library": "라이브러리",
-  "playlists": "플레이리스트",
-  "artists": "아티스트",
-  "albums": "앨범",
-  "folders": "폴더",
-  "local_library": "로컬 라이브러리",
-  "downloads": "다운로드",
-  "metadata_editor": "메타데이터 편집기",
-  "editMetadata": "메타데이터 편집",
-  "success": "성공",
-  "enableAlphabetIndexer": "알파벳 스크롤 인덱서 활성화",
-  "enableAlphabetIndexerSubtitle": "모바일 리스트 뷰에서 A-Z 사이드바 인덱스 표시",
-  "metadataUpdated": "메타데이터가 업데이트되었습니다",
-  "failedToUpdateMetadata": "메타데이터 업데이트 실패",
-  "toggleLyrics": "가사 켜기/끄기",
-  "settings": "설정",
-  "navigation": "네비게이션",
-  "system": "시스템",
-  "language": "언어",
-  "english": "영어",
-  "indonesian": "인도네시아어",
-  "korean": "한국어",
-  "japanese": "일본어",
-  "chinese": "중국어",
-  "spanish": "스페인어",
-  "french": "프랑스어",
-  "german": "독일어",
-  "portuguese": "포르투갈어",
-  "thai": "태국어",
-  "vietnamese": "베트남어",
-  "arabic": "아랍어",
-  "russian": "러시아어",
-  "hindi": "힌디어",
-  "appearance": "테마 및 디자인",
-  "atmospheres": "분위기",
-  "none": "없음",
-  "winter": "겨울",
-  "autumn": "가을",
-  "rainyCity": "비 오는 도시",
-  "sakura": "사쿠라",
-  "lunarNewYear": "설날",
-  "cyberpunk": "사이버펑크",
-  "underwater": "수중",
-  "nordicAurora": "노르딕 오로라",
-  "galacticSpace": "은하 우주",
-  "desertMirage": "사막의 신기루",
-  "general": "일반",
-  "darkMode": "다크 모드",
-  "lockedAtmosphere": "분위기가 활성화된 동안 잠김",
-  "useDarkTheme": "다크 테마 사용",
-  "syncThemeAlbumArt": "앨범 아트와 테마 동기화",
-  "tintBackground": "곡 색상으로 배경 및 비주얼라이저 물들이기",
-  "accentColor": "강조 색상",
-  "chooseAccentColor": "선호하는 정적 색상 선택",
-  "contentRegion": "콘텐츠 지역",
-  "setCountryReleases": "새 릴리스 및 차트 국가 설정",
-  "unitedStates": "미국",
-  "indonesia": "인도네시아",
-  "southKorea": "대한민국",
-  "japan": "일본",
-  "unitedKingdom": "영국",
-  "brazil": "브라질",
-  "visualizer": "비주얼라이저",
-  "enableBarVisualizer": "바 비주얼라이저 활성화",
-  "showAnimatedWaves": "플레이어 바에 애니메이션 파동 표시",
-  "opacity": "불투명도",
-  "visualizerStyle": "비주얼라이저 스타일",
-  "chooseAnimationType": "애니메이션 유형 선택",
-  "spectrumBars": "스펙트럼 바",
-  "fluidWave": "유체 파동",
-  "circularPulse": "원형 펄스",
-  "rainbowMode": "레인보우 모드",
-  "useMixedColors": "혼합 색상 사용 (동기화 무시)",
-  "integration": "연동",
-  "discordRPC": "Discord Rich Presence",
-  "showStatusDiscord": "Discord에 상태 표시",
-  "tidalApiStatus": "Tidal API",
-  "online": "온라인",
-  "unauthorize": "승인되지 않음",
-  "offlineStatus": "오프라인",
-  "checkInternetConnection": "인터넷 연결을 확인하세요",
-  "autoClearCache": "캐시 자동 지우기",
-  "autoClearDisabled": "비활성화됨",
-  "autoClearOnClose": "앱 종료 시",
-  "autoClearAfter24h": "24시간 후",
-  "autoClearAfter7d": "7일 후",
-  "autoClearEvery30m": "30분마다 (청취 중일 때만)",
-  "musicFolderLocation": "음악 폴더 위치",
-  "noFolderSelected": "폴더가 선택되지 않음",
-  "change": "변경",
-  "expand": "확장",
-  "ignoreSubfolderScan": "하위 폴더 스캔 무시",
-  "onlyScanSelected": "선택한 폴더만 스캔 (기본값: 켬)",
-  "importAdditionalPaths": "추가 경로 가져오기",
-  "addFoldersScan": "스캔할 폴더 추가",
-  "add": "추가",
-  "singleTracks": "개별 트랙",
-  "unsavedChanges": "저장되지 않은 변경 사항이 있습니다",
-  "playlistAlbumTracks": "플레이리스트 / 앨범 트랙",
-  "audioFormat": "오디오 형식",
-  "preferredOutputFormat": "다운로드 기본 출력 형식",
-  "flacNote": "참고: FLAC은 개별 트랙 다운로드에만 사용할 수 있습니다. 일괄 플레이리스트 다운로드는 M4A 형식을 사용합니다.",
-  "downloadLocation": "다운로드 위치",
-  "resetToDefault": "기본값으로 재설정",
-  "changeFolder": "폴더 변경",
-  "streaming": "스트리밍",
-  "streamingQuality": "스트리밍 품질",
-  "standardQuality": "표준 (MP3)",
-  "highQuality": "고품질 (M4A)",
-  "losslessQuality": "무손실 (자동)",
-  "standardDesc": "MP3 - 작은 파일 크기, 빠른 버퍼링",
-  "highDesc": "M4A - 더 나은 품질, 균형 잡힌 선택",
-  "losslessDesc": "FLAC - Deezer/Tidal의 무손실 품질",
-  "selectStreamingQuality": "스트리밍 품질 선택",
-  "losslessNote": "가능한 경우 Deezer/Tidal에서 무손실 FLAC을 스트리밍합니다. 불가능한 경우 M4A로 대체됩니다.",
-  "playback": "재생",
-  "endlessQueue": "무한 대기열",
-  "autoAddSimilar": "대기열이 거의 비었을 때 비슷한 곡 자동 추가",
-  "gaplessPlayback": "끊김 없는 재생",
-  "gaplessPlaybackDesc": "트랙 사이의 공백 제거",
-  "crossfade": "크로스페이드",
-  "crossfadeDesc": "곡 사이전환을 부드럽게 ({seconds} 초)",
-  "@crossfadeDesc": {
-    "placeholders": {
-      "seconds": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter24h": {
+    "description": "Option to clear cache every 24 hours"
   },
-  "disableRomanization": "로마자 표기 비활성화",
-  "hideRomajiPinyin": "한국어, 일본어, 중국어 가사 아래의 로마자/병음 숨기기",
-  "translationLanguage": "번역 언어",
-  "targetLanguageLyrics": "가사 번역 대상 언어",
-  "disableCanvas": "Canvas 비활성화",
-  "hideCanvas": "Spotify Canvas 비디오 대신 앨범 아트 표시",
-  "wasapiExclusive": "WASAPI 독점 모드",
-  "bitPerfectWindows": "자동 샘플링 레이트로 비트 퍼펙트 오디오 (재시작 필요)",
-  "audiophileDAC": "오디오필 DAC 재생 시 활성화 (재시작 필요)",
-  "android14BitPerfect": "Android 14+ 비트 퍼펙트",
-  "bypassSystemMixer": "USB DAC에 대해 시스템 믹서 우회",
-  "requiresAndroid14": "Android 14+ 및 USB DAC 필요",
-  "bitPerfectEnabled": "비트 퍼펙트 모드 활성화됨. 볼륨 조절이 비활성화될 수 있습니다.",
-  "audioOutputDevice": "오디오 출력 장치",
-  "loadingDevices": "장치 로딩 중...",
-  "systemDefault": "시스템 기본값",
-  "exclusiveWarning": "주의: 독점 모드는 시스템 기본값이 아닌 특정 장치를 선택했을 때 가장 잘 작동합니다.",
-  "dataCleanup": "데이터 및 정리",
-  "resetLibraryPath": "라이브러리 경로 재설정",
-  "unlinkFolder": "폴더 연결 해제 및 곡 목록 지우기",
-  "resetLibraryTitle": "라이브러리를 재설정할까요?",
-  "resetLibraryContent": "플레이어에서 현재 폴더를 제거합니다. 실제 파일은 삭제되지 않습니다.",
-  "resetPath": "경로 재설정",
-  "clearStreamingCache": "스트리밍 캐시 지우기",
-  "freeUpSpace": "공간 확보 (현재: {size})",
-  "resetStatistics": "통계 재설정",
-  "clearPlayHistory": "재생 기록 및 감상 시간 지우기",
-  "resetStatsTitle": "통계를 재설정할까요?",
-  "resetStatsContent": "이 작업은 되돌릴 수 없습니다.\\n모든 재생 횟수와 감상 시간이 영구적으로 삭제됩니다.",
-  "resetEverything": "모든 항목 재설정",
-  "debugging": "디버깅",
-  "showDebugButton": "부동 디버그 버튼 표시",
-  "toggleDebugButton": "부동 디버그 콘솔 표시 여부 전환",
-  "community": "커뮤니티",
-  "donate": "후원하기",
-  "joinUs": "함께하기",
-  "usbAudioBypass": "USB 오디오 우회 (베타) - Android 13 이하용 직접 DAC 출력",
-  "comingSoon": "출시 예정",
-  "underDevelopment": "이 기능은 개발 중입니다",
-  "version": "버전",
-  "restartRequired": "재시작 필요",
-  "restartContent": "오디오 출력 장치를 변경하려면 애플리케이션을 재시작해야 적용됩니다.\\n\\n지금 재시작하시겠습니까?",
-  "later": "나중에",
-  "restartNow": "지금 재시작",
-  "applyOnRestart": "변경 사항은 다음 재시작 시 적용됩니다.",
-  "autoRestartNotSupported": "자동 재시작이 지원되지 않습니다. 수동으로 재시작해 주세요.",
-  "enterAdminCode": "관리자 액세스 코드 입력",
-  "accessCode": "액세스 코드",
-  "cancel": "취소",
-  "access": "액세스",
-  "invalidCode": "잘못된 액세스 코드",
-  "formatSaved": "형식이 저장되었습니다!",
-  "addedFolder": "폴더 추가됨: {folder}",
-  "removedFolder": "폴더 제거됨: {folder}",
-  "downloadPathUpdated": "다운로드 경로 업데이트됨: {path}",
-  "downloadPathReset": "다운로드 경로가 기본값으로 재설정되었습니다.",
-  "libraryPathReset": "라이브러리 경로가 재설정되었습니다.",
-  "cacheCleared": "캐시가 성공적으로 지워졌습니다!",
-  "changesApplyRestart": "변경 사항은 다음 재시작 시 적용됩니다.",
-  "changeLanguage": "애플리케이션 언어 변경",
-  "unlinkFolderClear": "폴더 연결 해제 및 곡 목록 지우기",
-  "enterAdminAccessCode": "관리자 액세스 코드 입력",
-  "invalidAccessCode": "잘못된 액세스 코드",
-  "androidBitPerfect": "Android 14+ 비트 퍼펙트",
-  "customDevice": "사용자 지정 장치",
-  "exclusiveModeWarning": "주의: 독점 모드는 시스템 기본값이 아닌 특정 장치를 선택했을 때 가장 잘 작동합니다.",
-  "@freeUpSpace": {
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter7d": {
+    "description": "Option to clear cache every 7 days"
   },
-  "statisticsReset": "통계가 재설정되었습니다.",
-  "toggleDebugConsole": "부동 디버그 콘솔 표시 여부 전환",
-  "usbAudioBypassBeta": "USB 오디오 우회 (베타) - Android 13 이하용 직접 DAC 출력",
-  "connectedUsbDacs": "연결된 USB DAC:",
-  "scanning": "스캔 중...",
-  "scan": "스캔",
-  "noUsbDacDetected": "USB DAC가 감지되지 않았습니다. USB 오디오 장치를 연결하고 스캔을 누르세요.",
-  "connected": "연결됨",
-  "connect": "연결",
-  "failedToConnectDac": "DAC 연결 실패. USB 권한을 확인하세요.",
-  "connectedToDac": "{deviceName}에 연결됨 - USB 우회 활성",
-  "@connectedToDac": {
-    "placeholders": {
-      "deviceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearCache": {
+    "description": "Auto clear cache setting section"
   },
-  "changingAudioDeviceRestart": "오디오 출력 장치를 변경하려면 애플리케이션을 재시작해야 적용됩니다.\\n\\n지금 재시작하시겠습니까?",
-  "translateLyrics": "가사 번역",
-  "viewQueue": "대기열 보기",
-  "loadingLyrics": "가사 로딩 중...",
-  "noLyricsAvailable": "가사 없음",
-  "noSyncedLyricsFound": "동기화된 가사를 찾을 수 없음",
-  "justEnjoyVibes": "분위기를 즐기세요.",
-  "scrollForLyrics": "가사를 보려면 스크롤",
-  "switchingTo": "전환 중",
-  "metadataEditorInfo": "메타데이터 편집기로 간편하게 검색하고 수정하세요.",
-  "metadataEditorNote": "참고: 앨범 아트는 \"성공적으로 저장됨\" 상태 이후에 변경됩니다. 저장되지 않은 것이 아니라 앱의 캐싱 문제이며 현재 수정 중입니다. 파일 관리자 등으로 확인할 수 있습니다.",
-  "close": "닫기",
-  "permissionRequired": "권한 필요",
-  "permissionRequiredDesc": "태그를 편집하려면 '모든 파일 액세스' 권한이 필요합니다. 이를 통해 음악 파일을 직접 수정할 수 있습니다.",
-  "grantPermission": "권한 허용",
-  "files": "파일",
-  "editor": "편집기",
-  "clearImported": "가져온 항목 지우기",
-  "libraryData": "라이브러리 데이터",
-  "externalFiles": "외부 파일",
-  "addFiles": "파일 추가",
-  "addFolder": "폴더 추가",
-  "selectSongToEdit": "목록에서 편집할 곡 선택",
-  "fixAll": "모두 수정",
-  "autoTagTitle": "⚠️ {sourceName}을(를) 자동 태그 하시겠습니까?",
-  "@autoTagTitle": {
-    "placeholders": {
-      "sourceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearDisabled": {
+    "description": "Option to disable auto clear cache"
   },
-  "autoTagContent": "Spotify에서 '{sourceName}'의 모든 {count}개 곡을 검색하고 태그를 자동으로 덮어씁니다.\\n\\n이 작업은 되돌릴 수 없습니다.",
+  "@autoClearOnClose": {
+    "description": "Option to clear cache when app closes"
+  },
   "@autoTagContent": {
     "placeholders": {
       "count": {
@@ -266,108 +24,72 @@
       }
     }
   },
-  "startBulkProcess": "일괄 작업 시작",
-  "title": "제목",
-  "artist": "아티스트",
-  "album": "앨범",
-  "genre": "장르",
-  "year": "연도",
-  "trackNumber": "트랙 번호",
-  "discNumber": "디스크 번호",
-  "autoFixComingSoon": "자동 수정 (출시 예정)",
-  "manualSearch": "수동 검색",
-  "revert": "되돌리기",
-  "saveChangesToFile": "변경 사항을 파일에 저장",
-  "searchSpotify": "Spotify 검색",
-  "searchHint": "검색...",
-  "selectMatch": "일치 항목 선택",
-  "upNext": "다음에 재생",
-  "fetchingLossless": "무손실 음원 가져오는 중...",
-  "noMusicPlaying": "재생 중인 음악 없음",
-  "refreshList": "목록 새로고침",
-  "noDownloadsFound": "다운로드 항목 없음",
-  "play": "재생",
-  "showInFolder": "폴더에 표시",
-  "delete": "삭제",
-  "deleteFileTitle": "파일 삭제?",
-  "deleteFileContent": "'{filename}'을(를) 삭제하시겠습니까?\\n이 작업은 되돌릴 수 없습니다.",
-  "downloadedTo": "다운로드 위치: {path}",
-  "folderPath": "폴더: {path}",
-  "errorDeleting": "삭제 중 오류: {error}",
-  "ok": "확인",
-  "searchSongs": "곡 검색...",
-  "noResultsFound": "결과 없음",
-  "refreshLibrary": "라이브러리 새로고침",
-  "shuffleAll": "모두 셔플",
-  "switchToListView": "목록 보기로 전환",
-  "switchToGridView": "그리드 보기로 전환",
-  "songsLoadedCount": "{count}개의 곡 로드됨...",
-  "grantAccess": "액세스 허용",
-  "selectDifferentFolder": "다른 폴더 선택",
-  "selectFolder": "폴더 선택",
-  "noSongsInFolder": "이 폴더에서 곡을 찾을 수 없습니다.",
-  "queueUpdated": "대기열 업데이트됨",
-  "playingNext": "다음에 재생 중",
-  "addedToQueue": "대기열에 추가됨",
-  "playingTrack": "트랙 재생 중",
-  "error": "오류",
-  "noPlaylistsFound": "플레이리스트 없음",
-  "addToPlaylist": "플레이리스트에 추가",
-  "songAlreadyInPlaylist": "이미 플레이리스트에 있는 곡",
-  "addedToPlaylistSuccess": "플레이리스트에 추가됨",
-  "alreadyInLikedSongs": "이미 좋아요 표시한 곡",
-  "addedToLikedSongs": "좋아요 표시한 곡에 추가됨",
-  "likedSongs": "좋아요 표시한 곡",
-  "preparingDownload": "다운로드 준비 중",
-  "fetchingMetadataSpotify": "Spotify에서 메타데이터 가져오는 중...",
-  "preparingDownloadNotification": "다운로드 준비 중",
-  "downloadStarted": "다운로드 시작됨",
-  "downloading": "다운로드 중",
-  "preparingDownloadFormat": "다운로드 준비 중 ({format})...",
-  "searching": "검색 중...",
-  "findingBestMatchYoutube": "YouTube에서 최적의 검색 결과 찾는 중...",
-  "downloadingFlac": "FLAC 다운로드 중",
-  "fetchingLosslessAudio": "무손실 오디오 가져오는 중...",
-  "downloadComplete": "다운로드 완료",
-  "flacSavedToDownloads": "FLAC이 다운로드 폴더에 저장됨",
-  "downloadCompleteNotification": "다운로드 완료",
-  "flacUnavailable": "FLAC 사용 불가",
-  "flacUnavailableDesc": "FLAC을 사용할 수 없어 다운로드에 실패했습니다. 설정을 변경해 보세요.",
-  "flacUnavailableNotification": "FLAC 사용 불가",
-  "changeFormatInSettings": "설정에서 출력 형식을 변경해 주세요",
-  "flacError": "FLAC 오류",
-  "couldNotDownloadFlac": "FLAC을 다운로드할 수 없습니다.",
-  "downloadingFormat": "{format} 다운로드 중",
-  "savedAsFormat": "{format}(으)로 저장됨",
-  "downloadFailed": "다운로드 실패",
-  "downloadError": "다운로드 오류",
-  "playNext": "다음에 재생",
-  "addToQueue": "대기열에 추가",
-  "addToFavorite": "즐겨찾기에 추가",
-  "goToArtist": "아티스트로 이동",
-  "download": "다운로드",
-  "noAlbumsFound": "앨범 없음",
-  "moreOptions": "추가 옵션",
-  "titleLabel": "제목",
-  "artistLabel": "아티스트",
-  "albumLabel": "앨범",
-  "downloadAll": "모두 다운로드",
-  "albumRemovedFromPlaylists": "플레이리스트에서 앨범 제거됨",
-  "albumAddedToPlaylists": "플레이리스트에 앨범 추가됨",
-  "startedDownloadingAll": "모든 곡 다운로드 시작됨...",
-  "playingFromAlbum": "앨범에서 재생 중",
-  "unknownArtist": "알 수 없는 아티스트",
-  "songsCount": "{count}곡",
-  "@songsCount": {
+  "@autoTagTitle": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@automaticTitleLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@consecutivePlaysTooltip": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "@deleteFileContent": {
     "placeholders": {
       "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@deviceNameLabel": {
+    "placeholders": {
+      "deviceName": {
         "type": "String"
       }
     }
@@ -379,9 +101,9 @@
       }
     }
   },
-  "@folderPath": {
+  "@downloadingFormat": {
     "placeholders": {
-      "path": {
+      "format": {
         "type": "String"
       }
     }
@@ -393,72 +115,6 @@
       }
     }
   },
-  "@songsLoadedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "@preparingDownloadFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@downloadingFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@savedAsFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "libraryNotLoaded": "라이브러리가 로드되지 않았습니다.",
-  "noArtistsFound": "아티스트 없음.",
-  "goToLocalLibraryToSelect": "'로컬 라이브러리'로 이동하여 음악 폴더를 선택하세요.",
-  "popularOnSpotify": "Spotify 인기 곡",
-  "songsInLibrary": "라이브러리에 {count}곡 포함",
-  "@songsInLibrary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "shuffle": "셔플",
-  "shufflingArtist": "{artistName} 셔플 중...",
-  "@shufflingArtist": {
-    "placeholders": {
-      "artistName": {
-        "type": "String"
-      }
-    }
-  },
-  "showMore": "더 보기",
-  "showLess": "줄이기",
-  "discography": "디스코그래피",
-  "seeAll": "모두 보기",
-  "newPlaylist": "새 플레이리스트",
-  "deletePlaylistPermanentConfirm": "이 재생 목록을 삭제하시겠습니까? (이 작업은 취소할 수 없습니다)",
-  "publicSharing": "공개 공유",
-  "publicSharingDesc": "코드를 아는 사람은 누구나 이 재생 목록을 가져올 수 있습니다.",
-  "publicSharingDisabledDesc": "비활성화됨. 다른 사람과 공유하려면 활성화하세요.",
-  "failedEnableSharing": "공유를 활성화하지 못했습니다. 연결을 확인하세요.",
-  "failedDisableSharing": "공유를 비활성화하지 못했습니다.",
-  "disablingSharingWarning": "공유를 비활성화하면 공간을 절약하기 위해 서버에서 코드와 데이터가 영구적으로 삭제됩니다.",
-  "invalidSpotifyUrl": "유효하지 않은 Spotify 재생 목록 URL",
-  "invalidYoutubeMusicUrl": "유효하지 않은 YouTube Music 재생목록 URL입니다",
-  "fetchingPlaylistInfo": "재생 목록 정보를 가져오는 중...",
-  "failedFetchPlaylistInfo": "재생 목록 정보를 가져올 수 없습니다",
-  "fetchingTracksFrom": "\"{name}\"에서 트랙을 가져오는 중...",
   "@fetchingTracksFrom": {
     "placeholders": {
       "name": {
@@ -466,128 +122,20 @@
       }
     }
   },
-  "noTracksFound": "재생 목록에서 트랙을 찾을 수 없습니다",
-  "creatingPlaylistWithTracks": "{count}개의 트랙으로 재생 목록을 생성하는 중...",
-  "@creatingPlaylistWithTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "importedTracks": "{count}개의 트랙을 성공적으로 가져왔습니다!",
-  "@importedTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "importFailed": "가져오기 실패: {error}",
-  "@importFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "fetchingSharedPlaylist": "공유 재생 목록을 가져오는 중...",
-  "playlistNotFoundOrError": "재생 목록을 찾을 수 없거나 서버 오류입니다",
-  "parsingPlaylistData": "재생 목록 데이터를 분석하는 중...",
-  "importedPlaylistName": "\"{name}\"을(를) 성공적으로 가져왔습니다!",
-  "@importedPlaylistName": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "codeMust6Digits": "코드는 6자리여야 합니다",
-  "fetchingPlaylist": "재생 목록을 가져오는 중...",
-  "importViaCode": "코드를 통해 가져오기",
-  "enterShareCode": "6자리 공유 코드를 입력하세요",
-  "importChoice": "가져오기",
-  "importFromSpotify": "Spotify에서 가져오기",
-  "importFromSpotifySubtitle": "Spotify 플레이리스트 URL 붙여넣기",
-  "importFromYoutubeMusic": "YouTube Music에서 가져오기",
-  "importFromYoutubeMusicSubtitle": "YouTube Music 재생목록 URL 붙여넣기",
-  "playlistNameHint": "플레이리스트 이름",
-  "importSpotifyPlaylist": "Spotify 플레이리스트 가져오기",
-  "importYoutubeMusicPlaylist": "YouTube Music 플레이리스트 가져오기",
-  "deletePlaylistTitle": "플레이리스트 삭제?",
-  "deletePlaylistConfirm": "'{name}'을(를) 삭제하시겠습니까?",
-  "@deletePlaylistConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "playlistNotFound": "플레이리스트를 찾을 수 없음",
-  "noSongsAdded": "아직 추가된 곡이 없음",
-  "deleteDownloadsTitle": "다운로드 항목 삭제?",
-  "deleteDownloadsConfirm": "이 플레이리스트의 모든 다운로드된 곡이 장치에서 제거됩니다.",
-  "allDownloadsRemoved": "모든 다운로드 항목 제거됨",
-  "rename": "이름 변경",
-  "removeFromPlaylist": "플레이리스트에서 제거",
-  "renamePlaylist": "플레이리스트 이름 변경",
-  "listeningStats": "감상 통계",
-  "topArtist": "최고의 아티스트",
-  "mostListened": "가장 많이 들은 곡",
-  "timeListened": "감상 시간",
-  "totalPlays": "총 재생 횟수",
-  "minutes": "분",
-  "tracks": "트랙",
-  "songs": "곡",
-  "noStatsYet": "아직 통계가 없습니다.",
-  "noArtistStatsYet": "아직 아티스트 통계가 없습니다.",
-  "plays": "회 재생",
-  "min": "분",
-  "share": "공유",
-  "savedTo": "\"{path}\"에 저장됨",
-  "@savedTo": {
+  "@folderPath": {
     "placeholders": {
       "path": {
         "type": "String"
       }
     }
   },
-  "myTopTrackOn": "Simple Player에서 나의 {header}! 🎵",
-  "@myTopTrackOn": {
+  "@foundExistingAccount": {
     "placeholders": {
-      "header": {
+      "name": {
         "type": "String"
       }
     }
   },
-  "fileMissingHistory": "파일이 누락되었으며 기록에서 찾을 수 없습니다.",
-  "restoring": "복원 중",
-  "reBuffering": "다시 버퍼링 중...",
-  "nowPlaying": "현재 재생 중",
-  "recentlyPlayed": "최근 재생 항목",
-  "clearHistory": "기록 지우기",
-  "noHistoryYet": "아직 기록이 없습니다",
-  "cloud": "클라우드",
-  "cached": "캐시됨",
-  "searchingStatus": "검색 중",
-  "findingStream": "스트림 소스 찾는 중...",
-  "noStreamMatch": "일치하는 스트림을 찾을 수 없습니다.",
-  "errorSearchingStream": "스트림 검색 중 오류.",
-  "rebufferingFromCloud": "클라우드에서 다시 버퍼링 중...",
-  "musicSearch": "음악 검색",
-  "songTitleKeyword": "곡 제목 또는 키워드",
-  "searchSpotifyHint": "Spotify 검색...",
-  "readySearchSong": "준비되었습니다. 곡을 검색하세요.",
-  "searchingSpotifyFor": "\"{keyword}\" Spotify 검색 중...",
-  "@searchingSpotifyFor": {
-    "placeholders": {
-      "keyword": {
-        "type": "String"
-      }
-    }
-  },
-  "offline": "오프라인",
-  "foundResults": "{songCount}개 곡, {albumCount}개 앨범, {artistCount}개 아티스트를 찾았습니다.",
   "@foundResults": {
     "placeholders": {
       "songCount": {
@@ -601,76 +149,27 @@
       }
     }
   },
-  "noSpotifyResults": "Spotify 검색 결과 없음.",
-  "searchFailedStatus": "검색 실패: {error}",
-  "@searchFailedStatus": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "noInternetConnection": "인터넷 연결 없음",
-  "checkNetworkTryAgain": "네트워크 연결을 확인하고 다시 시도하세요",
-  "noSuggestionsFound": "제안 없음.",
-  "statusWithText": "상태: {status}",
-  "@statusWithText": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
-  "goodMorning": "좋은 아침입니다",
-  "goodAfternoon": "좋은 오후입니다",
-  "goodEvening": "좋은 저녁입니다",
-  "jumpBackIn": "다시 듣기",
-  "yourTopMix": "나의 믹스",
-  "youMayLike": "추천 곡",
-  "yourPlaylists": "나의 플레이리스트",
-  "quickMix": "빠른 믹스",
-  "madeForYou": "당신을 위한 추천",
-  "rediscover": "다시 발견하기",
-  "doYouRemember": "기억하시나요?",
-  "countSongs": "{count, plural, =1{1곡} other{{count}곡}}",
-  "@countSongs": {
+  "@foundYoutubeResults": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "savePlaylistTitle": "{title}을(를) 저장할까요?",
-  "@savePlaylistTitle": {
+  "@freeUpSpace": {
     "placeholders": {
-      "title": {
+      "size": {
         "type": "String"
       }
     }
   },
-  "savePlaylistContent": "이 곡들로 새 플레이리스트를 만듭니다.",
-  "savedAs": "\"{name}\"(으)로 저장됨!",
-  "@savedAs": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "save": "저장",
-  "searchSongsOrAlbumsAndArtistsHint": "곡, 앨범 또는 아티스트 검색...",
-  "playQueue": "재생 대기열",
-  "downloadSong": "곡 다운로드",
-  "sleepTimer": "취침 예약",
-  "minutesDuration": "{count, plural, =1{1분} other{{count}분}}",
-  "@minutesDuration": {
+  "@fromLibraryCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "hoursDuration": "{count, plural, =1{1시간} other{{count}시간}}",
   "@hoursDuration": {
     "placeholders": {
       "count": {
@@ -678,14 +177,52 @@
       }
     }
   },
-  "customTime": "사용자 지정 시간",
-  "turnOffTimer": "타이머 끄기",
-  "musicWillStopIn": "{label} 후에 음악이 중지됩니다",
-  "stopTimer": "타이머 중지 ({time})",
-  "@stopTimer": {
+  "@importFailed": {
     "placeholders": {
-      "time": {
+      "error": {
         "type": "String"
+      }
+    }
+  },
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@last30DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@last7DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@listenMinutesTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -696,73 +233,76 @@
       }
     }
   },
-  "setCustomTimer": "사용자 지정 타이머 설정",
-  "enterDuration": "시간 입력...",
-  "hourShort": "시간",
-  "minuteShort": "분",
-  "secondShort": "초",
-  "timerSetForHours": "{count}시간 후에 중지되도록 타이머가 설정되었습니다",
-  "@timerSetForHours": {
+  "@myTopTrackOn": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForMinutes": "{count}분 후에 중지되도록 타이머가 설정되었습니다",
-  "@timerSetForMinutes": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForSeconds": "{count}초 후에 중지되도록 타이머가 설정되었습니다",
-  "@timerSetForSeconds": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "start": "시작",
-  "errorCouldNotCreateSession": "오류: 세션을 생성할 수 없습니다.",
-  "scanToControlPlayback": "휴대폰으로 스캔하여 재생을 제어하세요.",
-  "session": "세션: {id}",
-  "@session": {
-    "placeholders": {
-      "id": {
+      "header": {
         "type": "String"
       }
     }
   },
-  "loadingCanvas": "Canvas 로딩 중...",
-  "searchingSpotify": "Spotify 검색 중...",
-  "fetchingCanvas": "Canvas 가져오는 중...",
-  "nowPlayingHeader": "현재 재생 중",
-  "nowPlayingSection": "현재 재생 중",
-  "upNextSection": "다음에 재생",
-  "recommendationsSection": "추천",
-  "fromLibrarySection": "라이브러리에서",
-  "queueIsEmpty": "대기열이 비어 있습니다",
-  "historySection": "기록",
-  "upNextCount": "다음에 재생 ({count})",
-  "@upNextCount": {
+  "@notRank": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@opacityLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@playCountLabel": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "fromLibraryCount": "라이브러리에서 ({count})",
-  "@fromLibraryCount": {
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@rankActive": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@rankLabel": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@reachDailyPlaysTooltip": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "recommendationsCount": "추천 ({count})",
+  "@reachSpecificArtistTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@reachWeeklyPlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@recommendationsCount": {
     "placeholders": {
       "count": {
@@ -770,78 +310,65 @@
       }
     }
   },
-  "noSongPlaying": "재생 중인 곡 없음",
-  "selectTrackToStart": "재생할 트랙 선택",
-  "importLabel": "가져오기",
-  "saveLabel": "저장",
-  "refreshLabel": "새로고침",
-  "hideTranslation": "번역 숨기기",
-  "translateLabel": "번역",
-  "lyricsByLRCLIB": "가사: LRCLIB",
-  "importLyricsFile": "가사 파일 가져오기",
-  "overwriteLrcWarning": "이미 로컬 .lrc 파일이 있습니다.\\n덮어쓰시겠습니까?",
-  "saveLrcPrompt": "현재 가사를 오디오 파일 옆에 저장하시겠습니까?",
-  "overwrite": "덮어쓰기",
-  "lyricsSavedSuccess": "가사가 .lrc 파일로 저장됨",
-  "lyricsSaveError": "가사 저장 실패",
-  "equalizer": "이퀄라이저",
-  "trackDetails": "트랙 상세 정보",
-  "audioQuality": "오디오 품질",
-  "formatLabel": "형식",
-  "codecLabel": "코덱",
-  "bitrateLabel": "비트레이트",
-  "sampleRateLabel": "샘플링 레이트",
-  "bitDepthLabel": "비트 깊이",
-  "channelsLabel": "채널",
-  "fileSizeLabel": "파일 크기",
-  "fileLocation": "파일 위치",
-  "audioSource": "오디오 소스",
-  "pathLabel": "경로",
-  "inputLabel": "입력",
-  "engineLabel": "엔진",
-  "eqLabel": "EQ",
-  "dspLabel": "DSP",
-  "androidMixer": "Android 믹서",
-  "bypassedBitPerfect": "우회됨 (비트 퍼펙트)",
-  "resamplingLabel": "리샘플링",
-  "activeNoResampling": "활성 (리샘플링 필요 없음)",
-  "nativeRate": "네이티브 레이트",
-  "signalOutput": "신호 출력",
-  "outputLabel": "출력",
-  "samplingRateLabel": "샘플링 레이트",
-  "bitsLabel": "비트",
-  "statusLabel": "상태",
-  "unknown": "알 수 없음",
-  "unknownDevice": "알 수 없는 장치",
-  "sharedMode": "공유",
-  "exclusiveMode": "독점",
-  "androidAudioTrack": "Android AudioTrack",
-  "songInformation": "곡 정보",
-  "selectVersion": "버전 선택",
-  "searchYoutubeHint": "YouTube 검색...",
-  "androidAudioEffectsNote": "참고: 오디오 효과는 Android 장치에서만 들을 수 있습니다.",
-  "deletePreset": "프리셋 삭제",
-  "saveAsNewPreset": "새 프리셋으로 저장",
-  "savePreset": "프리셋 저장",
-  "enterPresetName": "프리셋 이름 입력 (예: 나의 베이스)",
-  "presetSaved": "프리셋 저장됨!",
-  "miniPlayer": "미니 플레이어",
-  "listeningParty": "리스닝 파티",
-  "audioOutput": "오디오 출력",
-  "lyricsTooltip": "가사",
-  "queueTooltip": "대기열",
-  "moreOptionsTooltip": "추가 옵션",
-  "muteTooltip": "음소거",
-  "unmuteTooltip": "음소거 해제",
-  "fullScreenPlayerTooltip": "전체 화면 플레이어",
-  "importLyricsTooltip": "가사 가져오기",
-  "saveLyricsTooltip": "가사 저장",
-  "refreshLyricsTooltip": "가사 새로고침",
-  "translateLyricsTooltip": "가사 번역",
-  "sharePlaylist": "재생 목록 공유",
-  "deletePlaylist": "재생 목록 삭제",
-  "importViaCodeSubtitle": "친구가 공유한 재생 목록 가져오기",
-  "sharePlaylistTitle": "\"{name}\" 공유",
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingEngine": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      },
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "@sharePlaylistTitle": {
     "placeholders": {
       "name": {
@@ -849,20 +376,858 @@
       }
     }
   },
-  "generatingShareCode": "공유 코드 생성 중...",
-  "failedToGenerateCode": "공유 코드를 생성하지 못했습니다. 연결을 확인하세요.",
-  "playlistReadyShare": "재생 목록을 공유할 준비가 되었습니다!",
-  "copyCode": "코드 복사",
+  "@showAllTitles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@switchingTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@todayLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@top3GlobalTooltip": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "@topGlobalTooltip": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@unlockedCountLabel": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@updateAvailableVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@updateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutEducationalPurpose": "이 애플리케이션은 개인 및 교육 목적으로만 개발되었습니다.",
+  "aboutLicenses": "정보 및 라이선스",
+  "aboutNotForCommercial": "상업적 용도 아님.",
+  "accentColor": "강조 색상",
+  "access": "액세스",
+  "accessCode": "액세스 코드",
+  "accountDataMergeDesc": "동기화하면 프로필 이름과 아바타가 업데이트되지만, 현재 기기의 청취 시간은 계정 총계에 성공적으로 통합됩니다.",
+  "accountLinked": "계정 연결됨",
+  "accountLinkedSuccessfully": "계정이 성공적으로 연결되었습니다!",
+  "achievementsUnlocked": "해제된 업적",
+  "activeNoResampling": "활성 (리샘플링 필요 없음)",
+  "add": "추가",
+  "addFiles": "파일 추가",
+  "addFolder": "폴더 추가",
+  "addFoldersScan": "스캔할 폴더 추가",
+  "addToFavorite": "즐겨찾기에 추가",
+  "addToPlaylist": "플레이리스트에 추가",
+  "addToQueue": "대기열에 추가",
+  "addedFolder": "폴더 추가됨: {folder}",
+  "addedToLikedSongs": "좋아요 표시한 곡에 추가됨",
+  "addedToPlaylistSuccess": "플레이리스트에 추가됨",
+  "addedToQueue": "대기열에 추가됨",
+  "album": "앨범",
+  "albumAddedToPlaylists": "플레이리스트에 앨범 추가됨",
+  "albumLabel": "앨범",
+  "albumRemovedFromPlaylists": "플레이리스트에서 앨범 제거됨",
+  "albums": "앨범",
+  "allDownloadsRemoved": "모든 다운로드 항목 제거됨",
+  "allRightsReserved": "판권 소유.",
+  "allTime": "전체 기간",
+  "alreadyInLikedSongs": "이미 좋아요 표시한 곡",
+  "android14BitPerfect": "Android 14+ 비트 퍼펙트",
+  "androidAudioEffectsNote": "참고: 오디오 효과는 Android 장치에서만 들을 수 있습니다.",
+  "androidAudioTrack": "Android AudioTrack",
+  "androidBitPerfect": "Android 14+ 비트 퍼펙트",
+  "androidMixer": "Android 믹서",
+  "appearance": "테마 및 디자인",
+  "applyOnRestart": "변경 사항은 다음 재시작 시 적용됩니다.",
+  "arabic": "아랍어",
+  "artist": "아티스트",
+  "artistLabel": "아티스트",
+  "artists": "아티스트",
+  "atmospheres": "분위기",
+  "audioFormat": "오디오 형식",
+  "audioOutput": "오디오 출력",
+  "audioOutputDevice": "오디오 출력 장치",
+  "audioQuality": "오디오 품질",
+  "audioSource": "오디오 소스",
+  "audiophileDAC": "오디오필 DAC 재생 시 활성화 (재시작 필요)",
+  "autoAddSimilar": "대기열이 거의 비었을 때 비슷한 곡 자동 추가",
+  "autoClearAfter24h": "24시간 후",
+  "autoClearAfter7d": "7일 후",
+  "autoClearCache": "캐시 자동 지우기",
+  "autoClearDisabled": "비활성화됨",
+  "autoClearEvery30m": "30분마다 (청취 중일 때만)",
+  "autoClearOnClose": "앱 종료 시",
+  "autoFixComingSoon": "자동 수정 (출시 예정)",
+  "autoRestartNotSupported": "자동 재시작이 지원되지 않습니다. 수동으로 재시작해 주세요.",
+  "autoTagContent": "Spotify에서 '{sourceName}'의 모든 {count}개 곡을 검색하고 태그를 자동으로 덮어씁니다.\\n\\n이 작업은 되돌릴 수 없습니다.",
+  "autoTagTitle": "⚠️ {sourceName}을(를) 자동 태그 하시겠습니까?",
+  "automatic": "자동",
+  "automaticTitleLabel": "자동: {title}",
+  "autumn": "가을",
+  "avatarPickerDesc": "템플릿을 선택하거나 본인의 사진을 불러오세요",
+  "beFirstToClaim": "1위를 먼저 차지해 보세요!",
+  "behavioralHeader": "행동 업적",
+  "behavioralTitles": "행동 기반",
+  "binariesUpdateRequired": "바이너리 업데이트 필요",
+  "bitDepthLabel": "비트 깊이",
+  "bitPerfectEnabled": "비트 퍼펙트 모드 활성화됨. 볼륨 조절이 비활성화될 수 있습니다.",
+  "bitPerfectWindows": "자동 샘플링 레이트로 비트 퍼펙트 오디오 (재시작 필요)",
+  "bitrateLabel": "비트레이트",
+  "bitsLabel": "비트",
+  "brazil": "브라질",
+  "browse": "둘러보기",
+  "bypassSystemMixer": "USB DAC에 대해 시스템 믹서 우회",
+  "bypassedBitPerfect": "우회됨 (비트 퍼펙트)",
+  "cacheCleared": "캐시가 성공적으로 지워졌습니다!",
+  "cached": "캐시됨",
+  "cancel": "취소",
+  "championChampionTooltip": "5주 동안 세계 1위 달성",
+  "change": "변경",
+  "changeFolder": "폴더 변경",
+  "changeFormatInSettings": "설정에서 출력 형식을 변경해 주세요",
+  "changeLabel": "변경",
+  "changeLanguage": "애플리케이션 언어 변경",
+  "changesApplyRestart": "변경 사항은 다음 재시작 시 적용됩니다.",
+  "changingAudioDeviceRestart": "오디오 출력 장치를 변경하려면 애플리케이션을 재시작해야 적용됩니다.\\n\\n지금 재시작하시겠습니까?",
+  "channelsLabel": "채널",
+  "checkAgain": "다시 확인",
+  "checkInternetConnection": "인터넷 연결을 확인하세요",
+  "checkNetworkTryAgain": "네트워크 연결을 확인하고 다시 시도하세요",
+  "chinese": "중국어",
+  "chooseAccentColor": "선호하는 정적 색상 선택",
+  "chooseAnimationType": "애니메이션 유형 선택",
+  "chooseArtist": "아티스트 선택",
+  "chooseAvatar": "아바타 선택",
+  "chooseYourTitle": "타이틀 선택",
+  "circularPulse": "원형 펄스",
+  "clearAll": "모두 지우기",
+  "clearHistory": "기록 지우기",
+  "clearImported": "가져온 항목 지우기",
+  "clearMetadataCache": "메타데이터 및 아트 캐시 지우기",
+  "clearPlayHistory": "재생 기록 및 감상 시간 지우기",
+  "clearStreamingCache": "스트리밍 캐시 지우기",
+  "close": "닫기",
+  "cloud": "클라우드",
   "codeCopied": "코드가 클립보드에 복사되었습니다!",
-  "shareCodeUsage": "친구에게 이 6자리 코드를 알려주어 재생 목록을 가져오게 하세요.",
-  "noPlaylistsYet": "아직 재생 목록이 없습니다",
+  "codeMust6Digits": "코드는 6자리여야 합니다",
+  "codecLabel": "코덱",
+  "comingSoon": "출시 예정",
+  "community": "커뮤니티",
+  "competitiveTitles": "경쟁적",
+  "confirm": "확인",
+  "connect": "연결",
+  "connectToADevice": "기기에 연결",
+  "connected": "연결됨",
+  "connectedToDac": "{deviceName}에 연결됨 - USB 우회 활성",
+  "connectedUsbDacs": "연결된 USB DAC:",
+  "connecting": "연결 중...",
+  "connectionLostLeaderboard": "연결 끊김",
+  "connectionLostLeaderboardDesc": "글로벌 리더보드는 통계를 동기화하고 전 세계 순위를 가져오기 위해 활성 연결이 필요합니다.",
+  "consecutivePlaysTooltip": "같은 곡을 {count}회 연속 감상",
+  "contentRegion": "콘텐츠 지역",
+  "copyCode": "코드 복사",
+  "couldNotDownloadFlac": "FLAC을 다운로드할 수 없습니다.",
+  "countSongs": "{count, plural, =1{1곡} other{{count}곡}}",
   "createPlaylist": "재생 목록 만들기",
+  "creatingPlaylistWithTracks": "{count}개의 트랙으로 재생 목록을 생성하는 중...",
+  "crossfade": "크로스페이드",
+  "crossfadeDesc": "곡 사이전환을 부드럽게 ({seconds} 초)",
+  "crownedChampionTitlesHeader": "왕관을 쓴 챔피언 타이틀",
+  "customDevice": "사용자 지정 장치",
+  "customSelected": "커스텀 선택됨",
+  "customTime": "사용자 지정 시간",
+  "cyberpunk": "사이버펑크",
+  "daily": "일간",
+  "darkMode": "다크 모드",
+  "dataCleanup": "데이터 및 정리",
+  "dataUsage": "데이터 사용량",
+  "daysShort": "일",
+  "debugging": "디버깅",
+  "delete": "삭제",
+  "deleteDownloadsConfirm": "이 플레이리스트의 모든 다운로드된 곡이 장치에서 제거됩니다.",
+  "deleteDownloadsTitle": "다운로드 항목 삭제?",
+  "deleteFileContent": "'{filename}'을(를) 삭제하시겠습니까?\\n이 작업은 되돌릴 수 없습니다.",
+  "deleteFileTitle": "파일 삭제?",
+  "deletePlaylist": "재생 목록 삭제",
+  "deletePlaylistConfirm": "'{name}'을(를) 삭제하시겠습니까?",
+  "deletePlaylistPermanentConfirm": "이 재생 목록을 삭제하시겠습니까? (이 작업은 취소할 수 없습니다)",
+  "deletePlaylistTitle": "플레이리스트 삭제?",
+  "deletePreset": "프리셋 삭제",
+  "desertMirage": "사막의 신기루",
+  "developerExclusiveTooltip": "이 앱의 개발자 전용",
+  "deviceNameLabel": "기기: {deviceName}",
+  "disableCanvas": "Canvas 비활성화",
+  "disableRomanization": "로마자 표기 비활성화",
+  "disablingSharingWarning": "공유를 비활성화하면 공간을 절약하기 위해 서버에서 코드와 데이터가 영구적으로 삭제됩니다.",
+  "discNumber": "디스크 번호",
+  "discography": "디스코그래피",
+  "discordRPC": "Discord Rich Presence",
+  "doYouRemember": "기억하시나요?",
+  "donate": "후원하기",
+  "download": "다운로드",
+  "downloadAll": "모두 다운로드",
+  "downloadComplete": "다운로드 완료",
+  "downloadCompleteNotification": "다운로드 완료",
+  "downloadError": "다운로드 오류",
+  "downloadFailed": "다운로드 실패",
+  "downloadLocation": "다운로드 위치",
+  "downloadPathReset": "다운로드 경로가 기본값으로 재설정되었습니다.",
+  "downloadPathUpdated": "다운로드 경로 업데이트됨: {path}",
+  "downloadSong": "곡 다운로드",
+  "downloadStarted": "다운로드 시작됨",
+  "downloadedTo": "다운로드 위치: {path}",
+  "downloading": "다운로드 중",
+  "downloadingFlac": "FLAC 다운로드 중",
+  "downloadingFormat": "{format} 다운로드 중",
+  "downloadingUpdate": "업데이트 다운로드 중",
+  "downloads": "다운로드",
+  "dspLabel": "DSP",
+  "editMetadata": "메타데이터 편집",
+  "editNickname": "닉네임 수정",
+  "editor": "편집기",
+  "emptyMailbox": "편지함 비우기",
+  "emptyMailboxDesc": "모든 메시지가 영구적으로 삭제됩니다.",
+  "emptyMailboxTitle": "편지함을 비울까요?",
   "emptyPlaylist": "빈 재생 목록",
   "emptyPlaylistSubtitle": "비어 있는 새 재생 목록 만들기",
-  "filters": "필터",
+  "enableAlphabetIndexer": "알파벳 스크롤 인덱서 활성화",
+  "enableAlphabetIndexerSubtitle": "모바일 리스트 뷰에서 A-Z 사이드바 인덱스 표시",
+  "enableBarVisualizer": "바 비주얼라이저 활성화",
+  "endlessQueue": "무한 대기열",
+  "engineLabel": "엔진",
+  "english": "영어",
+  "enterAdminAccessCode": "관리자 액세스 코드 입력",
+  "enterAdminCode": "관리자 액세스 코드 입력",
+  "enterDuration": "시간 입력...",
+  "enterPresetName": "프리셋 이름 입력 (예: 나의 베이스)",
+  "enterShareCode": "6자리 공유 코드를 입력하세요",
+  "eqLabel": "EQ",
+  "equalizer": "이퀄라이저",
+  "equipTitle": "타이틀 장착",
+  "equipped": "장착됨",
+  "error": "오류",
+  "errorCouldNotCreateSession": "오류: 세션을 생성할 수 없습니다.",
+  "errorDeleting": "삭제 중 오류: {error}",
+  "errorSearchingStream": "스트림 검색 중 오류.",
+  "exclusiveMode": "독점",
+  "exclusiveModeWarning": "주의: 독점 모드는 시스템 기본값이 아닌 특정 장치를 선택했을 때 가장 잘 작동합니다.",
+  "exclusiveTitles": "전용",
+  "exclusiveTitlesHeader": "전용 타이틀",
+  "exclusiveWarning": "주의: 독점 모드는 시스템 기본값이 아닌 특정 장치를 선택했을 때 가장 잘 작동합니다.",
+  "exitApp": "종료",
+  "expand": "확장",
+  "externalFiles": "외부 파일",
+  "fadingAtEnd": "취침 타이머: 트랙 끝에서 페이드 아웃 중...",
+  "failedDisableSharing": "공유를 비활성화하지 못했습니다.",
+  "failedEnableSharing": "공유를 활성화하지 못했습니다. 연결을 확인하세요.",
+  "failedFetchPlaylistInfo": "재생 목록 정보를 가져올 수 없습니다",
+  "failedToConnectDac": "DAC 연결 실패. USB 권한을 확인하세요.",
+  "failedToGenerateCode": "공유 코드를 생성하지 못했습니다. 연결을 확인하세요.",
+  "failedToSetAvatar": "아바타 템플릿 설정 실패",
+  "failedToUpdateMetadata": "메타데이터 업데이트 실패",
+  "favoriteTrack": "즐겨찾는 트랙",
+  "fetchingCanvas": "Canvas 가져오는 중...",
+  "fetchingLossless": "무손실 음원 가져오는 중...",
+  "fetchingLosslessAudio": "무손실 오디오 가져오는 중...",
+  "fetchingMetadataSpotify": "Spotify에서 메타데이터 가져오는 중...",
+  "fetchingPlaylist": "재생 목록을 가져오는 중...",
+  "fetchingPlaylistInfo": "재생 목록 정보를 가져오는 중...",
+  "fetchingSharedPlaylist": "공유 재생 목록을 가져오는 중...",
+  "fetchingTracksFrom": "\"{name}\"에서 트랙을 가져오는 중...",
+  "fileLocation": "파일 위치",
+  "fileMissingHistory": "파일이 누락되었으며 기록에서 찾을 수 없습니다.",
   "fileName": "파일 이름",
-  "dataUsage": "데이터 사용량",
-  "todayLabel": "오늘: {size}",
+  "fileSizeLabel": "파일 크기",
+  "files": "파일",
+  "filters": "필터",
+  "findingBestMatchYoutube": "YouTube에서 최적의 검색 결과 찾는 중...",
+  "findingStream": "스트림 소스 찾는 중...",
+  "finishUpdate": "업데이트 완료",
+  "finishes": "순위",
+  "fixAll": "모두 수정",
+  "flacError": "FLAC 오류",
+  "flacNote": "참고: FLAC은 개별 트랙 다운로드에만 사용할 수 있습니다. 일괄 플레이리스트 다운로드는 M4A 형식을 사용합니다.",
+  "flacSavedToDownloads": "FLAC이 다운로드 폴더에 저장됨",
+  "flacUnavailable": "FLAC 사용 불가",
+  "flacUnavailableDesc": "FLAC을 사용할 수 없어 다운로드에 실패했습니다. 설정을 변경해 보세요.",
+  "flacUnavailableNotification": "FLAC 사용 불가",
+  "fluidWave": "유체 파동",
+  "folderPath": "폴더: {path}",
+  "folders": "폴더",
+  "formatLabel": "형식",
+  "formatSaved": "형식이 저장되었습니다!",
+  "foundExistingAccount": "'{name}'에 대한 기존 계정을 찾았습니다.",
+  "foundResults": "{songCount}개 곡, {albumCount}개 앨범, {artistCount}개 아티스트를 찾았습니다.",
+  "foundYoutubeResults": "YouTube에서 {count}개의 결과를 찾았습니다",
+  "freeUpSpace": "공간 확보 (현재: {size})",
+  "french": "프랑스어",
+  "fromLibraryCount": "라이브러리에서 ({count})",
+  "fromLibrarySection": "라이브러리에서",
+  "fullScreenPlayerTooltip": "전체 화면 플레이어",
+  "galacticSpace": "은하 우주",
+  "gaplessPlayback": "끊김 없는 재생",
+  "gaplessPlaybackDesc": "트랙 사이의 공백 제거",
+  "general": "일반",
+  "generatingShareCode": "공유 코드 생성 중...",
+  "genre": "장르",
+  "german": "독일어",
+  "globalLeaderboard": "글로벌 리더보드",
+  "globalMailbox": "글로벌 편지함",
+  "globalRank": "글로벌 순위",
+  "globalRankings": "글로벌 랭킹",
+  "globalRankingsDesc": "일간, 주간, 전체 상위 청취자를 확인하세요!",
+  "goToArtist": "아티스트로 이동",
+  "goToLocalLibraryToSelect": "'로컬 라이브러리'로 이동하여 음악 폴더를 선택하세요.",
+  "goodAfternoon": "좋은 오후입니다",
+  "goodEvening": "좋은 저녁입니다",
+  "goodMorning": "좋은 아침입니다",
+  "googleAccount": "Google 계정",
+  "grantAccess": "액세스 허용",
+  "grantPermission": "권한 허용",
+  "hallOfFameHeader": "명예의 전당 업적",
+  "hallOfFameTitles": "명예의 전당",
+  "hideCanvas": "Spotify Canvas 비디오 대신 앨범 아트 표시",
+  "hideRomajiPinyin": "한국어, 일본어, 중국어 가사 아래의 로마자/병음 숨기기",
+  "hideTranslation": "번역 숨기기",
+  "highDesc": "M4A - 더 나은 품질, 균형 잡힌 선택",
+  "highQuality": "고품질 (M4A)",
+  "hindi": "힌디어",
+  "history": "기록",
+  "historySection": "기록",
+  "home": "홈",
+  "hourShort": "시간",
+  "hoursDuration": "{count, plural, =1{1시간} other{{count}시간}}",
+  "hoursShort": "시",
+  "ignoreSubfolderScan": "하위 폴더 스캔 무시",
+  "importAdditionalPaths": "추가 경로 가져오기",
+  "importChoice": "가져오기",
+  "importFailed": "가져오기 실패: {error}",
+  "importFromGallery": "갤러리에서 불러오기",
+  "importFromSpotify": "Spotify에서 가져오기",
+  "importFromSpotifySubtitle": "Spotify 플레이리스트 URL 붙여넣기",
+  "importFromYoutubeMusic": "YouTube Music에서 가져오기",
+  "importFromYoutubeMusicSubtitle": "YouTube Music 재생목록 URL 붙여넣기",
+  "importLabel": "가져오기",
+  "importLyricsFile": "가사 파일 가져오기",
+  "importLyricsTooltip": "가사 가져오기",
+  "importSpotifyPlaylist": "Spotify 플레이리스트 가져오기",
+  "importViaCode": "코드를 통해 가져오기",
+  "importViaCodeSubtitle": "친구가 공유한 재생 목록 가져오기",
+  "importYoutubeMusicPlaylist": "YouTube Music 플레이리스트 가져오기",
+  "importedPlaylistName": "\"{name}\"을(를) 성공적으로 가져왔습니다!",
+  "importedTracks": "{count}개의 트랙을 성공적으로 가져왔습니다!",
+  "indonesia": "인도네시아",
+  "indonesian": "인도네시아어",
+  "inputLabel": "입력",
+  "installNow": "지금 설치",
+  "integration": "연동",
+  "invalidAccessCode": "잘못된 액세스 코드",
+  "invalidCode": "잘못된 액세스 코드",
+  "invalidSpotifyUrl": "유효하지 않은 Spotify 재생 목록 URL",
+  "invalidYoutubeMusicUrl": "유효하지 않은 YouTube Music 재생목록 URL입니다",
+  "japan": "일본",
+  "japanese": "일본어",
+  "joinUs": "함께하기",
+  "jumpBackIn": "다시 듣기",
+  "justEnjoyVibes": "분위기를 즐기세요.",
+  "korean": "한국어",
+  "language": "언어",
+  "last30DaysLabel": "지난 30일: {size}",
   "last7DaysLabel": "지난 7일: {size}",
-  "last30DaysLabel": "지난 30일: {size}"
+  "later": "나중에",
+  "library": "라이브러리",
+  "libraryData": "라이브러리 데이터",
+  "libraryNotLoaded": "라이브러리가 로드되지 않았습니다.",
+  "libraryPathReset": "라이브러리 경로가 재설정되었습니다.",
+  "likedSongs": "좋아요 표시한 곡",
+  "linkAccount": "계정 연결",
+  "linkAccountDesc": "Google로 진행 상황 동기화 및 복구",
+  "listenMinutesTooltip": "{minutes}분 동안 음악 감상",
+  "listeningParty": "리스닝 파티",
+  "listeningStats": "감상 통계",
+  "loadingCanvas": "Canvas 로딩 중...",
+  "loadingDevices": "장치 로딩 중...",
+  "loadingError": "세부 정보를 불러오지 못했습니다. 다시 시도해 주세요.",
+  "loadingLyrics": "가사 로딩 중...",
+  "localPlayHistorySaved": "로컬 재생 기록은 삭제되지 않습니다.",
+  "local_library": "로컬 라이브러리",
+  "lockedAtmosphere": "분위기가 활성화된 동안 잠김",
+  "losslessDesc": "FLAC - Deezer/Tidal의 무손실 품질",
+  "losslessNote": "가능한 경우 Deezer/Tidal에서 무손실 FLAC을 스트리밍합니다. 불가능한 경우 M4A로 대체됩니다.",
+  "losslessQuality": "무손실 (자동)",
+  "lunarNewYear": "설날",
+  "lyricsByLRCLIB": "가사: LRCLIB",
+  "lyricsSaveError": "가사 저장 실패",
+  "lyricsSavedSuccess": "가사가 .lrc 파일로 저장됨",
+  "lyricsTooltip": "가사",
+  "madeForYou": "당신을 위한 추천",
+  "manualSearch": "수동 검색",
+  "mergeAccountData": "계정 데이터를 통합할까요?",
+  "metadataCacheCleared": "메타데이터 캐시가 삭제되고 라이브러리 재검색이 시작되었습니다",
+  "metadataEditorInfo": "메타데이터 편집기로 간편하게 검색하고 수정하세요.",
+  "metadataEditorNote": "참고: 앨범 아트는 \"성공적으로 저장됨\" 상태 이후에 변경됩니다. 저장되지 않은 것이 아니라 앱의 캐싱 문제이며 현재 수정 중입니다. 파일 관리자 등으로 확인할 수 있습니다.",
+  "metadataUpdated": "메타데이터가 업데이트되었습니다",
+  "metadata_editor": "메타데이터 편집기",
+  "min": "분",
+  "minShortLabel": "분",
+  "miniPlayer": "미니 플레이어",
+  "minimizeToTray": "트레이로 최소화",
+  "minimizeToTrayDescription": "종료 대신 시스템 트레이로 앱 닫기",
+  "minsShort": "분",
+  "minsShortLabel": "분",
+  "minuteShort": "분",
+  "minutes": "분",
+  "minutesDuration": "{count, plural, =1{1분} other{{count}분}}",
+  "moreOptions": "추가 옵션",
+  "moreOptionsTooltip": "추가 옵션",
+  "mostListened": "가장 많이 들은 곡",
+  "mostListenedArtist": "가장 많이 청취한 아티스트",
+  "musicFolderLocation": "음악 폴더 위치",
+  "musicSearch": "음악 검색",
+  "musicWillStopIn": "{label} 후에 음악이 중지됩니다",
+  "muteTooltip": "음소거",
+  "myTopTrackOn": "Simple Player에서 나의 {header}! 🎵",
+  "nativeRate": "네이티브 레이트",
+  "navigation": "네비게이션",
+  "newPlaylist": "새 플레이리스트",
+  "nextTrack": "다음 트랙",
+  "nicknameHint": "닉네임을 입력하세요",
+  "nicknameLabel": "닉네임",
+  "nicknameRequired": "닉네임 필요",
+  "nicknameRequiredDesc": "글로벌 리더보드를 보려면 먼저 커스텀 닉네임을 설정해야 합니다!",
+  "nicknameTakenDesc": "이 닉네임은 이미 사용 중입니다. 다른 닉네임을 선택하세요.",
+  "nicknameTakenTitle": "이미 사용 중인 닉네임",
+  "noAlbumsFound": "앨범 없음",
+  "noArtistStatsYet": "아직 아티스트 통계가 없습니다.",
+  "noArtistsFound": "아티스트 없음.",
+  "noDownloadsFound": "다운로드 항목 없음",
+  "noFolderSelected": "폴더가 선택되지 않음",
+  "noHistoryYet": "아직 기록이 없습니다",
+  "noInternetConnection": "인터넷 연결 없음",
+  "noLyricsAvailable": "가사 없음",
+  "noMessages": "편지함에 메시지가 없습니다",
+  "noMusicPlaying": "재생 중인 음악 없음",
+  "noPlaylistsFound": "플레이리스트 없음",
+  "noPlaylistsYet": "아직 재생 목록이 없습니다",
+  "noRankingsYet": "이 기간 동안의 순위가 아직 없습니다.",
+  "noResultsFound": "결과 없음",
+  "noSongPlaying": "재생 중인 곡 없음",
+  "noSongsAdded": "아직 추가된 곡이 없음",
+  "noSongsInFolder": "이 폴더에서 곡을 찾을 수 없습니다.",
+  "noSpotifyResults": "Spotify 검색 결과 없음.",
+  "noStatsYet": "아직 통계가 없습니다.",
+  "noStreamMatch": "일치하는 스트림을 찾을 수 없습니다.",
+  "noSuggestionsFound": "제안 없음.",
+  "noSyncedLyricsFound": "동기화된 가사를 찾을 수 없음",
+  "noTracksFound": "재생 목록에서 트랙을 찾을 수 없습니다",
+  "noUsbDacDetected": "USB DAC가 감지되지 않았습니다. USB 오디오 장치를 연결하고 스캔을 누르세요.",
+  "noUsersFound": "사용자를 찾을 수 없음",
+  "noYoutubeResults": "YouTube에서 결과를 찾을 수 없습니다",
+  "none": "없음",
+  "nordicAurora": "노르딕 오로라",
+  "notRank": "순위 {rank} 아님",
+  "notRanked": "순위 없음",
+  "notRankedTop3": "상위 3위 이내 아님",
+  "nowPlaying": "현재 재생 중",
+  "nowPlayingHeader": "현재 재생 중",
+  "nowPlayingSection": "현재 재생 중",
+  "offline": "오프라인",
+  "offlineStatus": "오프라인",
+  "ok": "확인",
+  "online": "온라인",
+  "onlyScanSelected": "선택한 폴더만 스캔 (기본값: 켬)",
+  "opacity": "불투명도",
+  "opacityLabel": "불투명도: {percent}%",
+  "openProfile": "프로필 열기",
+  "openSourceLicenses": "오픈 소스 라이선스",
+  "outputLabel": "출력",
+  "overwrite": "덮어쓰기",
+  "overwriteLrcWarning": "이미 로컬 .lrc 파일이 있습니다.\\n덮어쓰시겠습니까?",
+  "parsingPlaylistData": "재생 목록 데이터를 분석하는 중...",
+  "pathLabel": "경로",
+  "permissionRequired": "권한 필요",
+  "permissionRequiredDesc": "태그를 편집하려면 '모든 파일 액세스' 권한이 필요합니다. 이를 통해 음악 파일을 직접 수정할 수 있습니다.",
+  "play": "재생",
+  "playCountLabel": "{count}회 재생",
+  "playNext": "다음에 재생",
+  "playPause": "재생 / 일시정지",
+  "playQueue": "재생 대기열",
+  "playback": "재생",
+  "playbackError": "재생 오류",
+  "player": "플레이어",
+  "playingFromAlbum": "앨범에서 재생 중",
+  "playingNext": "다음에 재생 중",
+  "playingTrack": "트랙 재생 중",
+  "playlistAlbumTracks": "플레이리스트 / 앨범 트랙",
+  "playlistNameHint": "플레이리스트 이름",
+  "playlistNotFound": "플레이리스트를 찾을 수 없음",
+  "playlistNotFoundOrError": "재생 목록을 찾을 수 없거나 서버 오류입니다",
+  "playlistReadyShare": "재생 목록을 공유할 준비가 되었습니다!",
+  "playlists": "플레이리스트",
+  "plays": "회 재생",
+  "popularOnSpotify": "Spotify 인기 곡",
+  "portuguese": "포르투갈어",
+  "preferredOutputFormat": "다운로드 기본 출력 형식",
+  "preparingDownload": "다운로드 준비 중",
+  "preparingDownloadFormat": "다운로드 준비 중 ({format})...",
+  "preparingDownloadNotification": "다운로드 준비 중",
+  "presetSaved": "프리셋 저장됨!",
+  "preview": "미리보기",
+  "previousTrack": "이전 트랙",
+  "profileSettings": "프로필 설정",
+  "profileStats": "프로필 통계",
+  "progress": "진행 상황",
+  "publicSharing": "공개 공유",
+  "publicSharingDesc": "코드를 아는 사람은 누구나 이 재생 목록을 가져올 수 있습니다.",
+  "publicSharingDisabledDesc": "비활성화됨. 다른 사람과 공유하려면 활성화하세요.",
+  "queueIsEmpty": "대기열이 비어 있습니다",
+  "queueTooltip": "대기열",
+  "queueUpdated": "대기열 업데이트됨",
+  "quickMix": "빠른 믹스",
+  "rainbowMode": "레인보우 모드",
+  "rainyCity": "비 오는 도시",
+  "rank": "순위",
+  "rankActive": "순위 {rank} (활성)",
+  "rankLabel": "순위 {rank}",
+  "reBuffering": "다시 버퍼링 중...",
+  "reachDailyPlaysTooltip": "하루에 {count}회 재생 달성",
+  "reachSpecificArtistTooltip": "특정 아티스트와 {minutes}분 달성",
+  "reachWeeklyPlaysTooltip": "일주일에 {count}회 재생 달성",
+  "readySearchSong": "준비되었습니다. 곡을 검색하세요.",
+  "rebufferingFromCloud": "클라우드에서 다시 버퍼링 중...",
+  "recentlyPlayed": "최근 재생 항목",
+  "recommendationsCount": "추천 ({count})",
+  "recommendationsSection": "추천",
+  "rediscover": "다시 발견하기",
+  "refreshLabel": "새로고침",
+  "refreshLibrary": "라이브러리 새로고침",
+  "refreshList": "목록 새로고침",
+  "refreshLyricsTooltip": "가사 새로고침",
+  "removeAvatar": "현재 아바타 제거",
+  "removeFromPlaylist": "플레이리스트에서 제거",
+  "removedFolder": "폴더 제거됨: {folder}",
+  "rename": "이름 변경",
+  "renamePlaylist": "플레이리스트 이름 변경",
+  "repeats": "반복",
+  "requiresAndroid14": "Android 14+ 및 USB DAC 필요",
+  "resamplingLabel": "리샘플링",
+  "reset": "초기화",
+  "resetDataUsage": "데이터 사용량 초기화",
+  "resetDataUsageContent": "데이터 사용량을 초기화하시겠습니까? 다운로드한 음악에는 영향을 주지 않습니다.",
+  "resetEverything": "모든 항목 재설정",
+  "resetLibraryContent": "플레이어에서 현재 폴더를 제거합니다. 실제 파일은 삭제되지 않습니다.",
+  "resetLibraryPath": "라이브러리 경로 재설정",
+  "resetLibraryTitle": "라이브러리를 재설정할까요?",
+  "resetPath": "경로 재설정",
+  "resetStatistics": "통계 재설정",
+  "resetStatsContent": "이 작업은 되돌릴 수 없습니다.\\n모든 재생 횟수와 감상 시간이 영구적으로 삭제됩니다.",
+  "resetStatsTitle": "통계를 재설정할까요?",
+  "resetToAutomatic": "자동으로 초기화",
+  "resetToDefault": "기본값으로 재설정",
+  "resetUsage": "사용량 초기화",
+  "resetsIn": "초기화까지",
+  "restartContent": "오디오 출력 장치를 변경하려면 애플리케이션을 재시작해야 적용됩니다.\\n\\n지금 재시작하시겠습니까?",
+  "restartNow": "지금 재시작",
+  "restartRequired": "재시작 필요",
+  "restoring": "복원 중",
+  "retryConnection": "연결 재시도",
+  "revert": "되돌리기",
+  "russian": "러시아어",
+  "sakura": "사쿠라",
+  "sampleRateLabel": "샘플링 레이트",
+  "samplingRateLabel": "샘플링 레이트",
+  "save": "저장",
+  "saveAsNewPreset": "새 프리셋으로 저장",
+  "saveChangesToFile": "변경 사항을 파일에 저장",
+  "saveLabel": "저장",
+  "saveLrcPrompt": "현재 가사를 오디오 파일 옆에 저장하시겠습니까?",
+  "saveLyricsTooltip": "가사 저장",
+  "savePlaylistContent": "이 곡들로 새 플레이리스트를 만듭니다.",
+  "savePlaylistTitle": "{title}을(를) 저장할까요?",
+  "savePreset": "프리셋 저장",
+  "savedAs": "\"{name}\"(으)로 저장됨!",
+  "savedAsFormat": "{format}(으)로 저장됨",
+  "savedTo": "\"{path}\"에 저장됨",
+  "saving": "저장 중...",
+  "scan": "스캔",
+  "scanToControlPlayback": "휴대폰으로 스캔하여 재생을 제어하세요.",
+  "scanning": "스캔 중...",
+  "scrollForLyrics": "가사를 보려면 스크롤",
+  "search": "검색",
+  "searchEngine": "검색 엔진",
+  "searchFailedStatus": "검색 실패: {error}",
+  "searchHint": "검색...",
+  "searchSongs": "곡 검색...",
+  "searchSongsOrAlbumsAndArtistsHint": "곡, 앨범 또는 아티스트 검색...",
+  "searchSpotify": "Spotify 검색",
+  "searchSpotifyHint": "Spotify 검색...",
+  "searchUsers": "사용자 검색...",
+  "searchYoutubeHint": "YouTube 검색...",
+  "searching": "검색 중...",
+  "searchingEngine": "{engine}에서 '{keyword}' 검색 중...",
+  "searchingSpotify": "Spotify 검색 중...",
+  "searchingSpotifyFor": "\"{keyword}\" Spotify 검색 중...",
+  "searchingStatus": "검색 중",
+  "secondShort": "초",
+  "secsShort": "초",
+  "seeAll": "모두 보기",
+  "selectDifferentFolder": "다른 폴더 선택",
+  "selectFolder": "폴더 선택",
+  "selectMatch": "일치 항목 선택",
+  "selectSongToEdit": "목록에서 편집할 곡 선택",
+  "selectStreamingQuality": "스트리밍 품질 선택",
+  "selectTrackToStart": "재생할 트랙 선택",
+  "selectVersion": "버전 선택",
+  "session": "세션: {id}",
+  "setCountryReleases": "새 릴리스 및 차트 국가 설정",
+  "setCustomTimer": "사용자 지정 타이머 설정",
+  "settings": "설정",
+  "share": "공유",
+  "shareCodeUsage": "친구에게 이 6자리 코드를 알려주어 재생 목록을 가져오게 하세요.",
+  "sharePlaylist": "재생 목록 공유",
+  "sharePlaylistTitle": "\"{name}\" 공유",
+  "sharedMode": "공유",
+  "showAllTitles": "{count}개 타이틀 모두 보기",
+  "showAnimatedWaves": "플레이어 바에 애니메이션 파동 표시",
+  "showDebugButton": "부동 디버그 버튼 표시",
+  "showInFolder": "폴더에 표시",
+  "showLess": "간략히 보기",
+  "showMore": "더 보기",
+  "showStatusDiscord": "Discord에 상태 표시",
+  "showUnlockedOnly": "잠금 해제된 항목만 보기",
+  "shuffle": "셔플",
+  "shuffleAll": "모두 셔플",
+  "shufflingArtist": "{artistName} 셔플 중...",
+  "signInWithGoogle": "Google로 로그인",
+  "signalOutput": "신호 출력",
+  "singleTracks": "개별 트랙",
+  "sleepTimer": "취침 예약",
+  "songAlreadyInPlaylist": "이미 플레이리스트에 있는 곡",
+  "songInformation": "곡 정보",
+  "songLabelUpper": "곡",
+  "songTitleKeyword": "곡 제목 또는 키워드",
+  "songs": "곡",
+  "songsCount": "{count}곡",
+  "songsInLibrary": "라이브러리에 {count}곡 포함",
+  "songsLoadedCount": "{count}개의 곡 로드됨...",
+  "southKorea": "대한민국",
+  "spanish": "스페인어",
+  "spectrumBars": "스펙트럼 바",
+  "spotify": "Spotify",
+  "standardDesc": "MP3 - 작은 파일 크기, 빠른 버퍼링",
+  "standardQuality": "표준 (MP3)",
+  "start": "시작",
+  "startBulkProcess": "일괄 작업 시작",
+  "startedDownloadingAll": "모든 곡 다운로드 시작됨...",
+  "stateDisabled": "비활성화됨",
+  "stateEnabled": "활성화됨",
+  "statisticsReset": "통계가 재설정되었습니다.",
+  "stats": "통계",
+  "statusLabel": "상태",
+  "statusWithText": "상태: {status}",
+  "stopTimer": "타이머 중지 ({time})",
+  "streaming": "스트리밍",
+  "streamingQuality": "스트리밍 품질",
+  "success": "성공",
+  "superfanHeader": "슈퍼팬 업적",
+  "superfanTitles": "슈퍼팬",
+  "supportDeveloperTooltip": "전용 타이틀을 획득하기 위해 개발자 지원",
+  "switchToGridView": "그리드 보기로 전환",
+  "switchToListView": "목록 보기로 전환",
+  "switchingTo": "전환 중",
+  "syncThemeAlbumArt": "앨범 아트와 테마 동기화",
+  "system": "시스템",
+  "systemDefault": "시스템 기본값",
+  "targetLanguageLyrics": "가사 번역 대상 언어",
+  "thai": "태국어",
+  "tidalApiStatus": "Tidal API",
+  "timeBasedTitles": "시간 기반",
+  "timeListened": "감상 시간",
+  "timeOverlordsHeader": "시간의 지배자",
+  "timerSetForHours": "{count}시간 후에 중지되도록 타이머가 설정되었습니다",
+  "timerSetForMinutes": "{count}분 후에 중지되도록 타이머가 설정되었습니다",
+  "timerSetForSeconds": "{count}초 후에 중지되도록 타이머가 설정되었습니다",
+  "tintBackground": "곡 색상으로 배경 및 비주얼라이저 물들이기",
+  "title": "제목",
+  "titleLabel": "제목",
+  "todayLabel": "오늘: {size}",
+  "toggleDebugButton": "부동 디버그 콘솔 표시 여부 전환",
+  "toggleDebugConsole": "부동 디버그 콘솔 표시 여부 전환",
+  "toggleLyrics": "가사 켜기/끄기",
+  "top3GlobalTooltip": "{weeks}주 동안 세계 상위 3위 달성",
+  "topArtist": "최고의 아티스트",
+  "topArtistAndTrack": "최고 아티스트 및 트랙",
+  "topArtists": "최고 아티스트",
+  "topGlobalTooltip": "세계 상위 {rank}위 달성",
+  "topListeners": "최고 청취자",
+  "totalMinutesStat": "총 시간(분)",
+  "totalPlays": "총 재생 횟수",
+  "trackDetails": "트랙 상세 정보",
+  "trackNumber": "트랙 번호",
+  "tracks": "트랙",
+  "translateLabel": "번역",
+  "translateLyrics": "가사 번역",
+  "translateLyricsTooltip": "가사 번역",
+  "translationLanguage": "번역 언어",
+  "turnOffTimer": "타이머 끄기",
+  "unauthorize": "승인되지 않음",
+  "underDevelopment": "이 기능은 개발 중입니다",
+  "underwater": "수중",
+  "unitedKingdom": "영국",
+  "unitedStates": "미국",
+  "unknown": "알 수 없음",
+  "unknownArtist": "알 수 없는 아티스트",
+  "unknownDevice": "알 수 없는 장치",
+  "unlink": "연결 해제",
+  "unlinkAccount": "계정 연결 해제",
+  "unlinkAccountDesc": "통계 데이터는 이 기기에 남지만 더 이상 기기 간에 동기화되지 않습니다.",
+  "unlinkAccountQuestion": "계정 연결을 해제할까요?",
+  "unlinkFolder": "폴더 연결 해제 및 곡 목록 지우기",
+  "unlinkFolderClear": "폴더 연결 해제 및 곡 목록 지우기",
+  "unlockedCountLabel": "{unlocked} / {total} 잠금 해제됨",
+  "unmuteTooltip": "음소거 해제",
+  "unsavedChanges": "저장되지 않은 변경 사항이 있습니다",
+  "upNext": "다음에 재생",
+  "upNextCount": "다음에 재생 ({count})",
+  "upNextSection": "다음에 재생",
+  "updateAvailableTitle": "업데이트 가능",
+  "updateAvailableVersion": "새 버전({version})을 사용할 수 있습니다.",
+  "updateFailed": "업데이트 실패: {error}",
+  "updateNow": "지금 업데이트",
+  "updatePrompt": "지금 다운로드하여 설치하시겠습니까?",
+  "updatingYtDlp": "yt-dlp 업데이트 중",
+  "usbAudioBypass": "USB 오디오 우회 (베타) - Android 13 이하용 직접 DAC 출력",
+  "usbAudioBypassBeta": "USB 오디오 우회 (베타) - Android 13 이하용 직접 DAC 출력",
+  "useDarkTheme": "다크 테마 사용",
+  "useMixedColors": "혼합 색상 사용 (동기화 무시)",
+  "verifiedDeveloper": "인증된 개발자",
+  "version": "버전",
+  "versionLabel": "버전 {version}",
+  "vietnamese": "베트남어",
+  "viewQueue": "대기열 보기",
+  "visualizer": "비주얼라이저",
+  "visualizerStyle": "비주얼라이저 스타일",
+  "wasapiExclusive": "WASAPI 독점 모드",
+  "weekly": "주간",
+  "weeks": "주",
+  "winter": "겨울",
+  "worldRanking": "월드 랭킹",
+  "worldTopArtists": "세계 최고 아티스트",
+  "year": "연도",
+  "youMayLike": "추천 곡",
+  "yourPlaylists": "나의 플레이리스트",
+  "yourTopMix": "나의 믹스",
+  "youtube": "YouTube",
+  "ytDlpUpdateAvailable": "yt-dlp의 새 버전을 사용할 수 있습니다."
 }

@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:metadata_god/metadata_god.dart';
+import 'package:metadata_god/metadata_god.dart' show Metadata;
+import 'package:path/path.dart' as p;
+import '../../services/metadata_service.dart';
 import '../../services/art_cache_service.dart';
+import '../../services/cue_parser_service.dart';
 
 class SmartArt extends StatefulWidget {
   final String path;
@@ -14,6 +17,8 @@ class SmartArt extends StatefulWidget {
   static final Map<String, Uint8List?> _cache = {};
   static final Map<String, File> _knownDiskCache = {};
   static final Set<String> _nonExistentPaths = {};
+  static final Set<String> _noEmbeddedArtPaths = {}; // 🚀 Negative Cache
+  static final Set<String> _noArtPaths = {}; // 🚀 Absolute Negative Cache (No embedded, no folder art)
 
   // 🚀 GLOBAL VERSION: Incremented on invalidation to force rebuilds
   static int _globalVersion = 0;
@@ -29,9 +34,23 @@ class SmartArt extends StatefulWidget {
     _cache.remove(path);
     _knownDiskCache.remove(path);
     _nonExistentPaths.remove(path);
+    _noEmbeddedArtPaths.remove(path); // 🚀 Clear negative cache too
+    _noArtPaths.remove(path); // 🚀 Clear absolute negative cache
     _globalVersion++;
     _pathVersions[path] = _globalVersion;
     // Also clear Flutter's image cache for this file
+    imageCache.clear();
+    imageCache.clearLiveImages();
+  }
+
+  static void clearAllMemoryCaches() {
+    _cache.clear();
+    _knownDiskCache.clear();
+    _nonExistentPaths.clear();
+    _noEmbeddedArtPaths.clear();
+    _noArtPaths.clear();
+    _pathVersions.clear();
+    _globalVersion++;
     imageCache.clear();
     imageCache.clearLiveImages();
   }
@@ -106,6 +125,11 @@ class _SmartArtState extends State<SmartArt> {
       return _buildPlaceholder();
     }
 
+    // SKIP paths proven to have no art
+    if (SmartArt._noArtPaths.contains(widget.path)) {
+      return _buildPlaceholder();
+    }
+
     return _buildFileArt();
   }
 
@@ -137,8 +161,26 @@ class _SmartArtState extends State<SmartArt> {
               return _buildPlaceholder();
             }
 
+            // 🚀 NEGATIVE CACHE CHECK: If we already scanned this file and found no art, skip ffprobe/metadata read!
+            if (SmartArt._noEmbeddedArtPaths.contains(widget.path)) {
+              return FutureBuilder<File?>(
+                future: _findFolderArt(widget.path),
+                builder: (context, folderArtSnapshot) {
+                  if (folderArtSnapshot.connectionState != ConnectionState.done) {
+                    return _buildPlaceholder();
+                  }
+                  if (folderArtSnapshot.hasData && folderArtSnapshot.data != null) {
+                    SmartArt._knownDiskCache[widget.path] = folderArtSnapshot.data!;
+                    return _buildFileImage(folderArtSnapshot.data!);
+                  }
+                  SmartArt._noArtPaths.add(widget.path);
+                  return _buildPlaceholder();
+                },
+              );
+            }
+
             return FutureBuilder<Metadata?>(
-              future: MetadataGod.readMetadata(file: widget.path),
+              future: MetadataService().readMetadata(widget.path),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data?.picture != null) {
                   final bytes = snapshot.data!.picture!.data;
@@ -146,13 +188,64 @@ class _SmartArtState extends State<SmartArt> {
                   ArtCacheService().saveArt(widget.path, bytes);
                   return _buildImage(bytes);
                 }
-                return _buildPlaceholder();
+                // 🚀 Mark as having no embedded art to prevent future FFProbe loops
+                SmartArt._noEmbeddedArtPaths.add(widget.path);
+
+                // 🚀 FOLDER ART FALLBACK: If no embedded art, check directory for cover.jpg, folder.jpg, etc.
+                return FutureBuilder<File?>(
+                  future: _findFolderArt(widget.path),
+                  builder: (context, folderArtSnapshot) {
+                    if (folderArtSnapshot.connectionState != ConnectionState.done) {
+                      return _buildPlaceholder();
+                    }
+                    if (folderArtSnapshot.hasData && folderArtSnapshot.data != null) {
+                      SmartArt._knownDiskCache[widget.path] = folderArtSnapshot.data!;
+                      return _buildFileImage(folderArtSnapshot.data!);
+                    }
+                    SmartArt._noArtPaths.add(widget.path);
+                    return _buildPlaceholder();
+                  },
+                );
               },
             );
           },
         );
       },
     );
+  }
+
+  /// 🚀 Searches for common album art filenames in the song's directory.
+  Future<File?> _findFolderArt(String songPath) async {
+    try {
+      // 🚀 CUE SUPPORT: Resolve virtual path to real audio path for directory check
+      final resolvedPath = CuePath.isCuePath(songPath) 
+          ? CuePath.extractAudioPath(songPath) 
+          : songPath;
+
+      final file = File(resolvedPath);
+      final directory = file.parent;
+      if (!await directory.exists()) return null;
+
+      final commonNames = [
+        'cover', 'folder', 'album', 'front', 'art', 'scans'
+      ];
+      final extensions = ['.jpg', '.jpeg', '.png', '.webp'];
+
+      final entities = await directory.list().toList();
+      for (final entity in entities) {
+        if (entity is File) {
+          final name = p.basenameWithoutExtension(entity.path).toLowerCase();
+          final ext = p.extension(entity.path).toLowerCase();
+          
+          if (extensions.contains(ext)) {
+            if (commonNames.any((cn) => name.contains(cn))) {
+               return entity;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 
   Widget _buildFileImage(File file) {

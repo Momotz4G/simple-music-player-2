@@ -24,8 +24,8 @@ class _RetroSunPainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: [
           const Color(0xFFFFD700), // Gold/Yellow
-          const Color(0xFFFF007F).withOpacity(0.8), // Neon Pink
-          const Color(0xFFBD00FF).withOpacity(0.0), // Fade to Purple
+          const Color(0xFFFF007F).withValues(alpha: 0.8), // Neon Pink
+          const Color(0xFFBD00FF).withValues(alpha: 0.0), // Fade to Purple
         ],
       ).createShader(Rect.fromCircle(
           center: Offset(centerX, centerY), radius: radius * 1.5))

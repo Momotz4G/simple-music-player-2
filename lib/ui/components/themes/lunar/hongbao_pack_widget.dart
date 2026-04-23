@@ -29,12 +29,12 @@ class _HongbaoPackPainter extends CustomPainter {
 
       if (isCoin) {
         paint.color = const Color(0xFFFFD700)
-            .withOpacity(0.7 + random.nextDouble() * 0.3);
+            .withValues(alpha: 0.7 + random.nextDouble() * 0.3);
         canvas.drawCircle(Offset(x, yBase - yShift - 5),
             3.0 + random.nextDouble() * 2, paint);
       } else {
         paint.color = const Color(0xFFD00000)
-            .withOpacity(0.7 + random.nextDouble() * 0.3);
+            .withValues(alpha: 0.7 + random.nextDouble() * 0.3);
         canvas.save();
         canvas.translate(x, yBase - yShift - 5);
         canvas.rotate((random.nextDouble() - 0.5) * 0.5);

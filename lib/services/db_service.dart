@@ -44,6 +44,10 @@ class DBService {
           PlaylistSchema,
           HistoryEntrySchema,
           SavedStatSchema,
+          MailboxMessageSchema,
+          DeletedMailboxMessageSchema,
+          OnlineArtCacheSchema,
+          OnlineDataCacheSchema,
         ], // Register schemas here
         directory: dir.path,
         inspector: true, // Allows you to debug DB content while app runs!
@@ -200,5 +204,200 @@ class DBService {
     } catch (e) {
       print("💥 DBService: Failed to reset database: $e");
     }
+  }
+
+  // --- MAILBOX OPERATIONS ---
+
+  /// Adds a new message to the mailbox with deduplication and blacklist check
+  Future<void> addMailboxMessage(String message, {String? remoteId, DateTime? timestamp}) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      // 1. Deduplication: If remoteId exists in mailbox, don't add again
+      if (remoteId != null) {
+        final existing = await isar.mailboxMessages.filter().remoteIdEqualTo(remoteId).findFirst();
+        if (existing != null) return;
+
+        // 2. Blacklist: If remoteId was previously deleted, don't add again
+        final deleted = await isar.deletedMailboxMessages.filter().remoteIdEqualTo(remoteId).findFirst();
+        if (deleted != null) return;
+      }
+
+      final newMessage = MailboxMessage()
+        ..message = message
+        ..remoteId = remoteId
+        ..timestamp = timestamp ?? DateTime.now()
+        ..isRead = false;
+      await isar.mailboxMessages.put(newMessage);
+      
+      // Keep only last 100 messages to prevent DB bloat
+      final count = await isar.mailboxMessages.count();
+      if (count > 100) {
+        final oldest = await isar.mailboxMessages.where().sortByTimestamp().limit(count - 100).findAll();
+        await isar.mailboxMessages.deleteAll(oldest.map((e) => e.id).toList());
+      }
+    });
+  }
+
+  /// Fetches all mailbox messages, sorted by newest first
+  Future<List<MailboxMessage>> getMailboxMessages() async {
+    final isar = await db;
+    return await isar.mailboxMessages.where().sortByTimestampDesc().findAll();
+  }
+
+  /// Marks a specific message as read
+  Future<void> markMessageAsRead(int id) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final message = await isar.mailboxMessages.get(id);
+      if (message != null) {
+        message.isRead = true;
+        await isar.mailboxMessages.put(message);
+      }
+    });
+  }
+
+  /// Deletes a specific message and adds to blacklist
+  Future<void> deleteMailboxMessage(int id) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final msg = await isar.mailboxMessages.get(id);
+      if (msg != null && msg.remoteId != null) {
+        // Add to persistent blacklist
+        final deletedEntry = DeletedMailboxMessage()..remoteId = msg.remoteId!;
+        await isar.deletedMailboxMessages.put(deletedEntry);
+      }
+      await isar.mailboxMessages.delete(id);
+    });
+  }
+
+  /// Clears all messages and adds all remote IDs to blacklist
+  Future<void> clearMailbox() async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final allMsgs = await isar.mailboxMessages.where().findAll();
+      final deletedEntries = allMsgs
+          .where((m) => m.remoteId != null)
+          .map((m) => DeletedMailboxMessage()..remoteId = m.remoteId!)
+          .toList();
+      
+      if (deletedEntries.isNotEmpty) {
+        await isar.deletedMailboxMessages.putAll(deletedEntries);
+      }
+      
+      await isar.mailboxMessages.clear();
+    });
+  }
+
+  // --- ART CACHE OPERATIONS ---
+
+  Future<String?> getArtCache(String key) async {
+    final isar = await db;
+    final cached = await isar.onlineArtCaches.filter().keyEqualTo(key).findFirst();
+    return cached?.url;
+  }
+
+  Future<void> saveArtCache(String key, String url) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final cache = OnlineArtCache()
+        ..key = key
+        ..url = url
+        ..lastUpdated = DateTime.now();
+      await isar.onlineArtCaches.put(cache);
+    });
+  }
+
+  // --- DATA CACHE OPERATIONS (JSON) ---
+
+  Future<String?> getDataCache(String key) async {
+    final isar = await db;
+    final cached = await isar.onlineDataCaches.filter().keyEqualTo(key).findFirst();
+    return cached?.json;
+  }
+
+  Future<void> saveDataCache(String key, String json) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final cache = OnlineDataCache()
+        ..key = key
+        ..json = json
+        ..lastUpdated = DateTime.now();
+      await isar.onlineDataCaches.put(cache);
+    });
+  }
+
+  // --- CACHE MANAGEMENT ---
+
+  Future<int> getMetadataCacheCount() async {
+    final isar = await db;
+    final artCount = await isar.onlineArtCaches.count();
+    final dataCount = await isar.onlineDataCaches.count();
+    return artCount + dataCount;
+  }
+
+  Future<String> getMetadataCacheSize() async {
+    final isar = await db;
+    int totalBytes = 0;
+
+    // 1. Sum up Isar database strings
+    final allData = await isar.onlineDataCaches.where().findAll();
+    for (var item in allData) {
+      totalBytes += (item.json?.length ?? 0);
+    }
+    final allArt = await isar.onlineArtCaches.where().findAll();
+    for (var item in allArt) {
+      totalBytes += (item.url?.length ?? 0);
+    }
+
+    // 2. Sum up File System folders
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final folders = ['canvas_cache', 'album_arts'];
+      for (var folder in folders) {
+        final dir = Directory('${tempDir.path}/$folder');
+        if (await dir.exists()) {
+          await for (var file in dir.list(recursive: true, followLinks: false)) {
+            if (file is File) {
+              totalBytes += await file.length();
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (totalBytes == 0) return "0.0 KB";
+    if (totalBytes < 1024 * 1024) {
+      return "${(totalBytes / 1024).toStringAsFixed(1)} KB";
+    }
+    return "${(totalBytes / (1024 * 1024)).toStringAsFixed(1)} MB";
+  }
+
+  Future<void> clearMetadataCache() async {
+    final isar = await db;
+    
+    // 1. Clear Isar Collections
+    await isar.writeTxn(() async {
+      await isar.onlineArtCaches.clear();
+      await isar.onlineDataCaches.clear();
+    });
+
+    // 2. Clear File System folders
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final folders = ['canvas_cache', 'album_arts'];
+      for (var folder in folders) {
+        final dir = Directory('${tempDir.path}/$folder');
+        if (await dir.exists()) {
+          final List<FileSystemEntity> files = dir.listSync();
+          for (var file in files) {
+            if (file is File) {
+              try {
+                await file.delete();
+              } catch (_) {}
+            }
+          }
+        }
+      }
+    } catch (_) {}
   }
 }

@@ -21,6 +21,10 @@ class SongModel {
   final String? year;
   final String? genre;
 
+  // 🚀 FAST SEARCH OPTIMIZATION
+  // Pre-lowercased string for instant O(1) search filtering without reallocation
+  final String searchKey;
+
   // SPOTIFY IDS FOR ENDLESS QUEUE
   final String? spotifyId; // Spotify track ID for recommendations
   final String? spotifyArtistId; // Spotify artist ID for recommendations
@@ -48,7 +52,8 @@ class SongModel {
     this.deezerId,
     this.dateAdded,
     this.replayGain,
-  });
+    String? searchKey,
+  }) : searchKey = searchKey ?? "${title.toLowerCase()} ${artist.toLowerCase()} ${album.toLowerCase()}";
 
   // Factory constructor for creating from file scan
   factory SongModel.fromFile(
@@ -83,6 +88,7 @@ class SongModel {
       genre: genre,
       dateAdded: dateAdded,
       replayGain: replayGain,
+      searchKey: "${title.toLowerCase()} ${artist.toLowerCase()} ${album.toLowerCase()}",
     );
   }
 
@@ -127,6 +133,7 @@ class SongModel {
       deezerId: deezerId ?? this.deezerId,
       dateAdded: dateAdded ?? this.dateAdded,
       replayGain: replayGain ?? this.replayGain,
+      searchKey: this.searchKey, // Keep the optimized cache
     );
   }
 
@@ -173,7 +180,7 @@ class SongModel {
           "cloud_stream", // Default to cloud_stream if missing (for remote adds)
       fileExtension: json['fileExtension'] ?? "mp3",
       duration: parsedDuration,
-      sourceUrl: json['sourceUrl'],
+      sourceUrl: json['sourceUrl'] ?? json['youtubeUrl'],
       onlineArtUrl: json['onlineArtUrl'] ??
           json['albumArtUrl'], // Fallback for SongMetadata
       albumArtBytes: null, // Will be loaded lazily if needed
@@ -189,6 +196,7 @@ class SongModel {
           ? DateTime.tryParse(json['dateAdded'])
           : null,
       replayGain: json['replayGain'] != null ? (json['replayGain'] as num).toDouble() : null,
+      searchKey: "${json['title']?.toString().toLowerCase() ?? ''} ${json['artist']?.toString().toLowerCase() ?? ''} ${json['album']?.toString().toLowerCase() ?? ''}",
     );
   }
 

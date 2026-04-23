@@ -77,6 +77,6 @@ class AmbientBackground extends ConsumerWidget {
 // Extension to mix colors easily
 extension ColorMixer on Color {
   Color mix(Color other, double amount) {
-    return Color.alphaBlend(other.withOpacity(amount), this);
+    return Color.alphaBlend(other.withValues(alpha: amount), this);
   }
 }

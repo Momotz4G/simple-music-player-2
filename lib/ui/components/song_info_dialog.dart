@@ -163,8 +163,8 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? Colors.white.withOpacity(0.05)
-                                  : Colors.black.withOpacity(0.05),
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : Colors.black.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: SelectableText(
@@ -225,12 +225,12 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            badgeColor.withOpacity(0.2),
-            badgeColor.withOpacity(0.1),
+            badgeColor.withValues(alpha: 0.2),
+            badgeColor.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: badgeColor.withOpacity(0.5)),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -252,7 +252,7 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
                 Text(
                   '${_audioInfo!.bitrateDisplay} • ${_audioInfo!.sampleRateDisplay}',
                   style: TextStyle(
-                    color: badgeColor.withOpacity(0.8),
+                    color: badgeColor.withValues(alpha: 0.8),
                     fontSize: 11,
                   ),
                 ),

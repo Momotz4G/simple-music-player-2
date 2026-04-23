@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../data/schemas.dart';
 import '../models/song_model.dart';
 import 'pocketbase_service.dart';
+import '../utils/stats_utils.dart';
 
 class MetricsService {
   static final MetricsService _instance = MetricsService._internal();
@@ -33,8 +34,19 @@ class MetricsService {
 
     try {
       // 0. Load Persistent Device ID
-      _userId = await _getStableUserId();
-      debugPrint("📊 MetricsService: Stable Device ID loaded: $_userId");
+      final hardwareId = await getDeviceIdentifier();
+      debugPrint("📊 MetricsService: Stable Hardware ID loaded: $hardwareId");
+
+      // 🔗 If account is linked via Google OAuth, use the linked user ID instead
+      final prefs = await SharedPreferences.getInstance();
+      final linkedUserId = prefs.getString('pb_linked_user_id');
+      
+      // 🚀 CRITICAL FIX: Update internal _userId to the synchronized identity
+      _userId = linkedUserId ?? hardwareId;
+      
+      if (linkedUserId != null) {
+        debugPrint("🔗 MetricsService: Using linked user ID: $linkedUserId");
+      }
 
       // 1. Initialize PocketBase (Unified for all platforms)
       debugPrint("🚀 Initializing PocketBase Service...");
@@ -102,6 +114,10 @@ class MetricsService {
   Future<void> trackSongPlay(Song song, {int? localTotal}) async {
     // Increment Total Plays
     await _incrementUserStat('play_count');
+    // Global Artist Tracking
+    if (song.artist != null && song.artist!.isNotEmpty) {
+      await PocketBaseService().incrementArtistPlay(song.artist!);
+    }
     // Sync Local Total
     if (localTotal != null) {
       await _restWrite(
@@ -115,19 +131,47 @@ class MetricsService {
     }
   }
 
-  Future<void> trackSongPlayModel(SongModel song, {int? localTotal}) async {
+  Future<void> trackSongPlayModel(SongModel song, {int? localTotal, int? totalMinutes}) async {
     await _incrementUserStat('play_count');
-    if (localTotal != null) {
-      await _restWrite(
-          'metrics',
-          _userId!,
-          {
-            'local_total_plays': localTotal,
-            'play_count': localTotal,
-          },
-          isUpdate: true);
+    // Global Artist Tracking
+    if (song.artist != null && song.artist!.isNotEmpty) {
+      await PocketBaseService().incrementArtistPlay(song.artist!);
+    }
+    if (localTotal != null || totalMinutes != null) {
+      // 🚀 SERIALIZE: Chain onto the mutex to prevent race conditions
+      _lastUpdateFuture = _lastUpdateFuture.whenComplete(() async {
+        try {
+          // 🚀 CRITICAL FIX: Never overwrite cloud values with a LOWER local value.
+          // On multi-device setups, each device has its own local Isar DB.
+          // Without this check, a device with fewer plays would nuke the cloud total.
+          final currentCloud = await PocketBaseService().getUserMetrics();
+          final cloudPlayCount = currentCloud?['play_count'] ?? 0;
+          final cloudMinutes = currentCloud?['total_minutes'] ?? 0;
+
+          final safePlayCount = localTotal != null
+              ? (localTotal > cloudPlayCount ? localTotal : cloudPlayCount)
+              : null;
+          final safeMinutes = totalMinutes != null
+              ? (totalMinutes > cloudMinutes ? totalMinutes : cloudMinutes)
+              : null;
+
+          final updates = <String, dynamic>{
+            if (safePlayCount != null) 'local_total_plays': localTotal,
+            if (safePlayCount != null) 'play_count': safePlayCount,
+            if (safeMinutes != null) 'total_minutes': safeMinutes,
+          };
+          debugPrint("📊 trackSongPlayModel: cloud_plays=$cloudPlayCount local=$localTotal → safe=$safePlayCount | cloud_min=$cloudMinutes local_min=$totalMinutes → safe=$safeMinutes");
+          if (updates.isNotEmpty) {
+            await _pbWrite(updates);
+          }
+        } catch (e) {
+          debugPrint("⚠️ trackSongPlayModel write error: $e");
+        }
+      });
+      await _lastUpdateFuture;
     }
   }
+
 
   Future<void> trackDownload(Song song) async {
     await _incrementUserStat('download_count');
@@ -266,17 +310,21 @@ class MetricsService {
       // 2. Prepare Current Values
       int currentTotal = 0;
       int currentDaily = 0;
+      int currentWeekly = 0;
       String? lastDateStr;
 
       // Determine which daily field matches the total field
       String dailyFieldName = '';
+      String weeklyFieldName = '';
       String dateFieldName = '';
 
       if (fieldName == 'play_count') {
         currentTotal = currentData?['play_count'] ?? 0;
         currentDaily = currentData?['daily_play_count'] ?? 0;
+        currentWeekly = currentData?['weekly_play_count'] ?? 0;
         lastDateStr = currentData?['last_play_date'];
         dailyFieldName = 'daily_play_count';
+        weeklyFieldName = 'weekly_play_count';
         dateFieldName = 'last_play_date';
       } else if (fieldName == 'download_count') {
         currentTotal = currentData?['download_count'] ?? 0;
@@ -286,48 +334,67 @@ class MetricsService {
         dateFieldName = 'last_download_date';
       }
 
-      // 3. Logic: Daily Reset Check
-      final now = DateTime.now().toUtc();
+      // 3. Logic: Daily & Weekly Reset Check (FOLLOWS GMT+7 SERVER TIME)
+      final nowUTC = DateTime.now().toUtc();
       bool isNewDay = true;
+      bool isNewWeek = true;
 
       if (lastDateStr != null && lastDateStr.isNotEmpty) {
         try {
-          final lastDate = DateTime.parse(lastDateStr).toUtc();
-          if (lastDate.year == now.year &&
-              lastDate.month == now.month &&
-              lastDate.day == now.day) {
-            isNewDay = false;
-          }
+          // Parse last date as UTC
+          final lastDateUTC = DateTime.parse(lastDateStr).toUtc();
+          
+          final sameDay = StatsUtils.isSameDayGMT7(nowUTC, lastDateUTC);
+          final sameWeek = StatsUtils.isSameWeekGMT7(nowUTC, lastDateUTC);
+          
+          if (sameDay) isNewDay = false;
+          if (sameWeek) isNewWeek = false;
+
+          debugPrint(
+              "📊 Reset Check: Now=${nowUTC.toIso8601String()} Last=$lastDateStr SameDay=$sameDay SameWeek=$sameWeek");
         } catch (e) {
-          // ignore parse errors, assume new day
+          debugPrint("⚠️ Date Parse Error: $e (LastDateStr: $lastDateStr)");
         }
+      } else {
+        debugPrint("📊 Reset Check: No lastDateStr found, assuming new day.");
       }
 
       if (isNewDay) {
-        currentDaily = 0; // Reset for new day
+        debugPrint("📊 Resetting daily counter (was: $currentDaily)");
+        currentDaily = 0; 
+      }
+      if (isNewWeek) {
+        debugPrint("📊 Resetting weekly counter (was: $currentWeekly)");
+        currentWeekly = 0;
       }
 
       // 4. Increment
+      debugPrint("📊 Incrementing: Total=$currentTotal -> ${currentTotal + 1}, Daily=$currentDaily -> ${currentDaily + 1}");
       currentTotal += 1;
       currentDaily += 1;
+      currentWeekly += 1;
 
-      // 5. Prepare Payload
+      // 5. Prepare Payload (Strict UTC ISO strings)
+      final nowISO = nowUTC.toIso8601String();
       updates[fieldName] = currentTotal;
       if (dailyFieldName.isNotEmpty) {
         updates[dailyFieldName] = currentDaily;
       }
+      if (weeklyFieldName.isNotEmpty) {
+        updates[weeklyFieldName] = currentWeekly;
+      }
       if (dateFieldName.isNotEmpty) {
-        updates[dateFieldName] = now.toIso8601String();
+        updates[dateFieldName] = nowISO;
       }
 
-      // Always update last active
-      updates['last_active'] = now.toIso8601String();
+      // Always update last active in UTC
+      updates['last_active'] = nowISO;
 
       // 6. Write Back
       await _restWrite('metrics', _userId!, updates, isUpdate: true);
 
       debugPrint(
-          "📊 Verified Increment: $fieldName=$currentTotal, Daily=$currentDaily");
+          "📊 Verified Write to Cloud: $fieldName=$currentTotal, Daily=$currentDaily (isNewDay=$isNewDay)");
     } catch (e) {
       debugPrint("⚠️ Increment Error: $e");
     }
@@ -383,12 +450,18 @@ class MetricsService {
   Future<void> syncLocalStats(int localTotal) async {
     if (!_initialized || _userId == null) return;
     try {
+      // 🚀 CRITICAL FIX: Never overwrite cloud with lower local value
+      final currentCloud = await PocketBaseService().getUserMetrics();
+      final cloudPlayCount = currentCloud?['play_count'] ?? 0;
+      final safePlayCount =
+          localTotal > cloudPlayCount ? localTotal : cloudPlayCount;
+
       await _restWrite(
           'metrics',
           _userId!,
           {
             'local_total_plays': localTotal,
-            'play_count': localTotal,
+            'play_count': safePlayCount,
           },
           isUpdate: true);
     } catch (e) {
@@ -396,9 +469,193 @@ class MetricsService {
     }
   }
 
+  Future<void> syncAdvancedStats({
+    String? topArtist,
+    String? topTrack,
+    int? totalMinutes,
+    int? playCount,
+    int? dailyPlayCount,
+    int? weeklyPlayCount,
+    String? selectedTitle,
+    int? maxRepeatStreak,
+    int? currentRepeatStreak,
+    String? lastRepeatSongId,
+    int? lastRepeatTime,
+    int? weeklyWinsCount,
+    int? weeklyPodiumsCount,
+    int? topArtistPlays,
+    int? mostListenedPlays,
+    Map<String, int>? artistMinutes,
+  }) async {
+    if (!_initialized || _userId == null) {
+      debugPrint("⚠️ syncAdvancedStats: SKIPPED - initialized=$_initialized, userId=$_userId");
+      return;
+    }
+    try {
+      // 🚀 CRITICAL FIX: Never overwrite cloud with lower local values (Multi-device protection)
+      final currentCloud = await PocketBaseService().getUserMetrics();
+
+      final cloudMinutes = currentCloud?['total_minutes'] ?? 0;
+      final cloudPlayCount = currentCloud?['play_count'] ?? 0;
+      final cloudDaily = currentCloud?['daily_play_count'] ?? 0;
+      final cloudWeekly = currentCloud?['weekly_play_count'] ?? 0;
+      final cloudTopArtistPlays = currentCloud?['top_artist_plays'] ?? 0;
+      final cloudMostListenedPlays = currentCloud?['most_listened_plays'] ?? 0;
+
+      final safeMinutes = (totalMinutes != null && totalMinutes > cloudMinutes)
+          ? totalMinutes
+          : (totalMinutes != null ? cloudMinutes : null);
+      final safePlayCount = (playCount != null && playCount > cloudPlayCount)
+          ? playCount
+          : (playCount != null ? cloudPlayCount : null);
+      final safeDaily =
+          (dailyPlayCount != null && dailyPlayCount > cloudDaily)
+              ? dailyPlayCount
+              : (dailyPlayCount != null ? cloudDaily : null);
+      final safeWeekly =
+          (weeklyPlayCount != null && weeklyPlayCount > cloudWeekly)
+              ? weeklyPlayCount
+              : (weeklyPlayCount != null ? cloudWeekly : null);
+      final safeTopArtistPlays =
+          (topArtistPlays != null && topArtistPlays > cloudTopArtistPlays)
+              ? topArtistPlays
+              : (topArtistPlays != null ? cloudTopArtistPlays : null);
+      final safeMostListenedPlays =
+          (mostListenedPlays != null && mostListenedPlays > cloudMostListenedPlays)
+              ? mostListenedPlays
+              : (mostListenedPlays != null ? cloudMostListenedPlays : null);
+
+      final cloudMaxRepeatStreak = currentCloud?['max_repeat_streak'] ?? 0;
+      final safeMaxRepeatStreak = (maxRepeatStreak != null && maxRepeatStreak > cloudMaxRepeatStreak)
+          ? maxRepeatStreak
+          : (maxRepeatStreak != null ? cloudMaxRepeatStreak : null);
+
+      final cloudTitle = currentCloud?['selected_title'] as String?;
+      
+      // 🚀 TITLE PROTECTION: Never let a low-rarity title from another device overwrite a prestige cloud title.
+      bool shouldUpdateTitle = true;
+      if (selectedTitle != null && cloudTitle != null && selectedTitle != cloudTitle) {
+        final newDef = StatsUtils.resolveTitleDefinition(selectedTitle, safeMinutes ?? totalMinutes ?? 0);
+        final cloudDef = StatsUtils.resolveTitleDefinition(cloudTitle, cloudMinutes);
+        
+        // If current cloud title is higher rarity, don't downgrade it.
+        // Special case: Developer/Contributor (Rarity 6/5) always protected unless the new title is the same or special.
+        if (cloudDef.rarityTier > newDef.rarityTier) {
+          shouldUpdateTitle = false;
+          debugPrint("🛡️ Title Protection: Blocked downgrading cloud title '$cloudTitle' (Tier ${cloudDef.rarityTier}) to '$selectedTitle' (Tier ${newDef.rarityTier})");
+        }
+      }
+
+      final cloudTopArtist = currentCloud?['top_artist'] as String?;
+      final cloudTopTrack = currentCloud?['top_track'] as String?;
+
+      final updates = <String, dynamic>{
+        // 🚀 STATS PROTECTION: Only update Top Artist/Track if cloud is empty or "N/A"
+        if (topArtist != null && (cloudTopArtist == null || cloudTopArtist.isEmpty || cloudTopArtist == "N/A")) 
+          'top_artist': topArtist,
+        if (topTrack != null && (cloudTopTrack == null || cloudTopTrack.isEmpty || cloudTopTrack == "N/A")) 
+          'top_track': topTrack,
+        if (safeMinutes != null) 'total_minutes': safeMinutes,
+        if (safePlayCount != null) 'play_count': safePlayCount,
+        if (safeDaily != null) 'daily_play_count': safeDaily,
+        if (safeWeekly != null) 'weekly_play_count': safeWeekly,
+        if (safeMaxRepeatStreak != null) 'max_repeat_streak': safeMaxRepeatStreak,
+        if (currentRepeatStreak != null) 'current_repeat_streak': currentRepeatStreak,
+        if (lastRepeatSongId != null) 'last_repeat_song_id': lastRepeatSongId,
+        if (lastRepeatTime != null) 'last_repeat_time': lastRepeatTime,
+        if (weeklyWinsCount != null) 'weekly_wins_count': weeklyWinsCount,
+        if (weeklyPodiumsCount != null)
+          'weekly_podiums_count': weeklyPodiumsCount,
+        if (selectedTitle != null && shouldUpdateTitle) 'selected_title': selectedTitle,
+        if (safeTopArtistPlays != null) 'top_artist_plays': safeTopArtistPlays,
+        if (safeMostListenedPlays != null) 'most_listened_plays': safeMostListenedPlays,
+        'last_active': DateTime.now().toUtc().toIso8601String(),
+      };
+
+      // 🎵 ARTIST MINUTES SYNC: Merge local with cloud, keeping the highest per artist
+      if (artistMinutes != null && artistMinutes.isNotEmpty) {
+        final cloudArtistMinutesRaw = currentCloud?['artist_minutes'];
+        final Map<String, int> cloudArtistMinutes = {};
+        if (cloudArtistMinutesRaw is Map) {
+          cloudArtistMinutesRaw.forEach((k, v) {
+            if (v is int) cloudArtistMinutes[k.toString()] = v;
+            else if (v is num) cloudArtistMinutes[k.toString()] = v.toInt();
+          });
+        }
+        // Merge: take the higher value for each artist
+        final mergedArtistMinutes = Map<String, int>.from(cloudArtistMinutes);
+        artistMinutes.forEach((artist, mins) {
+          final existing = mergedArtistMinutes[artist] ?? 0;
+          if (mins > existing) mergedArtistMinutes[artist] = mins;
+        });
+        updates['artist_minutes'] = mergedArtistMinutes;
+      }
+
+      if (updates.length > 1) {
+        // More than just last_active
+        debugPrint(
+            "📊 syncAdvancedStats: WRITING total_minutes=$totalMinutes (safe=$safeMinutes), topArtist=$topArtist, topTrack=$topTrack, maxRepeatStreak=$maxRepeatStreak");
+        // 🚀 SERIALIZE through mutex
+        _lastUpdateFuture = _lastUpdateFuture.whenComplete(() async {
+          await _pbWrite(updates);
+        });
+        await _lastUpdateFuture;
+        debugPrint("📊 syncAdvancedStats: SUCCESS");
+      } else {
+        debugPrint(
+            "⚠️ syncAdvancedStats: No meaningful data to sync (only last_active)");
+      }
+    } catch (e) {
+      debugPrint("⚠️ Sync Advanced Stats Error: $e");
+    }
+  }
+
+  Future<void> forceSyncAdvancedStats({
+    String? topArtist,
+    String? topTrack,
+    int? totalMinutes,
+    int? playCount,
+    int? dailyPlayCount,
+    int? weeklyPlayCount,
+    String? selectedTitle,
+    int? maxRepeatStreak,
+    int? weeklyWinsCount,
+    int? weeklyPodiumsCount,
+  }) async {
+    if (!_initialized || _userId == null) return;
+    try {
+      final updates = <String, dynamic>{
+        if (topArtist != null) 'top_artist': topArtist,
+        if (topTrack != null) 'top_track': topTrack,
+        if (totalMinutes != null) 'total_minutes': totalMinutes,
+        if (playCount != null) 'play_count': playCount,
+        if (dailyPlayCount != null) 'daily_play_count': dailyPlayCount,
+        if (weeklyPlayCount != null) 'weekly_play_count': weeklyPlayCount,
+        if (maxRepeatStreak != null) 'max_repeat_streak': maxRepeatStreak,
+        if (weeklyWinsCount != null) 'weekly_wins_count': weeklyWinsCount,
+        if (weeklyPodiumsCount != null) 'weekly_podiums_count': weeklyPodiumsCount,
+        if (selectedTitle != null) 'selected_title': selectedTitle,
+        'last_active': DateTime.now().toUtc().toIso8601String(),
+      };
+
+      debugPrint("🚨 FORCE SYNC: Overwriting cloud with local data...");
+      _lastUpdateFuture = _lastUpdateFuture.whenComplete(() async {
+        await _pbWrite(updates);
+      });
+      await _lastUpdateFuture;
+      debugPrint("✅ FORCE SYNC: SUCCESS");
+    } catch (e) {
+      debugPrint("⚠️ Force Sync Error: $e");
+    }
+  }
+
+  Future<int> getCurrentUserRank(int currentMinutes) async {
+    return await PocketBaseService().calculateUserRank(currentMinutes);
+  }
+
   // --- HARDWARE ID ---
 
-  Future<String> _getStableUserId() async {
+  Future<String> getDeviceIdentifier() async {
     try {
       final deviceInfo = DeviceInfoPlugin();
       String rawId = '';
@@ -410,11 +667,23 @@ class MetricsService {
         final winInfo = await deviceInfo.windowsInfo;
         rawId = winInfo.deviceId;
       } else if (Platform.isAndroid) {
-        final androidInfo = await deviceInfo.androidInfo;
-        rawId = androidInfo.id;
+        final prefs = await SharedPreferences.getInstance();
+        var stableId = prefs.getString('stable_android_device_id');
+        if (stableId == null) {
+          final androidInfo = await deviceInfo.androidInfo;
+          stableId = androidInfo.id;
+          await prefs.setString('stable_android_device_id', stableId);
+        }
+        rawId = stableId;
       } else if (Platform.isIOS) {
-        final iosInfo = await deviceInfo.iosInfo;
-        rawId = iosInfo.identifierForVendor ?? 'ios_user';
+        final prefs = await SharedPreferences.getInstance();
+        var stableId = prefs.getString('stable_ios_device_id');
+        if (stableId == null) {
+          final iosInfo = await deviceInfo.iosInfo;
+          stableId = iosInfo.identifierForVendor ?? 'ios_user';
+          await prefs.setString('stable_ios_device_id', stableId);
+        }
+        rawId = stableId;
       } else if (Platform.isMacOS) {
         final macInfo = await deviceInfo.macOsInfo;
         rawId = macInfo.systemGUID ?? 'mac_user';
@@ -438,6 +707,35 @@ class MetricsService {
         await prefs.setString('unique_device_id', id);
       }
       return id;
+    }
+  }
+
+  Future<String> getDeviceName() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (kIsWeb) return "Web Browser";
+      if (Platform.isWindows) {
+        final winInfo = await deviceInfo.windowsInfo;
+        return winInfo.computerName;
+      }
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        return "${androidInfo.manufacturer} ${androidInfo.model}";
+      }
+      if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        return iosInfo.name ?? "iPhone";
+      }
+      if (Platform.isMacOS) {
+        final macInfo = await deviceInfo.macOsInfo;
+        return macInfo.computerName;
+      }
+      if (Platform.isLinux) {
+        return Platform.localHostname;
+      }
+      return "Generic Device";
+    } catch (e) {
+      return "Unknown Device";
     }
   }
 

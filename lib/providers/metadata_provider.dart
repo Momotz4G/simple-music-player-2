@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:metadata_god/metadata_god.dart';
+import 'package:metadata_god/metadata_god.dart' show Metadata, Picture; // Keep types
+import '../services/metadata_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
+import '../utils/folder_picker.dart';
 import 'package:path/path.dart' as p;
-import 'dart:typed_data';
 
 import '../models/song_model.dart';
 import '../services/spotify_service.dart';
@@ -130,7 +131,7 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
 
     try {
       if (folder) {
-        String? dirPath = await FilePicker.platform.getDirectoryPath();
+        String? dirPath = await FolderPicker.pickDirectory();
         if (dirPath != null) {
           final dir = Directory(dirPath);
           if (await dir.exists()) {
@@ -181,7 +182,7 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
             '.dff'
           ].contains(ext)) continue;
 
-          final metadata = await MetadataGod.readMetadata(file: file.path);
+          final metadata = await MetadataService().readMetadata(file.path);
           final song = SongModel.fromFile(
               file.path,
               metadata.title ?? p.basenameWithoutExtension(file.path),
@@ -191,34 +192,7 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
               ext,
               shouldLoadImages ? metadata.picture?.data : null);
 
-          // 🚀 REPLAYGAIN EXTRACTION (ffprobe fallback)
-          Map<String, String> tags = {};
-          double? replayGain;
-          try {
-            tags = await AudioInfoService().getTags(file.path);
-            String? gainStr = tags['REPLAYGAIN_TRACK_GAIN'] ?? tags['replaygain_track_gain'];
-            if (gainStr != null) {
-              // Format usually like "-7.51 dB" or just "-7.51"
-              replayGain = double.tryParse(gainStr.replaceAll('dB', '').trim());
-            }
-          } catch (_) {}
-          
-          final songWithGain = song.copyWith(replayGain: replayGain);
-          if (ext == '.dsf' || ext == '.dff') {
-            if (songWithGain.artist == "Unknown Artist" ||
-                songWithGain.album == "Unknown Album") {
-              if (tags.isNotEmpty) {
-                final updatedSong = songWithGain.copyWith(
-                  title: tags['title'] ?? tags['TITLE'] ?? songWithGain.title,
-                  artist: tags['artist'] ?? tags['ARTIST'] ?? songWithGain.artist,
-                  album: tags['album'] ?? tags['ALBUM'] ?? songWithGain.album,
-                );
-                newSongs.add(updatedSong);
-                continue; // Skip the regular add below
-              }
-            }
-          }
-          newSongs.add(songWithGain);
+          newSongs.add(song);
         } catch (e) {
           // 🚀 CRITICAL FAIL FALLBACK
           final ext = p.extension(file.path).toLowerCase();
@@ -277,7 +251,7 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
 
   Future<void> _readFreshTags(String path) async {
     try {
-      final metadata = await MetadataGod.readMetadata(file: path);
+      final metadata = await MetadataService().readMetadata(path);
       if (state.selectedSong?.filePath != path) return;
 
       // Always prioritize fresh disk bytes since we just read them
@@ -484,8 +458,8 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
 
       state = state.copyWith(statusMessage: "Writing metadata to file...");
 
-      await MetadataGod.writeMetadata(
-        file: filePath,
+      await MetadataService().writeMetadata(
+        filePath: filePath,
         metadata: Metadata(
           title: state.title,
           artist: state.artist,
@@ -506,7 +480,7 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
       _log.success('writeMetadata() completed without exception');
 
       // 🚀 DEBUG: Verify what was actually written
-      final verifyMeta = await MetadataGod.readMetadata(file: filePath);
+      final verifyMeta = await MetadataService().readMetadata(filePath);
       _log.info('=== VERIFY READ BACK ===');
       _log.info('Read Title: ${verifyMeta.title}');
       _log.info('Read Artist: ${verifyMeta.artist}');
@@ -616,7 +590,7 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
             // but we update text fields.
             // If user clicks it later, selectSong will reload bytes from disk.
             final newMetadata =
-                await MetadataGod.readMetadata(file: song.filePath);
+                await MetadataService().readMetadata(song.filePath);
             final newSong = song.copyWith(
               title: newMetadata.title,
               artist: newMetadata.artist,
@@ -700,8 +674,8 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
       } catch (_) {}
     }
 
-    await MetadataGod.writeMetadata(
-      file: path,
+    await MetadataService().writeMetadata(
+      filePath: path,
       metadata: Metadata(
         title: title,
         artist: artist,

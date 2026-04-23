@@ -71,7 +71,7 @@ class _WhalePainter extends CustomPainter {
         const Color(0xFF4A6B8A); // Lighter blue-gray for the back
     final Color bottomColor =
         const Color(0xFF23395B); // Darker navy for the belly
-    final Color highlightColor = Colors.white.withOpacity(0.1);
+    final Color highlightColor = Colors.white.withValues(alpha: 0.1);
 
     // DRAW WHALE BODY
     final Path bodyPath = Path();
@@ -111,20 +111,20 @@ class _WhalePainter extends CustomPainter {
     finPath.close();
 
     final Paint finPaint = Paint()
-      ..color = bottomColor.withOpacity(0.9)
+      ..color = bottomColor.withValues(alpha: 0.9)
       ..style = PaintingStyle.fill;
     canvas.drawPath(finPath, finPaint);
 
     // DRAW EYE
-    final Paint eyePaint = Paint()..color = Colors.black.withOpacity(0.8);
+    final Paint eyePaint = Paint()..color = Colors.black.withValues(alpha: 0.8);
     canvas.drawCircle(Offset(scale * 0.42, scale * 0.08), 2.5, eyePaint);
     // Eye shine
     canvas.drawCircle(Offset(scale * 0.43, scale * 0.07), 0.8,
-        Paint()..color = Colors.white.withOpacity(0.5));
+        Paint()..color = Colors.white.withValues(alpha: 0.5));
 
     // SUBTLE BODY LINES (For texture)
     final Paint linePaint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
+      ..color = Colors.white.withValues(alpha: 0.05)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 

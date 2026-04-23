@@ -89,7 +89,7 @@ class _CitySkylinePainter extends CustomPainter {
             final double flicker =
                 sin(animationValue * 2 * pi + (i * 10) + r) * 0.3 + 0.7;
 
-            windowPaint.color = Colors.amber.withOpacity(flicker * 0.6);
+            windowPaint.color = Colors.amber.withValues(alpha: flicker * 0.6);
             canvas.drawRect(
                 Rect.fromCenter(
                     center: Offset(winX, winY), width: 3, height: 4),

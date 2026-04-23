@@ -8,8 +8,14 @@ typedef EngineCreate = ffi.Pointer<ffi.Void> Function();
 typedef EngineDisposeFunc = ffi.Void Function(ffi.Pointer<ffi.Void> handle);
 typedef EngineDispose = void Function(ffi.Pointer<ffi.Void> handle);
 
-typedef EnginePlayFileFunc = ffi.Bool Function(ffi.Pointer<ffi.Void> handle, ffi.Pointer<Utf8> filepath);
-typedef EnginePlayFile = bool Function(ffi.Pointer<ffi.Void> handle, ffi.Pointer<Utf8> filepath);
+typedef EngineReleaseDeviceFunc = ffi.Void Function(ffi.Pointer<ffi.Void> handle);
+typedef EngineReleaseDevice = void Function(ffi.Pointer<ffi.Void> handle);
+
+typedef EngineSetOutputDeviceFunc = ffi.Void Function(ffi.Pointer<ffi.Void> handle, ffi.Pointer<Utf8> deviceId);
+typedef EngineSetOutputDevice = void Function(ffi.Pointer<ffi.Void> handle, ffi.Pointer<Utf8> deviceId);
+
+typedef EnginePlayFileFunc = ffi.Bool Function(ffi.Pointer<ffi.Void> handle, ffi.Pointer<Utf8> filepath, ffi.Bool bitPerfect);
+typedef EnginePlayFile = bool Function(ffi.Pointer<ffi.Void> handle, ffi.Pointer<Utf8> filepath, bool bitPerfect);
 
 typedef EnginePlayFunc = ffi.Void Function(ffi.Pointer<ffi.Void> handle);
 typedef EnginePlay = void Function(ffi.Pointer<ffi.Void> handle);
@@ -48,6 +54,8 @@ class AudioEngineFfi {
 
   static late final EngineCreate create;
   static late final EngineDispose dispose;
+  static late final EngineReleaseDevice releaseDevice;
+  static late final EngineSetOutputDevice setOutputDeviceNative;
   static late final EnginePlayFile playFileNative;
   static late final EnginePlay play;
   static late final EnginePause pause;
@@ -71,6 +79,8 @@ class AudioEngineFfi {
 
     create = _lib.lookupFunction<EngineCreateFunc, EngineCreate>('Engine_Create');
     dispose = _lib.lookupFunction<EngineDisposeFunc, EngineDispose>('Engine_Dispose');
+    releaseDevice = _lib.lookupFunction<EngineReleaseDeviceFunc, EngineReleaseDevice>('Engine_ReleaseDevice');
+    setOutputDeviceNative = _lib.lookupFunction<EngineSetOutputDeviceFunc, EngineSetOutputDevice>('Engine_SetOutputDevice');
     playFileNative = _lib.lookupFunction<EnginePlayFileFunc, EnginePlayFile>('Engine_PlayFile');
     play = _lib.lookupFunction<EnginePlayFunc, EnginePlay>('Engine_Play');
     pause = _lib.lookupFunction<EnginePauseFunc, EnginePause>('Engine_Pause');
@@ -86,11 +96,22 @@ class AudioEngineFfi {
     _initialized = true;
   }
 
-  static bool playFile(ffi.Pointer<ffi.Void> handle, String filepath) {
+  static bool playFile(ffi.Pointer<ffi.Void> handle, String filepath, bool bitPerfect) {
     if (!_initialized) initialize();
     final ptr = filepath.toNativeUtf8();
-    final result = playFileNative(handle, ptr);
+    final result = playFileNative(handle, ptr, bitPerfect);
     malloc.free(ptr);
     return result;
+  }
+
+  static void setOutputDevice(ffi.Pointer<ffi.Void> handle, String? deviceId) {
+    if (!_initialized) initialize();
+    if (deviceId == null) {
+      setOutputDeviceNative(handle, ffi.Pointer.fromAddress(0));
+    } else {
+      final ptr = deviceId.toNativeUtf8();
+      setOutputDeviceNative(handle, ptr);
+      malloc.free(ptr);
+    }
   }
 }

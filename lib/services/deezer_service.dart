@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/song_metadata.dart';
 
 import '../models/album_model.dart';
@@ -368,3 +369,9 @@ class DeezerService {
     return <ArtistModel>[];
   }
 }
+
+final deezerArtistArtProvider =
+    FutureProvider.family<String?, String>((ref, name) async {
+  final artist = await DeezerService.getArtist(name);
+  return artist?.imageUrl;
+});

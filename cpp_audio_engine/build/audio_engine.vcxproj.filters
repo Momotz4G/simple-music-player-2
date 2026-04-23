@@ -4,6 +4,9 @@
     <ClCompile Include="C:\Users\MEKEW\source\repos\Simple_Music_Player_New_Gen\simple_music_player_2\cpp_audio_engine\src\audio_engine.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\MEKEW\source\repos\Simple_Music_Player_New_Gen\simple_music_player_2\cpp_audio_engine\src\mf_decoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\MEKEW\source\repos\Simple_Music_Player_New_Gen\simple_music_player_2\cpp_audio_engine\CMakeLists.txt" />

@@ -7,7 +7,6 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
-import 'audio_engine_ffi.dart';
 import 'native_music_service.dart'; // 🚀 ADDED
 
 class EqEngine {
@@ -53,18 +52,10 @@ class EqEngine {
         print("Failed to apply native Android EQ: ${e.message}");
       }
     } else if (Platform.isWindows) {
-      // 🚀 Windows: FFI C++ engine ONLY
-      // The bundled mpv/ffmpeg lacks the 'aresample' filter, so lavfi audio filters
-      // (including 'equalizer') are impossible. EQ works exclusively via FFI for local/cached files.
-      if (!AudioEngineFfi.isInitialized()) {
-        try {
-          AudioEngineFfi.initialize();
-        } catch (e) {
-          print("Failed to initialize Windows Audio Engine: $e");
-          return;
-        }
-      }
-
+      // 🚀 Windows: Route EQ through NativeMusicService which forwards to FFI players
+      // in their worker isolates. We MUST NOT call AudioEngineFfi.initialize() here
+      // because it loads audio_engine.dll on the main thread, which sets COM to MTA mode
+      // and permanently breaks the FilePicker (which requires STA mode).
       NativeMusicService().setWindowsEQ(
         gains: gains,
         preampDb: preampDb,
@@ -87,13 +78,11 @@ class EqEngine {
         'sessionId': audioSessionId,
       });
     } else if (Platform.isWindows) {
-      // Reset FFI EQ (for local playback)
-      if (AudioEngineFfi.isInitialized()) {
-        NativeMusicService().setWindowsEQ(
-          gains: List.filled(bandCount, 0.0),
-          preampDb: 0.0,
-        );
-      }
+      // Reset FFI EQ (routed through NativeMusicService worker isolates)
+      NativeMusicService().setWindowsEQ(
+        gains: List.filled(bandCount, 0.0),
+        preampDb: 0.0,
+      );
     }
     
     // Clear MediaKit filters on bypass (skip Windows — lavfi filters don't work there)

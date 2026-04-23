@@ -158,8 +158,8 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                     border: 0,
                     linearGradient: LinearGradient(
                       colors: [
-                        Colors.black.withOpacity(0.5),
-                        Colors.black.withOpacity(0.8),
+                        Colors.black.withValues(alpha: 0.5),
+                        Colors.black.withValues(alpha: 0.8),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -340,7 +340,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                             decoration: BoxDecoration(
                               border: Border(
                                 top: BorderSide(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                   width: 1,
                                 ),
                               ),
@@ -379,6 +379,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                     ),
                   ),
                 ),
+
               ],
             ),
           ),
@@ -464,7 +465,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: currentIndex >= 0
-                    ? accentColor.withOpacity(0.8)
+                    ? accentColor.withValues(alpha: 0.8)
                     : Colors.white54,
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
@@ -489,7 +490,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: currentIndex >= 0
-                      ? accentColor.withOpacity(0.6)
+                      ? accentColor.withValues(alpha: 0.6)
                       : Colors.white38,
                   fontSize: 11,
                 ),

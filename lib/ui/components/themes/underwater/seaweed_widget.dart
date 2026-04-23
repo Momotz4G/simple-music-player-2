@@ -90,7 +90,7 @@ class _SeaweedPainter extends CustomPainter {
   }
 
   void _drawLeaf(Canvas canvas, double x, double y, bool right, Color color) {
-    final leafPaint = Paint()..color = color.withOpacity(0.8);
+    final leafPaint = Paint()..color = color.withValues(alpha: 0.8);
     final double leafOffset = right ? 8 : -8;
     canvas.drawOval(
         Rect.fromCenter(

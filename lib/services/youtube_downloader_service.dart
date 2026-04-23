@@ -567,6 +567,7 @@ class YoutubeDownloaderService {
     required Function(bool success) onComplete,
     String audioFormat = 'mp3',
     String streamingQuality = 'high', // standard, high, lossless
+    bool isQuiet = false, // 🚀 Prevent stream flooding for background tasks
   }) async {
     // 1. MOBILE (Android/iOS): Native Dart Download (YoutubeExplode)
     if (Platform.isAndroid || Platform.isIOS) {
@@ -588,7 +589,7 @@ class YoutubeDownloaderService {
       return;
     }
     await _downloadDesktop(youtubeUrl, outputFilePath, onProgress, onComplete,
-        audioFormat, streamingQuality);
+        audioFormat, streamingQuality, isQuiet);
   }
 
   // --- Mobile Implementation (Native yt-dlp via MethodChannel) ---
@@ -883,6 +884,7 @@ class YoutubeDownloaderService {
     Function(bool) onComplete,
     String audioFormat,
     String streamingQuality,
+    bool isQuiet,
   ) async {
     // SINGLE SHOT COMPLETION: Ensure we only call onComplete once
     bool hasCompleted = false;
@@ -910,6 +912,8 @@ class YoutubeDownloaderService {
     // YouTube max is ~128kbps AAC or ~160kbps Opus - we use 128K to match source
 
     final args = [
+      if (isQuiet) '--quiet' else '--newline', // 🚀 PREVENT \r SPAMMING THAT CRASHES FLUTTER IPC
+      '--no-warnings',
       '-x',
       '--no-playlist',
       '-f', 'ba', // Best audio source (usually Opus/WebM ~160kbps)
@@ -933,7 +937,7 @@ class YoutubeDownloaderService {
       // Handle Stdout (Progress) safely
       process.stdout.transform(utf8.decoder).listen(
         (data) {
-          print('📥 YTDLP: $data'); // Debug output
+          // Intentionally omitting print() here to prevent flooding the Flutter message pump.
           try {
             final progressMatch =
                 RegExp(r'\[download\]\s+(\d+\.?\d*)%').firstMatch(data);
@@ -954,7 +958,7 @@ class YoutubeDownloaderService {
       // Handle Stderr (Errors) safely
       process.stderr.transform(utf8.decoder).listen(
         (data) {
-          print('❌ YTDLP ERR: $data'); // ALWAYS PRINT
+          // Intentionally omitting print() here to prevent flooding the Flutter message pump during background preload errors.
         },
         onError: (e) {
           if (kDebugMode) print("Stderr stream error: $e");
@@ -1021,18 +1025,17 @@ class YoutubeDownloaderService {
     try {
       final tempDir = await getTemporaryDirectory();
       final cacheDir = Directory('${tempDir.path}/SimpleMusicCache');
-      if (!await cacheDir.exists()) return "0 MB";
+      if (!await cacheDir.exists()) return "0.0 MB";
 
       int totalSize = 0;
-      await for (var file
-          in cacheDir.list(recursive: true, followLinks: false)) {
+      await for (var file in cacheDir.list(recursive: true, followLinks: false)) {
         if (file is File) {
           totalSize += await file.length();
         }
       }
       return "${(totalSize / (1024 * 1024)).toStringAsFixed(1)} MB";
     } catch (e) {
-      return "0 MB";
+      return "0.0 MB";
     }
   }
 }

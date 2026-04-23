@@ -1,261 +1,19 @@
 {
-  "browse": "Khám phá",
-  "search": "Tìm kiếm",
-  "history": "Lịch sử",
-  "stats": "Thống kê",
-  "library": "Thư viện",
-  "playlists": "Danh sách phát",
-  "artists": "Nghệ sĩ",
-  "albums": "Album",
-  "folders": "Thư mục",
-  "local_library": "Thư viện cục bộ",
-  "downloads": "Tải về",
-  "metadata_editor": "Trình sửa metadata",
-  "editMetadata": "Chỉnh sửa metadata",
-  "success": "Thành công",
-  "enableAlphabetIndexer": "Bật chỉ mục cuộn bảng chữ cái",
-  "enableAlphabetIndexerSubtitle": "Hiển thị chỉ mục thanh bên A-Z trên chế độ xem danh sách di động",
-  "metadataUpdated": "Đã cập nhật metadata",
-  "failedToUpdateMetadata": "Cập nhật metadata thất bại",
-  "toggleLyrics": "Bật/Tắt Lời bài hát",
-  "settings": "Cài đặt",
-  "navigation": "Điều hướng",
-  "system": "Hệ thống",
-  "language": "Ngôn ngữ",
-  "english": "Tiếng Anh",
-  "indonesian": "Tiếng Indonesia",
-  "korean": "Tiếng Hàn",
-  "japanese": "Tiếng Nhật",
-  "chinese": "Tiếng Trung",
-  "spanish": "Tiếng Tây Ban Nha",
-  "french": "Tiếng Pháp",
-  "german": "Tiếng Đức",
-  "portuguese": "Tiếng Bồ Đào Nha (Brazil)",
-  "thai": "Tiếng Thái",
-  "vietnamese": "Tiếng Việt",
-  "arabic": "Tiếng Ả Rập",
-  "russian": "Tiếng Nga",
-  "hindi": "Tiếng Hindi",
-  "appearance": "Giao diện",
-  "atmospheres": "Không gian",
-  "none": "Không có",
-  "winter": "Mùa đông",
-  "autumn": "Mùa thu",
-  "rainyCity": "Thành phố mưa",
-  "sakura": "Hoa anh đào",
-  "lunarNewYear": "Tết Nguyên Đán",
-  "cyberpunk": "Cyberpunk",
-  "underwater": "Dưới nước",
-  "nordicAurora": "Cực quang",
-  "galacticSpace": "Vũ trụ",
-  "desertMirage": "Ảo ảnh sa mạc",
-  "general": "Chung",
-  "darkMode": "Chế độ tối",
-  "lockedAtmosphere": "Bị khóa khi không gian đang hoạt động",
-  "useDarkTheme": "Sử dụng giao diện tối",
-  "syncThemeAlbumArt": "Đồng bộ giao diện với ảnh bìa album",
-  "tintBackground": "Nhuộm màu nền và trình trực quan theo màu bài hát",
-  "accentColor": "Màu nhấn",
-  "chooseAccentColor": "Chọn màu tĩnh yêu thích của bạn",
-  "contentRegion": "Khu vực nội dung",
-  "setCountryReleases": "Đặt quốc gia cho các bản phát hành và bảng xếp hạng",
-  "unitedStates": "Hoa Kỳ",
-  "indonesia": "Indonesia",
-  "southKorea": "Hàn Quốc",
-  "japan": "Nhật Bản",
-  "unitedKingdom": "Vương quốc Anh",
-  "brazil": "Brazil",
-  "visualizer": "Trình trực quan",
-  "enableBarVisualizer": "Bật trình trực quan dạng thanh",
-  "showAnimatedWaves": "Hiển thị sóng động trên thanh phát",
-  "opacity": "Độ mờ",
-  "visualizerStyle": "Kiểu trình trực quan",
-  "chooseAnimationType": "Chọn loại hiệu ứng",
-  "spectrumBars": "Thanh phổ",
-  "fluidWave": "Sóng lỏng",
-  "circularPulse": "Xung tròn",
-  "rainbowMode": "Chế độ cầu vồng",
-  "useMixedColors": "Sử dụng màu hỗn hợp (Ưu tiên đồng bộ)",
-  "integration": "Tích hợp",
-  "discordRPC": "Discord Rich Presence",
-  "showStatusDiscord": "Hiển thị trạng thái trên Discord",
-  "tidalApiStatus": "Tidal API",
-  "online": "Trực tuyến",
-  "unauthorize": "Chưa ủy quyền",
-  "offlineStatus": "Ngoại tuyến",
-  "checkInternetConnection": "Vui lòng kiểm tra kết nối internet",
-  "autoClearCache": "Tự động xóa bộ nhớ đệm",
-  "autoClearDisabled": "Đã tắt",
-  "autoClearOnClose": "Khi đóng ứng dụng",
-  "autoClearAfter24h": "Sau 24 giờ",
-  "autoClearAfter7d": "Sau 7 ngày",
-  "autoClearEvery30m": "Mỗi 30 phút (Chỉ khi đang nghe)",
-  "musicFolderLocation": "Vị trí thư mục nhạc",
-  "noFolderSelected": "Chưa chọn thư mục",
-  "change": "Thay đổi",
-  "expand": "Mở rộng",
-  "ignoreSubfolderScan": "Bỏ qua quét thư mục con",
-  "onlyScanSelected": "Chỉ quét thư mục đã chọn (mặc định bật)",
-  "importAdditionalPaths": "Nhập thêm đường dẫn",
-  "addFoldersScan": "Thêm thư mục để quét",
-  "add": "Thêm",
-  "singleTracks": "Bài hát đơn",
-  "unsavedChanges": "Thay đổi chưa lưu",
-  "playlistAlbumTracks": "Bài hát trong Playlist / Album",
-  "audioFormat": "Định dạng âm thanh",
-  "preferredOutputFormat": "Định dạng đầu ra ưu tiên khi tải về",
-  "flacNote": "Lưu ý: FLAC chỉ hỗ trợ tải bài hát đơn. Tải danh sách phát sẽ dùng định dạng M4A.",
-  "downloadLocation": "Vị trí tải về",
-  "resetToDefault": "Đặt lại mặc định",
-  "changeFolder": "Đổi thư mục",
-  "streaming": "Streaming",
-  "streamingQuality": "Chất lượng streaming",
-  "standardQuality": "Tiêu chuẩn (MP3)",
-  "highQuality": "Chất lượng cao (M4A)",
-  "losslessQuality": "Không nén (Tự động)",
-  "standardDesc": "MP3 - Dung lượng nhỏ, tải nhanh",
-  "highDesc": "M4A - Âm thanh tốt hơn, cân bằng",
-  "losslessDesc": "FLAC - Chất lượng không nén từ Deezer/Tidal",
-  "selectStreamingQuality": "Chọn chất lượng streaming",
-  "losslessNote": "Sẽ dùng FLAC không nén nếu có trên Deezer/Tidal. Nếu không, sẽ chuyển về M4A.",
-  "playback": "Phát nhạc",
-  "endlessQueue": "Hàng chờ vô tận",
-  "autoAddSimilar": "Tự động thêm các bài hát tương tự vào cuối hàng chờ",
-  "gaplessPlayback": "Phát nhạc liền mạch",
-  "gaplessPlaybackDesc": "Loại bỏ khoảng lặng giữa các bài hát",
-  "crossfade": "Crossfade",
-  "crossfadeDesc": "Chuyển tiếp mượt mà giữa các bài ({seconds} giây)",
-  "@crossfadeDesc": {
-    "placeholders": {
-      "seconds": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter24h": {
+    "description": "Option to clear cache every 24 hours"
   },
-  "disableRomanization": "Tắt phiên âm",
-  "hideRomajiPinyin": "Không hiển thị Romaji/Pinyin dưới lời bài hát tiếng Hàn, Nhật hoặc Trung",
-  "translationLanguage": "Ngôn ngữ dịch",
-  "targetLanguageLyrics": "Ngôn ngữ đích để dịch lời bài hát",
-  "disableCanvas": "Tắt Canvas",
-  "hideCanvas": "Không hiển thị video Spotify Canvas, thay bằng ảnh bìa album",
-  "wasapiExclusive": "Chế độ WASAPI Exclusive",
-  "bitPerfectWindows": "Âm thanh Bit-perfect với tần số lấy mẫu tự động (yêu cầu khởi động lại)",
-  "audiophileDAC": "Bật khi phát qua các thiết bị DAC chất lượng cao (yêu cầu khởi động lại)",
-  "android14BitPerfect": "Android 14+ Bit-Perfect",
-  "bypassSystemMixer": "Bỏ qua bộ trộn hệ thống cho USB DAC",
-  "requiresAndroid14": "Yêu cầu Android 14+ và USB DAC",
-  "bitPerfectEnabled": "Đã bật chế độ Bit-perfect. Điều khiển âm lượng có thể không hoạt động.",
-  "audioOutputDevice": "Thiết bị đầu ra âm thanh",
-  "loadingDevices": "Đang tải danh sách thiết bị...",
-  "systemDefault": "Mặc định hệ thống",
-  "exclusiveWarning": "Cảnh báo: Chế độ độc quyền hoạt động tốt nhất nếu bạn chọn thiết bị cụ thể ở trên thay vì mặc định hệ thống.",
-  "dataCleanup": "Dữ liệu & Dọn dẹp",
-  "resetLibraryPath": "Đặt lại đường dẫn thư viện",
-  "unlinkFolder": "Hủy liên kết thư mục và xóa danh sách bài hát",
-  "resetLibraryTitle": "Đặt lại thư viện?",
-  "resetLibraryContent": "Thao tác này sẽ xóa thư mục hiện tại khỏi trình phát. Tệp tin của bạn sẽ không bị xóa.",
-  "resetPath": "Đặt lại đường dẫn",
-  "clearStreamingCache": "Xóa bộ nhớ đệm streaming",
-  "freeUpSpace": "Giải phóng không gian (Hiện tại: {size})",
-  "resetStatistics": "Đặt lại thống kê",
-  "clearPlayHistory": "Xóa lịch sử phát và thời gian nghe",
-  "resetStatsTitle": "Đặt lại thống kê?",
-  "resetStatsContent": "Thao tác này không thể hoàn tác.\\nTất cả số lượt phát và thời gian nghe sẽ bị xóa vĩnh viễn.",
-  "resetEverything": "Đặt lại tất cả",
-  "debugging": "Gỡ lỗi",
-  "showDebugButton": "Hiển thị nút gỡ lỗi nổi",
-  "toggleDebugButton": "Bật/tắt bảng điều khiển gỡ lỗi nổi",
-  "community": "Cộng đồng",
-  "donate": "Quyên góp",
-  "joinUs": "Tham gia cùng chúng tôi",
-  "usbAudioBypass": "USB Audio Bypass (Beta) - Đầu ra DAC trực tiếp cho Android 13 trở xuống",
-  "comingSoon": "Sắp ra mắt",
-  "underDevelopment": "Tính năng này đang được phát triển",
-  "version": "Phiên bản",
-  "restartRequired": "Yêu cầu khởi động lại",
-  "restartContent": "Cần khởi động lại ứng dụng để áp dụng các thay đổi về thiết bị âm thanh.\\n\\nKhởi động lại ngay?",
-  "later": "Để sau",
-  "restartNow": "Khởi động lại ngay",
-  "applyOnRestart": "Các thay đổi sẽ có hiệu lực trong lần khởi động lại tới.",
-  "autoRestartNotSupported": "Không hỗ trợ khởi động lại tự động. Vui lòng khởi động lại thủ công.",
-  "enterAdminCode": "Vui lòng nhập mã truy cập quản trị",
-  "accessCode": "Mã truy cập",
-  "cancel": "Hủy",
-  "access": "Truy cập",
-  "invalidCode": "Mã truy cập không hợp lệ",
-  "formatSaved": "Đã lưu định dạng!",
-  "addedFolder": "Đã thêm thư mục: {folder}",
-  "removedFolder": "Đã xóa thư mục: {folder}",
-  "downloadPathUpdated": "Đường dẫn tải về đã cập nhật: {path}",
-  "downloadPathReset": "Đường dẫn tải về đã đặt lại về mặc định.",
-  "libraryPathReset": "Đường dẫn thư viện đã được đặt lại.",
-  "cacheCleared": "Đã xóa bộ nhớ đệm thành công!",
-  "changesApplyRestart": "Các thay đổi sẽ có hiệu lực trong lần khởi động lại tới.",
-  "changeLanguage": "Đổi ngôn ngữ ứng dụng",
-  "unlinkFolderClear": "Hủy liên kết thư mục và xóa danh sách bài hát",
-  "enterAdminAccessCode": "Vui lòng nhập mã truy cập quản trị",
-  "invalidAccessCode": "Mã truy cập không hợp lệ",
-  "androidBitPerfect": "Android 14+ Bit-Perfect",
-  "customDevice": "Thiết bị tùy chỉnh",
-  "exclusiveModeWarning": "Cảnh báo: Chế độ độc quyền hoạt động tốt nhất nếu bạn chọn thiết bị cụ thể ở trên thay vì mặc định hệ thống.",
-  "@freeUpSpace": {
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter7d": {
+    "description": "Option to clear cache every 7 days"
   },
-  "statisticsReset": "Đã đặt lại thống kê.",
-  "toggleDebugConsole": "Bật/tắt bảng điều khiển gỡ lỗi nổi",
-  "usbAudioBypassBeta": "USB Audio Bypass (Beta) - Đầu ra DAC trực tiếp cho Android 13 trở xuống",
-  "connectedUsbDacs": "DAC USB đã kết nối:",
-  "scanning": "Đang quét...",
-  "scan": "Quét",
-  "noUsbDacDetected": "Không tìm thấy DAC USB. Hãy kết nối thiết bị âm thanh USB và nhấn Quét.",
-  "connected": "Đã kết nối",
-  "connect": "Kết nối",
-  "failedToConnectDac": "Lỗi kết nối DAC. Vui lòng kiểm tra quyền USB.",
-  "connectedToDac": "Đã kết nối với {deviceName} - Đã bật USB Bypass",
-  "@connectedToDac": {
-    "placeholders": {
-      "deviceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearCache": {
+    "description": "Auto clear cache setting section"
   },
-  "changingAudioDeviceRestart": "Cần khởi động lại ứng dụng để áp dụng thay đổi thiết bị âm thanh.\\n\\nKhởi động lại ngay?",
-  "translateLyrics": "Dịch lời bài hát",
-  "viewQueue": "Xem hàng chờ",
-  "loadingLyrics": "Đang tải lời bài hát...",
-  "noLyricsAvailable": "Không có lời bài hát",
-  "noSyncedLyricsFound": "Không tìm thấy lời bài hát khớp thời gian",
-  "justEnjoyVibes": "Chỉ cần tận hưởng giai điệu.",
-  "scrollForLyrics": "Cuộn để xem lời bài hát",
-  "switchingTo": "Đang chuyển sang",
-  "metadataEditorInfo": "Bạn có thể tìm kiếm và sửa lỗi nhanh chóng trong trình chỉnh sửa Metadata.",
-  "metadataEditorNote": "Lưu ý: Sau khi trạng thái báo \"Lưu thành công\", ảnh bìa album có thể thay đổi. Đây không phải lỗi mà là vấn đề bộ nhớ đệm của ứng dụng chúng tôi đang khắc phục. Bạn có thể kiểm tra lại trong quản lý tệp.",
-  "close": "Đóng",
-  "permissionRequired": "Yêu cầu quyền truy cập",
-  "permissionRequiredDesc": "Quyền \"Truy cập tất cả tệp\" là cần thiết để chỉnh sửa thẻ nhạc. Điều này cho phép sửa trực tiếp tệp nhạc của bạn.",
-  "grantPermission": "Cấp quyền",
-  "files": "Tệp tin",
-  "editor": "Trình chỉnh sửa",
-  "clearImported": "Xóa mục đã nhập",
-  "libraryData": "Dữ liệu thư viện",
-  "externalFiles": "Tệp bên ngoài",
-  "addFiles": "Thêm tệp",
-  "addFolder": "Thêm thư mục",
-  "selectSongToEdit": "Chọn bài hát từ danh sách để chỉnh sửa",
-  "fixAll": "Sửa tất cả",
-  "autoTagTitle": "⚠️ Tự động gắn thẻ cho {sourceName}?",
-  "@autoTagTitle": {
-    "placeholders": {
-      "sourceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearDisabled": {
+    "description": "Option to disable auto clear cache"
   },
-  "autoTagContent": "Thao tác này sẽ tìm kiếm tất cả {count} bài hát của \"{sourceName}\" trên Spotify và ghi đè thẻ tự động.\\n\\nThao tác này không thể hoàn tác.",
+  "@autoClearOnClose": {
+    "description": "Option to clear cache when app closes"
+  },
   "@autoTagContent": {
     "placeholders": {
       "count": {
@@ -266,108 +24,72 @@
       }
     }
   },
-  "startBulkProcess": "Bắt đầu xử lý hàng loạt",
-  "title": "Tiêu đề",
-  "artist": "Nghệ sĩ",
-  "album": "Album",
-  "genre": "Thể loại",
-  "year": "Năm",
-  "trackNumber": "Số thứ tự",
-  "discNumber": "Số đĩa",
-  "autoFixComingSoon": "Tự động sửa (Sắp ra mắt)",
-  "manualSearch": "Tìm kiếm thủ công",
-  "revert": "Hoàn tác",
-  "saveChangesToFile": "Lưu thay đổi vào tệp",
-  "searchSpotify": "Tìm trên Spotify",
-  "searchHint": "Tìm kiếm...",
-  "selectMatch": "Chọn kết quả khớp",
-  "upNext": "Tiếp theo",
-  "fetchingLossless": "Đang lấy chất lượng không nén...",
-  "noMusicPlaying": "Không có nhạc đang phát",
-  "refreshList": "Làm mới danh sách",
-  "noDownloadsFound": "Không tìm thấy tệp tải về",
-  "play": "Phát",
-  "showInFolder": "Hiển thị trong thư mục",
-  "delete": "Xóa",
-  "deleteFileTitle": "Xóa tệp tin?",
-  "deleteFileContent": "Bạn có chắc chắn muốn xóa \"{filename}\"?\\nThao tác này không thể hoàn tác.",
-  "downloadedTo": "Đã tải vào: {path}",
-  "folderPath": "Thư mục: {path}",
-  "errorDeleting": "Lỗi khi xóa: {error}",
-  "ok": "OK",
-  "searchSongs": "Tìm bài hát...",
-  "noResultsFound": "Không tìm thấy kết quả",
-  "refreshLibrary": "Làm mới thư viện",
-  "shuffleAll": "Trộn tất cả",
-  "switchToListView": "Chuyển sang chế độ danh sách",
-  "switchToGridView": "Chuyển sang chế độ lưới",
-  "songsLoadedCount": "Đã tải {count} bài hát...",
-  "grantAccess": "Cấp quyền truy cập",
-  "selectDifferentFolder": "Chọn thư mục khác",
-  "selectFolder": "Chọn thư mục",
-  "noSongsInFolder": "Không tìm thấy bài hát nào trong thư mục này.",
-  "queueUpdated": "Đã cập nhật hàng chờ",
-  "playingNext": "Sẽ phát tiếp theo",
-  "addedToQueue": "Đã thêm vào hàng chờ",
-  "playingTrack": "Đang phát bài",
-  "error": "Lỗi",
-  "noPlaylistsFound": "Không tìm thấy danh sách phát",
-  "addToPlaylist": "Thêm vào danh sách phát",
-  "songAlreadyInPlaylist": "Bài hát đã có trong danh sách phát",
-  "addedToPlaylistSuccess": "Đã thêm vào danh sách phát",
-  "alreadyInLikedSongs": "Đã có trong bài hát yêu thích",
-  "addedToLikedSongs": "Đã thêm vào bài hát yêu thích",
-  "likedSongs": "Bài hát yêu thích",
-  "preparingDownload": "Đang chuẩn bị tải về",
-  "fetchingMetadataSpotify": "Đang lấy dữ liệu từ Spotify...",
-  "preparingDownloadNotification": "Đang chuẩn bị tải về",
-  "downloadStarted": "Đã bắt đầu tải về",
-  "downloading": "Đang tải về",
-  "preparingDownloadFormat": "Đang chuẩn bị tải về ({format})...",
-  "searching": "Đang tìm kiếm...",
-  "findingBestMatchYoutube": "Đang tìm kết quả phù hợp trên YouTube...",
-  "downloadingFlac": "Đang tải FLAC",
-  "fetchingLosslessAudio": "Đang lấy âm thanh không nén...",
-  "downloadComplete": "Tải về hoàn tất",
-  "flacSavedToDownloads": "Đã lưu FLAC vào thư mục tải về",
-  "downloadCompleteNotification": "Tải về hoàn tất",
-  "flacUnavailable": "FLAC không khả dụng",
-  "flacUnavailableDesc": "Không có tệp FLAC, tải về thất bại. Hãy thử đổi cài đặt.",
-  "flacUnavailableNotification": "FLAC không khả dụng",
-  "changeFormatInSettings": "Vui lòng đổi định dạng đầu ra trong cài đặt",
-  "flacError": "Lỗi FLAC",
-  "couldNotDownloadFlac": "Không thể tải FLAC.",
-  "downloadingFormat": "Đang tải {format}",
-  "savedAsFormat": "Đã lưu dưới dạng {format}",
-  "downloadFailed": "Tải về thất bại",
-  "downloadError": "Lỗi tải về",
-  "playNext": "Phát kế tiếp",
-  "addToQueue": "Thêm vào hàng chờ",
-  "addToFavorite": "Thêm vào yêu thích",
-  "goToArtist": "Đi tới nghệ sĩ",
-  "download": "Tải về",
-  "noAlbumsFound": "Không tìm thấy album",
-  "moreOptions": "Tùy chọn khác",
-  "titleLabel": "Tiêu đề",
-  "artistLabel": "Nghệ sĩ",
-  "albumLabel": "Album",
-  "downloadAll": "Tải toàn bộ",
-  "albumRemovedFromPlaylists": "Đã xóa album khỏi danh sách phát",
-  "albumAddedToPlaylists": "Đ đã thêm album vào danh sách phát",
-  "startedDownloadingAll": "Đã bắt đầu tải tất cả bài hát...",
-  "playingFromAlbum": "Đang phát từ album",
-  "unknownArtist": "Nghệ sĩ ẩn danh",
-  "songsCount": "{count, plural, =1{1 bài hát} other{{count} bài hát}}",
-  "@songsCount": {
+  "@autoTagTitle": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@automaticTitleLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@consecutivePlaysTooltip": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "@deleteFileContent": {
     "placeholders": {
       "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@deviceNameLabel": {
+    "placeholders": {
+      "deviceName": {
         "type": "String"
       }
     }
@@ -379,9 +101,9 @@
       }
     }
   },
-  "@folderPath": {
+  "@downloadingFormat": {
     "placeholders": {
-      "path": {
+      "format": {
         "type": "String"
       }
     }
@@ -393,102 +115,6 @@
       }
     }
   },
-  "@songsLoadedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "@preparingDownloadFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@downloadingFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@savedAsFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "libraryNotLoaded": "Thư viện chưa được tải.",
-  "noArtistsFound": "Không tìm thấy nghệ sĩ.",
-  "goToLocalLibraryToSelect": "Vào Thư viện cục bộ để chọn một thư mục.",
-  "popularOnSpotify": "Phổ biến trên Spotify",
-  "songsInLibrary": "{count, plural, =1{1 bài hát} other{{count} bài hát}} trong thư viện",
-  "@songsInLibrary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "shuffle": "Trộn nhạc",
-  "shufflingArtist": "Đang trộn các bài hát của {artistName}...",
-  "@shufflingArtist": {
-    "placeholders": {
-      "artistName": {
-        "type": "String"
-      }
-    }
-  },
-  "showMore": "Xem thêm",
-  "showLess": "Thu gọn",
-  "discography": "Danh sách tác phẩm",
-  "seeAll": "Xem tất cả",
-  "newPlaylist": "Danh sách phát mới",
-  "noPlaylistsYet": "Chưa có danh sách phát nào",
-  "createPlaylist": "Tạo danh sách phát",
-  "emptyPlaylist": "Danh sách phát trống",
-  "emptyPlaylistSubtitle": "Tạo danh sách phát trống mới",
-  "importFromSpotify": "Nhập từ Spotify",
-  "importFromSpotifySubtitle": "Dán liên kết danh sách phát Spotify",
-  "importFromYoutubeMusic": "Nhập từ YouTube Music",
-  "importFromYoutubeMusicSubtitle": "Dán liên kết danh sách phát YouTube Music",
-  "playlistNameHint": "Tên danh sách phát",
-  "importSpotifyPlaylist": "Nhập danh sách phát Spotify",
-  "importYoutubeMusicPlaylist": "Nhập danh sách phát YouTube Music",
-  "deletePlaylistTitle": "Xóa danh sách phát?",
-  "deletePlaylistConfirm": "Bạn có chắc chắn muốn xóa \"{name}\"?",
-  "@deletePlaylistConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "playlistNotFound": "Không tìm thấy danh sách phát",
-  "noSongsAdded": "Chưa có bài hát nào được thêm",
-  "deleteDownloadsTitle": "Xóa các bản tải về?",
-  "deleteDownloadsConfirm": "Thao tác này sẽ xóa tất cả các bài hát đã tải về trên thiết bị này cho danh sách phát này.",
-  "allDownloadsRemoved": "Đã xóa tất cả các bản tải về",
-  "rename": "Đổi tên",
-  "removeFromPlaylist": "Xóa khỏi danh sách phát",
-  "renamePlaylist": "Đổi tên danh sách phát",
-  "deletePlaylist": "Xóa danh sách phát",
-  "sharePlaylist": "Chia sẻ danh sách phát",
-  "deletePlaylistPermanentConfirm": "Bạn có chắc chắn muốn xóa danh sách phát này không? (Hành động này không thể hoàn tác)",
-  "publicSharing": "Chia sẻ công khai",
-  "publicSharingDesc": "Bất kỳ ai có mã đều có thể nhập danh sách phát này.",
-  "publicSharingDisabledDesc": "Đã tắt. Bật để chia sẻ với người phát khác.",
-  "failedEnableSharing": "Không thể bật chia sẻ. Kiểm tra kết nối.",
-  "failedDisableSharing": "Không thể tắt chia sẻ.",
-  "disablingSharingWarning": "Tắt chia sẻ sẽ xóa vĩnh viễn mã và dữ liệu khỏi máy chủ để tiết kiệm dung lượng.",
-  "invalidSpotifyUrl": "URL danh sách phát Spotify không hợp lệ",
-  "invalidYoutubeMusicUrl": "URL danh sách phát YouTube Music không hợp lệ",
-  "fetchingPlaylistInfo": "Đang lấy thông tin danh sách phát...",
-  "failedFetchPlaylistInfo": "Không thể lấy thông tin danh sách phát",
-  "fetchingTracksFrom": "Đang lấy các bài hát từ \"{name}\"...",
   "@fetchingTracksFrom": {
     "placeholders": {
       "name": {
@@ -496,97 +122,20 @@
       }
     }
   },
-  "noTracksFound": "Không tìm thấy bài hát nào trong danh sách phát",
-  "creatingPlaylistWithTracks": "Đang tạo danh sách phát với {count} bài hát...",
-  "@creatingPlaylistWithTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "importedTracks": "Đã nhập thành công {count} bài hát!",
-  "@importedTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "importFailed": "Nhập thất bại: {error}",
-  "@importFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "fetchingSharedPlaylist": "Đang lấy danh sách phát được chia sẻ...",
-  "playlistNotFoundOrError": "Không tìm thấy danh sách phát hoặc lỗi máy chủ",
-  "parsingPlaylistData": "Đang phân tích dữ liệu danh sách phát...",
-  "importedPlaylistName": "Đã nhập thành công \"{name}\"!",
-  "@importedPlaylistName": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "codeMust6Digits": "Mã phải có 6 chữ số",
-  "fetchingPlaylist": "Đang lấy danh sách phát...",
-  "importViaCode": "Nhập qua Mã",
-  "enterShareCode": "Nhập mã chia sẻ 6 chữ số",
-  "importChoice": "Nhập",
-  "listeningStats": "Thống kê nghe nhạc",
-  "topArtist": "Nghệ sĩ nghe nhiều",
-  "mostListened": "Nghe nhiều nhất",
-  "timeListened": "Thời gian nghe",
-  "totalPlays": "Tổng lượt phát",
-  "minutes": "phút",
-  "tracks": "bài",
-  "songs": "bài hát",
-  "noStatsYet": "Chưa có thống kê.",
-  "noArtistStatsYet": "Chưa có thống kê nghệ sĩ.",
-  "plays": "lượt phát",
-  "min": "phút",
-  "share": "Chia sẻ",
-  "savedTo": "Đã lưu vào \"{path}\"",
-  "@savedTo": {
+  "@folderPath": {
     "placeholders": {
       "path": {
         "type": "String"
       }
     }
   },
-  "myTopTrackOn": "Bài hát hàng đầu của tôi trên Simple Player! 🎵",
-  "fileMissingHistory": "Thiếu tệp và không có trong lịch sử.",
-  "restoring": "Đang khôi phục",
-  "reBuffering": "Đang tải dữ liệu...",
-  "nowPlaying": "Đang phát",
-  "recentlyPlayed": "Đã phát gần đây",
-  "clearHistory": "Xóa lịch sử",
-  "noHistoryYet": "Chưa có lịch sử",
-  "cloud": "Đám mây",
-  "cached": "Đã lưu đệm",
-  "searchingStatus": "Tìm kiếm",
-  "findingStream": "Đang tìm nguồn phát...",
-  "noStreamMatch": "Không tìm thấy nguồn phát phù hợp.",
-  "errorSearchingStream": "Lỗi khi tìm kiếm nguồn phát.",
-  "rebufferingFromCloud": "Đang tải lại từ đám mây...",
-  "musicSearch": "Tìm kiếm nhạc",
-  "songTitleKeyword": "Tiêu đề hoặc từ khóa",
-  "searchSpotifyHint": "Tìm trên Spotify...",
-  "readySearchSong": "Sẵn sàng. Hãy tìm kiếm bài hát.",
-  "searchingSpotifyFor": "Đang tìm \"{keyword}\" trên Spotify...",
-  "@searchingSpotifyFor": {
+  "@foundExistingAccount": {
     "placeholders": {
-      "keyword": {
+      "name": {
         "type": "String"
       }
     }
   },
-  "offline": "Ngoại tuyến",
-  "foundResults": "Tìm thấy {songCount} bài hát, {albumCount} album, {artistCount} nghệ sĩ.",
   "@foundResults": {
     "placeholders": {
       "songCount": {
@@ -600,76 +149,27 @@
       }
     }
   },
-  "noSpotifyResults": "Không tìm thấy kết quả từ Spotify.",
-  "searchFailedStatus": "Tìm kiếm thất bại: {error}",
-  "@searchFailedStatus": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "noInternetConnection": "Không có kết nối Internet",
-  "checkNetworkTryAgain": "Vui lòng kiểm tra mạng và thử lại",
-  "noSuggestionsFound": "Không tìm thấy gợi ý.",
-  "statusWithText": "Trạng thái: {status}",
-  "@statusWithText": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
-  "goodMorning": "Chào buổi sáng",
-  "goodAfternoon": "Chào buổi chiều",
-  "goodEvening": "Chào buổi tối",
-  "jumpBackIn": "Tiếp tục nghe",
-  "yourTopMix": "Top Mix của bạn",
-  "youMayLike": "Có thể bạn sẽ thích",
-  "yourPlaylists": "Danh sách phát của bạn",
-  "quickMix": "Trộn nhanh",
-  "madeForYou": "Dành cho bạn",
-  "rediscover": "Khám phá lại",
-  "doYouRemember": "Bạn còn nhớ chứ?",
-  "countSongs": "{count, plural, =1{1 bài hát} other{{count} bài hát}}",
-  "@countSongs": {
+  "@foundYoutubeResults": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "savePlaylistTitle": "Lưu \"{title}\"?",
-  "@savePlaylistTitle": {
+  "@freeUpSpace": {
     "placeholders": {
-      "title": {
+      "size": {
         "type": "String"
       }
     }
   },
-  "savePlaylistContent": "Thao tác này sẽ tạo một danh sách phát mới từ những bài hát này.",
-  "savedAs": "Đã lưu dưới dạng \"{name}\"!",
-  "@savedAs": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "save": "Lưu",
-  "searchSongsOrAlbumsAndArtistsHint": "Tìm bài hát, album hoặc nghệ sĩ...",
-  "playQueue": "Phát hàng chờ",
-  "downloadSong": "Tải bài hát",
-  "sleepTimer": "Hẹn giờ tắt",
-  "minutesDuration": "{count, plural, =1{1 phút} other{{count} phút}}",
-  "@minutesDuration": {
+  "@fromLibraryCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "hoursDuration": "{count, plural, =1{1 giờ} other{{count} giờ}}",
   "@hoursDuration": {
     "placeholders": {
       "count": {
@@ -677,14 +177,52 @@
       }
     }
   },
-  "customTime": "Thời gian tùy chỉnh",
-  "turnOffTimer": "Tắt hẹn giờ",
-  "musicWillStopIn": "Nhạc sẽ dừng sau {label}",
-  "stopTimer": "Dừng hẹn giờ ({time})",
-  "@stopTimer": {
+  "@importFailed": {
     "placeholders": {
-      "time": {
+      "error": {
         "type": "String"
+      }
+    }
+  },
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@last30DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@last7DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@listenMinutesTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -695,73 +233,76 @@
       }
     }
   },
-  "setCustomTimer": "Đặt thời gian hẹn tắt",
-  "enterDuration": "Nhập khoảng thời gian...",
-  "hourShort": "giờ",
-  "minuteShort": "phút",
-  "secondShort": "giây",
-  "timerSetForHours": "Đã hẹn giờ sau {count} giờ",
-  "@timerSetForHours": {
+  "@myTopTrackOn": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForMinutes": "Đã hẹn giờ sau {count} phút",
-  "@timerSetForMinutes": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForSeconds": "Đã hẹn giờ sau {count} giây",
-  "@timerSetForSeconds": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "start": "Bắt đầu",
-  "errorCouldNotCreateSession": "Lỗi: Không thể tạo phiên làm việc.",
-  "scanToControlPlayback": "Quét để điều khiển phát nhạc bằng điện thoại của bạn.",
-  "session": "Phiên làm việc: {id}",
-  "@session": {
-    "placeholders": {
-      "id": {
+      "header": {
         "type": "String"
       }
     }
   },
-  "loadingCanvas": "Đang tải Canvas...",
-  "searchingSpotify": "Đang tìm trên Spotify...",
-  "fetchingCanvas": "Đang lấy Canvas...",
-  "nowPlayingHeader": "Đang phát",
-  "nowPlayingSection": "Đang phát",
-  "upNextSection": "Tiếp theo",
-  "recommendationsSection": "Gợi ý",
-  "fromLibrarySection": "Từ thư viện",
-  "queueIsEmpty": "Hàng chờ trống",
-  "historySection": "Lịch sử",
-  "upNextCount": "Tiếp theo ({count})",
-  "@upNextCount": {
+  "@notRank": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@opacityLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@playCountLabel": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "fromLibraryCount": "Từ thư viện ({count})",
-  "@fromLibraryCount": {
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@rankActive": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@rankLabel": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@reachDailyPlaysTooltip": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "recommendationsCount": "Gợi ý ({count})",
+  "@reachSpecificArtistTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@reachWeeklyPlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@recommendationsCount": {
     "placeholders": {
       "count": {
@@ -769,76 +310,65 @@
       }
     }
   },
-  "noSongPlaying": "Không có nhạc đang phát",
-  "selectTrackToStart": "Chọn một bài hát để bắt đầu",
-  "importLabel": "Nhập",
-  "saveLabel": "Lưu",
-  "refreshLabel": "Làm mới",
-  "hideTranslation": "Ẩn bản dịch",
-  "translateLabel": "Dịch",
-  "lyricsByLRCLIB": "Lời bởi LRCLIB",
-  "importLyricsFile": "Nhập tệp lời bài hát",
-  "overwriteLrcWarning": "Tệp .lrc cục bộ đã tồn tại.\\nBạn có muốn ghi đè không?",
-  "saveLrcPrompt": "Bạn có muốn lưu lời hiện tại thành tệp .lrc bên cạnh tệp nhạc không?",
-  "overwrite": "Ghi đè",
-  "lyricsSavedSuccess": "Đã lưu lời bài hát vào tệp .lrc",
-  "lyricsSaveError": "Lỗi khi lưu lời bài hát",
-  "equalizer": "Equalizer",
-  "trackDetails": "Chi tiết bài hát",
-  "audioQuality": "Chất lượng âm thanh",
-  "formatLabel": "Định dạng",
-  "codecLabel": "Codec",
-  "bitrateLabel": "Tốc độ bit",
-  "sampleRateLabel": "Tần số lấy mẫu",
-  "bitDepthLabel": "Độ sâu bit",
-  "channelsLabel": "Kênh",
-  "fileSizeLabel": "Kích thước tệp",
-  "fileLocation": "Vị trí tệp",
-  "audioSource": "Nguồn âm thanh",
-  "pathLabel": "Đường dẫn",
-  "inputLabel": "Đầu vào",
-  "engineLabel": "Moteur",
-  "eqLabel": "EQ",
-  "dspLabel": "DSP",
-  "androidMixer": "Android Mixer",
-  "bypassedBitPerfect": "Đã bỏ qua (Bit-Perfect)",
-  "resamplingLabel": "Rééchantillonnage",
-  "activeNoResampling": "Hoạt động (Không lấy mẫu lại)",
-  "nativeRate": "Tần số gốc",
-  "signalOutput": "Tín hiệu đầu ra",
-  "outputLabel": "Đầu ra",
-  "samplingRateLabel": "Tần số lấy mẫu",
-  "bitsLabel": "Bits",
-  "statusLabel": "Trạng thái",
-  "unknown": "Không rõ",
-  "unknownDevice": "Thiết bị không xác định",
-  "sharedMode": "Chia sẻ",
-  "exclusiveMode": "Độc quyền",
-  "androidAudioTrack": "Android AudioTrack",
-  "songInformation": "Thông tin bài hát",
-  "selectVersion": "Chọn phiên bản",
-  "searchYoutubeHint": "Tìm trên YouTube...",
-  "androidAudioEffectsNote": "Lưu ý: Các hiệu ứng âm thanh chỉ khả dụng trên Android.",
-  "deletePreset": "Xóa cấu hình",
-  "saveAsNewPreset": "Lưu thành cấu hình mới",
-  "savePreset": "Lưu cấu hình",
-  "enterPresetName": "Nhập tên cấu hình (VD: Âm trầm của tôi)",
-  "presetSaved": "Đã lưu cấu hình!",
-  "miniPlayer": "Trình phát nhỏ",
-  "listeningParty": "Phòng nghe nhạc",
-  "audioOutput": "Đầu ra âm thanh",
-  "lyricsTooltip": "Lời bài hát",
-  "queueTooltip": "Hàng chờ",
-  "moreOptionsTooltip": "Tùy chọn khác",
-  "muteTooltip": "Tắt tiếng",
-  "unmuteTooltip": "Bật tiếng",
-  "fullScreenPlayerTooltip": "Trình phát toàn màn hình",
-  "importLyricsTooltip": "Nhập lời bài hát",
-  "saveLyricsTooltip": "Lưu lời bài hát",
-  "refreshLyricsTooltip": "Làm mới lời bài hát",
-  "translateLyricsTooltip": "Dịch lời bài hát",
-  "importViaCodeSubtitle": "Nhập danh sách phát được chia sẻ bởi một người bạn",
-  "sharePlaylistTitle": "Chia sẻ \"{name}\"",
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingEngine": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      },
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "@sharePlaylistTitle": {
     "placeholders": {
       "name": {
@@ -846,16 +376,858 @@
       }
     }
   },
-  "generatingShareCode": "Đang tạo mã chia sẻ...",
-  "failedToGenerateCode": "Không thể tạo mã chia sẻ. Kiểm tra kết nối.",
-  "playlistReadyShare": "Danh sách phát của bạn đã sẵn sàng để chia sẻ!",
-  "copyCode": "Sao chép Mã",
+  "@showAllTitles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@switchingTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@todayLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@top3GlobalTooltip": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "@topGlobalTooltip": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@unlockedCountLabel": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@updateAvailableVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@updateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutEducationalPurpose": "Ứng dụng này được phát triển chỉ cho mục đích cá nhân và giáo dục.",
+  "aboutLicenses": "Giới thiệu & Giấy phép",
+  "aboutNotForCommercial": "Không dành cho mục đích thương mại.",
+  "accentColor": "Màu nhấn",
+  "access": "Truy cập",
+  "accessCode": "Mã truy cập",
+  "accountDataMergeDesc": "Bằng cách đồng bộ hóa, tên hồ sơ và ảnh đại diệnของ bạn sẽ được cập nhật, nhưng số phút nghe của thiết bị hiện tại sẽ được hợp nhất thành công vào tổng số tài khoản.",
+  "accountLinked": "Tài khoản đã liên kết",
+  "accountLinkedSuccessfully": "Liên kết tài khoản thành công!",
+  "achievementsUnlocked": "Thành tựu đã mở khóa",
+  "activeNoResampling": "Hoạt động (Không lấy mẫu lại)",
+  "add": "Thêm",
+  "addFiles": "Thêm tệp",
+  "addFolder": "Thêm thư mục",
+  "addFoldersScan": "Thêm thư mục để quét",
+  "addToFavorite": "Thêm vào yêu thích",
+  "addToPlaylist": "Thêm vào danh sách phát",
+  "addToQueue": "Thêm vào hàng chờ",
+  "addedFolder": "Đã thêm thư mục: {folder}",
+  "addedToLikedSongs": "Đã thêm vào bài hát yêu thích",
+  "addedToPlaylistSuccess": "Đã thêm vào danh sách phát",
+  "addedToQueue": "Đã thêm vào hàng chờ",
+  "album": "Album",
+  "albumAddedToPlaylists": "Đ đã thêm album vào danh sách phát",
+  "albumLabel": "Album",
+  "albumRemovedFromPlaylists": "Đã xóa album khỏi danh sách phát",
+  "albums": "Album",
+  "allDownloadsRemoved": "Đã xóa tất cả các bản tải về",
+  "allRightsReserved": "Mọi quyền được bảo lưu.",
+  "allTime": "Mọi lúc",
+  "alreadyInLikedSongs": "Đã có trong bài hát yêu thích",
+  "android14BitPerfect": "Android 14+ Bit-Perfect",
+  "androidAudioEffectsNote": "Lưu ý: Các hiệu ứng âm thanh chỉ khả dụng trên Android.",
+  "androidAudioTrack": "Android AudioTrack",
+  "androidBitPerfect": "Android 14+ Bit-Perfect",
+  "androidMixer": "Android Mixer",
+  "appearance": "Giao diện",
+  "applyOnRestart": "Các thay đổi sẽ có hiệu lực trong lần khởi động lại tới.",
+  "arabic": "Tiếng Ả Rập",
+  "artist": "Nghệ sĩ",
+  "artistLabel": "Nghệ sĩ",
+  "artists": "Nghệ sĩ",
+  "atmospheres": "Không gian",
+  "audioFormat": "Định dạng âm thanh",
+  "audioOutput": "Đầu ra âm thanh",
+  "audioOutputDevice": "Thiết bị đầu ra âm thanh",
+  "audioQuality": "Chất lượng âm thanh",
+  "audioSource": "Nguồn âm thanh",
+  "audiophileDAC": "Bật khi phát qua các thiết bị DAC chất lượng cao (yêu cầu khởi động lại)",
+  "autoAddSimilar": "Tự động thêm các bài hát tương tự vào cuối hàng chờ",
+  "autoClearAfter24h": "Sau 24 giờ",
+  "autoClearAfter7d": "Sau 7 ngày",
+  "autoClearCache": "Tự động xóa bộ nhớ đệm",
+  "autoClearDisabled": "Đã tắt",
+  "autoClearEvery30m": "Mỗi 30 phút (Chỉ khi đang nghe)",
+  "autoClearOnClose": "Khi đóng ứng dụng",
+  "autoFixComingSoon": "Tự động sửa (Sắp ra mắt)",
+  "autoRestartNotSupported": "Không hỗ trợ khởi động lại tự động. Vui lòng khởi động lại thủ công.",
+  "autoTagContent": "Thao tác này sẽ tìm kiếm tất cả {count} bài hát của \"{sourceName}\" trên Spotify và ghi đè thẻ tự động.\\n\\nThao tác này không thể hoàn tác.",
+  "autoTagTitle": "⚠️ Tự động gắn thẻ cho {sourceName}?",
+  "automatic": "Tự động",
+  "automaticTitleLabel": "Tự động: {title}",
+  "autumn": "Mùa thu",
+  "avatarPickerDesc": "Chọn một bản mẫu hoặc nhập ảnh của riêng bạn",
+  "beFirstToClaim": "Hãy là người đầu tiên giành lấy vị trí dẫn đầu!",
+  "behavioralHeader": "THÀNH TÍCH HÀNH VI",
+  "behavioralTitles": "HÀNH VI",
+  "binariesUpdateRequired": "Yêu cầu cập nhật các tệp nhị phân",
+  "bitDepthLabel": "Độ sâu bit",
+  "bitPerfectEnabled": "Đã bật chế độ Bit-perfect. Điều khiển âm lượng có thể không hoạt động.",
+  "bitPerfectWindows": "Âm thanh Bit-perfect với tần số lấy mẫu tự động (yêu cầu khởi động lại)",
+  "bitrateLabel": "Tốc độ bit",
+  "bitsLabel": "Bits",
+  "brazil": "Brazil",
+  "browse": "Khám phá",
+  "bypassSystemMixer": "Bỏ qua bộ trộn hệ thống cho USB DAC",
+  "bypassedBitPerfect": "Đã bỏ qua (Bit-Perfect)",
+  "cacheCleared": "Đã xóa bộ nhớ đệm thành công!",
+  "cached": "Đã lưu đệm",
+  "cancel": "Hủy",
+  "championChampionTooltip": "Đạt Top 1 toàn cầu trong 5 tuần khác nhau",
+  "change": "Thay đổi",
+  "changeFolder": "Đổi thư mục",
+  "changeFormatInSettings": "Vui lòng đổi định dạng đầu ra trong cài đặt",
+  "changeLabel": "THAY ĐỔI",
+  "changeLanguage": "Đổi ngôn ngữ ứng dụng",
+  "changesApplyRestart": "Các thay đổi sẽ có hiệu lực trong lần khởi động lại tới.",
+  "changingAudioDeviceRestart": "Cần khởi động lại ứng dụng để áp dụng thay đổi thiết bị âm thanh.\\n\\nKhởi động lại ngay?",
+  "channelsLabel": "Kênh",
+  "checkAgain": "Kiểm tra lại",
+  "checkInternetConnection": "Vui lòng kiểm tra kết nối internet",
+  "checkNetworkTryAgain": "Vui lòng kiểm tra mạng và thử lại",
+  "chinese": "Tiếng Trung",
+  "chooseAccentColor": "Chọn màu tĩnh yêu thích của bạn",
+  "chooseAnimationType": "Chọn loại hiệu ứng",
+  "chooseArtist": "CHỌN NGHỆ SĨ",
+  "chooseAvatar": "Chọn ảnh đại diện",
+  "chooseYourTitle": "Chọn danh hiệu của bạn",
+  "circularPulse": "Xung tròn",
+  "clearAll": "Xóa tất cả",
+  "clearHistory": "Xóa lịch sử",
+  "clearImported": "Xóa mục đã nhập",
+  "clearMetadataCache": "Xóa bộ nhớ đệm siêu dữ liệu và ảnh bìa",
+  "clearPlayHistory": "Xóa lịch sử phát và thời gian nghe",
+  "clearStreamingCache": "Xóa bộ nhớ đệm streaming",
+  "close": "Đóng",
+  "cloud": "Đám mây",
   "codeCopied": "Đã sao chép mã vào danh bạ!",
-  "shareCodeUsage": "Đưa mã 6 chữ số này cho bạn bè để họ nhập danh sách phát này.",
-  "filters": "Bộ lọc",
-  "fileName": "Tên tệp",
+  "codeMust6Digits": "Mã phải có 6 chữ số",
+  "codecLabel": "Codec",
+  "comingSoon": "Sắp ra mắt",
+  "community": "Cộng đồng",
+  "competitiveTitles": "CẠNH TRANH",
+  "confirm": "Xác nhận",
+  "connect": "Kết nối",
+  "connectToADevice": "Kết nối với thiết bị",
+  "connected": "Đã kết nối",
+  "connectedToDac": "Đã kết nối với {deviceName} - Đã bật USB Bypass",
+  "connectedUsbDacs": "DAC USB đã kết nối:",
+  "connecting": "Đang kết nối...",
+  "connectionLostLeaderboard": "Mất kết nối",
+  "connectionLostLeaderboardDesc": "Bảng xếp hạng toàn cầu yêu cầu kết nối hoạt động để đồng bộ hóa số liệu thống kê của bạn và tìm nạp xếp hạng trên toàn thế giới.",
+  "consecutivePlaysTooltip": "Nghe cùng một bài hát {count} lần liên tiếp",
+  "contentRegion": "Khu vực nội dung",
+  "copyCode": "Sao chép Mã",
+  "couldNotDownloadFlac": "Không thể tải FLAC.",
+  "countSongs": "{count, plural, =1{1 bài hát} other{{count} bài hát}}",
+  "createPlaylist": "Tạo danh sách phát",
+  "creatingPlaylistWithTracks": "Đang tạo danh sách phát với {count} bài hát...",
+  "crossfade": "Crossfade",
+  "crossfadeDesc": "Chuyển tiếp mượt mà giữa các bài ({seconds} giây)",
+  "crownedChampionTitlesHeader": "DANH HIỆU QUÁN QUÂN ĐƯỢC PHONG VƯƠNG",
+  "customDevice": "Thiết bị tùy chỉnh",
+  "customSelected": "Đã chọn tùy chỉnh",
+  "customTime": "Thời gian tùy chỉnh",
+  "cyberpunk": "Cyberpunk",
+  "daily": "Hàng ngày",
+  "darkMode": "Chế độ tối",
+  "dataCleanup": "Dữ liệu & Dọn dẹp",
   "dataUsage": "Sử dụng dữ liệu",
-  "todayLabel": "Hôm nay: {size}",
+  "daysShort": "n",
+  "debugging": "Gỡ lỗi",
+  "delete": "Xóa",
+  "deleteDownloadsConfirm": "Thao tác này sẽ xóa tất cả các bài hát đã tải về trên thiết bị này cho danh sách phát này.",
+  "deleteDownloadsTitle": "Xóa các bản tải về?",
+  "deleteFileContent": "Bạn có chắc chắn muốn xóa \"{filename}\"?\\nThao tác này không thể hoàn tác.",
+  "deleteFileTitle": "Xóa tệp tin?",
+  "deletePlaylist": "Xóa danh sách phát",
+  "deletePlaylistConfirm": "Bạn có chắc chắn muốn xóa \"{name}\"?",
+  "deletePlaylistPermanentConfirm": "Bạn có chắc chắn muốn xóa danh sách phát này không? (Hành động này không thể hoàn tác)",
+  "deletePlaylistTitle": "Xóa danh sách phát?",
+  "deletePreset": "Xóa cấu hình",
+  "desertMirage": "Ảo ảnh sa mạc",
+  "developerExclusiveTooltip": "Dành riêng cho các nhà phát triển ứng dụng này",
+  "deviceNameLabel": "Thiết bị: {deviceName}",
+  "disableCanvas": "Tắt Canvas",
+  "disableRomanization": "Tắt phiên âm",
+  "disablingSharingWarning": "Tắt chia sẻ sẽ xóa vĩnh viễn mã và dữ liệu khỏi máy chủ để tiết kiệm dung lượng.",
+  "discNumber": "Số đĩa",
+  "discography": "Danh sách tác phẩm",
+  "discordRPC": "Discord Rich Presence",
+  "doYouRemember": "Bạn còn nhớ chứ?",
+  "donate": "Quyên góp",
+  "download": "Tải về",
+  "downloadAll": "Tải toàn bộ",
+  "downloadComplete": "Tải về hoàn tất",
+  "downloadCompleteNotification": "Tải về hoàn tất",
+  "downloadError": "Lỗi tải về",
+  "downloadFailed": "Tải về thất bại",
+  "downloadLocation": "Vị trí tải về",
+  "downloadPathReset": "Đường dẫn tải về đã đặt lại về mặc định.",
+  "downloadPathUpdated": "Đường dẫn tải về đã cập nhật: {path}",
+  "downloadSong": "Tải bài hát",
+  "downloadStarted": "Đã bắt đầu tải về",
+  "downloadedTo": "Đã tải vào: {path}",
+  "downloading": "Đang tải về",
+  "downloadingFlac": "Đang tải FLAC",
+  "downloadingFormat": "Đang tải {format}",
+  "downloadingUpdate": "Đang tải xuống bản cập nhật",
+  "downloads": "Tải về",
+  "dspLabel": "DSP",
+  "editMetadata": "Chỉnh sửa metadata",
+  "editNickname": "Chỉnh sửa biệt danh",
+  "editor": "Trình chỉnh sửa",
+  "emptyMailbox": "Hộp thư trống",
+  "emptyMailboxDesc": "Hành động này sẽ xóa tất cả tin nhắn vĩnhวิễn.",
+  "emptyMailboxTitle": "Xóa sạch hộp thư?",
+  "emptyPlaylist": "Danh sách phát trống",
+  "emptyPlaylistSubtitle": "Tạo danh sách phát trống mới",
+  "enableAlphabetIndexer": "Bật chỉ mục cuộn bảng chữ cái",
+  "enableAlphabetIndexerSubtitle": "Hiển thị chỉ mục thanh bên A-Z trên chế độ xem danh sách di động",
+  "enableBarVisualizer": "Bật trình trực quan dạng thanh",
+  "endlessQueue": "Hàng chờ vô tận",
+  "engineLabel": "Moteur",
+  "english": "Tiếng Anh",
+  "enterAdminAccessCode": "Vui lòng nhập mã truy cập quản trị",
+  "enterAdminCode": "Vui lòng nhập mã truy cập quản trị",
+  "enterDuration": "Nhập khoảng thời gian...",
+  "enterPresetName": "Nhập tên cấu hình (VD: Âm trầm của tôi)",
+  "enterShareCode": "Nhập mã chia sẻ 6 chữ số",
+  "eqLabel": "EQ",
+  "equalizer": "Equalizer",
+  "equipTitle": "TRANG BỊ DANH HIỆU",
+  "equipped": "ĐÃ TRANG BỊ",
+  "error": "Lỗi",
+  "errorCouldNotCreateSession": "Lỗi: Không thể tạo phiên làm việc.",
+  "errorDeleting": "Lỗi khi xóa: {error}",
+  "errorSearchingStream": "Lỗi khi tìm kiếm nguồn phát.",
+  "exclusiveMode": "Độc quyền",
+  "exclusiveModeWarning": "Cảnh báo: Chế độ độc quyền hoạt động tốt nhất nếu bạn chọn thiết bị cụ thể ở trên thay vì mặc định hệ thống.",
+  "exclusiveTitles": "ĐỘC QUYỀN",
+  "exclusiveTitlesHeader": "DANH HIỆU ĐỘC QUYỀN",
+  "exclusiveWarning": "Cảnh báo: Chế độ độc quyền hoạt động tốt nhất nếu bạn chọn thiết bị cụ thể ở trên thay vì mặc định hệ thống.",
+  "exitApp": "Thoát",
+  "expand": "Mở rộng",
+  "externalFiles": "Tệp bên ngoài",
+  "fadingAtEnd": "Hẹn giờ ngủ: Đang giảm dần ở cuối bài...",
+  "failedDisableSharing": "Không thể tắt chia sẻ.",
+  "failedEnableSharing": "Không thể bật chia sẻ. Kiểm tra kết nối.",
+  "failedFetchPlaylistInfo": "Không thể lấy thông tin danh sách phát",
+  "failedToConnectDac": "Lỗi kết nối DAC. Vui lòng kiểm tra quyền USB.",
+  "failedToGenerateCode": "Không thể tạo mã chia sẻ. Kiểm tra kết nối.",
+  "failedToSetAvatar": "Lỗi khi thiết lập mẫu ảnh đại diện",
+  "failedToUpdateMetadata": "Cập nhật metadata thất bại",
+  "favoriteTrack": "Bài hát yêu thích",
+  "fetchingCanvas": "Đang lấy Canvas...",
+  "fetchingLossless": "Đang lấy chất lượng không nén...",
+  "fetchingLosslessAudio": "Đang lấy âm thanh không nén...",
+  "fetchingMetadataSpotify": "Đang lấy dữ liệu từ Spotify...",
+  "fetchingPlaylist": "Đang lấy danh sách phát...",
+  "fetchingPlaylistInfo": "Đang lấy thông tin danh sách phát...",
+  "fetchingSharedPlaylist": "Đang lấy danh sách phát được chia sẻ...",
+  "fetchingTracksFrom": "Đang lấy các bài hát từ \"{name}\"...",
+  "fileLocation": "Vị trí tệp",
+  "fileMissingHistory": "Thiếu tệp và không có trong lịch sử.",
+  "fileName": "Tên tệp",
+  "fileSizeLabel": "Kích thước tệp",
+  "files": "Tệp tin",
+  "filters": "Bộ lọc",
+  "findingBestMatchYoutube": "Đang tìm kết quả phù hợp trên YouTube...",
+  "findingStream": "Đang tìm nguồn phát...",
+  "finishUpdate": "Hoàn tất cập nhật",
+  "finishes": "Thứ hạng",
+  "fixAll": "Sửa tất cả",
+  "flacError": "Lỗi FLAC",
+  "flacNote": "Lưu ý: FLAC chỉ hỗ trợ tải bài hát đơn. Tải danh sách phát sẽ dùng định dạng M4A.",
+  "flacSavedToDownloads": "Đã lưu FLAC vào thư mục tải về",
+  "flacUnavailable": "FLAC không khả dụng",
+  "flacUnavailableDesc": "Không có tệp FLAC, tải về thất bại. Hãy thử đổi cài đặt.",
+  "flacUnavailableNotification": "FLAC không khả dụng",
+  "fluidWave": "Sóng lỏng",
+  "folderPath": "Thư mục: {path}",
+  "folders": "Thư mục",
+  "formatLabel": "Định dạng",
+  "formatSaved": "Đã lưu định dạng!",
+  "foundExistingAccount": "Chúng tôi đã tìm thấy một tài khoản hiện có cho '{name}'.",
+  "foundResults": "Tìm thấy {songCount} bài hát, {albumCount} album, {artistCount} nghệ sĩ.",
+  "foundYoutubeResults": "Tìm thấy {count} kết quả trên YouTube",
+  "freeUpSpace": "Giải phóng không gian (Hiện tại: {size})",
+  "french": "Tiếng Pháp",
+  "fromLibraryCount": "Từ thư viện ({count})",
+  "fromLibrarySection": "Từ thư viện",
+  "fullScreenPlayerTooltip": "Trình phát toàn màn hình",
+  "galacticSpace": "Vũ trụ",
+  "gaplessPlayback": "Phát nhạc liền mạch",
+  "gaplessPlaybackDesc": "Loại bỏ khoảng lặng giữa các bài hát",
+  "general": "Chung",
+  "generatingShareCode": "Đang tạo mã chia sẻ...",
+  "genre": "Thể loại",
+  "german": "Tiếng Đức",
+  "globalLeaderboard": "Bảng xếp hạng toàn cầu",
+  "globalMailbox": "Hộp thư toàn cầu",
+  "globalRank": "Thứ hạng toàn cầu",
+  "globalRankings": "Bảng xếp hạng toàn cầu",
+  "globalRankingsDesc": "Xem những người nghe hàng đầu hàng ngày, hàng tuần và mọi thời đại!",
+  "goToArtist": "Đi tới nghệ sĩ",
+  "goToLocalLibraryToSelect": "Vào Thư viện cục bộ để chọn một thư mục.",
+  "goodAfternoon": "Chào buổi chiều",
+  "goodEvening": "Chào buổi tối",
+  "goodMorning": "Chào buổi sáng",
+  "googleAccount": "Tài khoản Google",
+  "grantAccess": "Cấp quyền truy cập",
+  "grantPermission": "Cấp quyền",
+  "hallOfFameHeader": "THÀNH TÍCH ĐẠI SẢNH DANH VỌNG",
+  "hallOfFameTitles": "ĐẠI SẢNH DANH VỌNG",
+  "hideCanvas": "Không hiển thị video Spotify Canvas, thay bằng ảnh bìa album",
+  "hideRomajiPinyin": "Không hiển thị Romaji/Pinyin dưới lời bài hát tiếng Hàn, Nhật hoặc Trung",
+  "hideTranslation": "Ẩn bản dịch",
+  "highDesc": "M4A - Âm thanh tốt hơn, cân bằng",
+  "highQuality": "Chất lượng cao (M4A)",
+  "hindi": "Tiếng Hindi",
+  "history": "Lịch sử",
+  "historySection": "Lịch sử",
+  "home": "Trang chủ",
+  "hourShort": "giờ",
+  "hoursDuration": "{count, plural, =1{1 giờ} other{{count} giờ}}",
+  "hoursShort": "g",
+  "ignoreSubfolderScan": "Bỏ qua quét thư mục con",
+  "importAdditionalPaths": "Nhập thêm đường dẫn",
+  "importChoice": "Nhập",
+  "importFailed": "Nhập thất bại: {error}",
+  "importFromGallery": "Nhập từ thư viện",
+  "importFromSpotify": "Nhập từ Spotify",
+  "importFromSpotifySubtitle": "Dán liên kết danh sách phát Spotify",
+  "importFromYoutubeMusic": "Nhập từ YouTube Music",
+  "importFromYoutubeMusicSubtitle": "Dán liên kết danh sách phát YouTube Music",
+  "importLabel": "Nhập",
+  "importLyricsFile": "Nhập tệp lời bài hát",
+  "importLyricsTooltip": "Nhập lời bài hát",
+  "importSpotifyPlaylist": "Nhập danh sách phát Spotify",
+  "importViaCode": "Nhập qua Mã",
+  "importViaCodeSubtitle": "Nhập danh sách phát được chia sẻ bởi một người bạn",
+  "importYoutubeMusicPlaylist": "Nhập danh sách phát YouTube Music",
+  "importedPlaylistName": "Đã nhập thành công \"{name}\"!",
+  "importedTracks": "Đã nhập thành công {count} bài hát!",
+  "indonesia": "Indonesia",
+  "indonesian": "Tiếng Indonesia",
+  "inputLabel": "Đầu vào",
+  "installNow": "Cài đặt ngay",
+  "integration": "Tích hợp",
+  "invalidAccessCode": "Mã truy cập không hợp lệ",
+  "invalidCode": "Mã truy cập không hợp lệ",
+  "invalidSpotifyUrl": "URL danh sách phát Spotify không hợp lệ",
+  "invalidYoutubeMusicUrl": "URL danh sách phát YouTube Music không hợp lệ",
+  "japan": "Nhật Bản",
+  "japanese": "Tiếng Nhật",
+  "joinUs": "Tham gia cùng chúng tôi",
+  "jumpBackIn": "Tiếp tục nghe",
+  "justEnjoyVibes": "Chỉ cần tận hưởng giai điệu.",
+  "korean": "Tiếng Hàn",
+  "language": "Ngôn ngữ",
+  "last30DaysLabel": "30 ngày qua: {size}",
   "last7DaysLabel": "7 ngày qua: {size}",
-  "last30DaysLabel": "30 ngày qua: {size}"
+  "later": "Để sau",
+  "library": "Thư viện",
+  "libraryData": "Dữ liệu thư viện",
+  "libraryNotLoaded": "Thư viện chưa được tải.",
+  "libraryPathReset": "Đường dẫn thư viện đã được đặt lại.",
+  "likedSongs": "Bài hát yêu thích",
+  "linkAccount": "Liên kết tài khoản",
+  "linkAccountDesc": "Đồng bộ hóa và khôi phục tiến trìnhของ bạn với Google",
+  "listenMinutesTooltip": "Nghe {minutes} phút nhạc",
+  "listeningParty": "Phòng nghe nhạc",
+  "listeningStats": "Thống kê nghe nhạc",
+  "loadingCanvas": "Đang tải Canvas...",
+  "loadingDevices": "Đang tải danh sách thiết bị...",
+  "loadingError": "Không thể tải chi tiết. Vui lòng thử lại.",
+  "loadingLyrics": "Đang tải lời bài hát...",
+  "localPlayHistorySaved": "Lịch sử phát cục bộ của bạn sẽ không bị xóa.",
+  "local_library": "Thư viện cục bộ",
+  "lockedAtmosphere": "Bị khóa khi không gian đang hoạt động",
+  "losslessDesc": "FLAC - Chất lượng không nén từ Deezer/Tidal",
+  "losslessNote": "Sẽ dùng FLAC không nén nếu có trên Deezer/Tidal. Nếu không, sẽ chuyển về M4A.",
+  "losslessQuality": "Không nén (Tự động)",
+  "lunarNewYear": "Tết Nguyên Đán",
+  "lyricsByLRCLIB": "Lời bởi LRCLIB",
+  "lyricsSaveError": "Lỗi khi lưu lời bài hát",
+  "lyricsSavedSuccess": "Đã lưu lời bài hát vào tệp .lrc",
+  "lyricsTooltip": "Lời bài hát",
+  "madeForYou": "Dành cho bạn",
+  "manualSearch": "Tìm kiếm thủ công",
+  "mergeAccountData": "Hợp nhất dữ liệu tài khoản?",
+  "metadataCacheCleared": "Đã xóa bộ nhớ đệm siêu dữ liệu và bắt đầu quét lại thư viện",
+  "metadataEditorInfo": "Bạn có thể tìm kiếm và sửa lỗi nhanh chóng trong trình chỉnh sửa Metadata.",
+  "metadataEditorNote": "Lưu ý: Sau khi trạng thái báo \"Lưu thành công\", ảnh bìa album có thể thay đổi. Đây không phải lỗi mà là vấn đề bộ nhớ đệm của ứng dụng chúng tôi đang khắc phục. Bạn có thể kiểm tra lại trong quản lý tệp.",
+  "metadataUpdated": "Đã cập nhật metadata",
+  "metadata_editor": "Trình sửa metadata",
+  "min": "phút",
+  "minShortLabel": "phút",
+  "miniPlayer": "Trình phát nhỏ",
+  "minimizeToTray": "Thu nhỏ vào khay",
+  "minimizeToTrayDescription": "Đóng ứng dụng vào khay hệ thống thay vì thoát",
+  "minsShort": "p",
+  "minsShortLabel": "phút",
+  "minuteShort": "phút",
+  "minutes": "phút",
+  "minutesDuration": "{count, plural, =1{1 phút} other{{count} phút}}",
+  "moreOptions": "Tùy chọn khác",
+  "moreOptionsTooltip": "Tùy chọn khác",
+  "mostListened": "Nghe nhiều nhất",
+  "mostListenedArtist": "Nghệ sĩ được nghe nhiều nhất",
+  "musicFolderLocation": "Vị trí thư mục nhạc",
+  "musicSearch": "Tìm kiếm nhạc",
+  "musicWillStopIn": "Nhạc sẽ dừng sau {label}",
+  "muteTooltip": "Tắt tiếng",
+  "myTopTrackOn": "Bài hát hàng đầu của tôi trên Simple Player! 🎵",
+  "nativeRate": "Tần số gốc",
+  "navigation": "Điều hướng",
+  "newPlaylist": "Danh sách phát mới",
+  "nextTrack": "Bài tiếp theo",
+  "nicknameHint": "Nhập biệt danh của bạn",
+  "nicknameLabel": "Biệt danh",
+  "nicknameRequired": "Cần có biệt danh",
+  "nicknameRequiredDesc": "Bạn cần thiết lập biệt danh tùy chỉnh trước để xem Bảng xếp hạng toàn cầu!",
+  "nicknameTakenDesc": "Biệt danh này đã được sử dụng trên toàn cầu. Vui lòng chọn một biệt danh khác.",
+  "nicknameTakenTitle": "Biệt danh đã được sử dụng",
+  "noAlbumsFound": "Không tìm thấy album",
+  "noArtistStatsYet": "Chưa có thống kê nghệ sĩ.",
+  "noArtistsFound": "Không tìm thấy nghệ sĩ.",
+  "noDownloadsFound": "Không tìm thấy tệp tải về",
+  "noFolderSelected": "Chưa chọn thư mục",
+  "noHistoryYet": "Chưa có lịch sử",
+  "noInternetConnection": "Không có kết nối Internet",
+  "noLyricsAvailable": "Không có lời bài hát",
+  "noMessages": "Không có tin nhắn nào trong hộp thư của bạn",
+  "noMusicPlaying": "Không có nhạc đang phát",
+  "noPlaylistsFound": "Không tìm thấy danh sách phát",
+  "noPlaylistsYet": "Chưa có danh sách phát nào",
+  "noRankingsYet": "Chưa có xếp hạng cho khoảng thời gian này.",
+  "noResultsFound": "Không tìm thấy kết quả",
+  "noSongPlaying": "Không có nhạc đang phát",
+  "noSongsAdded": "Chưa có bài hát nào được thêm",
+  "noSongsInFolder": "Không tìm thấy bài hát nào trong thư mục này.",
+  "noSpotifyResults": "Không tìm thấy kết quả từ Spotify.",
+  "noStatsYet": "Chưa có thống kê.",
+  "noStreamMatch": "Không tìm thấy nguồn phát phù hợp.",
+  "noSuggestionsFound": "Không tìm thấy gợi ý.",
+  "noSyncedLyricsFound": "Không tìm thấy lời bài hát khớp thời gian",
+  "noTracksFound": "Không tìm thấy bài hát nào trong danh sách phát",
+  "noUsbDacDetected": "Không tìm thấy DAC USB. Hãy kết nối thiết bị âm thanh USB và nhấn Quét.",
+  "noUsersFound": "Không tìm thấy người dùng",
+  "noYoutubeResults": "Không tìm thấy kết quả nào trên YouTube",
+  "none": "Không có",
+  "nordicAurora": "Cực quang",
+  "notRank": "Không phải hạng {rank}",
+  "notRanked": "Chưa có hạng",
+  "notRankedTop3": "KHÔNG THUỘC TOP 3",
+  "nowPlaying": "Đang phát",
+  "nowPlayingHeader": "Đang phát",
+  "nowPlayingSection": "Đang phát",
+  "offline": "Ngoại tuyến",
+  "offlineStatus": "Ngoại tuyến",
+  "ok": "OK",
+  "online": "Trực tuyến",
+  "onlyScanSelected": "Chỉ quét thư mục đã chọn (mặc định bật)",
+  "opacity": "Độ mờ",
+  "opacityLabel": "Độ mờ: {percent}%",
+  "openProfile": "Mở hồ sơ",
+  "openSourceLicenses": "Giấy phép mã nguồn mở",
+  "outputLabel": "Đầu ra",
+  "overwrite": "Ghi đè",
+  "overwriteLrcWarning": "Tệp .lrc cục bộ đã tồn tại.\\nBạn có muốn ghi đè không?",
+  "parsingPlaylistData": "Đang phân tích dữ liệu danh sách phát...",
+  "pathLabel": "Đường dẫn",
+  "permissionRequired": "Yêu cầu quyền truy cập",
+  "permissionRequiredDesc": "Quyền \"Truy cập tất cả tệp\" là cần thiết để chỉnh sửa thẻ nhạc. Điều này cho phép sửa trực tiếp tệp nhạc của bạn.",
+  "play": "Phát",
+  "playCountLabel": "{count} lượt phát",
+  "playNext": "Phát kế tiếp",
+  "playPause": "Phát / Tạm dừng",
+  "playQueue": "Phát hàng chờ",
+  "playback": "Phát nhạc",
+  "playbackError": "Lỗi phát lại",
+  "player": "Người chơi",
+  "playingFromAlbum": "Đang phát từ album",
+  "playingNext": "Sẽ phát tiếp theo",
+  "playingTrack": "Đang phát bài",
+  "playlistAlbumTracks": "Bài hát trong Playlist / Album",
+  "playlistNameHint": "Tên danh sách phát",
+  "playlistNotFound": "Không tìm thấy danh sách phát",
+  "playlistNotFoundOrError": "Không tìm thấy danh sách phát hoặc lỗi máy chủ",
+  "playlistReadyShare": "Danh sách phát của bạn đã sẵn sàng để chia sẻ!",
+  "playlists": "Danh sách phát",
+  "plays": "lượt phát",
+  "popularOnSpotify": "Phổ biến trên Spotify",
+  "portuguese": "Tiếng Bồ Đào Nha (Brazil)",
+  "preferredOutputFormat": "Định dạng đầu ra ưu tiên khi tải về",
+  "preparingDownload": "Đang chuẩn bị tải về",
+  "preparingDownloadFormat": "Đang chuẩn bị tải về ({format})...",
+  "preparingDownloadNotification": "Đang chuẩn bị tải về",
+  "presetSaved": "Đã lưu cấu hình!",
+  "preview": "XEM TRƯỚC",
+  "previousTrack": "Bài trước",
+  "profileSettings": "Cài đặt hồ sơ",
+  "profileStats": "Thống kê hồ sơ",
+  "progress": "Tiến độ",
+  "publicSharing": "Chia sẻ công khai",
+  "publicSharingDesc": "Bất kỳ ai có mã đều có thể nhập danh sách phát này.",
+  "publicSharingDisabledDesc": "Đã tắt. Bật để chia sẻ với người phát khác.",
+  "queueIsEmpty": "Hàng chờ trống",
+  "queueTooltip": "Hàng chờ",
+  "queueUpdated": "Đã cập nhật hàng chờ",
+  "quickMix": "Trộn nhanh",
+  "rainbowMode": "Chế độ cầu vồng",
+  "rainyCity": "Thành phố mưa",
+  "rank": "Thứ hạng",
+  "rankActive": "Hạng {rank} (Đang hoạt động)",
+  "rankLabel": "HẠNG {rank}",
+  "reBuffering": "Đang tải dữ liệu...",
+  "reachDailyPlaysTooltip": "Đạt {count} lượt phát trong một ngày",
+  "reachSpecificArtistTooltip": "Đạt {minutes} phút với một nghệ sĩ cụ thể",
+  "reachWeeklyPlaysTooltip": "Đạt {count} lượt phát trong một tuần",
+  "readySearchSong": "Sẵn sàng. Hãy tìm kiếm bài hát.",
+  "rebufferingFromCloud": "Đang tải lại từ đám mây...",
+  "recentlyPlayed": "Đã phát gần đây",
+  "recommendationsCount": "Gợi ý ({count})",
+  "recommendationsSection": "Gợi ý",
+  "rediscover": "Khám phá lại",
+  "refreshLabel": "Làm mới",
+  "refreshLibrary": "Làm mới thư viện",
+  "refreshList": "Làm mới danh sách",
+  "refreshLyricsTooltip": "Làm mới lời bài hát",
+  "removeAvatar": "Xóa ảnh đại diện hiện tại",
+  "removeFromPlaylist": "Xóa khỏi danh sách phát",
+  "removedFolder": "Đã xóa thư mục: {folder}",
+  "rename": "Đổi tên",
+  "renamePlaylist": "Đổi tên danh sách phát",
+  "repeats": "lượt phát lại",
+  "requiresAndroid14": "Yêu cầu Android 14+ và USB DAC",
+  "resamplingLabel": "Rééchantillonnage",
+  "reset": "Đặt lại",
+  "resetDataUsage": "Đặt lại mức sử dụng dữ liệu",
+  "resetDataUsageContent": "Bạn có chắc chắn muốn đặt lại mức sử dụng dữ liệu không? Điều này không ảnh hưởng đến nhạc đã tải xuống.",
+  "resetEverything": "Đặt lại tất cả",
+  "resetLibraryContent": "Thao tác này sẽ xóa thư mục hiện tại khỏi trình phát. Tệp tin của bạn sẽ không bị xóa.",
+  "resetLibraryPath": "Đặt lại đường dẫn thư viện",
+  "resetLibraryTitle": "Đặt lại thư viện?",
+  "resetPath": "Đặt lại đường dẫn",
+  "resetStatistics": "Đặt lại thống kê",
+  "resetStatsContent": "Thao tác này không thể hoàn tác.\\nTất cả số lượt phát và thời gian nghe sẽ bị xóa vĩnh viễn.",
+  "resetStatsTitle": "Đặt lại thống kê?",
+  "resetToAutomatic": "ĐẶT LẠI THÀNH TỰ ĐỘNG",
+  "resetToDefault": "Đặt lại mặc định",
+  "resetUsage": "Đặt lại mức sử dụng",
+  "resetsIn": "Đặt lại sau",
+  "restartContent": "Cần khởi động lại ứng dụng để áp dụng các thay đổi về thiết bị âm thanh.\\n\\nKhởi động lại ngay?",
+  "restartNow": "Khởi động lại ngay",
+  "restartRequired": "Yêu cầu khởi động lại",
+  "restoring": "Đang khôi phục",
+  "retryConnection": "Thử lại kết nối",
+  "revert": "Hoàn tác",
+  "russian": "Tiếng Nga",
+  "sakura": "Hoa anh đào",
+  "sampleRateLabel": "Tần số lấy mẫu",
+  "samplingRateLabel": "Tần số lấy mẫu",
+  "save": "Lưu",
+  "saveAsNewPreset": "Lưu thành cấu hình mới",
+  "saveChangesToFile": "Lưu thay đổi vào tệp",
+  "saveLabel": "Lưu",
+  "saveLrcPrompt": "Bạn có muốn lưu lời hiện tại thành tệp .lrc bên cạnh tệp nhạc không?",
+  "saveLyricsTooltip": "Lưu lời bài hát",
+  "savePlaylistContent": "Thao tác này sẽ tạo một danh sách phát mới từ những bài hát này.",
+  "savePlaylistTitle": "Lưu \"{title}\"?",
+  "savePreset": "Lưu cấu hình",
+  "savedAs": "Đã lưu dưới dạng \"{name}\"!",
+  "savedAsFormat": "Đã lưu dưới dạng {format}",
+  "savedTo": "Đã lưu vào \"{path}\"",
+  "saving": "Đang lưu...",
+  "scan": "Quét",
+  "scanToControlPlayback": "Quét để điều khiển phát nhạc bằng điện thoại của bạn.",
+  "scanning": "Đang quét...",
+  "scrollForLyrics": "Cuộn để xem lời bài hát",
+  "search": "Tìm kiếm",
+  "searchEngine": "Công cụ tìm kiếm",
+  "searchFailedStatus": "Tìm kiếm thất bại: {error}",
+  "searchHint": "Tìm kiếm...",
+  "searchSongs": "Tìm bài hát...",
+  "searchSongsOrAlbumsAndArtistsHint": "Tìm bài hát, album hoặc nghệ sĩ...",
+  "searchSpotify": "Tìm trên Spotify",
+  "searchSpotifyHint": "Tìm trên Spotify...",
+  "searchUsers": "Tìm kiếm người dùng...",
+  "searchYoutubeHint": "Tìm trên YouTube...",
+  "searching": "Đang tìm kiếm...",
+  "searchingEngine": "Đang tìm kiếm trên {engine} cho '{keyword}'...",
+  "searchingSpotify": "Đang tìm trên Spotify...",
+  "searchingSpotifyFor": "Đang tìm \"{keyword}\" trên Spotify...",
+  "searchingStatus": "Tìm kiếm",
+  "secondShort": "giây",
+  "secsShort": "s",
+  "seeAll": "Xem tất cả",
+  "selectDifferentFolder": "Chọn thư mục khác",
+  "selectFolder": "Chọn thư mục",
+  "selectMatch": "Chọn kết quả khớp",
+  "selectSongToEdit": "Chọn bài hát từ danh sách để chỉnh sửa",
+  "selectStreamingQuality": "Chọn chất lượng streaming",
+  "selectTrackToStart": "Chọn một bài hát để bắt đầu",
+  "selectVersion": "Chọn phiên bản",
+  "session": "Phiên làm việc: {id}",
+  "setCountryReleases": "Đặt quốc gia cho các bản phát hành và bảng xếp hạng",
+  "setCustomTimer": "Đặt thời gian hẹn tắt",
+  "settings": "Cài đặt",
+  "share": "Chia sẻ",
+  "shareCodeUsage": "Đưa mã 6 chữ số này cho bạn bè để họ nhập danh sách phát này.",
+  "sharePlaylist": "Chia sẻ danh sách phát",
+  "sharePlaylistTitle": "Chia sẻ \"{name}\"",
+  "sharedMode": "Chia sẻ",
+  "showAllTitles": "Hiển thị tất cả {count} danh hiệu",
+  "showAnimatedWaves": "Hiển thị sóng động trên thanh phát",
+  "showDebugButton": "Hiển thị nút gỡ lỗi nổi",
+  "showInFolder": "Hiển thị trong thư mục",
+  "showLess": "Thu gọn",
+  "showMore": "Xem thêm",
+  "showStatusDiscord": "Hiển thị trạng thái trên Discord",
+  "showUnlockedOnly": "Chỉ hiển thị đã mở khóa",
+  "shuffle": "Trộn nhạc",
+  "shuffleAll": "Trộn tất cả",
+  "shufflingArtist": "Đang trộn các bài hát của {artistName}...",
+  "signInWithGoogle": "Đăng nhập bằng Google",
+  "signalOutput": "Tín hiệu đầu ra",
+  "singleTracks": "Bài hát đơn",
+  "sleepTimer": "Hẹn giờ tắt",
+  "songAlreadyInPlaylist": "Bài hát đã có trong danh sách phát",
+  "songInformation": "Thông tin bài hát",
+  "songLabelUpper": "BÀI HÁT",
+  "songTitleKeyword": "Tiêu đề hoặc từ khóa",
+  "songs": "bài hát",
+  "songsCount": "{count, plural, =1{1 bài hát} other{{count} bài hát}}",
+  "songsInLibrary": "{count, plural, =1{1 bài hát} other{{count} bài hát}} trong thư viện",
+  "songsLoadedCount": "Đã tải {count} bài hát...",
+  "southKorea": "Hàn Quốc",
+  "spanish": "Tiếng Tây Ban Nha",
+  "spectrumBars": "Thanh phổ",
+  "spotify": "Spotify",
+  "standardDesc": "MP3 - Dung lượng nhỏ, tải nhanh",
+  "standardQuality": "Tiêu chuẩn (MP3)",
+  "start": "Bắt đầu",
+  "startBulkProcess": "Bắt đầu xử lý hàng loạt",
+  "startedDownloadingAll": "Đã bắt đầu tải tất cả bài hát...",
+  "stateDisabled": "Đã tắt",
+  "stateEnabled": "Đã bật",
+  "statisticsReset": "Đã đặt lại thống kê.",
+  "stats": "Thống kê",
+  "statusLabel": "Trạng thái",
+  "statusWithText": "Trạng thái: {status}",
+  "stopTimer": "Dừng hẹn giờ ({time})",
+  "streaming": "Streaming",
+  "streamingQuality": "Chất lượng streaming",
+  "success": "Thành công",
+  "superfanHeader": "THÀNH TÍCH SIÊU NGƯỜI HÂM MỘ",
+  "superfanTitles": "SIÊU NGƯỜI HÂM MỘ",
+  "supportDeveloperTooltip": "Hỗ trợ nhà phát triển để nhận danh hiệu độc quyền",
+  "switchToGridView": "Chuyển sang chế độ lưới",
+  "switchToListView": "Chuyển sang chế độ danh sách",
+  "switchingTo": "Đang chuyển sang",
+  "syncThemeAlbumArt": "Đồng bộ giao diện với ảnh bìa album",
+  "system": "Hệ thống",
+  "systemDefault": "Mặc định hệ thống",
+  "targetLanguageLyrics": "Ngôn ngữ đích để dịch lời bài hát",
+  "thai": "Tiếng Thái",
+  "tidalApiStatus": "Tidal API",
+  "timeBasedTitles": "DỰA TRÊN THỜI GIAN",
+  "timeListened": "Thời gian nghe",
+  "timeOverlordsHeader": "CHÚA TỂ THỜI GIAN",
+  "timerSetForHours": "Đã hẹn giờ sau {count} giờ",
+  "timerSetForMinutes": "Đã hẹn giờ sau {count} phút",
+  "timerSetForSeconds": "Đã hẹn giờ sau {count} giây",
+  "tintBackground": "Nhuộm màu nền và trình trực quan theo màu bài hát",
+  "title": "Tiêu đề",
+  "titleLabel": "Tiêu đề",
+  "todayLabel": "Hôm nay: {size}",
+  "toggleDebugButton": "Bật/tắt bảng điều khiển gỡ lỗi nổi",
+  "toggleDebugConsole": "Bật/tắt bảng điều khiển gỡ lỗi nổi",
+  "toggleLyrics": "Bật/Tắt Lời bài hát",
+  "top3GlobalTooltip": "Đạt Top 3 toàn cầu trong {weeks} tuần",
+  "topArtist": "Nghệ sĩ nghe nhiều",
+  "topArtistAndTrack": "Nghệ sĩ và Bài hát hàng đầu",
+  "topArtists": "Nghệ sĩ hàng đầu",
+  "topGlobalTooltip": "Đạt top {rank} toàn cầu",
+  "topListeners": "Người nghe hàng đầu",
+  "totalMinutesStat": "Tổng số phút",
+  "totalPlays": "Tổng lượt phát",
+  "trackDetails": "Chi tiết bài hát",
+  "trackNumber": "Số thứ tự",
+  "tracks": "bài",
+  "translateLabel": "Dịch",
+  "translateLyrics": "Dịch lời bài hát",
+  "translateLyricsTooltip": "Dịch lời bài hát",
+  "translationLanguage": "Ngôn ngữ dịch",
+  "turnOffTimer": "Tắt hẹn giờ",
+  "unauthorize": "Chưa ủy quyền",
+  "underDevelopment": "Tính năng này đang được phát triển",
+  "underwater": "Dưới nước",
+  "unitedKingdom": "Vương quốc Anh",
+  "unitedStates": "Hoa Kỳ",
+  "unknown": "Không rõ",
+  "unknownArtist": "Nghệ sĩ ẩn danh",
+  "unknownDevice": "Thiết bị không xác định",
+  "unlink": "Hủy liên kết",
+  "unlinkAccount": "Hủy liên kết",
+  "unlinkAccountDesc": "Thống kê của bạn sẽ vẫn còn trên thiết bị này nhưng sẽ không còn đồng bộ hóa giữa các thiết bị.",
+  "unlinkAccountQuestion": "Hủy liên kết tài khoản?",
+  "unlinkFolder": "Hủy liên kết thư mục và xóa danh sách bài hát",
+  "unlinkFolderClear": "Hủy liên kết thư mục và xóa danh sách bài hát",
+  "unlockedCountLabel": "{unlocked} / {total} Đã mở khóa",
+  "unmuteTooltip": "Bật tiếng",
+  "unsavedChanges": "Thay đổi chưa lưu",
+  "upNext": "Tiếp theo",
+  "upNextCount": "Tiếp theo ({count})",
+  "upNextSection": "Tiếp theo",
+  "updateAvailableTitle": "Có bản cập nhật mới",
+  "updateAvailableVersion": "Đã có phiên bản mới ({version}).",
+  "updateFailed": "Cập nhật thất bại: {error}",
+  "updateNow": "Cập nhật ngay",
+  "updatePrompt": "Bạn có muốn tải xuống và cài đặt ngay bây giờ không?",
+  "updatingYtDlp": "Đang cập nhật yt-dlp",
+  "usbAudioBypass": "USB Audio Bypass (Beta) - Đầu ra DAC trực tiếp cho Android 13 trở xuống",
+  "usbAudioBypassBeta": "USB Audio Bypass (Beta) - Đầu ra DAC trực tiếp cho Android 13 trở xuống",
+  "useDarkTheme": "Sử dụng giao diện tối",
+  "useMixedColors": "Sử dụng màu hỗn hợp (Ưu tiên đồng bộ)",
+  "verifiedDeveloper": "Nhà phát triển được xác minh",
+  "version": "Phiên bản",
+  "versionLabel": "Phiên bản {version}",
+  "vietnamese": "Tiếng Việt",
+  "viewQueue": "Xem hàng chờ",
+  "visualizer": "Trình trực quan",
+  "visualizerStyle": "Kiểu trình trực quan",
+  "wasapiExclusive": "Chế độ WASAPI Exclusive",
+  "weekly": "Hàng tuần",
+  "weeks": "Tuần",
+  "winter": "Mùa đông",
+  "worldRanking": "Xếp hạng thế giới",
+  "worldTopArtists": "Nghệ sĩ hàng đầu thế giới",
+  "year": "Năm",
+  "youMayLike": "Có thể bạn sẽ thích",
+  "yourPlaylists": "Danh sách phát của bạn",
+  "yourTopMix": "Top Mix của bạn",
+  "youtube": "YouTube",
+  "ytDlpUpdateAvailable": "Đã có phiên bản mới của yt-dlp."
 }

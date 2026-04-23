@@ -119,7 +119,7 @@ class SongContextMenuRegion extends ConsumerWidget {
                           width: 40,
                           height: 5,
                           decoration: BoxDecoration(
-                            color: Colors.grey[600]?.withOpacity(0.5),
+                            color: Colors.grey[600]?.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -287,7 +287,15 @@ class SongContextMenuRegion extends ConsumerWidget {
         final smartService = SmartDownloadService();
         final ytService = YoutubeDownloaderService();
         final settings = ref.read(settingsProvider);
-        final preferredFormat = settings.audioFormat; // mp3, m4a, flac
+        final isYtSource = song.sourceUrl != null && song.sourceUrl!.contains('youtube.com');
+        
+        // 🚀 FEATURE GATE: YouTube sources only support HQ (not Lossless)
+        String preferredFormat = settings.audioFormat; // mp3, m4a, flac
+        if (isYtSource && preferredFormat == 'flac') {
+          preferredFormat = 'm4a'; // Force to High Quality M4A
+          debugPrint("🚫 YouTube source: Forcing M4A instead of FLAC");
+        }
+        
         final isFlacRequested = preferredFormat == 'flac';
 
         // 🚀 INIT NOTIFICATIONS
@@ -329,7 +337,20 @@ class SongContextMenuRegion extends ConsumerWidget {
           String album = song.album;
           bool spotifyEnrichmentSucceeded = false;
 
-          final isYtSource = song.sourceUrl != null && song.sourceUrl!.contains('youtube');
+          final isYtSourceCurrent = song.sourceUrl != null && song.sourceUrl!.contains('youtube');
+
+          // --- 🚀 FEATURE GATE: If YouTube source, we MUST notify user that lossless is unavailable if they have it set ---
+          if (isYtSourceCurrent && settings.audioFormat == 'flac') {
+             if (context.mounted) {
+               showCenterNotification(context,
+                  label: AppLocalizations.of(context)!.losslessQuality,
+                  title: AppLocalizations.of(context)!.flacUnavailable,
+                  subtitle: "YouTube sources only support up to High Quality (M4A).",
+                  onlineArtUrl: song.onlineArtUrl,
+                  icon: Icons.info_outline_rounded,
+                  backgroundColor: Colors.orange.withValues(alpha: 0.85));
+             }
+          }
 
           // --- TRY SPOTIFY FIRST ---
           if (isYtSource || year == null || year.isEmpty) {

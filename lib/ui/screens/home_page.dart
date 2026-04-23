@@ -20,6 +20,7 @@ import '../../data/schemas.dart';
 // --- SERVICES ---
 // Keep for some stats/legacy if needed, or remove?
 import '../../services/hybrid_service.dart';
+import '../../services/debug_log_service.dart';
 import '../../l10n/app_localizations.dart';
 
 // --- COMPONENTS ---
@@ -82,7 +83,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (_dailyMixLoaded) return;
 
     final stats = ref.read(statsProvider).entries;
-    print("🎵 Trying to load Daily Mix - stats count: ${stats.length}");
 
     if (stats.isNotEmpty) {
       _dailyMixLoaded = true;
@@ -183,7 +183,9 @@ class _HomePageState extends ConsumerState<HomePage> {
       try {
         final song = librarySongs.firstWhere((s) => s.filePath == path);
         resolved.add(song);
-      } catch (e) {}
+      } catch (e) {
+        // Song not found in current library - expected for remote/deleted tracks
+      }
     }
     return resolved;
   }
@@ -193,30 +195,40 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (allSongs.isEmpty || statsEntries.isEmpty) return;
     if (_cachedDeepCuts.isNotEmpty) return;
 
-    final sortedStats = statsEntries.values.toList()
-      ..sort((a, b) => (b.playCount as int).compareTo(a.playCount as int));
+    // Use Future.microtask to bump this massive calculation out of the synchronous render pass!
+    Future.microtask(() {
+      if (!mounted || _cachedDeepCuts.isNotEmpty) return;
 
-    final playedStats =
-        sortedStats.where((e) => (e.playCount as int) > 0).toList();
+      final sortedStats = statsEntries.values.toList()
+        ..sort((a, b) => (b.playCount as int).compareTo(a.playCount as int));
 
-    int skipCount = 0;
-    if (playedStats.length > 50) {
-      skipCount = 20;
-    } else if (playedStats.length > 10) {
-      skipCount = 5;
-    } else {
-      return;
-    }
+      final playedStats =
+          sortedStats.where((e) => (e.playCount as int) > 0).toList();
 
-    final deepCutStats = playedStats.skip(skipCount).take(200).toList();
-    if (deepCutStats.isEmpty) return;
+      int skipCount = 0;
+      if (playedStats.length > 50) {
+        skipCount = 20;
+      } else if (playedStats.length > 10) {
+        skipCount = 5;
+      } else {
+        return;
+      }
 
-    deepCutStats.shuffle();
+      final deepCutStats = playedStats.skip(skipCount).take(200).toList();
+      if (deepCutStats.isEmpty) return;
 
-    final selectedPaths =
-        deepCutStats.take(10).map((e) => e.lastKnownPath as String).toList();
+      deepCutStats.shuffle();
 
-    _cachedDeepCuts = _resolveSongs(selectedPaths, allSongs);
+      final selectedPaths =
+          deepCutStats.take(10).map((e) => e.lastKnownPath as String).toList();
+
+      final resolved = _resolveSongs(selectedPaths, allSongs);
+      if (mounted && resolved.isNotEmpty) {
+        setState(() {
+          _cachedDeepCuts = resolved;
+        });
+      }
+    });
   }
 
   void _generateQuickMix(List<SongModel> allSongs) {
@@ -244,12 +256,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     final statsState = ref.watch(statsProvider);
     final historyEntries = ref.watch(historyProvider);
     final playlists = ref.watch(playlistProvider);
-
-    // 🚀 AUTO-RELOAD BANNER WHEN MARKET CHANGES
-    ref.listen<String>(settingsProvider.select((s) => s.spotifyMarket),
-        (previous, next) {
-      _loadNewReleases(next);
-    });
 
     final recentSongs =
         _mapHistoryToSongs(historyEntries.take(10).toList(), allSongs);
@@ -281,14 +287,22 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
     }
 
+    // 🚀 AUTO-RELOAD BANNER WHEN MARKET CHANGES
+    ref.listen<String>(settingsProvider.select((s) => s.spotifyMarket),
+        (previous, next) {
+      _loadNewReleases(next);
+    });
+
+    // 🚀 TRIGGER BACKFILL ONCE AT STARTUP
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && statsState.entries.isNotEmpty && !_isBackfilling) {
+        _backfillMetadata([...recentSongs, ...topPlayedSongs]);
+      }
+    });
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
     final accentColor = Theme.of(context).colorScheme.primary;
-
-    // 🚀 BACKFILL METADATA (Automatic Restoration)
-    // Combine lists to check both History and Stats
-    final combinedForBackfill = [...recentSongs, ...topPlayedSongs];
-    _backfillMetadata(combinedForBackfill);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -373,10 +387,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                   final dailyMixState = ref.watch(dailyMixProvider);
                   final mixes = dailyMixState.mixes;
 
-                  // DEBUG
-                  print(
-                      "🏠 HomePage: Daily Mixes - loading: ${dailyMixState.isLoading}, count: ${mixes.length}");
-
                   if (mixes.isEmpty) {
                     return const SizedBox.shrink();
                   }
@@ -445,21 +455,36 @@ class _HomePageState extends ConsumerState<HomePage> {
   // METADATA BACKFILL LOGIC
   final Set<String> _processedBackfill = {};
 
+  // 🚀 Global lock to prevent overlapping backfill floods
+  static bool _isBackfilling = false;
+  static DateTime? _rateLimitExpiry;
+
   Future<void> _backfillMetadata(List<SongModel> songs) async {
-    for (var song in songs) {
-      // If we already have metadata, skip
-      if (song.onlineArtUrl != null && song.sourceUrl != null) continue;
+    if (_isBackfilling) return;
+    
+    // 🚀 Global API Cooldown (5 Minutes Hard Lock)
+    if (_rateLimitExpiry != null) {
+      if (DateTime.now().isBefore(_rateLimitExpiry!)) {
+        return; 
+      } else {
+        _rateLimitExpiry = null;
+      }
+    }
 
-      // Generate a unique ID for tracking (using StatEntry logic for consistency)
-      // We can't use StatEntry.generateId directly if it's not imported or if we want to be generic.
-      // But we know title/artist/album are the keys.
-      final id = "${song.title}_${song.artist}_${song.album}";
+    _isBackfilling = true;
+    
+    try {
+      for (var song in songs) {
+        if (!mounted) break;
+        // If we already have metadata, skip
+        if (song.onlineArtUrl != null && song.sourceUrl != null) continue;
 
-      if (_processedBackfill.contains(id)) continue;
-      _processedBackfill.add(id);
+        // Generate a unique ID for tracking
+        final id = "${song.title}_${song.artist}_${song.album}";
 
-      // Run in background
-      Future.delayed(Duration.zero, () async {
+        if (_processedBackfill.contains(id)) continue;
+        _processedBackfill.add(id);
+
         try {
           // 1. Fetch Art
           String? artUrl = song.onlineArtUrl;
@@ -470,40 +495,45 @@ class _HomePageState extends ConsumerState<HomePage> {
           // 2. Fetch URL (Spotify Link as placeholder/source)
           String? youtubeUrl = song.sourceUrl;
           if (youtubeUrl == null || youtubeUrl.isEmpty) {
-            youtubeUrl =
-                await HybridService.getTrackLink(song.title, song.artist);
+            youtubeUrl = await HybridService.getTrackLink(song.title, song.artist);
           }
 
           if (artUrl != null || youtubeUrl != null) {
             if (mounted) {
               // A. Update Stats (if exists)
-              final statId =
-                  StatEntry.generateId(song.title, song.artist, song.album);
+              final statId = StatEntry.generateId(song.title, song.artist, song.album);
               ref.read(statsProvider.notifier).updateMetadata(statId,
                   artUrl: artUrl, youtubeUrl: youtubeUrl);
 
-              // B. Update History
+              // B. Update History strictly locally without aggressive loops
               final history = ref.read(historyProvider);
               try {
                 final entryToUpdate = history.firstWhere(
                     (e) => e.title == song.title && e.artist == song.artist);
 
                 entryToUpdate.albumArtUrl = artUrl ?? entryToUpdate.albumArtUrl;
-                entryToUpdate.youtubeUrl =
-                    youtubeUrl ?? entryToUpdate.youtubeUrl;
+                entryToUpdate.youtubeUrl = youtubeUrl ?? entryToUpdate.youtubeUrl;
 
-                ref
-                    .read(historyProvider.notifier)
-                    .updateHistoryEntry(entryToUpdate);
+                ref.read(historyProvider.notifier).updateHistoryEntry(entryToUpdate);
               } catch (e) {
                 // Not in history
               }
             }
           }
         } catch (e) {
-          print("Backfill failed for ${song.title}: $e");
+          if (e.toString().contains("rate_limit_429")) {
+            debugPrint("⚠️ Rate limited during home backfill. Cooling down for 5 mins...");
+            _rateLimitExpiry = DateTime.now().add(const Duration(minutes: 5));
+            break;
+          }
+          DebugLogService().error("Backfill failed for ${song.title}: $e");
         }
-      });
+
+        // 🚀 Add a 1000ms delay to prevent rate-limiting and UI thread starvation
+        await Future.delayed(const Duration(milliseconds: 1000));
+      }
+    } finally {
+      _isBackfilling = false;
     }
   }
 }

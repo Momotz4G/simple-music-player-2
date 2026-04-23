@@ -16,11 +16,11 @@ class _FujiPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final mountainPaint = Paint()
-      ..color = const Color(0xFF2C3E50).withOpacity(0.4) // Deep bluish-gray
+      ..color = const Color(0xFF2C3E50).withValues(alpha: 0.4) // Deep bluish-gray
       ..style = PaintingStyle.fill;
 
     final snowPaint = Paint()
-      ..color = const Color(0xFFECF0F1).withOpacity(0.6) // Off-white snow
+      ..color = const Color(0xFFECF0F1).withValues(alpha: 0.6) // Off-white snow
       ..style = PaintingStyle.fill;
 
     final double width = size.width;

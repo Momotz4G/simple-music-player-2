@@ -118,11 +118,11 @@ class _HangingLightsPainter extends CustomPainter {
 
       // Compute the glowing color
       final Color glowColor = Color.lerp(
-          baseColor.withOpacity(0.1), baseColor.withOpacity(1.0), brightness)!;
+          baseColor.withValues(alpha: 0.1), baseColor.withValues(alpha: 1.0), brightness)!;
 
       // Draw glow halo
       final glowPaint = Paint()
-        ..color = glowColor.withOpacity(0.35 * brightness)
+        ..color = glowColor.withValues(alpha: 0.35 * brightness)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
       canvas.drawCircle(Offset(bx, by + 10), 11, glowPaint);
 
@@ -145,7 +145,7 @@ class _HangingLightsPainter extends CustomPainter {
 
       // Draw a tiny specular highlight on the bulb
       final highlightPaint = Paint()
-        ..color = Colors.white.withOpacity(0.5 * brightness)
+        ..color = Colors.white.withValues(alpha: 0.5 * brightness)
         ..style = PaintingStyle.fill;
       canvas.drawOval(
         Rect.fromLTWH(bx - 4, by + 6, 5, 6),

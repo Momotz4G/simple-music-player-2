@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_discord_rpc/flutter_discord_rpc.dart' as rpc;
 import '../models/song_model.dart';
 import '../env/env.dart';
@@ -11,10 +10,10 @@ class DiscordService {
   factory DiscordService() => _instance;
   DiscordService._internal();
 
-  // Use the official "Simple Music Player" ID by default, or override with Env
-  static const String _defaultAppId = '1439993466267369492';
-  final String _applicationId =
-      Env.discordAppId.isNotEmpty ? Env.discordAppId : _defaultAppId;
+  // Use the official fallback ID only if Env is absolutely empty
+  final String _applicationId = Env.discordAppId.isNotEmpty 
+      ? Env.discordAppId 
+      : '1439993466267369492';
 
   bool _isConnected = false;
   bool _isConnecting = false;
@@ -22,6 +21,10 @@ class DiscordService {
   // CRITICAL: Static flag to ensure we NEVER initialize the native library twice.
   static bool _isLibraryInitialized = false;
 
+  // Stability Guard: Wait for 6 consecutive sightings (30 seconds)
+  // before attempting to touch the native IPC pipe.
+  static const int _requiredStability = 6;
+  int _stabilityCount = 0; 
   Timer? _monitorTimer;
 
   // Cache state for auto-sync
@@ -35,9 +38,21 @@ class DiscordService {
 
   /// Entry point: Called once when app starts
   void init() {
-    DebugLogService().info("[Discord] init() called - starting monitor");
-    // Start the infinite monitoring loop
+    DebugLogService().info("[Discord] init() called. Monitoring process...");
     _startMonitor();
+  }
+
+  Future<void> _initializeLibrary() async {
+    if (_isLibraryInitialized) return;
+    try {
+      DebugLogService()
+          .info("[Discord] Pre-Initializing with App ID: $_applicationId");
+      await rpc.FlutterDiscordRPC.initialize(_applicationId);
+      _isLibraryInitialized = true;
+      DebugLogService().info("[Discord] ✅ RPC Library Ready");
+    } catch (e) {
+      DebugLogService().error("[Discord] ❌ Library Init Failed: $e");
+    }
   }
 
   void setEnabled(bool enabled) {
@@ -46,7 +61,7 @@ class DiscordService {
       clearPresence();
     } else {
       // Try to re-sync immediately if we have data
-      if (_lastSong != null) {
+      if (_lastSong != null && _isConnected) {
         _performUpdate();
       }
     }
@@ -57,68 +72,72 @@ class DiscordService {
     _monitorTimer?.cancel();
     _monitorTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       if (!_isEnabled) return;
-
-      // If currently trying to connect, wait
       if (_isConnecting) return;
 
       // Check if Discord Process exists
       final isRunning = await _isDiscordProcessRunning();
 
-      // Ensure we mark it disconnected if Discord was forcefully closed
-      if (_isConnected && !isRunning) {
-        DebugLogService().info("[Discord] Discord process disappeared. Marking disconnected.");
-        _isConnected = false;
-        return;
-      }
-
-      // If already connected and running, do nothing
-      if (_isConnected) return;
-
       if (isRunning) {
-        DebugLogService()
-            .info("[Discord] Found Discord process. Attempting connection...");
-        await _tryConnect();
+        _stabilityCount++;
+        
+        // Ensure we don't spam the connection if we are already connected
+        if (_isConnected) return;
+
+        // --- STABILITY GUARD ---
+        // Only attempt connection after 30 seconds of stable process detection.
+        if (_stabilityCount >= _requiredStability) {
+          DebugLogService().info(
+              "[Discord] Stability achieved ($_stabilityCount). Attempting connection...");
+          await _tryConnect();
+        } else {
+          DebugLogService().info(
+              "[Discord] Found. Stability: ($_stabilityCount/$_requiredStability)");
+        }
+      } else {
+        // Reset count if Discord is not running
+        if (_stabilityCount > 0) {
+          DebugLogService().info("[Discord] Discord process not found. Resetting stability count.");
+          _stabilityCount = 0;
+        }
+
+        if (_isConnected) {
+          DebugLogService().info(
+              "[Discord] Connection lost (Process closed). Marking disconnected.");
+          _isConnected = false;
+        }
       }
     });
   }
 
   Future<void> _tryConnect() async {
+    if (_isConnecting) return;
     _isConnecting = true;
 
     try {
-      // 1. Initialize Library (ONLY ONCE PER APP LIFETIME)
+      // Ensure initialized (should be already from init)
       if (!_isLibraryInitialized) {
-        DebugLogService()
-            .info("[Discord] Initializing with App ID: $_applicationId");
-        await rpc.FlutterDiscordRPC.initialize(_applicationId);
-        _isLibraryInitialized = true;
-        DebugLogService().info("[Discord] ✅ RPC Library Initialized");
+        await _initializeLibrary();
       }
 
-      // 2. Wait a moment for Discord's IPC pipe to be ready (prevents native crash)
-      // If you just opened Discord, the pipe takes ~2-3 seconds to appear.
-      await Future.delayed(const Duration(seconds: 3));
+      // Final Buffer: Wait 10 more seconds after stability achieved
+      await Future.delayed(const Duration(seconds: 10));
 
-      // 3. Connect
-      rpc.FlutterDiscordRPC.instance.connect();
-
-      _isConnected = true;
-      DebugLogService().info("[Discord] ✅ Connected Successfully");
-
-      // 4. Sync immediately if music is playing
-      DebugLogService().info(
-          "[Discord] Checking lastSong after connect: ${_lastSong?.title ?? 'null'}");
-      if (_lastSong != null) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        DebugLogService()
-            .info("[Discord] Calling _performUpdate for: ${_lastSong!.title}");
-        _performUpdate();
+      // Connect 
+      try {
+        rpc.FlutterDiscordRPC.instance.connect();
+        _isConnected = true;
+        DebugLogService().info("[Discord] ✅ Connection Successful");
+      } catch (connErr) {
+        DebugLogService().error("[Discord] ❌ Handshake Failed: $connErr");
+        _isConnected = false;
       }
+      
+      // 🚀 RESTORED SAFETY: Do NOT sync immediately.
+      // Let the regular updatePresence() calls from the player handle it.
+      DebugLogService().info("[Discord] Handshake successful. Waiting for next player pulse.");
     } catch (e) {
       _isConnected = false;
-      // It's okay if this fails (e.g. pipe not ready yet).
-      // The timer will try again in 5 seconds.
-      DebugLogService().info("[Discord] ⚠️ Connect attempt failed: $e");
+      DebugLogService().error("[Discord] ⚠️ Global Handshake Error: $e");
     } finally {
       _isConnecting = false;
     }
@@ -127,12 +146,12 @@ class DiscordService {
   Future<bool> _isDiscordProcessRunning() async {
     if (!Platform.isWindows) return true;
     try {
-      final result =
-          await Process.run('tasklist', ['/FI', 'IMAGENAME eq Discord.exe']);
-      final output = result.stdout.toString();
-      return output.contains('Discord.exe') ||
-          output.contains('DiscordCanary.exe') ||
-          output.contains('DiscordPTB.exe');
+      final result = await Process.run('tasklist', []);
+      final output = result.stdout.toString().toLowerCase();
+      
+      return output.contains('discord.exe') ||
+             output.contains('discordcanary.exe') ||
+             output.contains('discordptb.exe');
     } catch (e) {
       return false;
     }
@@ -141,40 +160,45 @@ class DiscordService {
   void updatePresence(
       SongModel song, bool isPlaying, Duration position, Duration total,
       {String? imageUrl}) {
-    // Always cache the latest state
+    // Cache latest state
     _lastSong = song;
     _lastIsPlaying = isPlaying;
     _lastPosition = position;
     _lastTotal = total;
     _lastImageUrl = imageUrl;
 
-    // Only send if actually connected
-    if (_isConnected) {
+    // Only send if connected and enabled
+    if (_isConnected && _isEnabled) {
       _performUpdate();
     }
   }
 
   void _performUpdate() {
-    if (!_isEnabled) return;
-    if (_lastSong == null) return;
+    if (!_isEnabled || !_isConnected || _lastSong == null) return;
 
     try {
       final int startTimestamp =
           DateTime.now().millisecondsSinceEpoch - _lastPosition.inMilliseconds;
       final int endTimestamp = startTimestamp + _lastTotal.inMilliseconds;
 
+      // TRUNCATION GUARD: Discord Max 128 chars
+      final String title = _lastSong!.title.length > 128
+          ? _lastSong!.title.substring(0, 125) + "..."
+          : _lastSong!.title;
+      final String artist = _lastSong!.artist.length > 128
+          ? _lastSong!.artist.substring(0, 125) + "..."
+          : _lastSong!.artist;
+      final String album = _lastSong!.album.length > 128
+          ? _lastSong!.album.substring(0, 125) + "..."
+          : _lastSong!.album;
+
       rpc.FlutterDiscordRPC.instance.setActivity(
         activity: rpc.RPCActivity(
-          details: "${_lastSong!.title}",
-          state:
-              "by ${_lastSong!.artist}" + (_lastIsPlaying ? "" : " (Paused)"),
+          details: title,
+          state: "by $artist${_lastIsPlaying ? "" : " (Paused)"}",
           assets: rpc.RPCAssets(
             largeImage: _lastImageUrl ?? 'app_icon',
-            largeText: _lastSong!.album.isNotEmpty
-                ? _lastSong!.album
-                : 'Simple Music Player',
-            smallImage: _lastIsPlaying ? 'play' : 'pause',
-            smallText: _lastIsPlaying ? 'Playing' : 'Paused',
+            largeText: album.isNotEmpty ? album : 'Simple Music Player',
           ),
           timestamps: rpc.RPCTimestamps(
             start: _lastIsPlaying ? startTimestamp : null,
@@ -183,10 +207,8 @@ class DiscordService {
         ),
       );
     } catch (e) {
-      DebugLogService()
-          .info("[Discord] ⚠️ Connection Lost: $e. Restarting monitor...");
+      DebugLogService().error("[Discord] ⚠️ Update Failed: $e. Marking disconnected.");
       _isConnected = false;
-      // If the update fails, we assume connection lost. The timer loop will pick it up again.
     }
   }
 
@@ -195,7 +217,7 @@ class DiscordService {
     if (!_isConnected) return;
     try {
       rpc.FlutterDiscordRPC.instance.clearActivity();
-    } catch (_) {
+    } catch (e) {
       _isConnected = false;
     }
   }

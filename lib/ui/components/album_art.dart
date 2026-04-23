@@ -27,7 +27,7 @@ class AlbumArt extends StatelessWidget {
           // Keep the same shadow as your design for consistency
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(2, 2),
             ),
@@ -54,13 +54,13 @@ class AlbumArt extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            color ?? Theme.of(context).primaryColor.withOpacity(0.8),
-            (color ?? Theme.of(context).primaryColor).withOpacity(0.4),
+            color ?? Theme.of(context).primaryColor.withValues(alpha: 0.8),
+            (color ?? Theme.of(context).primaryColor).withValues(alpha: 0.4),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(2, 2),
           ),

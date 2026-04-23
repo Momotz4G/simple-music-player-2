@@ -115,7 +115,7 @@ class _LunarPainter extends CustomPainter {
 
   void _drawHongbao(Canvas canvas, double opacity) {
     final paint = Paint()
-      ..color = const Color(0xFFD00000).withOpacity(opacity) // Red
+      ..color = const Color(0xFFD00000).withValues(alpha: opacity) // Red
       ..style = PaintingStyle.fill;
 
     // Envelope body
@@ -124,7 +124,7 @@ class _LunarPainter extends CustomPainter {
 
     // Gold line/mark
     final goldPaint = Paint()
-      ..color = const Color(0xFFFFD700).withOpacity(opacity * 0.8)
+      ..color = const Color(0xFFFFD700).withValues(alpha: opacity * 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -134,7 +134,7 @@ class _LunarPainter extends CustomPainter {
 
   void _drawSparkle(Canvas canvas, double opacity) {
     final paint = Paint()
-      ..color = const Color(0xFFFFCC33).withOpacity(opacity)
+      ..color = const Color(0xFFFFCC33).withValues(alpha: opacity)
       ..style = PaintingStyle.fill;
 
     // Diamond shape for gold sparkle

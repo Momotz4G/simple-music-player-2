@@ -1,261 +1,19 @@
 {
-  "browse": "สำรวจ",
-  "search": "ค้นหา",
-  "history": "ประวัติ",
-  "stats": "สถิติ",
-  "library": "คลังเพลง",
-  "playlists": "เพลย์ลิสต์",
-  "artists": "ศิลปิน",
-  "albums": "อัลบั้ม",
-  "folders": "โฟลเดอร์",
-  "local_library": "คลังเพลงในเครื่อง",
-  "downloads": "ดาวน์โหลด",
-  "metadata_editor": "ตัวแก้ไขข้อมูลเมตา",
-  "editMetadata": "แก้ไขข้อมูลเมตา",
-  "success": "สำเร็จ",
-  "enableAlphabetIndexer": "เปิดใช้งานดัชนีการเลื่อนตามตัวอักษร",
-  "enableAlphabetIndexerSubtitle": "แสดงดัชนีแถบด้านข้าง A-Z บนมุมมองรายการบนมือถือ",
-  "metadataUpdated": "อัปเดตข้อมูลเมตาแล้ว",
-  "failedToUpdateMetadata": "ไม่สามารถอัปเดตข้อมูลเมตาได้",
-  "toggleLyrics": "สลับเนื้อเพลง",
-  "settings": "การตั้งค่า",
-  "navigation": "การนำทาง",
-  "system": "ระบบ",
-  "language": "ภาษา",
-  "english": "อังกฤษ",
-  "indonesian": "อินโดนีเซีย",
-  "korean": "เกาหลี",
-  "japanese": "ญี่ปุ่น",
-  "chinese": "จีน",
-  "spanish": "สเปน",
-  "french": "ฝรั่งเศส",
-  "german": "เยอรมัน",
-  "portuguese": "โปรตุเกส (บราซิล)",
-  "thai": "ไทย",
-  "vietnamese": "เวียดนาม",
-  "arabic": "อาหรับ",
-  "russian": "รัสเซีย",
-  "hindi": "ฮินดี",
-  "appearance": "รูปลักษณ์",
-  "atmospheres": "บรรยากาศ",
-  "none": "ไม่มี",
-  "winter": "ฤดูหนาว",
-  "autumn": "ฤดูใบไม้ร่วง",
-  "rainyCity": "เมืองฝนตก",
-  "sakura": "ซากุระ",
-  "lunarNewYear": "ตรุษจีน",
-  "cyberpunk": "ไซเบอร์พังก์",
-  "underwater": "ใต้น้ำ",
-  "nordicAurora": "แสงเหนือ",
-  "galacticSpace": "อวกาศ",
-  "desertMirage": "ภาพลวงตาในทะเลทราย",
-  "general": "ทั่วไป",
-  "darkMode": "โหมดมืด",
-  "lockedAtmosphere": "ล็อคไว้ขณะเปิดใช้งานบรรยากาศ",
-  "useDarkTheme": "ใช้ธีมมืด",
-  "syncThemeAlbumArt": "ซิงค์ธีมกับหน้าปกอัลบั้ม",
-  "tintBackground": "ย้อมสีพื้นหลังและตัวสร้างภาพตามสีเพลง",
-  "accentColor": "สีเน้น",
-  "chooseAccentColor": "เลือกสีคงที่ที่คุณชอบ",
-  "contentRegion": "ภูมิภาคเนื้อหา",
-  "setCountryReleases": "ตั้งค่าประเทศสำหรับเพลงใหม่และชาร์ต",
-  "unitedStates": "สหรัฐอเมริกา",
-  "indonesia": "อินโดนีเซีย",
-  "southKorea": "เกาหลีใต้",
-  "japan": "ญี่ปุ่น",
-  "unitedKingdom": "สหราชอาณาจักร",
-  "brazil": "บราซิล",
-  "visualizer": "ตัวสร้างภาพ (Visualizer)",
-  "enableBarVisualizer": "เปิดใช้งานตัวสร้างภาพแบบแท่ง",
-  "showAnimatedWaves": "แสดงคลื่นเคลื่อนไหวในแถบการเล่น",
-  "opacity": "ความโปร่งแสง",
-  "visualizerStyle": "สไตล์ตัวสร้างภาพ",
-  "chooseAnimationType": "เลือกประเภทแอนิเมชัน",
-  "spectrumBars": "แท่งสเปกตรัม",
-  "fluidWave": "คลื่นไหล",
-  "circularPulse": "ชีพจรวงกลม",
-  "rainbowMode": "โหมดรุ้ง",
-  "useMixedColors": "ใช้สีผสม (เน้นการซิงค์เป็นหลัก)",
-  "integration": "การรวมระบบ",
-  "discordRPC": "สถานะ Discord",
-  "showStatusDiscord": "แสดงสถานะบน Discord",
-  "tidalApiStatus": "Tidal API",
-  "online": "ออนไลน์",
-  "unauthorize": "ไม่ได้รับอนุญาต",
-  "offlineStatus": "ออฟไลน์",
-  "checkInternetConnection": "ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณ",
-  "autoClearCache": "ล้างแคชอัตโนมัติ",
-  "autoClearDisabled": "ปิดการใช้งาน",
-  "autoClearOnClose": "เมื่อปิดแอป",
-  "autoClearAfter24h": "หลังจาก 24 ชั่วโมง",
-  "autoClearAfter7d": "หลังจาก 7 วัน",
-  "autoClearEvery30m": "ทุก 30 นาที (เฉพาะตอนฟังเท่านั้น)",
-  "musicFolderLocation": "ตำแหน่งโฟลเดอร์เพลง",
-  "noFolderSelected": "ไม่ได้เลือกโฟลเดอร์",
-  "change": "เปลี่ยน",
-  "expand": "ขยาย",
-  "ignoreSubfolderScan": "ข้ามการสแกนโฟลเดอร์ย่อย",
-  "onlyScanSelected": "สแกนเฉพาะโฟลเดอร์ที่เลือก (เปิดไว้เป็นค่าเริ่มต้น)",
-  "importAdditionalPaths": "นำเข้าเส้นทางเพิ่มเติม",
-  "addFoldersScan": "เพิ่มโฟลเดอร์เพื่อสแกน",
-  "add": "เพิ่ม",
-  "singleTracks": "เพลงเดี่ยว",
-  "unsavedChanges": "ยังไม่ได้บันทึกการเปลี่ยนแปลง",
-  "playlistAlbumTracks": "เพลงในเพลย์ลิสต์ / อัลบั้ม",
-  "audioFormat": "รูปแบบเสียง",
-  "preferredOutputFormat": "รูปแบบไฟล์ดาวน์โหลดที่ต้องการ",
-  "flacNote": "หมายเหตุ: FLAC ใช้ได้เฉพาะการดาวน์โหลดเพลงเดี่ยว การดาวน์โหลดเพลย์ลิสต์จะใช้รูปแบบ M4A",
-  "downloadLocation": "ตำแหน่งที่ดาวน์โหลด",
-  "resetToDefault": "คืนค่าเริ่มต้น",
-  "changeFolder": "เปลี่ยนโฟลเดอร์",
-  "streaming": "สตรีมมิ่ง",
-  "streamingQuality": "คุณภาพสตรีมมิ่ง",
-  "standardQuality": "มาตรฐาน (MP3)",
-  "highQuality": "คุณภาพสูง (M4A)",
-  "losslessQuality": "ไร้การสูญเสีย (Auto)",
-  "standardDesc": "MP3 - ไฟล์เล็กลง โหลดเร็วขึ้น",
-  "highDesc": "M4A - เสียงดีขึ้น ประสิทธิภาพสมดุล",
-  "losslessDesc": "FLAC - คุณภาพไร้การสูญเสียจาก Deezer/Tidal",
-  "selectStreamingQuality": "เลือกคุณภาพสตรีมมิ่ง",
-  "losslessNote": "จะใช้ FLAC หากมีใน Deezer/Tidal มิฉะนั้นจะเปลี่ยนเป็น M4A",
-  "playback": "การเล่น",
-  "endlessQueue": "คิวไม่มีที่สิ้นสุด",
-  "autoAddSimilar": "เพิ่มเพลงที่คล้ายกันโดยอัตโนมัติเมื่อจบรายการ",
-  "gaplessPlayback": "การเล่นแบบไร้รอยต่อ",
-  "gaplessPlaybackDesc": "ลบความเงียบระหว่างแทร็ก",
-  "crossfade": "ครอสเฟด",
-  "crossfadeDesc": "เฟดระหว่างแทร็ก ({seconds} วินาที)",
-  "@crossfadeDesc": {
-    "placeholders": {
-      "seconds": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter24h": {
+    "description": "Option to clear cache every 24 hours"
   },
-  "disableRomanization": "ปิดการถอดเสียง (Romanization)",
-  "hideRomajiPinyin": "ไม่แสดง Romaji/Pinyin ใต้เนื้อเพลงเกาหลี ญี่ปุ่น หรือจีน",
-  "translationLanguage": "ภาษาที่ใช้แปล",
-  "targetLanguageLyrics": "ภาษาปลายทางสำหรับการแปลเนื้อเพลง",
-  "disableCanvas": "ปิดใช้งาน Canvas",
-  "hideCanvas": "ไม่แสดงวิดีโอ Spotify Canvas ให้แสดงหน้าปกแทน",
-  "wasapiExclusive": "โหมด WASAPI Exclusive",
-  "bitPerfectWindows": "เสียง Bit-perfect พร้อมอัตราสุ่มตัวอย่างอัตโนมัติ (ต้องรีสตาร์ท)",
-  "audiophileDAC": "เปิดใช้งานเมื่อเล่นผ่าน DAC ระดับ Audiophile (ต้องรีสตาร์ท)",
-  "android14BitPerfect": "Android 14+ Bit-Perfect",
-  "bypassSystemMixer": "ข้ามตัวผสมสัญญาณระบบสำหรับ USB DAC",
-  "requiresAndroid14": "ต้องใช้ Android 14+ และ USB DAC",
-  "bitPerfectEnabled": "เปิดโหมด Bit-perfect แล้ว การควบคุมระดับเสียงอาจใช้งานไม่ได้",
-  "audioOutputDevice": "อุปกรณ์เอาต์พุตเสียง",
-  "loadingDevices": "กำลังโหลดอุปกรณ์...",
-  "systemDefault": "ค่าเริ่มต้นระบบ",
-  "exclusiveWarning": "คำเตือน: โหมด Exclusive จะทำงานได้ดีที่สุดหากคุณเลือกอุปกรณ์ที่เจาะจงแทนค่าเริ่มต้นระบบ",
-  "dataCleanup": "ข้อมูลและการล้างข้อมูล",
-  "resetLibraryPath": "รีเซ็ตเส้นทางคลังเพลง",
-  "unlinkFolder": "ยกเลิกการเชื่อมต่อโฟลเดอร์และล้างรายการเพลง",
-  "resetLibraryTitle": "รีเซ็ตคลังเพลง?",
-  "resetLibraryContent": "การดำเนินการนี้จะลบโฟลเดอร์ปัจจุบันออกจากโปรแกรมเล่น ไฟล์ของคุณจะไม่ถูกลบ",
-  "resetPath": "รีเซ็ตเส้นทาง",
-  "clearStreamingCache": "ล้างแคชสตรีมมิ่ง",
-  "freeUpSpace": "เพิ่มพื้นที่ว่าง (ปัจจุบัน: {size})",
-  "resetStatistics": "รีเซ็ตสถิติ",
-  "clearPlayHistory": "ล้างประวัติการเล่นและเวลาที่ฟัง",
-  "resetStatsTitle": "รีเซ็ตสถิติ?",
-  "resetStatsContent": "การดำเนินการนี้ไม่สามารถย้อนคืนได้\\nจำนวนการเล่นและเวลาทั้งหมดจะหายไปอย่างถาวร",
-  "resetEverything": "รีเซ็ตทั้งหมด",
-  "debugging": "การแก้จุดบกพร่อง",
-  "showDebugButton": "แสดงปุ่มแก้จุดบกพร่องแบบลอย",
-  "toggleDebugButton": "เปิด/ปิด คอนโซลแก้จุดบกพร่องแบบลอย",
-  "community": "ชุมชน",
-  "donate": "บริจาค",
-  "joinUs": "เข้าร่วมกับเรา",
-  "usbAudioBypass": "USB Audio Bypass (Beta) - เอาต์พุต DAC โดยตรงสำหรับ Android 13 ลงไป",
-  "comingSoon": "เร็วๆ นี้",
-  "underDevelopment": "ฟีเจอร์นี้อยู่ระหว่างการพัฒนา",
-  "version": "เวอร์ชัน",
-  "restartRequired": "ต้องรีสตาร์ท",
-  "restartContent": "ต้องรีสตาร์ทแอปเพื่อใช้การเปลี่ยนแปลงอุปกรณ์เสียง\\n\\nรีสตาร์ทตอนนี้เลยไหม?",
-  "later": "ภายหลัง",
-  "restartNow": "รีสตาร์ทตอนนี้",
-  "applyOnRestart": "การเปลี่ยนแปลงจะมีผลเมื่อรีสตาร์ทครั้งถัดไป",
-  "autoRestartNotSupported": "ไม่รองรับการรีสตาร์ทอัตโนมัติ โปรดรีสตาร์ทด้วยตนเอง",
-  "enterAdminCode": "โปรดใส่รหัสผ่านผู้ดูแลระบบ",
-  "accessCode": "รหัสผ่าน",
-  "cancel": "ยกเลิก",
-  "access": "เข้าถึง",
-  "invalidCode": "รหัสผ่านไม่ถูกต้อง",
-  "formatSaved": "บันทึกรูปแบบแล้ว!",
-  "addedFolder": "เพิ่มโฟลเดอร์แล้ว: {folder}",
-  "removedFolder": "ลบโฟลเดอร์แล้ว: {folder}",
-  "downloadPathUpdated": "อัปเดตเส้นทางดาวน์โหลด: {path}",
-  "downloadPathReset": "รีเซ็ตเส้นทางดาวน์โหลดเป็นค่าเริ่มต้น",
-  "libraryPathReset": "รีเซ็ตเส้นทางคลังเพลงแล้ว",
-  "cacheCleared": "ล้างแคชสำเร็จ!",
-  "changesApplyRestart": "การเปลี่ยนแปลงจะมีผลเมื่อรีสตาร์ทครั้งถัดไป",
-  "changeLanguage": "เปลี่ยนภาษาแอป",
-  "unlinkFolderClear": "ยกเลิกการเชื่อมต่อโฟลเดอร์และล้างรายการเพลง",
-  "enterAdminAccessCode": "โปรดใส่รหัสผ่านผู้ดูแลระบบ",
-  "invalidAccessCode": "รหัสผ่านไม่ถูกต้อง",
-  "androidBitPerfect": "Android 14+ Bit-Perfect",
-  "customDevice": "อุปกรณ์ที่กำหนดเอง",
-  "exclusiveModeWarning": "คำเตือน: โหมด Exclusive จะทำงานได้ดีที่สุดหากคุณเลือกอุปกรณ์ที่เจาะจงแทนค่าเริ่มต้นระบบ",
-  "@freeUpSpace": {
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter7d": {
+    "description": "Option to clear cache every 7 days"
   },
-  "statisticsReset": "รีเซ็ตสถิติแล้ว",
-  "toggleDebugConsole": "เปิด/ปิด คอนโซลแก้จุดบกพร่องแบบลอย",
-  "usbAudioBypassBeta": "USB Audio Bypass (Beta) - เอาต์พุต DAC โดยตรงสำหรับ Android 13 ลงไป",
-  "connectedUsbDacs": "USB DAC ที่เชื่อมต่อ:",
-  "scanning": "กำลังสแกน...",
-  "scan": "สแกน",
-  "noUsbDacDetected": "ไม่พบ USB DAC โปรดเชื่อมต่ออุปกรณ์และกดสแกน",
-  "connected": "เชื่อมต่อแล้ว",
-  "connect": "เชื่อมต่อ",
-  "failedToConnectDac": "เชื่อมต่อ DAC ล้มเหลว โปรดตรวจสอบสิทธิ์ USB",
-  "connectedToDac": "เชื่อมต่อกับ {deviceName} แล้ว - เปิดใช้งาน USB Bypass",
-  "@connectedToDac": {
-    "placeholders": {
-      "deviceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearCache": {
+    "description": "Auto clear cache setting section"
   },
-  "changingAudioDeviceRestart": "ต้องรีสตาร์ทแอปเพื่อใช้การเปลี่ยนแปลงอุปกรณ์เสียง\\n\\nรีสตาร์ทตอนนี้เลยไหม?",
-  "translateLyrics": "แปลเนื้อเพลง",
-  "viewQueue": "ดูคิว",
-  "loadingLyrics": "กำลังโหลดเนื้อเพลง...",
-  "noLyricsAvailable": "ไม่มีเนื้อเพลง",
-  "noSyncedLyricsFound": "ไม่พบเนื้อเพลงที่ตรงจังหวะ",
-  "justEnjoyVibes": "ขอให้มีความสุขกับการฟังเพลง",
-  "scrollForLyrics": "เลื่อนเพื่อดูเนื้อเพลง",
-  "switchingTo": "กำลังสลับไปที่",
-  "metadataEditorInfo": "คุณสามารถค้นหาและแก้ไขอย่างรวดเร็วได้ในตัวแก้ไขข้อมูลเมตา",
-  "metadataEditorNote": "หมายเหตุ: หลังจากสถานะ \"บันทึกสำเร็จ\" หน้าปกอัลบั้มอาจเปลี่ยนไป นี่ไม่ใช่ข้อผิดพลาด แต่เป็นปัญหาแคชของแอปซึ่งกำลังได้รับการแก้ไข คุณสามารถตรวจสอบในตัวจัดการไฟล์ได้",
-  "close": "ปิด",
-  "permissionRequired": "ต้องขออนุญาต",
-  "permissionRequiredDesc": "ต้องได้รับอนุญาต \"เข้าถึงไฟล์ทั้งหมด\" เพื่อแก้ไขแท็ก เพื่อความสามารถในการแก้ไขไฟล์เพลงโดยตรง",
-  "grantPermission": "อนุญาต",
-  "files": "ไฟล์",
-  "editor": "ตัวแก้ไข",
-  "clearImported": "ล้างที่นำเข้า",
-  "libraryData": "ข้อมูลคลังเพลง",
-  "externalFiles": "ไฟล์ภายนอก",
-  "addFiles": "เพิ่มไฟล์",
-  "addFolder": "เพิ่มโฟลเดอร์",
-  "selectSongToEdit": "เลือกเพลงจากรายการเพื่อแก้ไข",
-  "fixAll": "แก้ไขทั้งหมด",
-  "autoTagTitle": "⚠️ ใส่แท็กอัตโนมัติให้ {sourceName}?",
-  "@autoTagTitle": {
-    "placeholders": {
-      "sourceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearDisabled": {
+    "description": "Option to disable auto clear cache"
   },
-  "autoTagContent": "การดำเนินการนี้จะค้นหาเพลงทั้งหมด {count} เพลงใน \"{sourceName}\" บน Spotify และเขียนทับแท็กโดยอัตโนมัติ\\n\\nไม่สามารถย้อนคืนได้",
+  "@autoClearOnClose": {
+    "description": "Option to clear cache when app closes"
+  },
   "@autoTagContent": {
     "placeholders": {
       "count": {
@@ -266,108 +24,72 @@
       }
     }
   },
-  "startBulkProcess": "เริ่มการทำงานแบบกลุ่ม",
-  "title": "ชื่อเพลง",
-  "artist": "ศิลปิน",
-  "album": "อัลบั้ม",
-  "genre": "แนวเพลง",
-  "year": "ปี",
-  "trackNumber": "ลำดับเพลง",
-  "discNumber": "ลำดับแผ่น",
-  "autoFixComingSoon": "แก้ไขอัตโนมัติ (Coming Soon)",
-  "manualSearch": "ค้นหาเอง",
-  "revert": "คืนค่า",
-  "saveChangesToFile": "บันทึกการเปลี่ยนแปลงลงไฟล์",
-  "searchSpotify": "ค้นหาบน Spotify",
-  "searchHint": "ค้นหา...",
-  "selectMatch": "เลือกที่ตรงกัน",
-  "upNext": "เพลงถัดไป",
-  "fetchingLossless": "กำลังดึงข้อมูลไร้การสูญเสีย...",
-  "noMusicPlaying": "ไม่มีเพลงที่เล่นอยู่",
-  "refreshList": "รีเฟรชรายการ",
-  "noDownloadsFound": "ไม่พบไฟล์ดาวน์โหลด",
-  "play": "เล่น",
-  "showInFolder": "แสดงในโฟลเดอร์",
-  "delete": "ลบ",
-  "deleteFileTitle": "ลบไฟล์?",
-  "deleteFileContent": "คุณแน่ใจไหมว่าต้องการลบ \"{filename}\"?\\nไม่สามารถย้อนคืนได้",
-  "downloadedTo": "ดาวน์โหลดไปที่: {path}",
-  "folderPath": "โฟลเดอร์: {path}",
-  "errorDeleting": "เกิดข้อผิดพลาดในการลบ: {error}",
-  "ok": "ตกลง",
-  "searchSongs": "ค้นหาเพลง...",
-  "noResultsFound": "ไม่พบผลลัพธ์",
-  "refreshLibrary": "รีเฟรชคลังเพลง",
-  "shuffleAll": "สุ่มทั้งหมด",
-  "switchToListView": "สลับเป็นมุมมองรายการ",
-  "switchToGridView": "สลับเป็นมุมมองตาราง",
-  "songsLoadedCount": "โหลดแล้ว {count} เพลง...",
-  "grantAccess": "อนุญาตการเข้าถึง",
-  "selectDifferentFolder": "เลือกโฟลเดอร์อื่น",
-  "selectFolder": "เลือกโฟลเดอร์",
-  "noSongsInFolder": "ไม่พบเพลงในโฟลเดอร์นี้",
-  "queueUpdated": "อัปเดตคิวแล้ว",
-  "playingNext": "กำลังเล่นเพลงถัดไป",
-  "addedToQueue": "เพิ่มในคิวแล้ว",
-  "playingTrack": "กำลังเล่นแทร็ก",
-  "error": "ข้อผิดพลาด",
-  "noPlaylistsFound": "ไม่พบเพลย์ลิสต์",
-  "addToPlaylist": "เพิ่มในเพลย์ลิสต์",
-  "songAlreadyInPlaylist": "เพลงนี้อยู่ในเพลย์ลิสต์แล้ว",
-  "addedToPlaylistSuccess": "เพิ่มในเพลย์ลิสต์แล้ว",
-  "alreadyInLikedSongs": "อยู่ในเพลงที่ชอบแล้ว",
-  "addedToLikedSongs": "เพิ่มในเพลงที่ชอบแล้ว",
-  "likedSongs": "เพลงที่ชอบ",
-  "preparingDownload": "กำลังเตรียมการดาวน์โหลด",
-  "fetchingMetadataSpotify": "กำลังดึงข้อมูลจาก Spotify...",
-  "preparingDownloadNotification": "กำลังเตรียมการดาวน์โหลด",
-  "downloadStarted": "เริ่มการดาวน์โหลด",
-  "downloading": "กำลังดาวน์โหลด",
-  "preparingDownloadFormat": "กำลังเตรียมการดาวน์โหลด ({format})...",
-  "searching": "กำลังค้นหา...",
-  "findingBestMatchYoutube": "กำลังหาเพลงที่ตรงกันบน YouTube...",
-  "downloadingFlac": "กำลังดาวน์โหลด FLAC",
-  "fetchingLosslessAudio": "กำลังดึงข้อมูลเสียงไร้การสูญเสีย...",
-  "downloadComplete": "ดาวน์โหลดเสร็จสิ้น",
-  "flacSavedToDownloads": "บันทึกไฟล์ FLAC ในโฟลเดอร์ดาวน์โหลดแล้ว",
-  "downloadCompleteNotification": "ดาวน์โหลดเสร็จสิ้น",
-  "flacUnavailable": "ไม่มีไฟล์ FLAC",
-  "flacUnavailableDesc": "ไม่มีไฟล์ FLAC ให้ดาวน์โหลด โปรดลองเปลี่ยนการตั้งค่า",
-  "flacUnavailableNotification": "ไม่มีไฟล์ FLAC",
-  "changeFormatInSettings": "โปรดเปลี่ยนรูปแบบไฟล์ในหน้าการตั้งค่า",
-  "flacError": "ข้อผิดพลาด FLAC",
-  "couldNotDownloadFlac": "ดาวน์โหลด FLAC ไม่ได้",
-  "downloadingFormat": "กำลังดาวน์โหลด {format}",
-  "savedAsFormat": "บันทึกเป็น {format} แล้ว",
-  "downloadFailed": "ดาวน์โหลดล้มเหลว",
-  "downloadError": "เกิดข้อผิดพลาดในการดาวน์โหลด",
-  "playNext": "เล่นคิวถัดไป",
-  "addToQueue": "เพิ่มในคิว",
-  "addToFavorite": "เพิ่มในรายการโปรด",
-  "goToArtist": "ไปที่ศิลปิน",
-  "download": "ดาวน์โหลด",
-  "noAlbumsFound": "ไม่พบอัลบั้ม",
-  "moreOptions": "ตัวเลือกเพิ่มเติม",
-  "titleLabel": "ชื่อเพลง",
-  "artistLabel": "ศิลปิน",
-  "albumLabel": "อัลบั้ม",
-  "downloadAll": "ดาวน์โหลดทั้งหมด",
-  "albumRemovedFromPlaylists": "ลบอัลบั้มออกจากเพลย์ลิสต์แล้ว",
-  "albumAddedToPlaylists": "เพิ่มอัลบั้มในเพลย์ลิสต์แล้ว",
-  "startedDownloadingAll": "เริ่มดาวน์โหลดเพลงทั้งหมดแล้ว...",
-  "playingFromAlbum": "เล่นจากอัลบั้ม",
-  "unknownArtist": "ไม่ระบุศิลปิน",
-  "songsCount": "{count, plural, =1{1 เพลง} other{{count} เพลง}}",
-  "@songsCount": {
+  "@autoTagTitle": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@automaticTitleLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@consecutivePlaysTooltip": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@creatingPlaylistWithTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "@deleteFileContent": {
     "placeholders": {
       "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@deviceNameLabel": {
+    "placeholders": {
+      "deviceName": {
         "type": "String"
       }
     }
@@ -379,9 +101,9 @@
       }
     }
   },
-  "@folderPath": {
+  "@downloadingFormat": {
     "placeholders": {
-      "path": {
+      "format": {
         "type": "String"
       }
     }
@@ -393,80 +115,6 @@
       }
     }
   },
-  "@songsLoadedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "@preparingDownloadFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@downloadingFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@savedAsFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "libraryNotLoaded": "ไม่ได้โหลดคลังเพลง",
-  "noArtistsFound": "ไม่พบศิลปิน",
-  "goToLocalLibraryToSelect": "ไปที่คลังเพลงในเครื่องเพื่อเลือกโฟลเดอร์",
-  "popularOnSpotify": "ยอดนิยมบน Spotify",
-  "songsInLibrary": "มี {count} เพลงในคลังเพลง",
-  "@songsInLibrary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "shuffle": "สุ่ม",
-  "shufflingArtist": "กำลังสุ่มเพลงของ {artistName}...",
-  "@shufflingArtist": {
-    "placeholders": {
-      "artistName": {
-        "type": "String"
-      }
-    }
-  },
-  "showMore": "แสดงเพิ่มเติม",
-  "showLess": "แสดงน้อยลง",
-  "discography": "ผลงานทั้งหมด",
-  "seeAll": "ดูทั้งหมด",
-  "newPlaylist": "เพลย์ลิสต์ใหม่",
-  "noPlaylistsYet": "ยังไม่มีเพลย์ลิสต์",
-  "createPlaylist": "สร้างเพลย์ลิสต์",
-  "emptyPlaylist": "เพลย์ลิสต์ว่างเปล่า",
-  "emptyPlaylistSubtitle": "สร้างเพลย์ลิสต์เปล่าใหม่",
-  "importFromSpotify": "นำเข้าจาก Spotify",
-  "importFromSpotifySubtitle": "วางลิงก์เพลย์ลิสต์ Spotify",
-  "importFromYoutubeMusic": "นำเข้าจาก YouTube Music",
-  "importFromYoutubeMusicSubtitle": "วางลิงก์เพลย์ลิสต์ YouTube Music",
-  "deletePlaylistPermanentConfirm": "คุณแน่ใจหรือไม่ว่าต้องการลบเพลย์ลิสต์นี้? (การดำเนินการนี้ไม่สามารถย้อนกลับได้)",
-  "publicSharing": "การแชร์แบบสาธารณะ",
-  "publicSharingDesc": "ทุกคนที่มีรหัสสามารถนำเข้าเพลย์ลิสต์นี้ได้",
-  "publicSharingDisabledDesc": "ปิดใช้งาน เปิดใช้งานเพื่อแชร์กับผู้อื่น",
-  "failedEnableSharing": "ไม่สามารถเปิดใช้งานการแชร์ได้ ตรวจสอบการเชื่อมต่อ",
-  "failedDisableSharing": "ไม่สามารถปิดใช้งานการแชร์ได้",
-  "disablingSharingWarning": "การปิดใช้งานการแชร์จะลบรหัสและข้อมูลออกจากเซิร์ฟเวอร์อย่างถาวรเพื่อประหยัดพื้นที่",
-  "invalidSpotifyUrl": "URL เพลย์ลิสต์ Spotify ไม่ถูกต้อง",
-  "invalidYoutubeMusicUrl": "ลิงก์เพลย์ลิสต์ YouTube Music ไม่ถูกต้อง",
-  "fetchingPlaylistInfo": "กำลังดึงข้อมูลเพลย์ลิสต์...",
-  "failedFetchPlaylistInfo": "ไม่สามารถดึงข้อมูลเพลย์ลิสต์ได้",
-  "fetchingTracksFrom": "กำลังดึงเพลงจาก \"{name}\"...",
   "@fetchingTracksFrom": {
     "placeholders": {
       "name": {
@@ -474,124 +122,20 @@
       }
     }
   },
-  "noTracksFound": "ไม่พบเพลงในเพลย์ลิสต์",
-  "creatingPlaylistWithTracks": "กำลังสร้างเพลย์ลิสต์ด้วยเพลง {count} เพลง...",
-  "@creatingPlaylistWithTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "importedTracks": "นำเข้าเพลง {count} เพลงสำเร็จแล้ว!",
-  "@importedTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "importFailed": "การนำเข้าล้มเหลว: {error}",
-  "@importFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "fetchingSharedPlaylist": "กำลังดึงเพลย์ลิสต์ที่แชร์...",
-  "playlistNotFoundOrError": "ไม่พบเพลย์ลิสต์หรือเกิดข้อผิดพลาดของเซิร์ฟเวอร์",
-  "parsingPlaylistData": "กำลังวิเคราะห์ข้อมูลเพลย์ลิสต์...",
-  "importedPlaylistName": "นำเข้า \"{name}\" สำเร็จแล้ว!",
-  "@importedPlaylistName": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "codeMust6Digits": "รหัสต้องมี 6 หลัก",
-  "fetchingPlaylist": "กำลังดึงเพลย์ลิสต์...",
-  "importViaCode": "นำเข้าผ่านรหัส",
-  "enterShareCode": "ป้อนรหัสแชร์ 6 หลัก",
-  "importChoice": "นำเข้า",
-  "playlistNameHint": "ชื่อเพลย์ลิสต์",
-  "importSpotifyPlaylist": "นำเข้าเพลย์ลิสต์ Spotify",
-  "importYoutubeMusicPlaylist": "นำเข้าเพลย์ลิสต์ YouTube Music",
-  "deletePlaylistTitle": "ลบเพลย์ลิสต์?",
-  "deletePlaylistConfirm": "คุณแน่ใจไหมว่าต้องการลบ \"{name}\"?",
-  "@deletePlaylistConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "playlistNotFound": "ไม่พบเพลย์ลิสต์",
-  "noSongsAdded": "ยังไม่มีเพลงที่เพิ่มไว้",
-  "deleteDownloadsTitle": "ลบไฟล์ดาวน์โหลด?",
-  "deleteDownloadsConfirm": "การดำเนินการนี้จะลบเพลงทั้งหมดที่ดาวน์โหลดไว้ในเครื่องนี้ออก",
-  "allDownloadsRemoved": "ลบไฟล์ดาวน์โหลดทั้งหมดแล้ว",
-  "rename": "เปลี่ยนชื่อ",
-  "removeFromPlaylist": "ลบออกจากเพลย์ลิสต์",
-  "renamePlaylist": "เปลี่ยนชื่อเพลย์ลิสต์",
-  "listeningStats": "สถิติการฟัง",
-  "topArtist": "ศิลปินยอดนิยม",
-  "mostListened": "ฟังบ่อยที่สุด",
-  "timeListened": "เวลาที่ฟัง",
-  "totalPlays": "จำนวนครั้งที่เล่นทั้งหมด",
-  "minutes": "นาที",
-  "tracks": "แทร็ก",
-  "songs": "เพลง",
-  "noStatsYet": "ยังไม่มีสถิติ",
-  "noArtistStatsYet": "ยังไม่มีสถิติศิลปิน",
-  "plays": "ครั้ง",
-  "min": "นาที",
-  "share": "แชร์",
-  "savedTo": "บันทึกไปที่ \"{path}\"",
-  "@savedTo": {
+  "@folderPath": {
     "placeholders": {
       "path": {
         "type": "String"
       }
     }
   },
-  "myTopTrackOn": "{header} ของฉันบน Simple Player! 🎵",
-  "@myTopTrackOn": {
+  "@foundExistingAccount": {
     "placeholders": {
-      "header": {
+      "name": {
         "type": "String"
       }
     }
   },
-  "fileMissingHistory": "ไม่พบไฟล์และไม่อยู่ในประวัติ",
-  "restoring": "กำลังกู้คืน",
-  "reBuffering": "กำลังโหลดข้อมูล...",
-  "nowPlaying": "กำลังเล่น",
-  "recentlyPlayed": "เพิ่งเล่นไป",
-  "clearHistory": "ล้างประวัติ",
-  "noHistoryYet": "ยังไม่มีประวัติ",
-  "cloud": "คลาวด์",
-  "cached": "แคชไว้",
-  "searchingStatus": "ค้นหา",
-  "findingStream": "กำลังหาแหล่งสตรีมมิ่ง...",
-  "noStreamMatch": "ไม่พบแหล่งสตรีมมิ่งที่ตรงกัน",
-  "errorSearchingStream": "เกิดข้อผิดพลาดในการค้นหาสตรีมมิ่ง",
-  "rebufferingFromCloud": "กำลังโหลดใหม่จากคลาวด์...",
-  "musicSearch": "ค้นหาเพลง",
-  "songTitleKeyword": "ชื่อเพลงหรือคำค้นหา",
-  "searchSpotifyHint": "ค้นหาบน Spotify...",
-  "readySearchSong": "พร้อมแล้ว ลองค้นหาเพลงเลย",
-  "searchingSpotifyFor": "กำลังค้นหา \"{keyword}\" บน Spotify...",
-  "@searchingSpotifyFor": {
-    "placeholders": {
-      "keyword": {
-        "type": "String"
-      }
-    }
-  },
-  "offline": "ออฟไลน์",
-  "foundResults": "พบ {songCount} เพลง, {albumCount} อัลบั้ม, {artistCount} ศิลปิน",
   "@foundResults": {
     "placeholders": {
       "songCount": {
@@ -605,76 +149,27 @@
       }
     }
   },
-  "noSpotifyResults": "ไม่พบผลลัพธ์จาก Spotify",
-  "searchFailedStatus": "ค้นหาล้มเหลว: {error}",
-  "@searchFailedStatus": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "noInternetConnection": "ไม่มีการเชื่อมต่ออินเทอร์เน็ต",
-  "checkNetworkTryAgain": "โปรดตรวจสอบเครือข่ายและลองใหม่",
-  "noSuggestionsFound": "ไม่พบข้อแนะนำ",
-  "statusWithText": "สถานะ: {status}",
-  "@statusWithText": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
-  "goodMorning": "สวัสดีตอนเช้า",
-  "goodAfternoon": "สวัสดีตอนบ่าย",
-  "goodEvening": "สวัสดีตอนเย็น",
-  "jumpBackIn": "กลับมาฟังต่อ",
-  "yourTopMix": "มิกซ์ยอดนิยมของคุณ",
-  "youMayLike": "คุณอาจจะชอบ",
-  "yourPlaylists": "เพลย์ลิสต์ของคุณ",
-  "quickMix": "มิกซ์ด่วน",
-  "madeForYou": "สร้างมาเพื่อคุณ",
-  "rediscover": "ค้นพบอีกครั้ง",
-  "doYouRemember": "คุณจำได้ไหม?",
-  "countSongs": "{count, plural, =1{1 เพลง} other{{count} เพลง}}",
-  "@countSongs": {
+  "@foundYoutubeResults": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "savePlaylistTitle": "บันทึก \"{title}\" หรือไม่?",
-  "@savePlaylistTitle": {
+  "@freeUpSpace": {
     "placeholders": {
-      "title": {
+      "size": {
         "type": "String"
       }
     }
   },
-  "savePlaylistContent": "จะสร้างเพลย์ลิสต์ใหม่จากเพลงเหล่านี้",
-  "savedAs": "บันทึกในชื่อ \"{name}\" แล้ว!",
-  "@savedAs": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "save": "บันทึก",
-  "searchSongsOrAlbumsAndArtistsHint": "ค้นหาเพลง อัลบั้ม หรือศิลปิน...",
-  "playQueue": "เล่นคิว",
-  "downloadSong": "ดาวน์โหลดเพลง",
-  "sleepTimer": "ตัวตั้งเวลาปิด",
-  "minutesDuration": "{count, plural, =1{1 นาที} other{{count} นาที}}",
-  "@minutesDuration": {
+  "@fromLibraryCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "hoursDuration": "{count, plural, =1{1 ชั่วโมง} other{{count} ชั่วโมง}}",
   "@hoursDuration": {
     "placeholders": {
       "count": {
@@ -682,14 +177,52 @@
       }
     }
   },
-  "customTime": "กำหนดเวลาเอง",
-  "turnOffTimer": "ปิดตัวตั้งเวลา",
-  "musicWillStopIn": "เพลงจะหยุดใน {label}",
-  "stopTimer": "หยุดตัวตั้งเวลา ({time})",
-  "@stopTimer": {
+  "@importFailed": {
     "placeholders": {
-      "time": {
+      "error": {
         "type": "String"
+      }
+    }
+  },
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@last30DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@last7DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@listenMinutesTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -700,73 +233,76 @@
       }
     }
   },
-  "setCustomTimer": "กำหนดเวลาปิดเอง",
-  "enterDuration": "ระบุระยะเวลา...",
-  "hourShort": "ชม.",
-  "minuteShort": "นาที",
-  "secondShort": "วิ",
-  "timerSetForHours": "ตั้งเวลาปิดไว้อีก {count} ชั่วโมง",
-  "@timerSetForHours": {
+  "@myTopTrackOn": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForMinutes": "ตั้งเวลาปิดไว้อีก {count} นาที",
-  "@timerSetForMinutes": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForSeconds": "ตั้งเวลาปิดไว้อีก {count} วินาที",
-  "@timerSetForSeconds": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "start": "เริ่ม",
-  "errorCouldNotCreateSession": "ข้อผิดพลาด: ไม่สามารถสร้างเซสชันได้",
-  "scanToControlPlayback": "สแกนเพื่อควบคุมการเล่นด้วยโทรศัพท์ของคุณ",
-  "session": "เซสชัน: {id}",
-  "@session": {
-    "placeholders": {
-      "id": {
+      "header": {
         "type": "String"
       }
     }
   },
-  "loadingCanvas": "กำลังโหลด Canvas...",
-  "searchingSpotify": "กำลังค้นหาบน Spotify...",
-  "fetchingCanvas": "กำลังดึงข้อมูล Canvas...",
-  "nowPlayingHeader": "กำลังเล่น",
-  "nowPlayingSection": "กำลังเล่น",
-  "upNextSection": "ถัดไป",
-  "recommendationsSection": "แนะนำ",
-  "fromLibrarySection": "จากคลังเพลง",
-  "queueIsEmpty": "คิวว่างเปล่า",
-  "historySection": "ประวัติ",
-  "upNextCount": "ถัดไป ({count})",
-  "@upNextCount": {
+  "@notRank": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@opacityLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@playCountLabel": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "fromLibraryCount": "จากคลังเพลง ({count})",
-  "@fromLibraryCount": {
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@rankActive": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@rankLabel": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@reachDailyPlaysTooltip": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "recommendationsCount": "แนะนำ ({count})",
+  "@reachSpecificArtistTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@reachWeeklyPlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@recommendationsCount": {
     "placeholders": {
       "count": {
@@ -774,78 +310,65 @@
       }
     }
   },
-  "noSongPlaying": "ไม่มีเพลงที่เล่นอยู่",
-  "selectTrackToStart": "เลือกเพลงเพื่อเริ่มเล่น",
-  "importLabel": "นำเข้า",
-  "saveLabel": "บันทึก",
-  "refreshLabel": "รีเฟรช",
-  "hideTranslation": "ซ่อนการแปล",
-  "translateLabel": "แปล",
-  "lyricsByLRCLIB": "เนื้อเพลงโดย LRCLIB",
-  "importLyricsFile": "นำเข้าไฟล์เนื้อเพลง",
-  "overwriteLrcWarning": "มีไฟล์ .lrc อยู่แล้วสำหรับเพลงนี้\\nคุณต้องการเขียนทับหรือไม่?",
-  "saveLrcPrompt": "คุณต้องการบันทึกเนื้อเพลงเป็นไฟล์ .lrc ไว้ข้างไฟล์เสียงหรือไม่?",
-  "overwrite": "เขียนทับ",
-  "lyricsSavedSuccess": "บันทึกเนื้อเพลงในไฟล์ .lrc แล้ว",
-  "lyricsSaveError": "เกิดข้อผิดพลาดในการบันทึกเนื้อเพลง",
-  "equalizer": "อีควอไลเซอร์",
-  "trackDetails": "รายละเอียดเพลง",
-  "audioQuality": "คุณภาพเสียง",
-  "formatLabel": "รูปแบบ",
-  "codecLabel": "ตัวแปลงสัญญาณ",
-  "bitrateLabel": "บิตเรต",
-  "sampleRateLabel": "อัตราสุ่มตัวอย่าง",
-  "bitDepthLabel": "ความลึกบิต",
-  "channelsLabel": "ช่องสัญญาณ",
-  "fileSizeLabel": "ขนาดไฟล์",
-  "fileLocation": "ที่อยู่ไฟล์",
-  "audioSource": "แหล่งเสียง",
-  "pathLabel": "เส้นทาง",
-  "inputLabel": "อินพุต",
-  "engineLabel": "เอนจิน",
-  "eqLabel": "EQ",
-  "dspLabel": "DSP",
-  "androidMixer": "Android Mixer",
-  "bypassedBitPerfect": "ข้ามขั้นตอน (Bit-Perfect)",
-  "resamplingLabel": "รีแซมพลิง",
-  "activeNoResampling": "ทำงาน (ไม่มีรีแซมพลิง)",
-  "nativeRate": "อัตราดั้งเดิม",
-  "signalOutput": "สัญญาณเอาต์พุต",
-  "outputLabel": "เอาต์พุต",
-  "samplingRateLabel": "อัตราสุ่มตัวอย่าง",
-  "bitsLabel": "บิต",
-  "statusLabel": "สถานะ",
-  "unknown": "ไม่ทราบ",
-  "unknownDevice": "ไม่พบอุปกรณ์",
-  "sharedMode": "แชร์",
-  "exclusiveMode": "เอ็กซ์คลูซีฟ",
-  "androidAudioTrack": "Android AudioTrack",
-  "songInformation": "ข้อมูลเพลง",
-  "selectVersion": "เลือกเวอร์ชัน",
-  "searchYoutubeHint": "ค้นหาบน YouTube...",
-  "androidAudioEffectsNote": "หมายเหตุ: เอฟเฟกต์เสียงมีเฉพาะในอุปกรณ์ Android",
-  "deletePreset": "ลบพรีเซ็ต",
-  "saveAsNewPreset": "บันทึกเป็นพรีเซ็ตใหม่",
-  "savePreset": "บันทึกพรีเซ็ต",
-  "enterPresetName": "ระบุชื่อพรีเซ็ต (เช่น เบสของฉัน)",
-  "presetSaved": "บันทึกพรีเซ็ตแล้ว!",
-  "miniPlayer": "มินิเพลเยอร์",
-  "listeningParty": "ปาร์ตี้ฟังเพลง",
-  "audioOutput": "เอาต์พุตเสียง",
-  "lyricsTooltip": "เนื้อเพลง",
-  "queueTooltip": "คิว",
-  "moreOptionsTooltip": "ตัวเลือกเพิ่มเติม",
-  "muteTooltip": "ปิดเสียง",
-  "unmuteTooltip": "เปิดเสียง",
-  "fullScreenPlayerTooltip": "เครื่องเล่นเต็มหน้าจอ",
-  "importLyricsTooltip": "นำเข้าเนื้อเพลง",
-  "saveLyricsTooltip": "บันทึกเนื้อเพลง",
-  "refreshLyricsTooltip": "รีเฟรชเนื้อเพลง",
-  "translateLyricsTooltip": "แปลเนื้อเพลง",
-  "sharePlaylist": "แชร์เพลย์ลิสต์",
-  "deletePlaylist": "ลบเพลย์ลิสต์",
-  "importViaCodeSubtitle": "นำเข้าเพลย์ลิสต์ที่เพื่อนแชร์",
-  "sharePlaylistTitle": "แชร์ \"{name}\"",
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingEngine": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      },
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "@sharePlaylistTitle": {
     "placeholders": {
       "name": {
@@ -853,16 +376,858 @@
       }
     }
   },
-  "generatingShareCode": "กำลังสร้างรหัสแชร์...",
-  "failedToGenerateCode": "ไม่สามารถสร้างรหัสแชร์ได้ ตรวจสอบการเชื่อมต่อ",
-  "playlistReadyShare": "เพลย์ลิสต์ของคุณพร้อมสำหรับการแชร์แล้ว!",
-  "copyCode": "คัดลอกรหัส",
+  "@showAllTitles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@switchingTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@todayLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@top3GlobalTooltip": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "@topGlobalTooltip": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@unlockedCountLabel": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@updateAvailableVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@updateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutEducationalPurpose": "แอปพลิเคชันนี้พัฒนาขึ้นเพื่อวัตถุประสงค์ส่วนบุคคลและการศึกษาเท่านั้น",
+  "aboutLicenses": "เกี่ยวกับและใบอนุญาต",
+  "aboutNotForCommercial": "ไม่ใช่เพื่อการค้า",
+  "accentColor": "สีเน้น",
+  "access": "เข้าถึง",
+  "accessCode": "รหัสผ่าน",
+  "accountDataMergeDesc": "หากคุณซิงค์ ชื่อโปรไฟล์และอวตารของคุณจะได้รับการอัปเดต แต่เวลาการฟังของอุปกรณ์ปัจจุบันจะถูกรวมเข้ากับยอดรวมบัญชีให้เรียบร้อย",
+  "accountLinked": "เชื่อมต่อบัญชีแล้ว",
+  "accountLinkedSuccessfully": "เชื่อมต่อบัญชีสำเร็จแล้ว!",
+  "achievementsUnlocked": "ปลดล็อกความสำเร็จแล้ว",
+  "activeNoResampling": "ทำงาน (ไม่มีรีแซมพลิง)",
+  "add": "เพิ่ม",
+  "addFiles": "เพิ่มไฟล์",
+  "addFolder": "เพิ่มโฟลเดอร์",
+  "addFoldersScan": "เพิ่มโฟลเดอร์เพื่อสแกน",
+  "addToFavorite": "เพิ่มในรายการโปรด",
+  "addToPlaylist": "เพิ่มในเพลย์ลิสต์",
+  "addToQueue": "เพิ่มในคิว",
+  "addedFolder": "เพิ่มโฟลเดอร์แล้ว: {folder}",
+  "addedToLikedSongs": "เพิ่มในเพลงที่ชอบแล้ว",
+  "addedToPlaylistSuccess": "เพิ่มในเพลย์ลิสต์แล้ว",
+  "addedToQueue": "เพิ่มในคิวแล้ว",
+  "album": "อัลบั้ม",
+  "albumAddedToPlaylists": "เพิ่มอัลบั้มในเพลย์ลิสต์แล้ว",
+  "albumLabel": "อัลบั้ม",
+  "albumRemovedFromPlaylists": "ลบอัลบั้มออกจากเพลย์ลิสต์แล้ว",
+  "albums": "อัลบั้ม",
+  "allDownloadsRemoved": "ลบไฟล์ดาวน์โหลดทั้งหมดแล้ว",
+  "allRightsReserved": "สงวนลิขสิทธิ์ทั้งหมด",
+  "allTime": "ตลอดกาล",
+  "alreadyInLikedSongs": "อยู่ในเพลงที่ชอบแล้ว",
+  "android14BitPerfect": "Android 14+ Bit-Perfect",
+  "androidAudioEffectsNote": "หมายเหตุ: เอฟเฟกต์เสียงมีเฉพาะในอุปกรณ์ Android",
+  "androidAudioTrack": "Android AudioTrack",
+  "androidBitPerfect": "Android 14+ Bit-Perfect",
+  "androidMixer": "Android Mixer",
+  "appearance": "รูปลักษณ์",
+  "applyOnRestart": "การเปลี่ยนแปลงจะมีผลเมื่อรีสตาร์ทครั้งถัดไป",
+  "arabic": "อาหรับ",
+  "artist": "ศิลปิน",
+  "artistLabel": "ศิลปิน",
+  "artists": "ศิลปิน",
+  "atmospheres": "บรรยากาศ",
+  "audioFormat": "รูปแบบเสียง",
+  "audioOutput": "เอาต์พุตเสียง",
+  "audioOutputDevice": "อุปกรณ์เอาต์พุตเสียง",
+  "audioQuality": "คุณภาพเสียง",
+  "audioSource": "แหล่งเสียง",
+  "audiophileDAC": "เปิดใช้งานเมื่อเล่นผ่าน DAC ระดับ Audiophile (ต้องรีสตาร์ท)",
+  "autoAddSimilar": "เพิ่มเพลงที่คล้ายกันโดยอัตโนมัติเมื่อจบรายการ",
+  "autoClearAfter24h": "หลังจาก 24 ชั่วโมง",
+  "autoClearAfter7d": "หลังจาก 7 วัน",
+  "autoClearCache": "ล้างแคชอัตโนมัติ",
+  "autoClearDisabled": "ปิดการใช้งาน",
+  "autoClearEvery30m": "ทุก 30 นาที (เฉพาะตอนฟังเท่านั้น)",
+  "autoClearOnClose": "เมื่อปิดแอป",
+  "autoFixComingSoon": "แก้ไขอัตโนมัติ (Coming Soon)",
+  "autoRestartNotSupported": "ไม่รองรับการรีสตาร์ทอัตโนมัติ โปรดรีสตาร์ทด้วยตนเอง",
+  "autoTagContent": "การดำเนินการนี้จะค้นหาเพลงทั้งหมด {count} เพลงใน \"{sourceName}\" บน Spotify และเขียนทับแท็กโดยอัตโนมัติ\\n\\nไม่สามารถย้อนคืนได้",
+  "autoTagTitle": "⚠️ ใส่แท็กอัตโนมัติให้ {sourceName}?",
+  "automatic": "อัตโนมัติ",
+  "automaticTitleLabel": "อัตโนมัติ: {title}",
+  "autumn": "ฤดูใบไม้ร่วง",
+  "avatarPickerDesc": "เลือกเทมเพลตหรือนำเข้ารูปภาพของคุณเอง",
+  "beFirstToClaim": "เป็นคนแรกที่คว้าอันดับหนึ่ง!",
+  "behavioralHeader": "ความสำเร็จด้านพฤติกรรม",
+  "behavioralTitles": "พฤติกรรม",
+  "binariesUpdateRequired": "ต้องอัปเดตไบนารี",
+  "bitDepthLabel": "ความลึกบิต",
+  "bitPerfectEnabled": "เปิดโหมด Bit-perfect แล้ว การควบคุมระดับเสียงอาจใช้งานไม่ได้",
+  "bitPerfectWindows": "เสียง Bit-perfect พร้อมอัตราสุ่มตัวอย่างอัตโนมัติ (ต้องรีสตาร์ท)",
+  "bitrateLabel": "บิตเรต",
+  "bitsLabel": "บิต",
+  "brazil": "บราซิล",
+  "browse": "สำรวจ",
+  "bypassSystemMixer": "ข้ามตัวผสมสัญญาณระบบสำหรับ USB DAC",
+  "bypassedBitPerfect": "ข้ามขั้นตอน (Bit-Perfect)",
+  "cacheCleared": "ล้างแคชสำเร็จ!",
+  "cached": "แคชไว้",
+  "cancel": "ยกเลิก",
+  "championChampionTooltip": "ครองอันดับ 1 ของโลกเป็นเวลา 5 สัปดาห์",
+  "change": "เปลี่ยน",
+  "changeFolder": "เปลี่ยนโฟลเดอร์",
+  "changeFormatInSettings": "โปรดเปลี่ยนรูปแบบไฟล์ในหน้าการตั้งค่า",
+  "changeLabel": "เปลี่ยน",
+  "changeLanguage": "เปลี่ยนภาษาแอป",
+  "changesApplyRestart": "การเปลี่ยนแปลงจะมีผลเมื่อรีสตาร์ทครั้งถัดไป",
+  "changingAudioDeviceRestart": "ต้องรีสตาร์ทแอปเพื่อใช้การเปลี่ยนแปลงอุปกรณ์เสียง\\n\\nรีสตาร์ทตอนนี้เลยไหม?",
+  "channelsLabel": "ช่องสัญญาณ",
+  "checkAgain": "ตรวจสอบอีกครั้ง",
+  "checkInternetConnection": "ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณ",
+  "checkNetworkTryAgain": "โปรดตรวจสอบเครือข่ายและลองใหม่",
+  "chinese": "จีน",
+  "chooseAccentColor": "เลือกสีคงที่ที่คุณชอบ",
+  "chooseAnimationType": "เลือกประเภทแอนิเมชัน",
+  "chooseArtist": "เลือกศิลปิน",
+  "chooseAvatar": "เลือกอวตาร",
+  "chooseYourTitle": "เลือกฉายาของคุณ",
+  "circularPulse": "ชีพจรวงกลม",
+  "clearAll": "ล้างทั้งหมด",
+  "clearHistory": "ล้างประวัติ",
+  "clearImported": "ล้างที่นำเข้า",
+  "clearMetadataCache": "ล้างแคชข้อมูลเมตาและรูปภาพ",
+  "clearPlayHistory": "ล้างประวัติการเล่นและเวลาที่ฟัง",
+  "clearStreamingCache": "ล้างแคชสตรีมมิ่ง",
+  "close": "ปิด",
+  "cloud": "คลาวด์",
   "codeCopied": "คัดลอกรหัสไปยังคลิปบอร์ดแล้ว!",
-  "shareCodeUsage": "ให้รหัส 6 หลักนี้กับเพื่อนเพื่อนำเข้าเพลย์ลิสต์นี้",
-  "filters": "ตัวกรอง",
-  "fileName": "ชื่อไฟล์",
+  "codeMust6Digits": "รหัสต้องมี 6 หลัก",
+  "codecLabel": "ตัวแปลงสัญญาณ",
+  "comingSoon": "เร็วๆ นี้",
+  "community": "ชุมชน",
+  "competitiveTitles": "การแข่งขัน",
+  "confirm": "ยืนยัน",
+  "connect": "เชื่อมต่อ",
+  "connectToADevice": "เชื่อมต่อกับอุปกรณ์",
+  "connected": "เชื่อมต่อแล้ว",
+  "connectedToDac": "เชื่อมต่อกับ {deviceName} แล้ว - เปิดใช้งาน USB Bypass",
+  "connectedUsbDacs": "USB DAC ที่เชื่อมต่อ:",
+  "connecting": "กำลังเชื่อมต่อ...",
+  "connectionLostLeaderboard": "การเชื่อมต่อขาดหาย",
+  "connectionLostLeaderboardDesc": "กระดานผู้นำระดับโลกต้องการการเชื่อมต่อที่ใช้งานอยู่เพื่อซิงค์สถิติของคุณและดึงอันดับทั่วโลก",
+  "consecutivePlaysTooltip": "ฟังเพลงเดิมซ้ำกัน {count} ครั้ง",
+  "contentRegion": "ภูมิภาคเนื้อหา",
+  "copyCode": "คัดลอกรหัส",
+  "couldNotDownloadFlac": "ดาวน์โหลด FLAC ไม่ได้",
+  "countSongs": "{count, plural, =1{1 เพลง} other{{count} เพลง}}",
+  "createPlaylist": "สร้างเพลย์ลิสต์",
+  "creatingPlaylistWithTracks": "กำลังสร้างเพลย์ลิสต์ด้วยเพลง {count} เพลง...",
+  "crossfade": "ครอสเฟด",
+  "crossfadeDesc": "เฟดระหว่างแทร็ก ({seconds} วินาที)",
+  "crownedChampionTitlesHeader": "ฉายาแชมป์เปี้ยนผู้ครองมงกุฎ",
+  "customDevice": "อุปกรณ์ที่กำหนดเอง",
+  "customSelected": "เลือกแบบกำหนดเอง",
+  "customTime": "กำหนดเวลาเอง",
+  "cyberpunk": "ไซเบอร์พังก์",
+  "daily": "รายวัน",
+  "darkMode": "โหมดมืด",
+  "dataCleanup": "ข้อมูลและการล้างข้อมูล",
   "dataUsage": "การใช้ข้อมูล",
-  "todayLabel": "วันนี้: {size}",
+  "daysShort": "ว",
+  "debugging": "การแก้จุดบกพร่อง",
+  "delete": "ลบ",
+  "deleteDownloadsConfirm": "การดำเนินการนี้จะลบเพลงทั้งหมดที่ดาวน์โหลดไว้ในเครื่องนี้ออก",
+  "deleteDownloadsTitle": "ลบไฟล์ดาวน์โหลด?",
+  "deleteFileContent": "คุณแน่ใจไหมว่าต้องการลบ \"{filename}\"?\\nไม่สามารถย้อนคืนได้",
+  "deleteFileTitle": "ลบไฟล์?",
+  "deletePlaylist": "ลบเพลย์ลิสต์",
+  "deletePlaylistConfirm": "คุณแน่ใจไหมว่าต้องการลบ \"{name}\"?",
+  "deletePlaylistPermanentConfirm": "คุณแน่ใจหรือไม่ว่าต้องการลบเพลย์ลิสต์นี้? (การดำเนินการนี้ไม่สามารถย้อนกลับได้)",
+  "deletePlaylistTitle": "ลบเพลย์ลิสต์?",
+  "deletePreset": "ลบพรีเซ็ต",
+  "desertMirage": "ภาพลวงตาในทะเลทราย",
+  "developerExclusiveTooltip": "สำหรับนักพัฒนาแอปนี้เท่านั้น",
+  "deviceNameLabel": "อุปกรณ์: {deviceName}",
+  "disableCanvas": "ปิดใช้งาน Canvas",
+  "disableRomanization": "ปิดการถอดเสียง (Romanization)",
+  "disablingSharingWarning": "การปิดใช้งานการแชร์จะลบรหัสและข้อมูลออกจากเซิร์ฟเวอร์อย่างถาวรเพื่อประหยัดพื้นที่",
+  "discNumber": "ลำดับแผ่น",
+  "discography": "ผลงานทั้งหมด",
+  "discordRPC": "สถานะ Discord",
+  "doYouRemember": "คุณจำได้ไหม?",
+  "donate": "บริจาค",
+  "download": "ดาวน์โหลด",
+  "downloadAll": "ดาวน์โหลดทั้งหมด",
+  "downloadComplete": "ดาวน์โหลดเสร็จสิ้น",
+  "downloadCompleteNotification": "ดาวน์โหลดเสร็จสิ้น",
+  "downloadError": "เกิดข้อผิดพลาดในการดาวน์โหลด",
+  "downloadFailed": "ดาวน์โหลดล้มเหลว",
+  "downloadLocation": "ตำแหน่งที่ดาวน์โหลด",
+  "downloadPathReset": "รีเซ็ตเส้นทางดาวน์โหลดเป็นค่าเริ่มต้น",
+  "downloadPathUpdated": "อัปเดตเส้นทางดาวน์โหลด: {path}",
+  "downloadSong": "ดาวน์โหลดเพลง",
+  "downloadStarted": "เริ่มการดาวน์โหลด",
+  "downloadedTo": "ดาวน์โหลดไปที่: {path}",
+  "downloading": "กำลังดาวน์โหลด",
+  "downloadingFlac": "กำลังดาวน์โหลด FLAC",
+  "downloadingFormat": "กำลังดาวน์โหลด {format}",
+  "downloadingUpdate": "กำลังดาวน์โหลดอัปเดต",
+  "downloads": "ดาวน์โหลด",
+  "dspLabel": "DSP",
+  "editMetadata": "แก้ไขข้อมูลเมตา",
+  "editNickname": "แก้ไขชื่อเล่น",
+  "editor": "ตัวแก้ไข",
+  "emptyMailbox": "ล้างกล่องจดหมาย",
+  "emptyMailboxDesc": "สิ่งนี้จะลบข้อความทั้งหมดอย่างถาวร",
+  "emptyMailboxTitle": "ล้างกล่องจดหมาย?",
+  "emptyPlaylist": "เพลย์ลิสต์ว่างเปล่า",
+  "emptyPlaylistSubtitle": "สร้างเพลย์ลิสต์เปล่าใหม่",
+  "enableAlphabetIndexer": "เปิดใช้งานดัชนีการเลื่อนตามตัวอักษร",
+  "enableAlphabetIndexerSubtitle": "แสดงดัชนีแถบด้านข้าง A-Z บนมุมมองรายการบนมือถือ",
+  "enableBarVisualizer": "เปิดใช้งานตัวสร้างภาพแบบแท่ง",
+  "endlessQueue": "คิวไม่มีที่สิ้นสุด",
+  "engineLabel": "เอนจิน",
+  "english": "อังกฤษ",
+  "enterAdminAccessCode": "โปรดใส่รหัสผ่านผู้ดูแลระบบ",
+  "enterAdminCode": "โปรดใส่รหัสผ่านผู้ดูแลระบบ",
+  "enterDuration": "ระบุระยะเวลา...",
+  "enterPresetName": "ระบุชื่อพรีเซ็ต (เช่น เบสของฉัน)",
+  "enterShareCode": "ป้อนรหัสแชร์ 6 หลัก",
+  "eqLabel": "EQ",
+  "equalizer": "อีควอไลเซอร์",
+  "equipTitle": "สวมใส่ฉายา",
+  "equipped": "สวมใส่แล้ว",
+  "error": "ข้อผิดพลาด",
+  "errorCouldNotCreateSession": "ข้อผิดพลาด: ไม่สามารถสร้างเซสชันได้",
+  "errorDeleting": "เกิดข้อผิดพลาดในการลบ: {error}",
+  "errorSearchingStream": "เกิดข้อผิดพลาดในการค้นหาสตรีมมิ่ง",
+  "exclusiveMode": "เอ็กซ์คลูซีฟ",
+  "exclusiveModeWarning": "คำเตือน: โหมด Exclusive จะทำงานได้ดีที่สุดหากคุณเลือกอุปกรณ์ที่เจาะจงแทนค่าเริ่มต้นระบบ",
+  "exclusiveTitles": "พิเศษ",
+  "exclusiveTitlesHeader": "ฉายาพิเศษ",
+  "exclusiveWarning": "คำเตือน: โหมด Exclusive จะทำงานได้ดีที่สุดหากคุณเลือกอุปกรณ์ที่เจาะจงแทนค่าเริ่มต้นระบบ",
+  "exitApp": "ออก",
+  "expand": "ขยาย",
+  "externalFiles": "ไฟล์ภายนอก",
+  "fadingAtEnd": "ตั้งเวลาปิด: กำลังค่อยๆ เบาลงที่ท้ายเพลง...",
+  "failedDisableSharing": "ไม่สามารถปิดใช้งานการแชร์ได้",
+  "failedEnableSharing": "ไม่สามารถเปิดใช้งานการแชร์ได้ ตรวจสอบการเชื่อมต่อ",
+  "failedFetchPlaylistInfo": "ไม่สามารถดึงข้อมูลเพลย์ลิสต์ได้",
+  "failedToConnectDac": "เชื่อมต่อ DAC ล้มเหลว โปรดตรวจสอบสิทธิ์ USB",
+  "failedToGenerateCode": "ไม่สามารถสร้างรหัสแชร์ได้ ตรวจสอบการเชื่อมต่อ",
+  "failedToSetAvatar": "การตั้งค่าเทมเพลตอวาตาร์ล้มเหลว",
+  "failedToUpdateMetadata": "ไม่สามารถอัปเดตข้อมูลเมตาได้",
+  "favoriteTrack": "เพลงโปรด",
+  "fetchingCanvas": "กำลังดึงข้อมูล Canvas...",
+  "fetchingLossless": "กำลังดึงข้อมูลไร้การสูญเสีย...",
+  "fetchingLosslessAudio": "กำลังดึงข้อมูลเสียงไร้การสูญเสีย...",
+  "fetchingMetadataSpotify": "กำลังดึงข้อมูลจาก Spotify...",
+  "fetchingPlaylist": "กำลังดึงเพลย์ลิสต์...",
+  "fetchingPlaylistInfo": "กำลังดึงข้อมูลเพลย์ลิสต์...",
+  "fetchingSharedPlaylist": "กำลังดึงเพลย์ลิสต์ที่แชร์...",
+  "fetchingTracksFrom": "กำลังดึงเพลงจาก \"{name}\"...",
+  "fileLocation": "ที่อยู่ไฟล์",
+  "fileMissingHistory": "ไม่พบไฟล์และไม่อยู่ในประวัติ",
+  "fileName": "ชื่อไฟล์",
+  "fileSizeLabel": "ขนาดไฟล์",
+  "files": "ไฟล์",
+  "filters": "ตัวกรอง",
+  "findingBestMatchYoutube": "กำลังหาเพลงที่ตรงกันบน YouTube...",
+  "findingStream": "กำลังหาแหล่งสตรีมมิ่ง...",
+  "finishUpdate": "เสร็จสิ้นการอัปเดต",
+  "finishes": "อันดับ",
+  "fixAll": "แก้ไขทั้งหมด",
+  "flacError": "ข้อผิดพลาด FLAC",
+  "flacNote": "หมายเหตุ: FLAC ใช้ได้เฉพาะการดาวน์โหลดเพลงเดี่ยว การดาวน์โหลดเพลย์ลิสต์จะใช้รูปแบบ M4A",
+  "flacSavedToDownloads": "บันทึกไฟล์ FLAC ในโฟลเดอร์ดาวน์โหลดแล้ว",
+  "flacUnavailable": "ไม่มีไฟล์ FLAC",
+  "flacUnavailableDesc": "ไม่มีไฟล์ FLAC ให้ดาวน์โหลด โปรดลองเปลี่ยนการตั้งค่า",
+  "flacUnavailableNotification": "ไม่มีไฟล์ FLAC",
+  "fluidWave": "คลื่นไหล",
+  "folderPath": "โฟลเดอร์: {path}",
+  "folders": "โฟลเดอร์",
+  "formatLabel": "รูปแบบ",
+  "formatSaved": "บันทึกรูปแบบแล้ว!",
+  "foundExistingAccount": "เราพบบัญชีที่มีอยู่สำหรับ '{name}'",
+  "foundResults": "พบ {songCount} เพลง, {albumCount} อัลบั้ม, {artistCount} ศิลปิน",
+  "foundYoutubeResults": "พบ {count} รายการใน YouTube",
+  "freeUpSpace": "เพิ่มพื้นที่ว่าง (ปัจจุบัน: {size})",
+  "french": "ฝรั่งเศส",
+  "fromLibraryCount": "จากคลังเพลง ({count})",
+  "fromLibrarySection": "จากคลังเพลง",
+  "fullScreenPlayerTooltip": "เครื่องเล่นเต็มหน้าจอ",
+  "galacticSpace": "อวกาศ",
+  "gaplessPlayback": "การเล่นแบบไร้รอยต่อ",
+  "gaplessPlaybackDesc": "ลบความเงียบระหว่างแทร็ก",
+  "general": "ทั่วไป",
+  "generatingShareCode": "กำลังสร้างรหัสแชร์...",
+  "genre": "แนวเพลง",
+  "german": "เยอรมัน",
+  "globalLeaderboard": "กระดานผู้นำระดับโลก",
+  "globalMailbox": "กล่องจดหมายโลก",
+  "globalRank": "อันดับโลก",
+  "globalRankings": "อันดับโลก",
+  "globalRankingsDesc": "ดูผู้ฟังอันดับต้น ๆ รายวัน รายสัปดาห์ และตลอดกาล!",
+  "goToArtist": "ไปที่ศิลปิน",
+  "goToLocalLibraryToSelect": "ไปที่คลังเพลงในเครื่องเพื่อเลือกโฟลเดอร์",
+  "goodAfternoon": "สวัสดีตอนบ่าย",
+  "goodEvening": "สวัสดีตอนเย็น",
+  "goodMorning": "สวัสดีตอนเช้า",
+  "googleAccount": "บัญชี Google",
+  "grantAccess": "อนุญาตการเข้าถึง",
+  "grantPermission": "อนุญาต",
+  "hallOfFameHeader": "ความสำเร็จในหอเกียรติยศ",
+  "hallOfFameTitles": "หอเกียรติยศ",
+  "hideCanvas": "ไม่แสดงวิดีโอ Spotify Canvas ให้แสดงหน้าปกแทน",
+  "hideRomajiPinyin": "ไม่แสดง Romaji/Pinyin ใต้เนื้อเพลงเกาหลี ญี่ปุ่น หรือจีน",
+  "hideTranslation": "ซ่อนการแปล",
+  "highDesc": "M4A - เสียงดีขึ้น ประสิทธิภาพสมดุล",
+  "highQuality": "คุณภาพสูง (M4A)",
+  "hindi": "ฮินดี",
+  "history": "ประวัติ",
+  "historySection": "ประวัติ",
+  "home": "หน้าแรก",
+  "hourShort": "ชม.",
+  "hoursDuration": "{count, plural, =1{1 ชั่วโมง} other{{count} ชั่วโมง}}",
+  "hoursShort": "ชม",
+  "ignoreSubfolderScan": "ข้ามการสแกนโฟลเดอร์ย่อย",
+  "importAdditionalPaths": "นำเข้าเส้นทางเพิ่มเติม",
+  "importChoice": "นำเข้า",
+  "importFailed": "การนำเข้าล้มเหลว: {error}",
+  "importFromGallery": "นำเข้าจากแกลเลอรี",
+  "importFromSpotify": "นำเข้าจาก Spotify",
+  "importFromSpotifySubtitle": "วางลิงก์เพลย์ลิสต์ Spotify",
+  "importFromYoutubeMusic": "นำเข้าจาก YouTube Music",
+  "importFromYoutubeMusicSubtitle": "วางลิงก์เพลย์ลิสต์ YouTube Music",
+  "importLabel": "นำเข้า",
+  "importLyricsFile": "นำเข้าไฟล์เนื้อเพลง",
+  "importLyricsTooltip": "นำเข้าเนื้อเพลง",
+  "importSpotifyPlaylist": "นำเข้าเพลย์ลิสต์ Spotify",
+  "importViaCode": "นำเข้าผ่านรหัส",
+  "importViaCodeSubtitle": "นำเข้าเพลย์ลิสต์ที่เพื่อนแชร์",
+  "importYoutubeMusicPlaylist": "นำเข้าเพลย์ลิสต์ YouTube Music",
+  "importedPlaylistName": "นำเข้า \"{name}\" สำเร็จแล้ว!",
+  "importedTracks": "นำเข้าเพลง {count} เพลงสำเร็จแล้ว!",
+  "indonesia": "อินโดนีเซีย",
+  "indonesian": "อินโดนีเซีย",
+  "inputLabel": "อินพุต",
+  "installNow": "ติดตั้งตอนนี้",
+  "integration": "การรวมระบบ",
+  "invalidAccessCode": "รหัสผ่านไม่ถูกต้อง",
+  "invalidCode": "รหัสผ่านไม่ถูกต้อง",
+  "invalidSpotifyUrl": "URL เพลย์ลิสต์ Spotify ไม่ถูกต้อง",
+  "invalidYoutubeMusicUrl": "ลิงก์เพลย์ลิสต์ YouTube Music ไม่ถูกต้อง",
+  "japan": "ญี่ปุ่น",
+  "japanese": "ญี่ปุ่น",
+  "joinUs": "เข้าร่วมกับเรา",
+  "jumpBackIn": "กลับมาฟังต่อ",
+  "justEnjoyVibes": "ขอให้มีความสุขกับการฟังเพลง",
+  "korean": "เกาหลี",
+  "language": "ภาษา",
+  "last30DaysLabel": "30 วันที่ผ่านมา: {size}",
   "last7DaysLabel": "7 วันที่ผ่านมา: {size}",
-  "last30DaysLabel": "30 วันที่ผ่านมา: {size}"
+  "later": "ภายหลัง",
+  "library": "คลังเพลง",
+  "libraryData": "ข้อมูลคลังเพลง",
+  "libraryNotLoaded": "ไม่ได้โหลดคลังเพลง",
+  "libraryPathReset": "รีเซ็ตเส้นทางคลังเพลงแล้ว",
+  "likedSongs": "เพลงที่ชอบ",
+  "linkAccount": "เชื่อมต่อบัญชี",
+  "linkAccountDesc": "ซิงค์และกู้คืนความคืบหน้าของคุณด้วย Google",
+  "listenMinutesTooltip": "ฟังเพลง {minutes} นาที",
+  "listeningParty": "ปาร์ตี้ฟังเพลง",
+  "listeningStats": "สถิติการฟัง",
+  "loadingCanvas": "กำลังโหลด Canvas...",
+  "loadingDevices": "กำลังโหลดอุปกรณ์...",
+  "loadingError": "โหลดรายละเอียดล้มเหลว โปรดลองอีกครั้ง",
+  "loadingLyrics": "กำลังโหลดเนื้อเพลง...",
+  "localPlayHistorySaved": "ประวัติการเล่นในเครื่องของคุณจะไม่ถูกลบ",
+  "local_library": "คลังเพลงในเครื่อง",
+  "lockedAtmosphere": "ล็อคไว้ขณะเปิดใช้งานบรรยากาศ",
+  "losslessDesc": "FLAC - คุณภาพไร้การสูญเสียจาก Deezer/Tidal",
+  "losslessNote": "จะใช้ FLAC หากมีใน Deezer/Tidal มิฉะนั้นจะเปลี่ยนเป็น M4A",
+  "losslessQuality": "ไร้การสูญเสีย (Auto)",
+  "lunarNewYear": "ตรุษจีน",
+  "lyricsByLRCLIB": "เนื้อเพลงโดย LRCLIB",
+  "lyricsSaveError": "เกิดข้อผิดพลาดในการบันทึกเนื้อเพลง",
+  "lyricsSavedSuccess": "บันทึกเนื้อเพลงในไฟล์ .lrc แล้ว",
+  "lyricsTooltip": "เนื้อเพลง",
+  "madeForYou": "สร้างมาเพื่อคุณ",
+  "manualSearch": "ค้นหาเอง",
+  "mergeAccountData": "รวมข้อมูลบัญชีหรือไม่?",
+  "metadataCacheCleared": "ล้างแคชข้อมูลเมตาแล้วและเริ่มการสแกนคลังเพลงใหม่",
+  "metadataEditorInfo": "คุณสามารถค้นหาและแก้ไขอย่างรวดเร็วได้ในตัวแก้ไขข้อมูลเมตา",
+  "metadataEditorNote": "หมายเหตุ: หลังจากสถานะ \"บันทึกสำเร็จ\" หน้าปกอัลบั้มอาจเปลี่ยนไป นี่ไม่ใช่ข้อผิดพลาด แต่เป็นปัญหาแคชของแอปซึ่งกำลังได้รับการแก้ไข คุณสามารถตรวจสอบในตัวจัดการไฟล์ได้",
+  "metadataUpdated": "อัปเดตข้อมูลเมตาแล้ว",
+  "metadata_editor": "ตัวแก้ไขข้อมูลเมตา",
+  "min": "นาที",
+  "minShortLabel": "นาที",
+  "miniPlayer": "มินิเพลเยอร์",
+  "minimizeToTray": "ย่อไปที่ถาด",
+  "minimizeToTrayDescription": "ปิดแอปไปที่ถาดระบบแทนการออก",
+  "minsShort": "น",
+  "minsShortLabel": "นาที",
+  "minuteShort": "นาที",
+  "minutes": "นาที",
+  "minutesDuration": "{count, plural, =1{1 นาที} other{{count} นาที}}",
+  "moreOptions": "ตัวเลือกเพิ่มเติม",
+  "moreOptionsTooltip": "ตัวเลือกเพิ่มเติม",
+  "mostListened": "ฟังบ่อยที่สุด",
+  "mostListenedArtist": "ศิลปินที่ฟังบ่อยที่สุด",
+  "musicFolderLocation": "ตำแหน่งโฟลเดอร์เพลง",
+  "musicSearch": "ค้นหาเพลง",
+  "musicWillStopIn": "เพลงจะหยุดใน {label}",
+  "muteTooltip": "ปิดเสียง",
+  "myTopTrackOn": "{header} ของฉันบน Simple Player! 🎵",
+  "nativeRate": "อัตราดั้งเดิม",
+  "navigation": "การนำทาง",
+  "newPlaylist": "เพลย์ลิสต์ใหม่",
+  "nextTrack": "เพลงถัดไป",
+  "nicknameHint": "ใส่ชื่อเล่นของคุณ",
+  "nicknameLabel": "ชื่อเล่น",
+  "nicknameRequired": "จำเป็นต้องมีชื่อเล่น",
+  "nicknameRequiredDesc": "คุณต้องตั้งชื่อเล่นของคุณก่อนเพื่อดูวิดีโอกระดานผู้นำระดับโลก!",
+  "nicknameTakenDesc": "ชื่อเล่นนี้มีการใช้งานอยู่แล้ว โปรดเลือกชื่ออื่น",
+  "nicknameTakenTitle": "ชื่อเล่นนี้ถูกนำไปใช้แล้ว",
+  "noAlbumsFound": "ไม่พบอัลบั้ม",
+  "noArtistStatsYet": "ยังไม่มีสถิติศิลปิน",
+  "noArtistsFound": "ไม่พบศิลปิน",
+  "noDownloadsFound": "ไม่พบไฟล์ดาวน์โหลด",
+  "noFolderSelected": "ไม่ได้เลือกโฟลเดอร์",
+  "noHistoryYet": "ยังไม่มีประวัติ",
+  "noInternetConnection": "ไม่มีการเชื่อมต่ออินเทอร์เน็ต",
+  "noLyricsAvailable": "ไม่มีเนื้อเพลง",
+  "noMessages": "ไม่มีข้อความในกล่องจดหมายของคุณ",
+  "noMusicPlaying": "ไม่มีเพลงที่เล่นอยู่",
+  "noPlaylistsFound": "ไม่พบเพลย์ลิสต์",
+  "noPlaylistsYet": "ยังไม่มีเพลย์ลิสต์",
+  "noRankingsYet": "ยังไม่มีการจัดอันดับสำหรับช่วงเวลานี้",
+  "noResultsFound": "ไม่พบผลลัพธ์",
+  "noSongPlaying": "ไม่มีเพลงที่เล่นอยู่",
+  "noSongsAdded": "ยังไม่มีเพลงที่เพิ่มไว้",
+  "noSongsInFolder": "ไม่พบเพลงในโฟลเดอร์นี้",
+  "noSpotifyResults": "ไม่พบผลลัพธ์จาก Spotify",
+  "noStatsYet": "ยังไม่มีสถิติ",
+  "noStreamMatch": "ไม่พบแหล่งสตรีมมิ่งที่ตรงกัน",
+  "noSuggestionsFound": "ไม่พบข้อแนะนำ",
+  "noSyncedLyricsFound": "ไม่พบเนื้อเพลงที่ตรงจังหวะ",
+  "noTracksFound": "ไม่พบเพลงในเพลย์ลิสต์",
+  "noUsbDacDetected": "ไม่พบ USB DAC โปรดเชื่อมต่ออุปกรณ์และกดสแกน",
+  "noUsersFound": "ไม่พบผู้ใช้",
+  "noYoutubeResults": "ไม่พบรายการใน YouTube",
+  "none": "ไม่มี",
+  "nordicAurora": "แสงเหนือ",
+  "notRank": "ไม่อยู่ในอันดับ {rank}",
+  "notRanked": "ยังไม่จัดอันดับ",
+  "notRankedTop3": "ไม่อยู่ใน 3 อันดับแรก",
+  "nowPlaying": "กำลังเล่น",
+  "nowPlayingHeader": "กำลังเล่น",
+  "nowPlayingSection": "กำลังเล่น",
+  "offline": "ออฟไลน์",
+  "offlineStatus": "ออฟไลน์",
+  "ok": "ตกลง",
+  "online": "ออนไลน์",
+  "onlyScanSelected": "สแกนเฉพาะโฟลเดอร์ที่เลือก (เปิดไว้เป็นค่าเริ่มต้น)",
+  "opacity": "ความโปร่งแสง",
+  "opacityLabel": "ความโปร่งใส: {percent}%",
+  "openProfile": "เปิดโปรไฟล์",
+  "openSourceLicenses": "ใบอนุญาตโอเพนซอร์ส",
+  "outputLabel": "เอาต์พุต",
+  "overwrite": "เขียนทับ",
+  "overwriteLrcWarning": "มีไฟล์ .lrc อยู่แล้วสำหรับเพลงนี้\\nคุณต้องการเขียนทับหรือไม่?",
+  "parsingPlaylistData": "กำลังวิเคราะห์ข้อมูลเพลย์ลิสต์...",
+  "pathLabel": "เส้นทาง",
+  "permissionRequired": "ต้องขออนุญาต",
+  "permissionRequiredDesc": "ต้องได้รับอนุญาต \"เข้าถึงไฟล์ทั้งหมด\" เพื่อแก้ไขแท็ก เพื่อความสามารถในการแก้ไขไฟล์เพลงโดยตรง",
+  "play": "เล่น",
+  "playCountLabel": "{count} เล่น",
+  "playNext": "เล่นคิวถัดไป",
+  "playPause": "เล่น / หยุดชั่วคราว",
+  "playQueue": "เล่นคิว",
+  "playback": "การเล่น",
+  "playbackError": "ข้อผิดพลาดในการเล่น",
+  "player": "ผู้เล่น",
+  "playingFromAlbum": "เล่นจากอัลบั้ม",
+  "playingNext": "กำลังเล่นเพลงถัดไป",
+  "playingTrack": "กำลังเล่นแทร็ก",
+  "playlistAlbumTracks": "เพลงในเพลย์ลิสต์ / อัลบั้ม",
+  "playlistNameHint": "ชื่อเพลย์ลิสต์",
+  "playlistNotFound": "ไม่พบเพลย์ลิสต์",
+  "playlistNotFoundOrError": "ไม่พบเพลย์ลิสต์หรือเกิดข้อผิดพลาดของเซิร์ฟเวอร์",
+  "playlistReadyShare": "เพลย์ลิสต์ของคุณพร้อมสำหรับการแชร์แล้ว!",
+  "playlists": "เพลย์ลิสต์",
+  "plays": "ครั้ง",
+  "popularOnSpotify": "ยอดนิยมบน Spotify",
+  "portuguese": "โปรตุเกส (บราซิล)",
+  "preferredOutputFormat": "รูปแบบไฟล์ดาวน์โหลดที่ต้องการ",
+  "preparingDownload": "กำลังเตรียมการดาวน์โหลด",
+  "preparingDownloadFormat": "กำลังเตรียมการดาวน์โหลด ({format})...",
+  "preparingDownloadNotification": "กำลังเตรียมการดาวน์โหลด",
+  "presetSaved": "บันทึกพรีเซ็ตแล้ว!",
+  "preview": "ตัวอย่าง",
+  "previousTrack": "เพลงก่อนหน้า",
+  "profileSettings": "การตั้งค่าโปรไฟล์",
+  "profileStats": "สถิติโปรไฟล์",
+  "progress": "ความคืบหน้า",
+  "publicSharing": "การแชร์แบบสาธารณะ",
+  "publicSharingDesc": "ทุกคนที่มีรหัสสามารถนำเข้าเพลย์ลิสต์นี้ได้",
+  "publicSharingDisabledDesc": "ปิดใช้งาน เปิดใช้งานเพื่อแชร์กับผู้อื่น",
+  "queueIsEmpty": "คิวว่างเปล่า",
+  "queueTooltip": "คิว",
+  "queueUpdated": "อัปเดตคิวแล้ว",
+  "quickMix": "มิกซ์ด่วน",
+  "rainbowMode": "โหมดรุ้ง",
+  "rainyCity": "เมืองฝนตก",
+  "rank": "อันดับ",
+  "rankActive": "อันดับ {rank} (กำลังใช้งาน)",
+  "rankLabel": "อันดับ {rank}",
+  "reBuffering": "กำลังโหลดข้อมูล...",
+  "reachDailyPlaysTooltip": "ฟังครบ {count} ครั้งในหนึ่งวัน",
+  "reachSpecificArtistTooltip": "ฟังศิลปินคนนี้ครบ {minutes} นาที",
+  "reachWeeklyPlaysTooltip": "ฟังครบ {count} ครั้งในหนึ่งสัปดาห์",
+  "readySearchSong": "พร้อมแล้ว ลองค้นหาเพลงเลย",
+  "rebufferingFromCloud": "กำลังโหลดใหม่จากคลาวด์...",
+  "recentlyPlayed": "เพิ่งเล่นไป",
+  "recommendationsCount": "แนะนำ ({count})",
+  "recommendationsSection": "แนะนำ",
+  "rediscover": "ค้นพบอีกครั้ง",
+  "refreshLabel": "รีเฟรช",
+  "refreshLibrary": "รีเฟรชคลังเพลง",
+  "refreshList": "รีเฟรชรายการ",
+  "refreshLyricsTooltip": "รีเฟรชเนื้อเพลง",
+  "removeAvatar": "ลบอวตารปัจจุบัน",
+  "removeFromPlaylist": "ลบออกจากเพลย์ลิสต์",
+  "removedFolder": "ลบโฟลเดอร์แล้ว: {folder}",
+  "rename": "เปลี่ยนชื่อ",
+  "renamePlaylist": "เปลี่ยนชื่อเพลย์ลิสต์",
+  "repeats": "ครั้งที่ฟังซ้ำ",
+  "requiresAndroid14": "ต้องใช้ Android 14+ และ USB DAC",
+  "resamplingLabel": "รีแซมพลิง",
+  "reset": "รีเซ็ต",
+  "resetDataUsage": "รีเซ็ตการใช้ข้อมูล",
+  "resetDataUsageContent": "คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ตการใช้ข้อมูล? การดำเนินการนี้จะไม่ส่งผลต่อเพลงที่ดาวน์โหลด",
+  "resetEverything": "รีเซ็ตทั้งหมด",
+  "resetLibraryContent": "การดำเนินการนี้จะลบโฟลเดอร์ปัจจุบันออกจากโปรแกรมเล่น ไฟล์ของคุณจะไม่ถูกลบ",
+  "resetLibraryPath": "รีเซ็ตเส้นทางคลังเพลง",
+  "resetLibraryTitle": "รีเซ็ตคลังเพลง?",
+  "resetPath": "รีเซ็ตเส้นทาง",
+  "resetStatistics": "รีเซ็ตสถิติ",
+  "resetStatsContent": "การดำเนินการนี้ไม่สามารถย้อนคืนได้\\nจำนวนการเล่นและเวลาทั้งหมดจะหายไปอย่างถาวร",
+  "resetStatsTitle": "รีเซ็ตสถิติ?",
+  "resetToAutomatic": "รีเซ็ตเป็นอัตโนมัติ",
+  "resetToDefault": "คืนค่าเริ่มต้น",
+  "resetUsage": "รีเซ็ตการใช้งาน",
+  "resetsIn": "รีเซ็ตในอีก",
+  "restartContent": "ต้องรีสตาร์ทแอปเพื่อใช้การเปลี่ยนแปลงอุปกรณ์เสียง\\n\\nรีสตาร์ทตอนนี้เลยไหม?",
+  "restartNow": "รีสตาร์ทตอนนี้",
+  "restartRequired": "ต้องรีสตาร์ท",
+  "restoring": "กำลังกู้คืน",
+  "retryConnection": "ลองอีกครั้ง",
+  "revert": "คืนค่า",
+  "russian": "รัสเซีย",
+  "sakura": "ซากุระ",
+  "sampleRateLabel": "อัตราสุ่มตัวอย่าง",
+  "samplingRateLabel": "อัตราสุ่มตัวอย่าง",
+  "save": "บันทึก",
+  "saveAsNewPreset": "บันทึกเป็นพรีเซ็ตใหม่",
+  "saveChangesToFile": "บันทึกการเปลี่ยนแปลงลงไฟล์",
+  "saveLabel": "บันทึก",
+  "saveLrcPrompt": "คุณต้องการบันทึกเนื้อเพลงเป็นไฟล์ .lrc ไว้ข้างไฟล์เสียงหรือไม่?",
+  "saveLyricsTooltip": "บันทึกเนื้อเพลง",
+  "savePlaylistContent": "จะสร้างเพลย์ลิสต์ใหม่จากเพลงเหล่านี้",
+  "savePlaylistTitle": "บันทึก \"{title}\" หรือไม่?",
+  "savePreset": "บันทึกพรีเซ็ต",
+  "savedAs": "บันทึกในชื่อ \"{name}\" แล้ว!",
+  "savedAsFormat": "บันทึกเป็น {format} แล้ว",
+  "savedTo": "บันทึกไปที่ \"{path}\"",
+  "saving": "กำลังบันทึก...",
+  "scan": "สแกน",
+  "scanToControlPlayback": "สแกนเพื่อควบคุมการเล่นด้วยโทรศัพท์ของคุณ",
+  "scanning": "กำลังสแกน...",
+  "scrollForLyrics": "เลื่อนเพื่อดูเนื้อเพลง",
+  "search": "ค้นหา",
+  "searchEngine": "เครื่องมือค้นหา",
+  "searchFailedStatus": "ค้นหาล้มเหลว: {error}",
+  "searchHint": "ค้นหา...",
+  "searchSongs": "ค้นหาเพลง...",
+  "searchSongsOrAlbumsAndArtistsHint": "ค้นหาเพลง อัลบั้ม หรือศิลปิน...",
+  "searchSpotify": "ค้นหาบน Spotify",
+  "searchSpotifyHint": "ค้นหาบน Spotify...",
+  "searchUsers": "ค้นหาผู้ใช้...",
+  "searchYoutubeHint": "ค้นหาบน YouTube...",
+  "searching": "กำลังค้นหา...",
+  "searchingEngine": "กำลังค้นหา '{keyword}' ใน {engine}...",
+  "searchingSpotify": "กำลังค้นหาบน Spotify...",
+  "searchingSpotifyFor": "กำลังค้นหา \"{keyword}\" บน Spotify...",
+  "searchingStatus": "ค้นหา",
+  "secondShort": "วิ",
+  "secsShort": "วิ",
+  "seeAll": "ดูทั้งหมด",
+  "selectDifferentFolder": "เลือกโฟลเดอร์อื่น",
+  "selectFolder": "เลือกโฟลเดอร์",
+  "selectMatch": "เลือกที่ตรงกัน",
+  "selectSongToEdit": "เลือกเพลงจากรายการเพื่อแก้ไข",
+  "selectStreamingQuality": "เลือกคุณภาพสตรีมมิ่ง",
+  "selectTrackToStart": "เลือกเพลงเพื่อเริ่มเล่น",
+  "selectVersion": "เลือกเวอร์ชัน",
+  "session": "เซสชัน: {id}",
+  "setCountryReleases": "ตั้งค่าประเทศสำหรับเพลงใหม่และชาร์ต",
+  "setCustomTimer": "กำหนดเวลาปิดเอง",
+  "settings": "การตั้งค่า",
+  "share": "แชร์",
+  "shareCodeUsage": "ให้รหัส 6 หลักนี้กับเพื่อนเพื่อนำเข้าเพลย์ลิสต์นี้",
+  "sharePlaylist": "แชร์เพลย์ลิสต์",
+  "sharePlaylistTitle": "แชร์ \"{name}\"",
+  "sharedMode": "แชร์",
+  "showAllTitles": "แสดงทั้งหมด {count} ฉายา",
+  "showAnimatedWaves": "แสดงคลื่นเคลื่อนไหวในแถบการเล่น",
+  "showDebugButton": "แสดงปุ่มแก้จุดบกพร่องแบบลอย",
+  "showInFolder": "แสดงในโฟลเดอร์",
+  "showLess": "แสดงน้อยลง",
+  "showMore": "แสดงเพิ่มเติม",
+  "showStatusDiscord": "แสดงสถานะบน Discord",
+  "showUnlockedOnly": "แสดงเฉพาะที่ปลดล็อกแล้ว",
+  "shuffle": "สุ่ม",
+  "shuffleAll": "สุ่มทั้งหมด",
+  "shufflingArtist": "กำลังสุ่มเพลงของ {artistName}...",
+  "signInWithGoogle": "ลงชื่อเข้าใช้ด้วย Google",
+  "signalOutput": "สัญญาณเอาต์พุต",
+  "singleTracks": "เพลงเดี่ยว",
+  "sleepTimer": "ตัวตั้งเวลาปิด",
+  "songAlreadyInPlaylist": "เพลงนี้อยู่ในเพลย์ลิสต์แล้ว",
+  "songInformation": "ข้อมูลเพลง",
+  "songLabelUpper": "เพลง",
+  "songTitleKeyword": "ชื่อเพลงหรือคำค้นหา",
+  "songs": "เพลง",
+  "songsCount": "{count, plural, =1{1 เพลง} other{{count} เพลง}}",
+  "songsInLibrary": "มี {count} เพลงในคลังเพลง",
+  "songsLoadedCount": "โหลดแล้ว {count} เพลง...",
+  "southKorea": "เกาหลีใต้",
+  "spanish": "สเปน",
+  "spectrumBars": "แท่งสเปกตรัม",
+  "spotify": "Spotify",
+  "standardDesc": "MP3 - ไฟล์เล็กลง โหลดเร็วขึ้น",
+  "standardQuality": "มาตรฐาน (MP3)",
+  "start": "เริ่ม",
+  "startBulkProcess": "เริ่มการทำงานแบบกลุ่ม",
+  "startedDownloadingAll": "เริ่มดาวน์โหลดเพลงทั้งหมดแล้ว...",
+  "stateDisabled": "ปิดใช้งาน",
+  "stateEnabled": "เปิดใช้งาน",
+  "statisticsReset": "รีเซ็ตสถิติแล้ว",
+  "stats": "สถิติ",
+  "statusLabel": "สถานะ",
+  "statusWithText": "สถานะ: {status}",
+  "stopTimer": "หยุดตัวตั้งเวลา ({time})",
+  "streaming": "สตรีมมิ่ง",
+  "streamingQuality": "คุณภาพสตรีมมิ่ง",
+  "success": "สำเร็จ",
+  "superfanHeader": "ความสำเร็จของซูเปอร์แฟน",
+  "superfanTitles": "ซูเปอร์แฟน",
+  "supportDeveloperTooltip": "สนับสนุนนักพัฒนาเพื่อรับฉายาพิเศษ",
+  "switchToGridView": "สลับเป็นมุมมองตาราง",
+  "switchToListView": "สลับเป็นมุมมองรายการ",
+  "switchingTo": "กำลังสลับไปที่",
+  "syncThemeAlbumArt": "ซิงค์ธีมกับหน้าปกอัลบั้ม",
+  "system": "ระบบ",
+  "systemDefault": "ค่าเริ่มต้นระบบ",
+  "targetLanguageLyrics": "ภาษาปลายทางสำหรับการแปลเนื้อเพลง",
+  "thai": "ไทย",
+  "tidalApiStatus": "Tidal API",
+  "timeBasedTitles": "ตามเวลา",
+  "timeListened": "เวลาที่ฟัง",
+  "timeOverlordsHeader": "เจ้าแห่งกาลเวลา",
+  "timerSetForHours": "ตั้งเวลาปิดไว้อีก {count} ชั่วโมง",
+  "timerSetForMinutes": "ตั้งเวลาปิดไว้อีก {count} นาที",
+  "timerSetForSeconds": "ตั้งเวลาปิดไว้อีก {count} วินาที",
+  "tintBackground": "ย้อมสีพื้นหลังและตัวสร้างภาพตามสีเพลง",
+  "title": "ชื่อเพลง",
+  "titleLabel": "ชื่อเพลง",
+  "todayLabel": "วันนี้: {size}",
+  "toggleDebugButton": "เปิด/ปิด คอนโซลแก้จุดบกพร่องแบบลอย",
+  "toggleDebugConsole": "เปิด/ปิด คอนโซลแก้จุดบกพร่องแบบลอย",
+  "toggleLyrics": "สลับเนื้อเพลง",
+  "top3GlobalTooltip": "ติดอันดับท็อป 3 ของโลกเป็นเวลา {weeks} สัปดาห์",
+  "topArtist": "ศิลปินยอดนิยม",
+  "topArtistAndTrack": "ศิลปินและเพลงยอดนิยม",
+  "topArtists": "ศิลปินยอดนิยม",
+  "topGlobalTooltip": "ติดอันดับท็อป {rank} ของโลก",
+  "topListeners": "ผู้ฟังยอดนิยม",
+  "totalMinutesStat": "นาทีรวม",
+  "totalPlays": "จำนวนครั้งที่เล่นทั้งหมด",
+  "trackDetails": "รายละเอียดเพลง",
+  "trackNumber": "ลำดับเพลง",
+  "tracks": "แทร็ก",
+  "translateLabel": "แปล",
+  "translateLyrics": "แปลเนื้อเพลง",
+  "translateLyricsTooltip": "แปลเนื้อเพลง",
+  "translationLanguage": "ภาษาที่ใช้แปล",
+  "turnOffTimer": "ปิดตัวตั้งเวลา",
+  "unauthorize": "ไม่ได้รับอนุญาต",
+  "underDevelopment": "ฟีเจอร์นี้อยู่ระหว่างการพัฒนา",
+  "underwater": "ใต้น้ำ",
+  "unitedKingdom": "สหราชอาณาจักร",
+  "unitedStates": "สหรัฐอเมริกา",
+  "unknown": "ไม่ทราบ",
+  "unknownArtist": "ไม่ระบุศิลปิน",
+  "unknownDevice": "ไม่พบอุปกรณ์",
+  "unlink": "ยกเลิกการเชื่อมต่อ",
+  "unlinkAccount": "ยกเลิกการเชื่อมต่อ",
+  "unlinkAccountDesc": "สถิติของคุณจะยังคงอยู่ในอุปกรณ์นี้ แต่จะไม่ซิงค์ระหว่างอุปกรณ์อีกต่อไป",
+  "unlinkAccountQuestion": "ยกเลิกการเชื่อมต่อบัญชี?",
+  "unlinkFolder": "ยกเลิกการเชื่อมต่อโฟลเดอร์และล้างรายการเพลง",
+  "unlinkFolderClear": "ยกเลิกการเชื่อมต่อโฟลเดอร์และล้างรายการเพลง",
+  "unlockedCountLabel": "{unlocked} / {total} ปลดล็อกแล้ว",
+  "unmuteTooltip": "เปิดเสียง",
+  "unsavedChanges": "ยังไม่ได้บันทึกการเปลี่ยนแปลง",
+  "upNext": "เพลงถัดไป",
+  "upNextCount": "ถัดไป ({count})",
+  "upNextSection": "ถัดไป",
+  "updateAvailableTitle": "มีอัปเดตใหม่",
+  "updateAvailableVersion": "มีเวอร์ชันใหม่ ({version}) พร้อมใช้งาน",
+  "updateFailed": "การอัปเดตล้มเหลว: {error}",
+  "updateNow": "อัปเดตตอนนี้",
+  "updatePrompt": "คุณต้องการดาวน์โหลดและติดตั้งตอนนี้หรือไม่?",
+  "updatingYtDlp": "กำลังอัปเดต yt-dlp",
+  "usbAudioBypass": "USB Audio Bypass (Beta) - เอาต์พุต DAC โดยตรงสำหรับ Android 13 ลงไป",
+  "usbAudioBypassBeta": "USB Audio Bypass (Beta) - เอาต์พุต DAC โดยตรงสำหรับ Android 13 ลงไป",
+  "useDarkTheme": "ใช้ธีมมืด",
+  "useMixedColors": "ใช้สีผสม (เน้นการซิงค์เป็นหลัก)",
+  "verifiedDeveloper": "นักพัฒนาที่ได้รับการรับรอง",
+  "version": "เวอร์ชัน",
+  "versionLabel": "เวอร์ชัน {version}",
+  "vietnamese": "เวียดนาม",
+  "viewQueue": "ดูคิว",
+  "visualizer": "ตัวสร้างภาพ (Visualizer)",
+  "visualizerStyle": "สไตล์ตัวสร้างภาพ",
+  "wasapiExclusive": "โหมด WASAPI Exclusive",
+  "weekly": "รายสัปดาห์",
+  "weeks": "สัปดาห์",
+  "winter": "ฤดูหนาว",
+  "worldRanking": "อันดับโลก",
+  "worldTopArtists": "ศิลปินยอดนิยมของโลก",
+  "year": "ปี",
+  "youMayLike": "คุณอาจจะชอบ",
+  "yourPlaylists": "เพลย์ลิสต์ของคุณ",
+  "yourTopMix": "มิกซ์ยอดนิยมของคุณ",
+  "youtube": "YouTube",
+  "ytDlpUpdateAvailable": "มี yt-dlp เวอร์ชันใหม่พร้อมใช้งาน"
 }

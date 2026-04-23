@@ -23,8 +23,8 @@ class _WetGroundPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Colors.black.withOpacity(0.1),
-          Colors.black.withOpacity(0.4),
+          Colors.black.withValues(alpha: 0.1),
+          Colors.black.withValues(alpha: 0.4),
         ],
       ).createShader(Rect.fromLTWH(0, yBase - 40, size.width, 40));
 
@@ -38,7 +38,7 @@ class _WetGroundPainter extends CustomPainter {
 
     // 2. Highlilghts / Reflections (Puddles)
     final highlightPaint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
+      ..color = Colors.white.withValues(alpha: 0.1)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10.0);
 
     canvas.drawOval(

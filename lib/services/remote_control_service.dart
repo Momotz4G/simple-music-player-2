@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:simple_music_player_2/services/metrics_service.dart';
 import 'package:simple_music_player_2/services/pocketbase_service.dart';
+import 'package:simple_music_player_2/services/debug_log_service.dart';
 
 class RemoteControlService {
   static final RemoteControlService _instance =
@@ -10,6 +11,8 @@ class RemoteControlService {
   RemoteControlService._internal();
 
   String? _userId;
+  String? _deviceId;
+  String? _deviceName;
   String? _lastCommandId; // Deduplication
 
   // State Tracking for Deduplication (Loop Breaker Pattern)
@@ -26,8 +29,15 @@ class RemoteControlService {
     }
 
     _userId = metrics.userId;
+    _deviceId = await metrics.getDeviceIdentifier();
+    _deviceName = await metrics.getDeviceName();
+
     if (_userId != null) {
-      debugPrint("📡 RemoteControl: Initialized for ID: $_userId");
+      DebugLogService().info("📡 Remote: Active for User: $_userId, Device: $_deviceName");
+      // Start Heartbeat
+      registerHeartbeat();
+    } else {
+      DebugLogService().error("📡 Remote Error: No user ID provided. Discovery disabled.");
     }
   }
 
@@ -40,17 +50,21 @@ class RemoteControlService {
   void setInitialState({bool? shuffle, int? loopMode}) {
     if (shuffle != null) _lastShuffle = shuffle;
     if (loopMode != null) _lastLoop = loopMode;
-    debugPrint(
-        "📡 RemoteControl: Initial state set - Shuffle=$shuffle, Loop=$loopMode");
+    DebugLogService().info("📡 Remote: Initial state - Shuffle=$shuffle, Loop=$loopMode");
   }
-
-  String? _lastCommandTime; // Track updates by timestamp
 
   Timer? _pollingTimer;
 
   // Start listening for commands
   Future<void> startListening(
       {required Function(String action, dynamic value) onCommand}) async {
+    
+    // 0. FETCH INITIAL STATE IMMEDIATELY
+    final initialSession = await PocketBaseService().getSessionData();
+    if (initialSession != null) {
+      _checkAndProcessCommand(initialSession, onCommand, isInitial: true);
+    }
+    
     // 1. Setup Realtime Subscription (Best Effort)
     await PocketBaseService().subscribeToSession((data) {
       _checkAndProcessCommand(data, onCommand);
@@ -70,16 +84,22 @@ class RemoteControlService {
 
   final DateTime _serviceStartTime = DateTime.now();
 
+  // 🚀 Continuous sync dedup tracking (prevents spamming identical data to slaves)
+  String? _lastSyncTitle;
+  double _lastSyncPosition = -1.0;
+  bool? _lastSyncPlaying;
+
   DateTime? _lastShuffleChangeTime;
   DateTime? _lastLoopChangeTime;
   void _checkAndProcessCommand(
-      Map<String, dynamic> data, Function(String, dynamic) onCommand) {
+      Map<String, dynamic> data, Function(String, dynamic) onCommand, {bool isInitial = false}) {
 
     final now = DateTime.now();
 
     // 1. STARTUP COOLDOWN: Ignore sync events for 5 seconds after service start
+    // UNLESS this is the explicit initial fetch
     final msSinceStart = now.difference(_serviceStartTime).inMilliseconds;
-    final isStartupPeriod = msSinceStart < 5000;
+    final isStartupPeriod = msSinceStart < 5000 && !isInitial;
 
     // 2. STATE COOLDOWNS: Ignore syncs for only the specific properties we recently changed
     final msSinceShuffle = _lastShuffleChangeTime != null
@@ -108,13 +128,13 @@ class RemoteControlService {
 
     // Reject sync if it's an empty session
     if (!isNewEmptySession) {
-      if (isStartupPeriod) {
-        debugPrint("📡 [Remote] Sync IGNORED (startup cooldown)");
-      } else {
+        if (isStartupPeriod) {
+          DebugLogService().info("📡 Remote: Sync IGNORED (startup cooldown)");
+        } else {
         // Evaluate Shuffle
         if (shuffleChanged) {
           if (isShuffleCooldown) {
-            debugPrint("📡 [Remote] Shuffle Sync IGNORED (cooldown): $newShuffle");
+            DebugLogService().info("📡 Remote: Shuffle Sync IGNORED (cooldown)");
           } else {
             _lastShuffleChangeTime = DateTime.now(); // 🚀 Prevent stale data echo from polling
             _lastShuffle = newShuffle;
@@ -125,7 +145,7 @@ class RemoteControlService {
         // Evaluate Loop
         if (loopChanged) {
           if (isLoopCooldown) {
-            debugPrint("📡 [Remote] Loop Sync IGNORED (cooldown): $newLoop");
+            DebugLogService().info("📡 Remote: Loop Sync IGNORED (cooldown)");
           } else {
             _lastLoopChangeTime = DateTime.now(); // 🚀 Prevent stale data echo from polling
             _lastLoop = newLoop;
@@ -136,9 +156,28 @@ class RemoteControlService {
     }
 
     if (hasNewState) {
-      debugPrint(
-          "📡 [Remote] Sync State Detected: Shuffle=$newShuffle, Loop=$newLoop");
+      DebugLogService().info("📡 Remote: Sync State Detected: Shuffle=$newShuffle, Loop=$newLoop");
       onCommand('sync_state', data);
+    }
+
+    // 🚀 CONTINUOUS SYNC: Always dispatch sync_state for slave UI updates
+    // This ensures slaves receive position, title, art, and isPlaying changes
+    // even when shuffle/loop haven't changed. Dedup prevents spamming identical data.
+    if (!isStartupPeriod && !isNewEmptySession && !hasNewState) {
+      final syncPos = (data['position_seconds'] as num?)?.toDouble() ?? 0.0;
+      final syncPlaying = data['is_playing'] as bool?;
+      final syncTitle = data['current_title'] as String?;
+
+      final titleChanged = syncTitle != _lastSyncTitle;
+      final posChanged = (syncPos - _lastSyncPosition).abs() > 0.5; // 🚀 HIGH PRECISION: 0.5s threshold
+      final playChanged = syncPlaying != _lastSyncPlaying;
+
+      if (titleChanged || posChanged || playChanged) {
+        _lastSyncTitle = syncTitle;
+        _lastSyncPosition = syncPos;
+        _lastSyncPlaying = syncPlaying;
+        onCommand('sync_state', data);
+      }
     }
 
     final cmd = data['last_command'] as String?;
@@ -158,7 +197,7 @@ class RemoteControlService {
 
         if (timestampMs < (serviceStartMs - 5000)) {
           _lastCommandId = cmd;
-          debugPrint("📡 Ignoring stale command (Startup): ${parts[0]}");
+          DebugLogService().info("📡 Remote: Ignoring stale command: ${parts[0]}");
           return;
         }
 
@@ -181,8 +220,108 @@ class RemoteControlService {
     }
   }
 
+  // --- DEVICE MANAGEMENT ---
+
+  Timer? _heartbeatTimer;
+
+  void registerHeartbeat() {
+    _heartbeatTimer?.cancel();
+    // Immediate heartbeat
+    _updateDeviceListInSession();
+    // Repeating heartbeat
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _updateDeviceListInSession();
+    });
+  }
+
+  Future<void> _updateDeviceListInSession() async {
+    if (_userId == null || _deviceId == null || _deviceName == null) return;
+
+    try {
+      final session = await PocketBaseService().getSessionData();
+      if (session == null) return;
+
+      dynamic rawDevices = session['available_devices'];
+      List<dynamic> devices = [];
+      if (rawDevices is List) {
+        devices = List<dynamic>.from(rawDevices);
+      } else if (rawDevices is String && rawDevices.isNotEmpty) {
+        try {
+          devices = jsonDecode(rawDevices) as List<dynamic>;
+        } catch (_) {}
+      }
+
+      final now = DateTime.now();
+      final nowIso = now.toIso8601String();
+      bool found = false;
+
+      // Filter out stale devices (not seen for > 2 minutes)
+      final cutoff = now.subtract(const Duration(minutes: 2));
+      
+      List<dynamic> activeDevices = [];
+      for (var d in devices) {
+        if (d is Map<String, dynamic>) {
+          final lastActiveStr = d['last_active'];
+          if (lastActiveStr != null) {
+            try {
+              final lastActive = DateTime.parse(lastActiveStr);
+              if (lastActive.isAfter(cutoff) || d['id'] == _deviceId) {
+                 activeDevices.add(d);
+              }
+            } catch (_) {
+              activeDevices.add(d); 
+            }
+          }
+        }
+      }
+
+      for (int i = 0; i < activeDevices.length; i++) {
+        final d = activeDevices[i] as Map<String, dynamic>;
+        if (d['id'] == _deviceId) {
+          activeDevices[i] = {
+            'id': _deviceId,
+            'name': _deviceName,
+            'last_active': nowIso,
+          };
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        activeDevices.add({
+          'id': _deviceId,
+          'name': _deviceName,
+          'last_active': nowIso,
+        });
+      }
+
+      await PocketBaseService().updateSession({'available_devices': activeDevices});
+      
+      final deviceListSummary = activeDevices.map((d) => d['id']?.toString().substring(0, 4)).join(', ');
+      DebugLogService().success("📡 Remote: Heartbeat sent. Total: ${activeDevices.length} [$deviceListSummary]");
+    } catch (e) {
+      DebugLogService().error("⚠️ Remote Heartbeat FAILED: $e");
+    }
+  }
+
+  /// Update the active device ID in the cloud session
+  Future<void> setActiveDevice(String deviceId, String name) async {
+    try {
+      await PocketBaseService().updateSession({
+        'active_device_id': deviceId,
+        'active_device_name': name,
+        'last_command': 'adopt_master', // Optional hint
+      });
+      DebugLogService().success("📡 Remote: Nominated $name as active player");
+    } catch (e) {
+      DebugLogService().error("⚠️ Remote: Failed to set active device: $e");
+    }
+  }
+
   void stopListening() {
     _pollingTimer?.cancel();
+    _heartbeatTimer?.cancel();
     PocketBaseService().unsubscribe();
   }
 
@@ -190,53 +329,85 @@ class RemoteControlService {
   void broadcastState({
     String? title,
     String? artist,
+    String? album,
     bool? isPlaying,
     double? volume,
     bool? isShuffle,
     int? loopMode,
-    int? positionSeconds,
-    int? durationSeconds,
+    num? positionSeconds, // 🚀 HIGH PRECISION: Accepts double
+    num? durationSeconds, // 🚀 HIGH PRECISION: Accepts double
     String? artUrl,
-    String? filePath, // Keep filePath as it was in the original signature
+    String? filePath,
+    String? sourceUrl,
+    String? spotifyId,
     List<Map<String, dynamic>>? queue,
     Map<String, dynamic>? albumDetails,
-  }) {
-    if (_userId == null) return;
+    bool forceActive = false,
+  }) async {
+    if (_userId == null || _deviceId == null) return;
 
     final data = <String, dynamic>{};
     if (title != null) data['current_title'] = title;
     if (artist != null) data['current_artist'] = artist;
+    if (album != null) data['current_album'] = album;
     if (isPlaying != null) data['is_playing'] = isPlaying;
     if (volume != null) data['volume'] = volume;
     if (isShuffle != null) {
       if (_lastShuffle != isShuffle) {
         _lastShuffleChangeTime = DateTime.now();
       }
-      _lastShuffle = isShuffle; // Loop Breaker: Update local state
+      _lastShuffle = isShuffle;
       data['is_shuffle'] = isShuffle;
     }
     if (loopMode != null) {
       if (_lastLoop != loopMode) {
         _lastLoopChangeTime = DateTime.now();
       }
-      _lastLoop = loopMode; // Loop Breaker: Update local state
+      _lastLoop = loopMode;
       data['loop_mode'] = loopMode;
     }
     if (positionSeconds != null) data['position_seconds'] = positionSeconds;
     if (durationSeconds != null) data['duration_seconds'] = durationSeconds;
-    if (artUrl != null)
-      data['album_art_url'] = artUrl; // Use album_art_url consistent with web
+    
+    // 🚀 STALE CACHE FIX: If artUrl is null, explicitly clear the PocketBase entry 
+    // so it doesn't accidentally retain the previous song's image during a PATCH update!
+    if (artUrl != null) {
+      data['album_art_url'] = artUrl;
+    } else if (title != null) {
+      data['album_art_url'] = ''; 
+    }
+
+    if (sourceUrl != null) data['source_url'] = sourceUrl;
+    if (spotifyId != null) data['spotify_id'] = spotifyId;
     if (queue != null) data['queue'] = queue;
-    if (albumDetails != null)
-      data['active_album_details'] = albumDetails; // NEW
+    if (albumDetails != null) data['active_album_details'] = albumDetails;
 
-    // Always update last active
+    // 🚀 MASTER DECLARATION: If we are broadcasting state, we mark ourselves as active
+    // UNLESS we are in Follower mode (handled by PlayerProvider)
+    if (forceActive || (isPlaying == true)) {
+      data['active_device_id'] = _deviceId;
+      data['active_device_name'] = _deviceName;
+    }
+
     data['last_active'] = DateTime.now().toIso8601String();
-
-    // 🚀 CONSUME COMMAND: Clear it so we don't process it again (Echo Loop Fix)
     data['last_command'] = '';
 
-    PocketBaseService().updateSession(data);
+    await PocketBaseService().updateSession(data);
+  }
+
+  // --- COMMAND HANDLING ---
+
+  Future<void> sendCommand(String action, {dynamic payload}) async {
+    if (_userId == null) return;
+    
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final cmdId = "$action|${payload ?? ''}|$timestamp";
+    
+    await PocketBaseService().updateSession({
+      'last_command': cmdId,
+      'cmd_payload': payload,
+    });
+    DebugLogService().info("📡 Remote Command SENT: $action");
   }
 
   // Broadcast Search Results (Party Mode)

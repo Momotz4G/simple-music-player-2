@@ -55,6 +55,8 @@ remote_web_app/config.js
 
 RobloxCampingGame/
 tidal-api/
+spotify-artist-banner/
+scratch/
 
 # Helper scripts
 cleanup_pocketbase.dart
@@ -63,3 +65,6 @@ cleanup_pocketbase.dart
 *.backup
 *.dll
 search_output.json
+engine_log.txt
+/Experimental Version/
+

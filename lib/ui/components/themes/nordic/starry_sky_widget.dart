@@ -87,7 +87,7 @@ class _StarPainter extends CustomPainter {
                   0.5 *
                       sin(animationValue * 2 * pi * star.pulseSpeed +
                           star.offset));
-      paint.color = Colors.white.withOpacity(opacity.clamp(0.0, 1.0));
+      paint.color = Colors.white.withValues(alpha: opacity.clamp(0.0, 1.0));
 
       final Offset position = Offset(star.x * size.width, star.y * size.height);
       canvas.drawCircle(position, star.size, paint);
@@ -98,7 +98,7 @@ class _StarPainter extends CustomPainter {
             position,
             star.size * 2,
             Paint()
-              ..color = Colors.white.withOpacity(opacity * 0.3)
+              ..color = Colors.white.withValues(alpha: opacity * 0.3)
               ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
       }
     }

@@ -27,10 +27,10 @@ class GlassBox extends StatelessWidget {
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.4),
+            color: color.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1.0,
             ),
           ),

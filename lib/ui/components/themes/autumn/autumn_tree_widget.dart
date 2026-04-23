@@ -91,7 +91,7 @@ class _AutumnTreePainter extends CustomPainter {
 
       final double circleSize = random.nextDouble() * 15 + 10;
       final paint = Paint()
-        ..color = colors[random.nextInt(colors.length)].withOpacity(0.8);
+        ..color = colors[random.nextInt(colors.length)].withValues(alpha: 0.8);
 
       canvas.drawCircle(Offset(x, y), circleSize, paint);
     }
@@ -101,7 +101,7 @@ class _AutumnTreePainter extends CustomPainter {
       final double lx = centerX + (random.nextDouble() - 0.5) * 60;
       final double ly = bottomY + (random.nextDouble() - 0.5) * 10;
       final paint = Paint()
-        ..color = colors[random.nextInt(colors.length)].withOpacity(0.7);
+        ..color = colors[random.nextInt(colors.length)].withValues(alpha: 0.7);
       canvas.drawOval(
           Rect.fromCenter(center: Offset(lx, ly), width: 10, height: 5), paint);
     }

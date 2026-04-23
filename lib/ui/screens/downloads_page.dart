@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:metadata_god/metadata_god.dart';
+import '../../services/metadata_service.dart';
 import 'package:open_filex/open_filex.dart';
 
 import '../../models/song_model.dart';
@@ -83,7 +83,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
         }
 
         if (await dir.exists()) {
-          final List<FileSystemEntity> entities = dir.listSync();
+          final List<FileSystemEntity> entities = await dir.list().toList();
 
           final audioFiles = entities.where((e) {
             final ext = p.extension(e.path).toLowerCase();
@@ -91,8 +91,21 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                 .contains(ext);
           }).toList();
 
-          audioFiles.sort(
-              (a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+          // Fetch all stats in parallel
+          final stats = await Future.wait(audioFiles.map((f) => f.stat()));
+
+          // Create index mapping for fast lookup during sort
+          final fileStats = <String, FileStat>{};
+          for (int i = 0; i < audioFiles.length; i++) {
+            fileStats[audioFiles[i].path] = stats[i];
+          }
+
+          audioFiles.sort((a, b) {
+            final statA = fileStats[a.path];
+            final statB = fileStats[b.path];
+            if (statA == null || statB == null) return 0;
+            return statB.modified.compareTo(statA.modified);
+          });
 
           if (mounted) {
             setState(() {
@@ -187,7 +200,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
 
     // 2. Try to read real metadata (overwrites smart fallback if successful)
     try {
-      final metadata = await MetadataGod.readMetadata(file: file.path);
+      final metadata = await MetadataService().readMetadata(file.path);
 
       // Only overwrite if the metadata actually exists
       if (metadata.title != null && metadata.title!.isNotEmpty) {

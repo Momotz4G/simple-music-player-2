@@ -41,8 +41,8 @@ class _AnimatedTreeWidgetState extends State<AnimatedTreeWidget>
             painter: _TreePainter(
               animationValue: _controller.value,
               treeColor: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withOpacity(0.3)
-                  : Colors.black.withOpacity(0.3),
+                  ? Colors.white.withValues(alpha: 0.3)
+                  : Colors.black.withValues(alpha: 0.3),
             ),
           );
         },
@@ -155,7 +155,7 @@ class _TreePainter extends CustomPainter {
 
     // Glowing warm Window
     final Paint windowPaint = Paint()
-      ..color = Colors.yellowAccent.withOpacity(0.8);
+      ..color = Colors.yellowAccent.withValues(alpha: 0.8);
     // Left window
     canvas.drawCircle(Offset(houseX + 5, houseY + 12), 4, windowPaint);
     // Right window
@@ -177,13 +177,13 @@ class _TreePainter extends CustomPainter {
       // opacity: 0.4 (back) to 0.9 (front)
       final double opacity = 0.4 + (normalizedZ * 0.3) + 0.1;
 
-      paint.color = pt.color.withOpacity(opacity.clamp(0.1, 1.0));
+      paint.color = pt.color.withValues(alpha: opacity.clamp(0.1, 1.0));
       canvas.drawCircle(Offset(pt.x, pt.y), pt.radius, paint);
     }
 
     // Draw a shining 5-pointed star at the top
     final Paint starGlowPaint = Paint()
-      ..color = Colors.amberAccent.withOpacity(0.6)
+      ..color = Colors.amberAccent.withValues(alpha: 0.6)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6.0)
       ..style = PaintingStyle.fill;
 

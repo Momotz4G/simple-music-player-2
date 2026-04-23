@@ -90,7 +90,7 @@ class _RainPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     for (var drop in rainDrops) {
-      paint.color = Colors.white.withOpacity(drop.opacity);
+      paint.color = Colors.white.withValues(alpha: drop.opacity);
       paint.strokeWidth = drop.width;
 
       final double startX = drop.x * size.width;

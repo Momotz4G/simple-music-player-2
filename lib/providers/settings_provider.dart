@@ -1,12 +1,16 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:simple_music_player_2/services/android_audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_music_player_2/utils/translation_service.dart';
 import 'package:path/path.dart' as p;
 
-// NEW ENUM
+// NEW ENUMS
 enum VisualizerStyle { spectrum, wave, pulse }
+
+enum SearchEngine { spotify, youtube }
 
 enum AtmosphereTheme {
   none,
@@ -54,12 +58,14 @@ class SettingsState {
   final bool gaplessPlayback; // Enable gapless transitions
   final double crossfadeDuration; // Crossfade duration in seconds (0.0-12.0)
   final bool enableAlphabetIndexer; // NEW: Enable side Alphabet scroll indexer on mobile
+  final bool minimizeToTrayOnClose;
+  final SearchEngine searchEngine; // NEW: Spotify vs YouTube
 
   SettingsState({
     this.isDarkMode = true,
     this.accentColor = const Color(0xFF6C5CE7),
     this.enableDiscordRpc = true,
-    this.enableVisualizer = true,
+    this.enableVisualizer = false,
     this.visualizerOpacity = 0.3,
     this.isVisualizerRainbow = false,
     this.syncThemeWithAlbumArt = false,
@@ -83,6 +89,8 @@ class SettingsState {
     this.gaplessPlayback = true,
     this.crossfadeDuration = 0.0, // Default: No crossfade
     this.enableAlphabetIndexer = false, // Default: Off
+    this.minimizeToTrayOnClose = true,
+    this.searchEngine = SearchEngine.spotify, // Default: Spotify
   });
 
   SettingsState copyWith({
@@ -113,6 +121,8 @@ class SettingsState {
     bool? gaplessPlayback,
     double? crossfadeDuration,
     bool? enableAlphabetIndexer,
+    bool? minimizeToTrayOnClose,
+    SearchEngine? searchEngine,
   }) {
     return SettingsState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -145,6 +155,8 @@ class SettingsState {
       crossfadeDuration: crossfadeDuration ?? this.crossfadeDuration,
       enableAlphabetIndexer:
           enableAlphabetIndexer ?? this.enableAlphabetIndexer,
+      minimizeToTrayOnClose: minimizeToTrayOnClose ?? this.minimizeToTrayOnClose,
+      searchEngine: searchEngine ?? this.searchEngine,
     );
   }
 }
@@ -162,7 +174,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final colorValue = _prefs.getInt('accentColor') ?? 0xFF6C5CE7;
     final rpcEnabled = _prefs.getBool('enableDiscordRpc') ?? true;
 
-    final visEnabled = _prefs.getBool('enableVisualizer') ?? true;
+    final visEnabled = _prefs.getBool('enableVisualizer') ?? false;
     final visOpacity = _prefs.getDouble('visualizerOpacity') ?? 0.3;
     final visRainbow = _prefs.getBool('isVisualizerRainbow') ?? false;
     final themeSync = _prefs.getBool('syncThemeWithAlbumArt') ?? false;
@@ -190,6 +202,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final gaplessPlayback = _prefs.getBool('gaplessPlayback') ?? true;
     final crossfadeDuration = _prefs.getDouble('crossfadeDuration') ?? 0.0;
     final enableAlphabetIndexer = _prefs.getBool('enableAlphabetIndexer') ?? false;
+    final minimizeToTrayOnClose = _prefs.getBool('minimizeToTrayOnClose') ?? true;
+    final searchEngineIndex = _prefs.getInt('searchEngine') ?? SearchEngine.spotify.index;
+    final searchEngine = SearchEngine.values[searchEngineIndex];
 
     // Load Theme Enum
     final themeIndex = _prefs.getInt('atmosphereTheme') ??
@@ -231,6 +246,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       gaplessPlayback: gaplessPlayback,
       crossfadeDuration: crossfadeDuration,
       enableAlphabetIndexer: enableAlphabetIndexer,
+      minimizeToTrayOnClose: minimizeToTrayOnClose,
+      searchEngine: searchEngine,
     );
   }
 
@@ -320,14 +337,21 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   /// Toggle WASAPI exclusive mode (Windows only)
-  /// Note: Requires app restart to take effect
   Future<void> toggleWasapiExclusive(bool enabled) async {
+    if (Platform.isWindows) {
+      JustAudioMediaKit.audioExclusive = enabled;
+      debugPrint("🎵 [Settings] WASAPI Exclusive Mode: ${enabled ? 'ENABLED' : 'DISABLED'}");
+    }
     await _prefs.setBool('wasapiExclusive', enabled);
     state = state.copyWith(wasapiExclusive: enabled);
   }
 
   /// Set Audio Device ID (Windows only)
   Future<void> setAudioDeviceId(String? deviceId) async {
+    if (Platform.isWindows) {
+      JustAudioMediaKit.audioDeviceId = deviceId;
+      debugPrint("🎵 [Settings] Audio Device Override: $deviceId");
+    }
     if (deviceId == null) {
       await _prefs.remove('audioDeviceId');
     } else {
@@ -412,6 +436,16 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> toggleAlphabetIndexer(bool enabled) async {
     await _prefs.setBool('enableAlphabetIndexer', enabled);
     state = state.copyWith(enableAlphabetIndexer: enabled);
+  }
+
+  Future<void> toggleMinimizeToTrayOnClose(bool enabled) async {
+    await _prefs.setBool('minimizeToTrayOnClose', enabled);
+    state = state.copyWith(minimizeToTrayOnClose: enabled);
+  }
+
+  Future<void> setSearchEngine(SearchEngine engine) async {
+    await _prefs.setInt('searchEngine', engine.index);
+    state = state.copyWith(searchEngine: engine);
   }
 }
 

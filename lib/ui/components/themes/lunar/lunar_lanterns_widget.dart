@@ -47,7 +47,7 @@ class _LunarLanternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final wirePaint = Paint()
-      ..color = Colors.black.withOpacity(0.4)
+      ..color = Colors.black.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -74,11 +74,11 @@ class _LunarLanternPainter extends CustomPainter {
 
     // Lantern Body (Large Round)
     final bodyPaint = Paint()
-      ..color = lanternRed.withOpacity(0.95 * flicker)
+      ..color = lanternRed.withValues(alpha: 0.95 * flicker)
       ..style = PaintingStyle.fill;
 
     final glowPaint = Paint()
-      ..color = lanternRed.withOpacity(0.4 * flicker)
+      ..color = lanternRed.withValues(alpha: 0.4 * flicker)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
 
     // Draw Glow
@@ -91,7 +91,7 @@ class _LunarLanternPainter extends CustomPainter {
 
     // Vertical Gold Lines
     final linePaint = Paint()
-      ..color = goldColor.withOpacity(0.3 * flicker)
+      ..color = goldColor.withValues(alpha: 0.3 * flicker)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
 
@@ -102,7 +102,7 @@ class _LunarLanternPainter extends CustomPainter {
 
     // Top/Bottom caps (Gold)
     final capPaint = Paint()
-      ..color = goldColor.withOpacity(0.9)
+      ..color = goldColor.withValues(alpha: 0.9)
       ..style = PaintingStyle.fill;
 
     canvas.drawRRect(
@@ -118,7 +118,7 @@ class _LunarLanternPainter extends CustomPainter {
 
     // Gold Tassel
     final tasselPaint = Paint()
-      ..color = goldColor.withOpacity(0.7)
+      ..color = goldColor.withValues(alpha: 0.7)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -130,7 +130,7 @@ class _LunarLanternPainter extends CustomPainter {
 
     // Hanger
     final wirePaint = Paint()
-      ..color = Colors.black.withOpacity(0.4)
+      ..color = Colors.black.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
     canvas.drawLine(pos.translate(0, -5), pos.translate(0, 4), wirePaint);

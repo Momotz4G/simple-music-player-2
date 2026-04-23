@@ -23,8 +23,8 @@ class DownloadProgressWidget extends StatelessWidget {
         border: Border(
           top: BorderSide(
             color: isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.grey.withOpacity(0.2),
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.grey.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -88,7 +88,7 @@ class DownloadProgressWidget extends StatelessWidget {
                     "${progress.receivedMB.toStringAsFixed(1)} MB / ${progress.totalMB.toStringAsFixed(1)} MB",
                 style: TextStyle(
                   fontSize: 11,
-                  color: textColor?.withOpacity(0.7),
+                  color: textColor?.withValues(alpha: 0.7),
                 ),
               ),
               // 🚀 Speed display

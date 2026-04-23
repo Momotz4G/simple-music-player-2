@@ -90,7 +90,7 @@ class _FishSwarmPainter extends CustomPainter {
       final double fy = (f.y * size.height) + sin(f.wobble + f.offset) * 15;
 
       final fishPaint = Paint()
-        ..color = f.color.withOpacity(0.6)
+        ..color = f.color.withValues(alpha: 0.6)
         ..style = PaintingStyle.fill;
 
       // DRAW SMALL FISH (Simple tear shape)
@@ -110,7 +110,7 @@ class _FishSwarmPainter extends CustomPainter {
 
       // EYE
       canvas.drawCircle(Offset(fx - 5, fy - 1), 1.0,
-          Paint()..color = Colors.black.withOpacity(0.5));
+          Paint()..color = Colors.black.withValues(alpha: 0.5));
     }
   }
 

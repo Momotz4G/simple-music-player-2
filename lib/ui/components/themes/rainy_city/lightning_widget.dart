@@ -91,7 +91,7 @@ class _LightningWidgetState extends State<LightningWidget>
         children: [
           // Screen Flash
           Container(
-            color: Colors.white.withOpacity(_flashOpacity),
+            color: Colors.white.withValues(alpha: _flashOpacity),
           ),
           // Bolt
           AnimatedBuilder(
@@ -130,7 +130,7 @@ class _LightningPainter extends CustomPainter {
     if (opacity <= 0 || points.isEmpty) return;
 
     final paint = Paint()
-      ..color = Colors.cyanAccent.withOpacity(opacity)
+      ..color = Colors.cyanAccent.withValues(alpha: opacity)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round
@@ -145,7 +145,7 @@ class _LightningPainter extends CustomPainter {
 
     // Glow
     final glowPaint = Paint()
-      ..color = Colors.white.withOpacity(opacity * 0.5)
+      ..color = Colors.white.withValues(alpha: opacity * 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4.0
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);

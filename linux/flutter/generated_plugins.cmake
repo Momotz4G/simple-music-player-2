@@ -4,10 +4,12 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_linux
+  file_selector_linux
   flutter_media_metadata
   isar_flutter_libs
   media_kit_libs_linux
   screen_retriever
+  tray_manager
   url_launcher_linux
   window_manager
 )

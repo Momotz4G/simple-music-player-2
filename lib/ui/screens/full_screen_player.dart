@@ -13,7 +13,7 @@ import '../../models/song_model.dart';
 import '../../services/canvas_service.dart';
 import '../../l10n/app_localizations.dart';
 
-import '../../services/spotify_service.dart';
+import '../components/player/device_selector_dialog.dart';
 import '../components/smart_art.dart';
 import '../../providers/lyrics_provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -21,6 +21,8 @@ import '../../utils/japanese_romanizer.dart';
 import '../../utils/chinese_romanizer.dart';
 import '../../utils/korean_romanizer.dart';
 import '../../utils/translation_service.dart';
+import '../../services/spotify_service.dart';
+import '../../services/db_service.dart'; // 🚀 Added for Caching
 
 class FullScreenPlayer extends ConsumerStatefulWidget {
   const FullScreenPlayer({super.key});
@@ -88,6 +90,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
     _hideTimer?.cancel();
     super.dispose();
   }
+
 
   // --------------------------------------------------------------------------
   // 🚀 SIMPLE WINDOW LOGIC (No Hacks)
@@ -203,17 +206,55 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
     }
     if (oldController != null) await oldController.dispose();
 
-    // Canvas requires Spotify URL - no fallback to Deezer possible
-    String? spotifyUrl;
+    // 🚀 TIER 1: Check Video URL Cache (FASTEST)
     try {
-      spotifyUrl = await SpotifyService.getTrackLink(title, artist);
+      final String videoCacheKey = "canvas_video:$artist-$title";
+      final cachedVideoUrl = await DBService().getArtCache(videoCacheKey);
+      if (cachedVideoUrl != null && cachedVideoUrl.isNotEmpty) {
+        debugPrint("💾 [DB CACHE] Canvas Video Found: $artist - $title");
+        if (mounted) {
+          setState(() => _loadingStatus = "[Cached] ${AppLocalizations.of(context)!.fetchingCanvas}");
+        }
+        await _loadCanvasFromUrl(cachedVideoUrl, isDirectVideoUrl: true);
+        if (_videoController != null) return; // Success!
+      }
     } catch (e) {
-      // 429 or other error - cannot load Canvas, gracefully degrade
+      debugPrint("⚠️ Canvas Cache Read Error (Video): $e");
+    }
+
+    // 🚀 TIER 2: Check Spotify Link Cache (Saves API Quota)
+    String? spotifyUrl;
+    bool isLinkFromCache = false;
+    final String linkCacheKey = "spotify_link:$artist-$title";
+    try {
+      spotifyUrl = await DBService().getArtCache(linkCacheKey);
+      if (spotifyUrl != null && spotifyUrl.isNotEmpty) {
+        debugPrint("💾 [DB CACHE] Spotify Link Found: $artist - $title");
+        isLinkFromCache = true;
+      }
+    } catch (e) {
+      debugPrint("⚠️ Canvas Cache Read Error (Link): $e");
+    }
+
+    // 🚀 TIER 3: Fetch from Official Spotify API
+    if (spotifyUrl == null || spotifyUrl.isEmpty) {
+      debugPrint("🌐 [NETWORK] Searching Spotify for: $artist - $title");
+      try {
+        spotifyUrl = await SpotifyService.getTrackLink(title, artist);
+        if (spotifyUrl != null) {
+          DBService().saveArtCache(linkCacheKey, spotifyUrl);
+        }
+      } catch (e) {
+        // 429 or other error - cannot load Canvas, gracefully degrade
+      }
     }
 
     if (spotifyUrl != null) {
       if (!mounted) return;
-      setState(() => _loadingStatus = "Fetching Canvas...");
+      setState(() {
+        final prefix = isLinkFromCache ? "[Cached] " : "";
+        _loadingStatus = "$prefix${AppLocalizations.of(context)!.fetchingCanvas}";
+      });
       await _loadCanvasFromUrl(spotifyUrl);
     } else {
       if (mounted) {
@@ -225,12 +266,27 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
     }
   }
 
-  Future<void> _loadCanvasFromUrl(String url) async {
-    final videoUrl = await CanvasService.getCanvasUrl(url);
+  Future<void> _loadCanvasFromUrl(String url, {bool isDirectVideoUrl = false}) async {
+    String? videoUrl;
+    
+    if (isDirectVideoUrl) {
+      videoUrl = url;
+    } else {
+      videoUrl = await CanvasService.getCanvasUrl(url);
+      if (videoUrl != null) {
+        // Save to Video Cache for next time
+        final song = ref.read(playerProvider).currentSong;
+        if (song != null) {
+          DBService().saveArtCache("canvas_video:${song.artist}-${song.title}", videoUrl);
+          // Also save the Spotify Link if we were using an override or found it
+          DBService().saveArtCache("spotify_link:${song.artist}-${song.title}", url);
+        }
+      }
+    }
 
     if (videoUrl != null) {
       if (!mounted) return;
-      setState(() => _loadingStatus = "Downloading Canvas...");
+      setState(() => _loadingStatus = AppLocalizations.of(context)!.fetchingCanvas);
 
       final cachedFile = await CanvasService.downloadCanvasToCache(videoUrl);
 
@@ -486,6 +542,40 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
                             color: Colors.black.withValues(alpha: 0.5)),
                       ),
                     ),
+                    // 🚀 REMOTE PLAYBACK BANNER (Only show when in a remote session AND this device is a slave)
+                    if (ref.read(playerProvider.notifier).isRemoteSessionActive && !ref.read(playerProvider.notifier).isMaster && playerState.activeDeviceName != null)
+                      Positioned(
+                        top: 100,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: Colors.blue.withValues(alpha: 0.3), width: 1),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.cast_connected,
+                                    size: 16, color: Colors.blue),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Playing on ${playerState.activeDeviceName}",
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     // --- NEW LAYER: LYRICS ON RIGHT ---
                     AnimatedPositioned(
                       duration: const Duration(milliseconds: 600),

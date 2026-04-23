@@ -97,9 +97,9 @@ class _MilkyWayPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Colors.white.withOpacity(0.0),
-          Colors.white.withOpacity(0.04),
-          Colors.white.withOpacity(0.0),
+          Colors.white.withValues(alpha: 0.0),
+          Colors.white.withValues(alpha: 0.04),
+          Colors.white.withValues(alpha: 0.0),
         ],
         stops: const [0.3, 0.5, 0.7],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
@@ -118,8 +118,8 @@ class _MilkyWayPainter extends CustomPainter {
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           colors: [
-            Colors.white.withOpacity(0.0),
-            Colors.white.withOpacity(star.life.clamp(0.0, 1.0)),
+            Colors.white.withValues(alpha: 0.0),
+            Colors.white.withValues(alpha: star.life.clamp(0.0, 1.0)),
           ],
         ).createShader(Rect.fromLTWH(sx - length, sy - 2, length, 4));
 
@@ -132,7 +132,7 @@ class _MilkyWayPainter extends CustomPainter {
 
       // The head
       canvas.drawCircle(Offset.zero, 1.5 * star.life,
-          Paint()..color = Colors.white.withOpacity(star.life.clamp(0.0, 1.0)));
+          Paint()..color = Colors.white.withValues(alpha: star.life.clamp(0.0, 1.0)));
 
       canvas.restore();
     }

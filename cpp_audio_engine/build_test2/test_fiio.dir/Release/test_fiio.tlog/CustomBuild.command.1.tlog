@@ -1,0 +1,10 @@
+^C:\USERS\MEKEW\SOURCE\REPOS\SIMPLE_MUSIC_PLAYER_NEW_GEN\SIMPLE_MUSIC_PLAYER_2\CPP_AUDIO_ENGINE\TEST2\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/test2 -BC:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build_test2 --check-stamp-file C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build_test2/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

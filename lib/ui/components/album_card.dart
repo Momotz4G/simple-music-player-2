@@ -51,8 +51,8 @@ class _AlbumCardState extends State<AlbumCard>
           decoration: BoxDecoration(
             color: _isHovered
                 ? (isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.05))
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05))
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -69,7 +69,7 @@ class _AlbumCardState extends State<AlbumCard>
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(_isHovered ? 0.3 : 0.1),
+                        color: Colors.black.withValues(alpha: _isHovered ? 0.3 : 0.1),
                         blurRadius: _isHovered ? 12 : 8,
                         offset: const Offset(0, 4),
                       ),
@@ -100,7 +100,7 @@ class _AlbumCardState extends State<AlbumCard>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: textColor.withOpacity(0.6),
+                  color: textColor.withValues(alpha: 0.6),
                   fontSize: 12,
                 ),
               ),

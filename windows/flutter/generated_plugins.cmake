@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_windows
+  file_selector_windows
   flutter_inappwebview_windows
   flutter_media_metadata
   isar_flutter_libs
@@ -12,6 +13,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   permission_handler_windows
   screen_retriever
   share_plus
+  tray_manager
   url_launcher_windows
   video_player_win
   window_manager

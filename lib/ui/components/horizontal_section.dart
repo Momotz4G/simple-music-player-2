@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
 
 import '../../models/song_model.dart';
 import '../../providers/player_provider.dart';
@@ -63,7 +64,7 @@ class _HorizontalSectionState extends ConsumerState<HorizontalSection> {
               if (widget.onSeeAll != null)
                 TextButton(
                   onPressed: widget.onSeeAll,
-                  child: const Text("See all"),
+                  child: Text(AppLocalizations.of(context)!.seeAll),
                 ),
             ],
           ),

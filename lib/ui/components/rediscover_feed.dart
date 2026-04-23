@@ -165,7 +165,7 @@ class _RediscoverFeedState extends ConsumerState<RediscoverFeed> {
             color: Colors.grey[900],
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -259,7 +259,7 @@ class _RediscoverFeedState extends ConsumerState<RediscoverFeed> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child:

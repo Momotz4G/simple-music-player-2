@@ -50,12 +50,12 @@ class _CyberGridPainter extends CustomPainter {
     final double centerX = size.width / 2;
 
     final gridPaint = Paint()
-      ..color = const Color(0xFFBD00FF).withOpacity(0.5) // Neon Purple
+      ..color = const Color(0xFFBD00FF).withValues(alpha: 0.5) // Neon Purple
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
     final glowPaint = Paint()
-      ..color = const Color(0xFFBD00FF).withOpacity(0.3)
+      ..color = const Color(0xFFBD00FF).withValues(alpha: 0.3)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
     // 1. Perspective Lines (Converging at horizon)

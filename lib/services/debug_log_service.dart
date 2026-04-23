@@ -1,4 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'dart:io';
+import 'dart:async';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 /// A simple in-app debug log service that captures debug messages
 /// and makes them available for display in a debug panel.
@@ -9,10 +13,88 @@ class DebugLogService {
 
   final List<DebugLogEntry> _logs = [];
   final List<VoidCallback> _listeners = [];
+  final List<String> _fileBuffer = []; // 🚀 LOG BUFFER FOR BATCH RECORDING
+  Timer? _flushTimer;
+  String? _logsDirPath;
 
   static const int maxLogs = 500;
 
   List<DebugLogEntry> get logs => List.unmodifiable(_logs);
+
+  Future<void> _initLogFile() async {
+    if (_logsDirPath != null) return;
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      // Drop the logs exactly next to the ISAR default.isar file
+      final logsDir = Directory(p.join(dir.path, 'SimpleMusicDB', 'logs'));
+      if (!logsDir.existsSync()) {
+        logsDir.createSync(recursive: true);
+      }
+      _logsDirPath = logsDir.path;
+      
+      // Cleanup logs older than 3 days in the background
+      _cleanupOldLogs(logsDir);
+    } catch (_) {
+      // Log initialization failed
+    }
+  }
+
+  void _cleanupOldLogs(Directory logsDir) {
+    try {
+      final now = DateTime.now();
+      // Define the cutoff time as exactly 3 days ago from now
+      final cutoff = now.subtract(const Duration(days: 3));
+      
+      final files = logsDir.listSync();
+      for (var entity in files) {
+        if (entity is File && entity.path.contains('app_console_log_')) {
+          final lastModified = entity.lastModifiedSync();
+          // Delete safely if it violates the 3 days limit
+          if (lastModified.isBefore(cutoff)) {
+            entity.deleteSync();
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _appendToFile(String formattedMessage) {
+    _fileBuffer.add(formattedMessage);
+    
+    // Start flush timer on first message
+    _flushTimer ??= Timer.periodic(const Duration(seconds: 1), (timer) {
+      _flushBuffer();
+    });
+  }
+
+  Future<void> _flushBuffer() async {
+    if (_fileBuffer.isEmpty) {
+       _flushTimer?.cancel();
+       _flushTimer = null;
+       return;
+    }
+
+    if (_logsDirPath == null) {
+      await _initLogFile();
+    }
+
+    if (_logsDirPath != null && _fileBuffer.isNotEmpty) {
+      try {
+        final now = DateTime.now();
+        final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+        final filePath = p.join(_logsDirPath!, 'app_console_log_$dateStr.txt');
+        
+        final List<String> batch = List.from(_fileBuffer);
+        _fileBuffer.clear();
+
+        final file = File(filePath);
+        String content = batch.join('\n') + '\n';
+        await file.writeAsString(content, mode: FileMode.append);
+      } catch (_) {
+        // Silent fail on write
+      }
+    }
+  }
 
   /// Add a log entry
   void log(String message, {DebugLogLevel level = DebugLogLevel.info}) {
@@ -29,8 +111,14 @@ class DebugLogService {
       _logs.removeAt(0);
     }
 
+    // Format console output
+    final logFormatted = '[${entry.formattedTime}] [${level.name.toUpperCase()}] $message';
+
     // Also print to console for debugging
-    debugPrint('[${level.name.toUpperCase()}] $message');
+    debugPrint(logFormatted);
+
+    // Write to logs folder automatically via async
+    _appendToFile(logFormatted);
 
     // Notify listeners
     for (var listener in _listeners) {

@@ -67,7 +67,7 @@ class _FirecrackerPainter extends CustomPainter {
 
     // String/Wire
     final stringPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
+      ..color = Colors.black.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 

@@ -82,7 +82,7 @@ class _CabinPainter extends CustomPainter {
     // Window Glow
     final double glowIntensity = 0.4 + 0.6 * pulse;
     final Paint glowPaint = Paint()
-      ..color = const Color(0xFFFFD166).withOpacity(glowIntensity)
+      ..color = const Color(0xFFFFD166).withValues(alpha: glowIntensity)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
     final Rect windowRect =
@@ -103,7 +103,7 @@ class _CabinPainter extends CustomPainter {
 
     // Snow on roof
     final Paint snowPaint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
     final Path snowPath = Path();
     snowPath.moveTo(-cabinWidth * 0.6, -cabinHeight);

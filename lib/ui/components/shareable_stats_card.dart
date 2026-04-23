@@ -11,14 +11,18 @@ class ShareableStatsCard extends StatelessWidget {
   final String appName;
   // Allow overriding the image (for Artist Photos)
   final ImageProvider? imageOverride;
+  final String? totalPlaysLabel; // New: Localized "Total Plays"
+  final String? headerText;     // New: Localized header like "Most Listened"
 
   const ShareableStatsCard({
     super.key,
     required this.song,
     required this.playCount,
-    this.title = "", // Default handled in build
+    this.title = "", // Kept for backward compat, but headerText is preferred
     this.appName = "Simple Music Player",
     this.imageOverride,
+    this.totalPlaysLabel,
+    this.headerText,
   });
 
   @override
@@ -89,11 +93,7 @@ class ShareableStatsCard extends StatelessWidget {
                     color: Colors.black26,
                   ),
                   child: Text(
-                    title.isEmpty
-                        ? AppLocalizations.of(context)!
-                            .mostListened
-                            .toUpperCase()
-                        : title,
+                    headerText ?? (title.isNotEmpty ? title : (AppLocalizations.of(context)?.mostListened.toUpperCase() ?? "MOST LISTENED")),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -177,7 +177,7 @@ class ShareableStatsCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  AppLocalizations.of(context)!.totalPlays.toUpperCase(),
+                  (totalPlaysLabel ?? AppLocalizations.of(context)?.totalPlays ?? "TOTAL PLAYS").toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white54,
                     fontSize: 12,

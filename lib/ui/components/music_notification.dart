@@ -31,8 +31,8 @@ class MusicNotification extends StatelessWidget {
 
     final effectiveBgColor = backgroundColor ??
         (isDark
-            ? const Color(0xFF141414).withOpacity(0.95)
-            : Colors.white.withOpacity(0.95));
+            ? const Color(0xFF141414).withValues(alpha: 0.95)
+            : Colors.white.withValues(alpha: 0.95));
 
     return Material(
       color: Colors.transparent,
@@ -47,10 +47,10 @@ class MusicNotification extends StatelessWidget {
               color: effectiveBgColor,
               borderRadius: BorderRadius.circular(16),
               border:
-                  Border.all(color: Colors.white.withOpacity(0.08), width: 1),
+                  Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   blurRadius: 30,
                   spreadRadius: 5,
                   offset: const Offset(0, 10),
@@ -74,7 +74,7 @@ class MusicNotification extends StatelessWidget {
                                 : (icon == Icons.error_outline ||
                                         icon == Icons.error
                                     ? Colors.redAccent
-                                    : Colors.white.withOpacity(0.15)),
+                                    : Colors.white.withValues(alpha: 0.15)),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -107,7 +107,7 @@ class MusicNotification extends StatelessWidget {
                           subtitle!,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.65),
+                            color: Colors.white.withValues(alpha: 0.65),
                             fontSize: 13,
                           ),
                         ),
@@ -123,7 +123,7 @@ class MusicNotification extends StatelessWidget {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8)),
                           child: Icon(icon, color: Colors.white, size: 28),
                         )
@@ -134,7 +134,7 @@ class MusicNotification extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     blurRadius: 8)
                               ]),
                           child: artPath!.startsWith('http')
@@ -166,7 +166,7 @@ class MusicNotification extends StatelessWidget {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8)),
                           child: const Icon(Icons.info_outline_rounded,
                               color: Colors.white, size: 28),
@@ -183,7 +183,7 @@ class MusicNotification extends StatelessWidget {
                             Text(
                               label.toUpperCase(),
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.5,
@@ -206,7 +206,7 @@ class MusicNotification extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 13,
                                 ),
                               ),

@@ -25,7 +25,7 @@ class _PagodaPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final accentPaint = Paint()
-      ..color = const Color(0xFFB71C1C).withOpacity(0.4) // Subtle red accent
+      ..color = const Color(0xFFB71C1C).withValues(alpha: 0.4) // Subtle red accent
       ..style = PaintingStyle.fill;
 
     final double centerX = size.width / 2;

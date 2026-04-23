@@ -112,6 +112,8 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
           newQueue: [song],
         );
 
+        if (!mounted) return;
+
         showCenterNotification(context,
             label: AppLocalizations.of(context)!.playingTrack,
             title: song.title,
@@ -123,7 +125,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text("Playback error: $e"),
+              content: Text("${AppLocalizations.of(context)!.playbackError}: $e"),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 2)),
         );
@@ -221,8 +223,8 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                           ),
                           const SizedBox(height: 24),
                           // Song Label
-                          const Text("SONG",
-                              style: TextStyle(
+                          Text(AppLocalizations.of(context)!.songLabelUpper,
+                              style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.5,
@@ -325,8 +327,8 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  const Text("SONG",
-                                      style: TextStyle(
+                                  Text(AppLocalizations.of(context)!.songLabelUpper,
+                                      style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
                                           letterSpacing: 1)),
@@ -420,7 +422,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4))
                           ]),
@@ -622,7 +624,6 @@ class _MarqueeTextState extends State<_MarqueeText>
   late ScrollController _scrollController;
   late AnimationController _animationController;
   bool _needsScroll = false;
-  bool _isHovered = false;
 
   @override
   void initState() {
@@ -698,11 +699,9 @@ class _MarqueeTextState extends State<_MarqueeText>
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) {
-        setState(() => _isHovered = true);
         widget.onHover?.call(true);
       },
       onExit: (_) {
-        setState(() => _isHovered = false);
         widget.onHover?.call(false);
       },
       child: GestureDetector(

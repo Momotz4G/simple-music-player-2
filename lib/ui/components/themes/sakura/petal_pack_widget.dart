@@ -35,7 +35,7 @@ class _PetalPackPainter extends CustomPainter {
       ];
 
       paint.color = colors[random.nextInt(colors.length)]
-          .withOpacity(0.6 + random.nextDouble() * 0.3);
+          .withValues(alpha: 0.6 + random.nextDouble() * 0.3);
 
       canvas.drawOval(
         Rect.fromCenter(

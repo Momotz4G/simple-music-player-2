@@ -4,7 +4,8 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:metadata_god/metadata_god.dart';
+import 'package:metadata_god/metadata_god.dart' show Metadata;
+import 'metadata_service.dart';
 
 // --- NATIVE C FUNCTION SIGNATURE (Unified Wrapper) ---
 // We define the signature for the single function exposed by our C++ wrapper.
@@ -24,7 +25,8 @@ class AcoustIdService {
   GetFingerprintDart? _getFingerprintWrapper;
 
   AcoustIdService() {
-    _loadNativeLibrary();
+    // 🚀 DEFERRED LOADING: Do not load DLLs on construction 
+    // to prevent COM mode conflicts at app startup.
   }
 
   /// Attempts to load chromaprint.dll / libchromaprint.so
@@ -56,7 +58,10 @@ class AcoustIdService {
   /// --------------------------------------------------------------------------
 
   Future<List<MusicBrainzRecord>> identifyFile(String filePath) async {
-    // 1. Try Native Fingerprinting (The hard part)
+    // 1. Lazy load native library if not already
+    if (!_isNativeLoaded) _loadNativeLibrary();
+
+    // 2. Try Native Fingerprinting (The hard part)
     if (_isNativeLoaded) {
       try {
         final fingerprint = await _generateFingerprint(filePath);
@@ -69,10 +74,9 @@ class AcoustIdService {
       }
     }
 
-    // 2. Fallback: Use MetadataGod to get Artist/Title
+    // 2. Fallback: Use MetadataService (Safe background scan)
     print("⚠️ Using Metadata Fallback...");
-    // FIX APPLIED: Using named argument 'file:'
-    final metadata = await MetadataGod.readMetadata(file: filePath);
+    final Metadata metadata = await MetadataService().readMetadata(filePath);
     final title = metadata?.title ?? "";
     final artist = metadata?.artist ?? "";
 

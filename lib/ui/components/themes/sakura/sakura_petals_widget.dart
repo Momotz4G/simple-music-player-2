@@ -103,7 +103,7 @@ class _SakuraPainter extends CustomPainter {
     for (final petal in petals) {
       final paint = Paint()
         ..color =
-            const Color(0xFFFFB7C5).withOpacity(petal.opacity) // Sakura Pink
+            const Color(0xFFFFB7C5).withValues(alpha: petal.opacity) // Sakura Pink
         ..style = PaintingStyle.fill;
 
       canvas.save();

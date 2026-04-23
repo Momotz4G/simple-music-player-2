@@ -106,8 +106,8 @@ class _VehiclePainter extends CustomPainter {
           skyPaint);
 
       // Draw Lights (Cyan/Magenta)
-      final lightPaint = Paint()..color = v.color.withOpacity(0.8);
-      final tailPaint = Paint()..color = Colors.red.withOpacity(0.6);
+      final lightPaint = Paint()..color = v.color.withValues(alpha: 0.8);
+      final tailPaint = Paint()..color = Colors.red.withValues(alpha: 0.6);
 
       if (v.targetX > 0) {
         // Moving Right
@@ -125,7 +125,7 @@ class _VehiclePainter extends CustomPainter {
 
       // Occasional Glow
       final glowPaint = Paint()
-        ..color = v.color.withOpacity(0.3)
+        ..color = v.color.withValues(alpha: 0.3)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
       canvas.drawCircle(Offset(vx, vy), 8, glowPaint);
     }

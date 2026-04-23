@@ -2,9 +2,6 @@ import 'dart:io'; // Platform check
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
-import 'package:qr_flutter/qr_flutter.dart'; // QR Code
-import '../../services/pocketbase_service.dart'; // Session ID
-import '../../env/env.dart'; // Secure environment variables
 
 import '../../providers/player_provider.dart';
 import '../../providers/timer_provider.dart';
@@ -25,8 +22,10 @@ import 'version_selection_dialog.dart';
 import 'song_context_menu.dart';
 import 'song_info_dialog.dart';
 import '../../services/audio_info_service.dart';
+import '../../services/tray_service.dart';
 import 'marquee_text.dart';
 import 'audio_output_dialog.dart';
+import 'player/device_selector_dialog.dart';
 
 enum TimeUnit { hour, minute, second }
 
@@ -42,8 +41,9 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   bool _isTitleHovered = false;
 
   // Audio Quality Badge
-  AudioInfo? _audioInfo;
-  String? _lastFilePath;
+   AudioInfo? _audioInfo;
+   String? _lastFilePath;
+   bool _isLoadingQuality = false;
 
   Future<void> _fetchAudioInfo(String? filePath) async {
     if (filePath == null) {
@@ -51,16 +51,23 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
       return;
     }
 
-    // Don't re-fetch if file path hasn't changed (handled by check below, but double check)
-    // Note: This method is called when file path actually changes
+    // Redundancy check: If we already have info OR are currently fetching for this path, stop.
+    if (_lastFilePath == filePath && (_audioInfo != null || _isLoadingQuality)) return;
+    
+    _lastFilePath = filePath;
+    if (mounted) setState(() => _isLoadingQuality = true);
 
     try {
-      final info = await AudioInfoService().getAudioInfo(filePath);
-      if (mounted) {
-        setState(() => _audioInfo = info);
+      // Ensure we pass a non-null String
+      final info = await AudioInfoService().getAudioInfo(filePath, isPriority: true);
+      if (mounted && _lastFilePath == filePath) {
+        setState(() {
+          _audioInfo = info;
+          _isLoadingQuality = false;
+        });
       }
     } catch (e) {
-      // Fail silently
+      if (mounted) setState(() => _isLoadingQuality = false);
     }
   }
 
@@ -94,7 +101,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
       margin: const EdgeInsets.only(left: 8),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       decoration: BoxDecoration(
-        border: Border.all(color: color.withOpacity(0.5), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
         borderRadius: BorderRadius.circular(4),
         color: primaryColor.withValues(alpha: 0.1),
       ),
@@ -592,12 +599,19 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                               if (hasSong) {
                                 _showVersionSelector(context, ref, song);
                               }
-                            } else if (value == 'remote') {
-                              _showRemotePairingDialog(l10n);
+                            } else if (value == 'connect_device') {
+                              showModalBottomSheet(
+                                context: context,
+                                backgroundColor: Colors.transparent,
+                                isScrollControlled: true,
+                                builder: (context) => const DeviceSelectorDialog(),
+                              );
                             } else if (value == 'mini') {
                               ref
                                   .read(interfaceProvider.notifier)
                                   .enterMiniPlayer();
+                            } else if (value == 'minimize_tray') {
+                              TrayService().minimizeToTray();
                             } else if (value == 'song_info') {
                               // SHOW SONG INFORMATION DIALOG
                               if (hasSong) {
@@ -683,15 +697,30 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                   ),
                                 ),
 
-                              // 5. REMOTE CONTROL OPTION
+                              // 4.5 MINIMIZE TO TRAY OPTION (Desktop Only)
+                              if (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
+                                PopupMenuItem(
+                                  value: 'minimize_tray',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.call_received_rounded,
+                                          color: primaryColor, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(l10n.minimizeToTray,
+                                          style: TextStyle(color: primaryColor)),
+                                    ],
+                                  ),
+                                ),
+
+                              // 5. CONNECT TO A DEVICE OPTION
                               PopupMenuItem(
-                                value: 'remote',
+                                value: 'connect_device',
                                 child: Row(
                                   children: [
-                                    Icon(Icons.qr_code_2_rounded,
+                                    Icon(Icons.devices_rounded,
                                         color: primaryColor, size: 20),
                                     const SizedBox(width: 12),
-                                    Text(l10n.listeningParty,
+                                    Text(l10n.connectToADevice,
                                         style: TextStyle(color: primaryColor)),
                                   ],
                                 ),
@@ -914,38 +943,45 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: dialogColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         title: Text(l10n.sleepTimer, style: TextStyle(color: textColor)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _timerOption(
-                context, ref, 15, l10n.minutesDuration(15), textColor, l10n),
-            _timerOption(
-                context, ref, 30, l10n.minutesDuration(30), textColor, l10n),
-            _timerOption(
-                context, ref, 45, l10n.minutesDuration(45), textColor, l10n),
-            _timerOption(
-                context, ref, 60, l10n.hoursDuration(1), textColor, l10n),
-            ListTile(
-              leading: Icon(Icons.edit, color: textColor),
-              title: Text(l10n.customTime, style: TextStyle(color: textColor)),
-              onTap: () {
-                Navigator.pop(context);
-                _showCustomTimerInput(context, ref, l10n);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading:
-                  const Icon(Icons.timer_off_rounded, color: Colors.redAccent),
-              title: Text(l10n.turnOffTimer,
-                  style: const TextStyle(color: Colors.redAccent)),
-              onTap: () {
-                ref.read(timerProvider.notifier).cancelTimer();
-                Navigator.pop(context);
-              },
-            ),
-          ],
+        content: SizedBox(
+          width: 240, // 🚀 Slimmer width to avoid "fat" look
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _timerOption(
+                  context, ref, 15, l10n.minutesDuration(15), textColor, l10n),
+              _timerOption(
+                  context, ref, 30, l10n.minutesDuration(30), textColor, l10n),
+              _timerOption(
+                  context, ref, 45, l10n.minutesDuration(45), textColor, l10n),
+              _timerOption(
+                  context, ref, 60, l10n.hoursDuration(1), textColor, l10n),
+              const Divider(),
+              ListTile(
+                leading: Icon(Icons.edit, color: textColor),
+                title: Text(l10n.customTime, style: TextStyle(color: textColor)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCustomTimerInput(context, ref, l10n);
+                },
+              ),
+              if (ref.watch(timerProvider).isActive || ref.watch(playerProvider).isSleepPending) ...[
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.timer_off_rounded, color: Colors.redAccent),
+                  title: Text(l10n.turnOffTimer,
+                      style: const TextStyle(color: Colors.redAccent)),
+                  onTap: () {
+                    ref.read(timerProvider.notifier).cancelTimer();
+                    ref.read(playerProvider.notifier).setSleepPending(false);
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -1095,68 +1131,6 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     }
   }
 
-  // REMOTE CONTROL DIALOG
-  void _showRemotePairingDialog(AppLocalizations l10n) async {
-    // Get the session record ID (not user_id) for security
-    final sessionId = await PocketBaseService().getUniqueSessionId();
-    if (sessionId == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorCouldNotCreateSession)),
-        );
-      }
-      return;
-    }
-
-    // Use session record ID in URL instead of user_id
-    final url = "${Env.remoteControlUrl}/?sid=$sessionId";
-
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.listeningParty),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: SizedBox(
-                width: 200,
-                height: 200,
-                child: QrImageView(
-                  data: url,
-                  version: QrVersions.auto,
-                  size: 200.0,
-                  backgroundColor: Colors.white,
-                  padding: EdgeInsets.zero,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.scanToControlPlayback,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            SelectableText(
-              l10n.session(sessionId),
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: Text(l10n.close)),
-        ],
-      ),
-    );
-  }
 
   // 🚀 MOBILE MINI PLAYER BAR (Floating design) + Bottom Navigation
   Widget _buildMobilePlayerBar(
@@ -1269,7 +1243,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
+                        color: Colors.black.withValues(alpha: 0.25),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -1279,7 +1253,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                     // Dark overlay for better text readability
                     decoration: BoxDecoration(
                       color: hasCustomColor
-                          ? Colors.black.withOpacity(0.4) // Dark overlay
+                          ? Colors.black.withValues(alpha: 0.4) // Dark overlay
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(14),
                     ),

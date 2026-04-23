@@ -84,47 +84,45 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 final entry = historyEntries[index];
-                final fileExists = File(entry.originalFilePath).existsSync();
 
-                // 🚀 CHECK FOR VALID ONLINE ART URL
-                final bool hasOnlineArt = entry.albumArtUrl.isNotEmpty;
+                return FutureBuilder<bool>(
+                  future: File(entry.originalFilePath).exists(),
+                  initialData: true, // Assume it exists to avoid flicker
+                  builder: (context, snapshot) {
+                    final fileExists = snapshot.data ?? false;
+                    final bool hasOnlineArt = entry.albumArtUrl.isNotEmpty;
 
-                return ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-
-                  // 🚀 SMART ART FALLBACK LOGIC
-                  // 1. If file exists -> Load from disk (SmartArt)
-                  // 2. If file missing but URL exists -> Load from Network
-                  // 3. Else -> Placeholder
-                  leading: fileExists
-                      ? SmartArt(
-                          path: entry.originalFilePath,
-                          size: 48,
-                          borderRadius: 4,
-                          onlineArtUrl: entry.albumArtUrl)
-                      : (hasOnlineArt
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: Image.network(
-                                entry.albumArtUrl,
-                                width: 48,
-                                height: 48,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                    color: Colors.grey[900],
-                                    child: const Icon(Icons.music_note,
-                                        color: Colors.white24)),
-                              ),
-                            )
-                          : Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                  color: Colors.grey[900],
-                                  borderRadius: BorderRadius.circular(4)),
-                              child: const Icon(Icons.music_note,
-                                  color: Colors.white24))),
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                      leading: fileExists
+                          ? SmartArt(
+                              path: entry.originalFilePath,
+                              size: 48,
+                              borderRadius: 4,
+                              onlineArtUrl: entry.albumArtUrl)
+                          : (hasOnlineArt
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Image.network(
+                                    entry.albumArtUrl,
+                                    width: 48,
+                                    height: 48,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                        color: Colors.grey[900],
+                                        child: const Icon(Icons.music_note,
+                                            color: Colors.white24)),
+                                  ),
+                                )
+                              : Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                      color: Colors.grey[900],
+                                      borderRadius: BorderRadius.circular(4)),
+                                  child: const Icon(Icons.music_note,
+                                      color: Colors.white24))),
 
                   title: Text(
                     entry.title,
@@ -183,10 +181,12 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   ),
                   trailing: Icon(Icons.play_circle_outline,
                       size: 24, color: accentColor.withValues(alpha: 0.7)),
-                  onTap: () => _handleSongTap(entry),
-                );
-              }, childCount: historyEntries.length),
-            ),
+                    onTap: () => _handleSongTap(entry),
+                  );
+                },
+              );
+            }, childCount: historyEntries.length),
+          ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],

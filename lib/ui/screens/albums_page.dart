@@ -38,8 +38,7 @@ class AlbumsPage extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: CustomScrollView(
-        key: const PageStorageKey(
-            'albums_page_scroll'), // Preserve Scroll Position
+        key: const PageStorageKey('albums_page_scroll'),
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
@@ -71,7 +70,8 @@ class AlbumsPage extends ConsumerWidget {
                     : AppLocalizations.of(context)!.unknownArtist;
 
                 final year = songs
-                        .firstWhere((s) => s.year != null && s.year!.isNotEmpty,
+                        .firstWhere(
+                            (s) => s.year != null && s.year!.isNotEmpty,
                             orElse: () => songs.first)
                         .year ??
                     "Unknown";
@@ -82,17 +82,15 @@ class AlbumsPage extends ConsumerWidget {
                   songs: songs,
                   year: year,
                   onTap: () {
-                    // Create a local AlbumModel
                     final album = AlbumModel(
-                      id: "local_$albumName", // Dummy ID for local
+                      id: "local_$albumName",
                       title: albumName,
                       artist: artistName,
-                      imageUrl: "", // Detail page will fetch/find it
+                      imageUrl: "",
                       releaseDate: year,
-                      localSongs: songs, // PASS LOCAL SONGS
+                      localSongs: songs,
                     );
 
-                    // Navigate
                     ref.read(navigationStackProvider.notifier).push(
                           NavigationItem(
                               type: NavigationType.album, data: album),

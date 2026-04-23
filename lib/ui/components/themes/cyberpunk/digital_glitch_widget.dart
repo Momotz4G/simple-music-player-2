@@ -88,7 +88,7 @@ class _GlitchPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final textStyle = TextStyle(
-      color: const Color(0xFF00FFFF).withOpacity(0.4), // Cyan Glow
+      color: const Color(0xFF00FFFF).withValues(alpha: 0.4), // Cyan Glow
       fontSize: 10,
       fontFamily: 'monospace',
       fontWeight: FontWeight.bold,
@@ -105,7 +105,7 @@ class _GlitchPainter extends CustomPainter {
               text: s.characters[i],
               style: textStyle.copyWith(
                 color: textStyle.color!
-                    .withOpacity((1 - (i / s.characters.length)) * 0.4),
+                    .withValues(alpha: (1 - (i / s.characters.length)) * 0.4),
               )),
           textDirection: TextDirection.ltr,
         )..layout();

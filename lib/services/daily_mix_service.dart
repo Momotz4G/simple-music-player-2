@@ -5,6 +5,7 @@ import '../models/song_metadata.dart';
 import '../models/stat_model.dart';
 import 'spotify_service.dart';
 import 'deezer_service.dart';
+import 'debug_log_service.dart';
 
 /// Service to generate personalized daily mixes based on user's listening history
 class DailyMixService {
@@ -17,8 +18,6 @@ class DailyMixService {
   Future<List<DailyMix>> getDailyMixes(Map<String, StatEntry> stats) async {
     // 1. Try to load from in-memory cache
     if (_cachedMixes.isNotEmpty && !_cachedMixes.first.isStale) {
-      print(
-          "📦 DailyMixes: Using in-memory cache (${_cachedMixes.length} mixes)");
       return _cachedMixes;
     }
 
@@ -31,13 +30,11 @@ class DailyMixService {
         final List<dynamic> jsonList = jsonDecode(cachedJson);
         final mixes = jsonList.map((j) => DailyMix.fromJson(j)).toList();
         if (mixes.isNotEmpty && !mixes.first.isStale) {
-          print("💾 DailyMixes: Loaded ${mixes.length} mixes from disk cache");
           _cachedMixes = mixes;
           return mixes;
         }
-        print("⏰ DailyMixes: Cache is stale, regenerating...");
       } catch (e) {
-        print("⚠️ DailyMixes: Failed to parse cache: $e");
+        DebugLogService().error("⚠️ DailyMixes: Failed to parse cache: $e");
       }
     }
 
@@ -56,13 +53,11 @@ class DailyMixService {
     Map<String, StatEntry> stats,
     SharedPreferences prefs,
   ) async {
-    print("🎵 DailyMixes: Generating 6 mixes...");
-
     // Get top 30 artists to distribute across 6 mixes (5 artists per mix)
     final allTopArtists = _getTopArtists(stats, limit: 30);
 
     if (allTopArtists.isEmpty) {
-      print("⚠️ DailyMixes: No listening history yet");
+      DebugLogService().info("⚠️ DailyMixes: No listening history yet");
       return [];
     }
 
@@ -98,7 +93,6 @@ class DailyMixService {
         _cacheKey,
         jsonEncode(mixes.map((m) => m.toJson()).toList()),
       );
-      print("💾 DailyMixes: Cached ${mixes.length} mixes");
     }
 
     return mixes;
@@ -110,8 +104,6 @@ class DailyMixService {
     required List<String> artists,
     required String title,
   }) async {
-    print("🎯 Mix $mixNumber: ${artists.join(', ')}");
-
     // Get Spotify artist IDs
     final artistIds = <String>[];
     for (final artistName in artists) {
@@ -122,7 +114,6 @@ class DailyMixService {
     }
 
     if (artistIds.isEmpty) {
-      print("   ⚠️ Mix $mixNumber: Could not find any artist IDs");
       return null;
     }
 
@@ -134,16 +125,12 @@ class DailyMixService {
 
     // Fallback to track search if recommendations fail
     if (tracks.isEmpty) {
-      print("   🔄 Mix $mixNumber: Using fallback search...");
       tracks = await _getFallbackTracks(artists);
     }
 
     if (tracks.isEmpty) {
-      print("   ❌ Mix $mixNumber: No tracks found");
       return null;
     }
-
-    print("   ✅ Mix $mixNumber: Got ${tracks.length} tracks");
 
     return DailyMix(
       id: 'daily_mix_${mixNumber}_${DateTime.now().millisecondsSinceEpoch}',
@@ -167,14 +154,14 @@ class DailyMixService {
         try {
           tracks = await SpotifyService.searchTracks('artist:$artist');
         } catch (e) {
-          print("   ⚠️ Spotify error searching for $artist: $e, trying Deezer");
+          DebugLogService().error("⚠️ Spotify error searching for $artist: $e");
         }
 
         if (tracks.isEmpty) {
           try {
             tracks = await DeezerService.searchSongs('artist:"$artist"');
           } catch (e) {
-            print("   ⚠️ Deezer error searching for $artist: $e");
+            DebugLogService().error("⚠️ Deezer error searching for $artist: $e");
           }
         }
 
@@ -186,7 +173,7 @@ class DailyMixService {
           }
         }
       } catch (e) {
-        print("   ⚠️ Error searching for $artist: $e");
+        DebugLogService().error("⚠️ Error searching for $artist: $e");
       }
     }
 

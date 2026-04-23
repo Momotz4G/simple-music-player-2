@@ -207,7 +207,7 @@ class _SiriWavePainter extends CustomPainter {
       ghostPath.lineTo(x, y);
     }
     paint.strokeWidth = 1.5;
-    if (!isRainbow) paint.color = color.withOpacity(0.5);
+    if (!isRainbow) paint.color = color.withValues(alpha: 0.5);
     canvas.drawPath(ghostPath, paint);
   }
 
@@ -250,7 +250,7 @@ class _CircularPulsePainter extends CustomPainter {
         paint.color = HSVColor.fromAHSV(opacity, (i * 120).toDouble(), 0.7, 1.0)
             .toColor();
       } else {
-        paint.color = color.withOpacity(opacity);
+        paint.color = color.withValues(alpha: opacity);
       }
 
       canvas.drawCircle(center, radius, paint);

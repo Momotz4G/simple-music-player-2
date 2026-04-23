@@ -92,6 +92,39 @@ class TranslationService {
     return null;
   }
 
+  /// Translate a single text string.
+  /// Returns the translated string, or null on failure.
+  static Future<String?> translateText({
+    required String text,
+    String targetLang = 'en',
+  }) async {
+    try {
+      if (text.trim().isEmpty) return text;
+
+      final response = await http
+          .post(
+            Uri.parse(_apiUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'text': [text],
+              'to': targetLang,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final translations = List<String>.from(data['translations'] ?? []);
+        if (translations.isNotEmpty) {
+          return translations.first;
+        }
+      }
+    } catch (e) {
+      print('Translation error: $e');
+    }
+    return null;
+  }
+
   /// Clear cache for a specific song
   static void clearSongCache(String songKey) {
     _cache.remove(songKey);

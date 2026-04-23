@@ -22,13 +22,13 @@ class AppTheme {
       textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
       colorScheme: ColorScheme.dark(
         primary: accentColor,
-        secondary: accentColor.withOpacity(0.8),
+        secondary: accentColor.withValues(alpha: 0.8),
         surface: darkCardColor,
         background: darkBackgroundColor,
       ),
       listTileTheme: ListTileThemeData(
         dense: true,
-        selectedTileColor: accentColor.withOpacity(0.1),
+        selectedTileColor: accentColor.withValues(alpha: 0.1),
         iconColor: Colors.white70,
         selectedColor: accentColor,
       ),

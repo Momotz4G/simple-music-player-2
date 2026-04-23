@@ -646,8 +646,8 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-        hoverColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-        splashColor: (isDark ? Colors.white : Colors.black).withOpacity(0.15),
+        hoverColor: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+        splashColor: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Row(

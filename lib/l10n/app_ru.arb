@@ -1,261 +1,19 @@
 {
-  "browse": "Обзор",
-  "search": "Поиск",
-  "history": "История",
-  "stats": "Статистика",
-  "library": "Библиотека",
-  "playlists": "Плейлисты",
-  "artists": "Исполнители",
-  "albums": "Альбомы",
-  "folders": "Папки",
-  "local_library": "Локальная библиотека",
-  "downloads": "Загрузки",
-  "metadata_editor": "Редактор метаданных",
-  "editMetadata": "Редактировать метаданные",
-  "enableAlphabetIndexer": "Включить алфавитный указатель прокрутки",
-  "enableAlphabetIndexerSubtitle": "Показывать индекс боковой панели A-Z в мобильном списке",
-  "success": "Успешно",
-  "metadataUpdated": "Метаданные обновлены",
-  "failedToUpdateMetadata": "Не удалось обновить метаданные",
-  "toggleLyrics": "Переключить текст",
-  "settings": "Настройки",
-  "navigation": "Навигация",
-  "system": "Система",
-  "language": "Язык",
-  "english": "Английский",
-  "indonesian": "Индонезийский",
-  "korean": "Корейский",
-  "japanese": "Японский",
-  "chinese": "Китайский",
-  "spanish": "Испанский",
-  "french": "Французский",
-  "german": "Немецкий",
-  "portuguese": "Португальский (Бразилия)",
-  "thai": "Тайский",
-  "vietnamese": "Вьетнамский",
-  "arabic": "Арабский",
-  "russian": "Русский",
-  "hindi": "Хинди",
-  "appearance": "Внешний вид",
-  "atmospheres": "Атмосферы",
-  "none": "Нет",
-  "winter": "Зима",
-  "autumn": "Осень",
-  "rainyCity": "Дождливый город",
-  "sakura": "Сакура",
-  "lunarNewYear": "Лунный Новый год",
-  "cyberpunk": "Киберпанк",
-  "underwater": "Под водой",
-  "nordicAurora": "Северное сияние",
-  "galacticSpace": "Галактический космос",
-  "desertMirage": "Пустынный мираж",
-  "general": "Общие",
-  "darkMode": "Темный режим",
-  "lockedAtmosphere": "Заблокировано, когда активна атмосфера",
-  "useDarkTheme": "Использовать темную тему",
-  "syncThemeAlbumArt": "Синхронизировать тему с обложкой альбома",
-  "tintBackground": "Окрашивать фон и визуализатор в цвет песни",
-  "accentColor": "Акцентный цвет",
-  "chooseAccentColor": "Выберите предпочитаемый статический цвет",
-  "contentRegion": "Регион контента",
-  "setCountryReleases": "Установить страну для релизов и чартов",
-  "unitedStates": "США",
-  "indonesia": "Индонезия",
-  "southKorea": "Южная Корея",
-  "japan": "Япония",
-  "unitedKingdom": "Великобритания",
-  "brazil": "Бразилия",
-  "visualizer": "Визуализатор",
-  "enableBarVisualizer": "Включить полосовой визуализатор",
-  "showAnimatedWaves": "Показывать анимированные волны в панели воспроизведения",
-  "opacity": "Прозрачность",
-  "visualizerStyle": "Стиль визуализатора",
-  "chooseAnimationType": "Выберите тип анимации",
-  "spectrumBars": "Спектральные полосы",
-  "fluidWave": "Плавная волна",
-  "circularPulse": "Круговой импульс",
-  "rainbowMode": "Радужный режим",
-  "useMixedColors": "Использовать смешанные цвета (приоритет синхронизации)",
-  "integration": "Интеграция",
-  "discordRPC": "Discord Presence",
-  "showStatusDiscord": "Показывать статус в Discord",
-  "tidalApiStatus": "Tidal API",
-  "online": "В сети",
-  "unauthorize": "Не авторизован",
-  "offlineStatus": "Не в сети",
-  "checkInternetConnection": "Проверьте интернет-соединение",
-  "autoClearCache": "Автоматическая очистка кэша",
-  "autoClearDisabled": "Отключено",
-  "autoClearOnClose": "При закрытии приложения",
-  "autoClearAfter24h": "Через 24 часа",
-  "autoClearAfter7d": "Через 7 дней",
-  "autoClearEvery30m": "Каждые 30 мин (Только при прослушивании)",
-  "musicFolderLocation": "Расположение папки с музыкой",
-  "noFolderSelected": "Папка не выбрана",
-  "change": "Изменить",
-  "expand": "Развернуть",
-  "ignoreSubfolderScan": "Игнорировать сканирование подпапок",
-  "onlyScanSelected": "Сканировать только выбранные папки (включено по умолчанию)",
-  "importAdditionalPaths": "Импорт дополнительных путей",
-  "addFoldersScan": "Добавить папки для сканирования",
-  "add": "Добавить",
-  "singleTracks": "Отдельные треки",
-  "unsavedChanges": "Несохраненные изменения",
-  "playlistAlbumTracks": "Треки плейлиста / альбома",
-  "audioFormat": "Аудио формат",
-  "preferredOutputFormat": "Предпочтительный формат вывода для загрузок",
-  "flacNote": "Примечание: FLAC доступен только для загрузки отдельных треков. Загрузка плейлистов будет использовать формат M4A.",
-  "downloadLocation": "Место загрузки",
-  "resetToDefault": "Сбросить по умолчанию",
-  "changeFolder": "Изменить папку",
-  "streaming": "Стриминг",
-  "streamingQuality": "Качество стриминга",
-  "standardQuality": "Стандартное (MP3)",
-  "highQuality": "Высокое качество (M4A)",
-  "losslessQuality": "Без потерь (Авто)",
-  "standardDesc": "MP3 - меньший файл, более быстрая загрузка",
-  "highDesc": "M4A - лучший звук, сбалансированная производительность",
-  "losslessDesc": "FLAC - качество без потерь от Deezer/Tidal",
-  "selectStreamingQuality": "Выберите качество стриминга",
-  "losslessNote": "Будет использоваться FLAC без потерь, если доступно на Deezer/Tidal. В противном случае вернется к M4A.",
-  "playback": "Воспроизведение",
-  "endlessQueue": "Бесконечная очередь",
-  "autoAddSimilar": "Автоматически добавлять похожие песни в конец очереди",
-  "gaplessPlayback": "Бесшовное Воспроизведение",
-  "gaplessPlaybackDesc": "Устранить паузы между треками",
-  "crossfade": "Crossfade",
-  "crossfadeDesc": "Плавный переход между треками ({seconds} с)",
-  "@crossfadeDesc": {
-    "placeholders": {
-      "seconds": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter24h": {
+    "description": "Option to clear cache every 24 hours"
   },
-  "disableRomanization": "Отключить романизацию",
-  "hideRomajiPinyin": "Не показывать Romaji/Pinyin под корейскими, японскими или китайскими текстами",
-  "translationLanguage": "Язык перевода",
-  "targetLanguageLyrics": "Целевой язык для перевода текста песен",
-  "disableCanvas": "Отключить Canvas",
-  "hideCanvas": "Не показывать видео Spotify Canvas, показывать обложку альбома вместо этого",
-  "wasapiExclusive": "Эксклюзивный режим WASAPI",
-  "bitPerfectWindows": "Bit-perfect аудио с автоматической частотой дискретизации (требуется перезагрузка)",
-  "audiophileDAC": "Включить при воспроизведении на аудиофильских ЦАП (требуется перезагрузка)",
-  "android14BitPerfect": "Android 14+ Bit-Perfect",
-  "bypassSystemMixer": "Обходить системный микшер для USB ЦАП",
-  "requiresAndroid14": "Требуется Android 14+ и USB ЦАП",
-  "bitPerfectEnabled": "Режим Bit-perfect включен. Регулировка громкости может не работать.",
-  "audioOutputDevice": "Устройство вывода звука",
-  "loadingDevices": "Загрузка устройств...",
-  "systemDefault": "Системное по умолчанию",
-  "exclusiveWarning": "Предупреждение: Эксклюзивный режим работает лучше, если вы выберете конкретное устройство выше вместо системного по умолчанию.",
-  "dataCleanup": "Данные и очистка",
-  "resetLibraryPath": "Сбросить путь к библиотеке",
-  "unlinkFolder": "Отвязать папку и очистить список песен",
-  "resetLibraryTitle": "Сбросить библиотеку?",
-  "resetLibraryContent": "Это удалит текущую папку из проигрывателя. Ваши файлы не будут удалены.",
-  "resetPath": "Сбросить путь",
-  "clearStreamingCache": "Очистить кэш стриминга",
-  "freeUpSpace": "Освободить место (Текущее: {size})",
-  "resetStatistics": "Сбросить статистику",
-  "clearPlayHistory": "Очистить историю и время прослушивания",
-  "resetStatsTitle": "Сбросить статистику?",
-  "resetStatsContent": "Это действие необратимо.\\nВсе данные о количестве проигрываний и времени будут утеряны навсегда.",
-  "resetEverything": "Сбросить всё",
-  "debugging": "Отладка",
-  "showDebugButton": "Показывать плавающую кнопку отладки",
-  "toggleDebugButton": "Переключить плавающую консоль отладки",
-  "community": "Сообщество",
-  "donate": "Пожертвовать",
-  "joinUs": "Присоединяйтесь к нам",
-  "usbAudioBypass": "USB Audio Bypass (Beta) - Прямой вывод ЦАП для Android 13 и ниже",
-  "comingSoon": "Скоро будет",
-  "underDevelopment": "Эта функция находится в разработке",
-  "version": "Версия",
-  "restartRequired": "Требуется перезагрузка",
-  "restartContent": "Для применения изменений аудиоустройства требуется перезагрузка приложения.\\n\\nПерезагрузить сейчас?",
-  "later": "Позже",
-  "restartNow": "Перезагрузить сейчас",
-  "applyOnRestart": "Изменения будут применены при следующем запуске.",
-  "autoRestartNotSupported": "Автоматическая перезагрузка не поддерживается. Пожалуйста, перезапустите вручную.",
-  "enterAdminCode": "Пожалуйста, введите административный код доступа",
-  "accessCode": "Код доступа",
-  "cancel": "Отмена",
-  "access": "Доступ",
-  "invalidCode": "Неверный код доступа",
-  "formatSaved": "Формат сохранен!",
-  "addedFolder": "Добавлена папка: {folder}",
-  "removedFolder": "Удалена папка: {folder}",
-  "downloadPathUpdated": "Путь загрузки обновлен: {path}",
-  "downloadPathReset": "Путь загрузки сброшен по умолчанию.",
-  "libraryPathReset": "Путь к библиотеке сброшен.",
-  "cacheCleared": "Кэш успешно очищен!",
-  "changesApplyRestart": "Изменения будут применены при следующем запуске.",
-  "changeLanguage": "Изменить язык приложения",
-  "unlinkFolderClear": "Отвязать папку и очистить список песен",
-  "enterAdminAccessCode": "Пожалуйста, введите административный код доступа",
-  "invalidAccessCode": "Неверный код доступа",
-  "androidBitPerfect": "Android 14+ Bit-Perfect",
-  "customDevice": "Пользовательское устройство",
-  "exclusiveModeWarning": "Предупреждение: Эксклюзивный режим работает лучше, если вы выберете конкретное устройство выше вместо системного по умолчанию.",
-  "@freeUpSpace": {
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter7d": {
+    "description": "Option to clear cache every 7 days"
   },
-  "statisticsReset": "Статистика сброшена.",
-  "toggleDebugConsole": "Переключить плавающую консоль отладки",
-  "usbAudioBypassBeta": "USB Audio Bypass (Beta) - Прямой вывод ЦАП для Android 13 и ниже",
-  "connectedUsbDacs": "Подключенные USB ЦАП:",
-  "scanning": "Сканирование...",
-  "scan": "Сканировать",
-  "noUsbDacDetected": "USB ЦАП не обнаружен. Подключите аудиоустройство USB и нажмите «Сканировать».",
-  "connected": "Подключено",
-  "connect": "Подключить",
-  "failedToConnectDac": "Не удалось подключиться к ЦАП. Проверьте разрешения USB.",
-  "connectedToDac": "Подключено к {deviceName} - USB Bypass активен",
-  "@connectedToDac": {
-    "placeholders": {
-      "deviceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearCache": {
+    "description": "Auto clear cache setting section"
   },
-  "changingAudioDeviceRestart": "Для применения изменений аудиоустройства требуется перезагрузка приложения.\\n\\nПерезагрузить сейчас?",
-  "translateLyrics": "Перевести текст",
-  "viewQueue": "Просмотр очереди",
-  "loadingLyrics": "Загрузка текста...",
-  "noLyricsAvailable": "Текст песни недоступен",
-  "noSyncedLyricsFound": "Синхронизированный текст не найден",
-  "justEnjoyVibes": "Просто наслаждайтесь атмосферой.",
-  "scrollForLyrics": "Прокрутите для просмотра текста",
-  "switchingTo": "Переключение на",
-  "metadataEditorInfo": "Вы можете быстро найти и исправить данные в редакторе метаданных.",
-  "metadataEditorNote": "Примечание: После появления статуса «Успешно сохранено» обложка альбома может измениться. Это не ошибка, а проблема с кэшем приложения, которую мы решаем. Проверьте в файловом менеджере.",
-  "close": "Закрыть",
-  "permissionRequired": "Требуется разрешение",
-  "permissionRequiredDesc": "Разрешение «Доступ ко всем файлам» необходимо для редактирования тегов. Это позволяет изменять ваши музыкальные файлы напрямую.",
-  "grantPermission": "Предоставить разрешение",
-  "files": "Файлы",
-  "editor": "Редактор",
-  "clearImported": "Очистить импортированные",
-  "libraryData": "Данные библиотеки",
-  "externalFiles": "Внешние файлы",
-  "addFiles": "Добавить файлы",
-  "addFolder": "Добавить папку",
-  "selectSongToEdit": "Выберите песню из списка для редактирования",
-  "fixAll": "Исправить всё",
-  "autoTagTitle": "⚠️ Авто-теги для {sourceName}?",
-  "@autoTagTitle": {
-    "placeholders": {
-      "sourceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearDisabled": {
+    "description": "Option to disable auto clear cache"
   },
-  "autoTagContent": "Это приведет к поиску всех {count} песен из «{sourceName}» на Spotify и автоматической перезаписи тегов.\\n\\nЭто действие необратимо.",
+  "@autoClearOnClose": {
+    "description": "Option to clear cache when app closes"
+  },
   "@autoTagContent": {
     "placeholders": {
       "count": {
@@ -266,48 +24,41 @@
       }
     }
   },
-  "startBulkProcess": "Начать пакетную обработку",
-  "title": "Название",
-  "artist": "Исполнитель",
-  "album": "Альбом",
-  "genre": "Жанр",
-  "year": "Год",
-  "trackNumber": "№ трека",
-  "discNumber": "№ диска",
-  "autoFixComingSoon": "Авто-исправление (Скоро)",
-  "manualSearch": "Поиск вручную",
-  "revert": "Вернуть",
-  "saveChangesToFile": "Сохранить изменения в файл",
-  "searchSpotify": "Поиск в Spotify",
-  "searchHint": "Поиск...",
-  "selectMatch": "Выберите совпадение",
-  "upNext": "Далее",
-  "fetchingLossless": "Получение качества без потерь...",
-  "noMusicPlaying": "Музыка не воспроизводится",
-  "refreshList": "Обновить список",
-  "noDownloadsFound": "Загрузки не найдены",
-  "play": "Играть",
-  "deletePlaylistPermanentConfirm": "Вы уверены, что хотите удалить этот плейлист? (Это действие нельзя отменить)",
-  "publicSharing": "Публичный доступ",
-  "publicSharingDesc": "Любой, у кого есть код, может импортировать этот плейлист.",
-  "publicSharingDisabledDesc": "Отключено. Включите, чтобы поделиться с другими.",
-  "failedEnableSharing": "Не удалось включить общий доступ. Проверьте соединение.",
-  "failedDisableSharing": "Не удалось отключить общий доступ.",
-  "disablingSharingWarning": "При отключении общего доступа код и данные будут навсегда удалены с сервера для экономии места.",
-  "invalidSpotifyUrl": "Неверный URL-адрес плейлиста Spotify",
-  "invalidYoutubeMusicUrl": "Неверная ссылка на плейлист YouTube Music",
-  "fetchingPlaylistInfo": "Получение информации о плейлисте...",
-  "failedFetchPlaylistInfo": "Не удалось получить информацию о плейлисте",
-  "fetchingTracksFrom": "Получение треков из \"{name}\"...",
-  "@fetchingTracksFrom": {
+  "@autoTagTitle": {
     "placeholders": {
-      "name": {
+      "sourceName": {
         "type": "String"
       }
     }
   },
-  "noTracksFound": "Треки в плейлисте не найдены",
-  "creatingPlaylistWithTracks": "Создание плейлиста с {count} треками...",
+  "@automaticTitleLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@consecutivePlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@creatingPlaylistWithTracks": {
     "placeholders": {
       "count": {
@@ -315,115 +66,30 @@
       }
     }
   },
-  "importedTracks": "Успешно импортировано {count} треков!",
-  "@importedTracks": {
+  "@crossfadeDesc": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "importFailed": "Ошибка импорта: {error}",
-  "@importFailed": {
-    "placeholders": {
-      "error": {
+      "seconds": {
         "type": "String"
-      }
-    }
-  },
-  "fetchingSharedPlaylist": "Получение общего плейлиста...",
-  "playlistNotFoundOrError": "Плейлист не найден или ошибка сервера",
-  "parsingPlaylistData": "Анализ данных плейлиста...",
-  "importedPlaylistName": "Плейлист \"{name}\" успешно импортирован!",
-  "@importedPlaylistName": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "codeMust6Digits": "Код должен состоять из 6 цифр",
-  "fetchingPlaylist": "Получение плейлиста...",
-  "importViaCode": "Импорт по коду",
-  "enterShareCode": "Введите 6-значный код общего доступа",
-  "importChoice": "Импортировать",
-  "downloadedTo": "Загружено в: {path}",
-  "folderPath": "Папка: {path}",
-  "errorDeleting": "Ошибка при удалении: {error}",
-  "ok": "OK",
-  "searchSongs": "Поиск песен...",
-  "noResultsFound": "Результаты не найдены",
-  "refreshLibrary": "Обновить библиотеку",
-  "shuffleAll": "Перемешать всё",
-  "switchToListView": "Переключить на список",
-  "switchToGridView": "Переключить на сетку",
-  "songsLoadedCount": "Загружено песен: {count}...",
-  "grantAccess": "Предоставить доступ",
-  "selectDifferentFolder": "Выбрать другую папку",
-  "selectFolder": "Выбрать папку",
-  "noSongsInFolder": "В этой папке песен не найдено.",
-  "queueUpdated": "Очередь обновлена",
-  "playingNext": "Далее играет",
-  "addedToQueue": "Добавлено в очередь",
-  "playingTrack": "Воспроизведение трека",
-  "error": "Ошибка",
-  "noPlaylistsFound": "Плейлисты не найдены",
-  "addToPlaylist": "Добавить в плейлист",
-  "songAlreadyInPlaylist": "Песня уже есть в плейлисте",
-  "addedToPlaylistSuccess": "Добавлено в плейлист",
-  "alreadyInLikedSongs": "Уже в любимых песнях",
-  "addedToLikedSongs": "Добавлено в любимые песни",
-  "likedSongs": "Любимые песни",
-  "preparingDownload": "Подготовка загрузки",
-  "fetchingMetadataSpotify": "Получение метаданных из Spotify...",
-  "preparingDownloadNotification": "Подготовка загрузки",
-  "downloadStarted": "Загрузка началась",
-  "downloading": "Загрузка",
-  "preparingDownloadFormat": "Подготовка загрузки ({format})...",
-  "searching": "Поиск...",
-  "findingBestMatchYoutube": "Поиск лучшего совпадения на YouTube...",
-  "downloadingFlac": "Загрузка FLAC",
-  "fetchingLosslessAudio": "Получение аудио без потерь...",
-  "downloadComplete": "Загрузка завершена",
-  "flacSavedToDownloads": "FLAC сохранен в папку загрузок",
-  "downloadCompleteNotification": "Загрузка завершена",
-  "flacUnavailable": "FLAC недоступен",
-  "flacUnavailableDesc": "FLAC недоступен, загрузка не удалась. Попробуйте изменить настройки.",
-  "flacUnavailableNotification": "FLAC недоступен",
-  "changeFormatInSettings": "Пожалуйста, измените формат вывода в настройках",
-  "flacError": "Ошибка FLAC",
-  "couldNotDownloadFlac": "Не удалось загрузить FLAC.",
-  "downloadingFormat": "Загрузка {format}",
-  "savedAsFormat": "Сохранено как {format}",
-  "downloadFailed": "Загрузка не удалась",
-  "downloadError": "Ошибка загрузки",
-  "playNext": "Играть следующим",
-  "addToQueue": "Добавить в очередь",
-  "addToFavorite": "Добавить в избранное",
-  "goToArtist": "Перейти к исполнителю",
-  "download": "Скачать",
-  "noAlbumsFound": "Альбомы не найдены",
-  "moreOptions": "Дополнительные опции",
-  "titleLabel": "Название",
-  "artistLabel": "Исполнитель",
-  "albumLabel": "Альбом",
-  "downloadAll": "Скачать всё",
-  "albumRemovedFromPlaylists": "Альбом удален из плейлистов",
-  "albumAddedToPlaylists": "Альбом добавлен в плейлисты",
-  "startedDownloadingAll": "Начата загрузка всех песен...",
-  "playingFromAlbum": "Воспроизведение из альбома",
-  "unknownArtist": "Неизвестный исполнитель",
-  "songsCount": "{count, plural, one{1 песня} few{{count} песни} other{{count} песен}}",
-  "@songsCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
       }
     }
   },
   "@deleteFileContent": {
     "placeholders": {
       "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@deviceNameLabel": {
+    "placeholders": {
+      "deviceName": {
         "type": "String"
       }
     }
@@ -435,9 +101,9 @@
       }
     }
   },
-  "@folderPath": {
+  "@downloadingFormat": {
     "placeholders": {
-      "path": {
+      "format": {
         "type": "String"
       }
     }
@@ -449,145 +115,27 @@
       }
     }
   },
-  "@songsLoadedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "@preparingDownloadFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@downloadingFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "@savedAsFormat": {
-    "placeholders": {
-      "format": {
-        "type": "String"
-      }
-    }
-  },
-  "libraryNotLoaded": "Библиотека не загружена.",
-  "noArtistsFound": "Исполнители не найдены.",
-  "goToLocalLibraryToSelect": "Перейдите в локальную библиотеку, чтобы выбрать папку.",
-  "popularOnSpotify": "Популярно в Spotify",
-  "songsInLibrary": "{count, plural, one{1 песня} few{{count} песни} other{{count} песен}} в библиотеке",
-  "@songsInLibrary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "shuffle": "Перемешать",
-  "shufflingArtist": "Перемешивание песен {artistName}...",
-  "@shufflingArtist": {
-    "placeholders": {
-      "artistName": {
-        "type": "String"
-      }
-    }
-  },
-  "showMore": "Показать больше",
-  "showLess": "Показать меньше",
-  "discography": "Дискография",
-  "seeAll": "Посмотреть всё",
-  "newPlaylist": "Новый плейлист",
-  "noPlaylistsYet": "Плейлистов пока нет",
-  "createPlaylist": "Создать плейлист",
-  "emptyPlaylist": "Пустой плейлист",
-  "emptyPlaylistSubtitle": "Создать новый пустой плейлист",
-  "importFromSpotify": "Импорт из Spotify",
-  "importFromSpotifySubtitle": "Вставьте ссылку на плейлист Spotify",
-  "importFromYoutubeMusic": "Импорт из YouTube Music",
-  "importFromYoutubeMusicSubtitle": "Вставьте ссылку на плейлист YouTube Music",
-  "playlistNameHint": "Название плейлиста",
-  "importSpotifyPlaylist": "Импортировать плейлист Spotify",
-  "importYoutubeMusicPlaylist": "Импортировать плейлист YouTube Music",
-  "deletePlaylistTitle": "Удалить плейлист?",
-  "deletePlaylistConfirm": "Вы уверены, что хотите удалить «{name}»?",
-  "@deletePlaylistConfirm": {
+  "@fetchingTracksFrom": {
     "placeholders": {
       "name": {
         "type": "String"
       }
     }
   },
-  "playlistNotFound": "Плейлист не найден",
-  "noSongsAdded": "Песни пока не добавлены",
-  "deleteDownloadsTitle": "Удалить загрузки?",
-  "deleteDownloadsConfirm": "Это удалит все загруженные на это устройство песни для этого плейлиста.",
-  "allDownloadsRemoved": "Все загрузки удалены",
-  "rename": "Переименовать",
-  "removeFromPlaylist": "Удалить из плейлиста",
-  "renamePlaylist": "Переименовать плейлист",
-  "listeningStats": "Статистика прослушивания",
-  "topArtist": "Топ исполнителей",
-  "mostListened": "Самые прослушиваемые",
-  "timeListened": "Время прослушивания",
-  "totalPlays": "Всего проигрываний",
-  "minutes": "минут",
-  "tracks": "треков",
-  "songs": "песен",
-  "noStatsYet": "Статистики пока нет.",
-  "noArtistStatsYet": "Статистики исполнителей пока нет.",
-  "plays": "проигрываний",
-  "min": "мин",
-  "share": "Поделиться",
-  "savedTo": "Сохранено в «{path}»",
-  "@savedTo": {
+  "@folderPath": {
     "placeholders": {
       "path": {
         "type": "String"
       }
     }
   },
-  "myTopTrackOn": "Мой {header} на Simple Player! 🎵",
-  "@myTopTrackOn": {
+  "@foundExistingAccount": {
     "placeholders": {
-      "header": {
+      "name": {
         "type": "String"
       }
     }
   },
-  "fileMissingHistory": "Файл отсутствует и не найден в истории.",
-  "restoring": "Восстановление",
-  "reBuffering": "Буферизация...",
-  "nowPlaying": "Сейчас играет",
-  "recentlyPlayed": "Недавно прослушанные",
-  "clearHistory": "Очистить историю",
-  "noHistoryYet": "Истории пока нет",
-  "cloud": "Облако",
-  "cached": "Кэшировано",
-  "searchingStatus": "Поиск",
-  "findingStream": "Поиск источника стриминга...",
-  "noStreamMatch": "Совпадений для стриминга не найдено.",
-  "errorSearchingStream": "Ошибка при поиске стрима.",
-  "rebufferingFromCloud": "Перезагрузка из облака...",
-  "musicSearch": "Поиск музыки",
-  "songTitleKeyword": "Название или ключевое слово",
-  "searchSpotifyHint": "Поиск в Spotify...",
-  "readySearchSong": "Готово. Найдите песню.",
-  "searchingSpotifyFor": "Поиск «{keyword}» в Spotify...",
-  "@searchingSpotifyFor": {
-    "placeholders": {
-      "keyword": {
-        "type": "String"
-      }
-    }
-  },
-  "offline": "Оффлайн",
-  "foundResults": "Найдено: {songCount} песен, {albumCount} альбомов, {artistCount} исполнителей.",
   "@foundResults": {
     "placeholders": {
       "songCount": {
@@ -601,76 +149,27 @@
       }
     }
   },
-  "noSpotifyResults": "Результатов в Spotify не найдено.",
-  "searchFailedStatus": "Ошибка поиска: {error}",
-  "@searchFailedStatus": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "noInternetConnection": "Нет подключения к интернету",
-  "checkNetworkTryAgain": "Проверьте сеть и попробуйте снова",
-  "noSuggestionsFound": "Предложений не найдено.",
-  "statusWithText": "Статус: {status}",
-  "@statusWithText": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
-  "goodMorning": "Доброе утро",
-  "goodAfternoon": "Добрый день",
-  "goodEvening": "Добрый вечер",
-  "jumpBackIn": "Продолжить прослушивание",
-  "yourTopMix": "Ваш топ-микс",
-  "youMayLike": "Вам может понравиться",
-  "yourPlaylists": "Ваши плейлисты",
-  "quickMix": "Быстрый микс",
-  "madeForYou": "Создано для вас",
-  "rediscover": "Откройте заново",
-  "doYouRemember": "Вы помните?",
-  "countSongs": "{count, plural, one{1 песня} few{{count} песни} other{{count} песен}}",
-  "@countSongs": {
+  "@foundYoutubeResults": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "savePlaylistTitle": "Сохранить «{title}»?",
-  "@savePlaylistTitle": {
+  "@freeUpSpace": {
     "placeholders": {
-      "title": {
+      "size": {
         "type": "String"
       }
     }
   },
-  "savePlaylistContent": "Это создаст новый плейлист на основе этих песен.",
-  "savedAs": "Сохранено как «{name}»!",
-  "@savedAs": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "save": "Сохранить",
-  "searchSongsOrAlbumsAndArtistsHint": "Поиск песен, альбомов или исполнителей...",
-  "playQueue": "Играть очередь",
-  "downloadSong": "Скачать песню",
-  "sleepTimer": "Таймер сна",
-  "minutesDuration": "{count, plural, one{1 минута} few{{count} минуты} other{{count} минут}}",
-  "@minutesDuration": {
+  "@fromLibraryCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "hoursDuration": "{count, plural, one{1 час} few{{count} часа} other{{count} часов}}",
   "@hoursDuration": {
     "placeholders": {
       "count": {
@@ -678,14 +177,52 @@
       }
     }
   },
-  "customTime": "Своё время",
-  "turnOffTimer": "Выключить таймер",
-  "musicWillStopIn": "Музыка остановится через {label}",
-  "stopTimer": "Остановить таймер ({time})",
-  "@stopTimer": {
+  "@importFailed": {
     "placeholders": {
-      "time": {
+      "error": {
         "type": "String"
+      }
+    }
+  },
+  "@importedPlaylistName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@last30DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@last7DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@listenMinutesTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -696,73 +233,76 @@
       }
     }
   },
-  "setCustomTimer": "Установить свой таймер",
-  "enterDuration": "Введите длительность...",
-  "hourShort": "ч",
-  "minuteShort": "мин",
-  "secondShort": "с",
-  "timerSetForHours": "Таймер установлен на {count} ч.",
-  "@timerSetForHours": {
+  "@myTopTrackOn": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForMinutes": "Таймер установлен на {count} мин.",
-  "@timerSetForMinutes": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "timerSetForSeconds": "Таймер установлен на {count} с.",
-  "@timerSetForSeconds": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "start": "Начать",
-  "errorCouldNotCreateSession": "Ошибка: Не удалось создать сессию.",
-  "scanToControlPlayback": "Отсканируйте, чтобы управлять воспроизведением с телефона.",
-  "session": "Сессия: {id}",
-  "@session": {
-    "placeholders": {
-      "id": {
+      "header": {
         "type": "String"
       }
     }
   },
-  "loadingCanvas": "Загрузка Canvas...",
-  "searchingSpotify": "Поиск в Spotify...",
-  "fetchingCanvas": "Загрузка Canvas...",
-  "nowPlayingHeader": "Сейчас играет",
-  "nowPlayingSection": "Сейчас играет",
-  "upNextSection": "Далее",
-  "recommendationsSection": "Рекомендации",
-  "fromLibrarySection": "Из библиотеки",
-  "queueIsEmpty": "Очередь пуста",
-  "historySection": "История",
-  "upNextCount": "Далее ({count})",
-  "@upNextCount": {
+  "@notRank": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@opacityLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@playCountLabel": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "fromLibraryCount": "Из библиотеки ({count})",
-  "@fromLibraryCount": {
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@rankActive": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@rankLabel": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@reachDailyPlaysTooltip": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "recommendationsCount": "Рекомендации ({count})",
+  "@reachSpecificArtistTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@reachWeeklyPlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@recommendationsCount": {
     "placeholders": {
       "count": {
@@ -770,78 +310,65 @@
       }
     }
   },
-  "noSongPlaying": "Музыка не воспроизводится",
-  "selectTrackToStart": "Выберите трек для начала",
-  "importLabel": "Импорт",
-  "saveLabel": "Сохранить",
-  "refreshLabel": "Обновить",
-  "hideTranslation": "Скрыть перевод",
-  "translateLabel": "Перевести",
-  "lyricsByLRCLIB": "Текст от LRCLIB",
-  "importLyricsFile": "Импортировать файл текста",
-  "overwriteLrcWarning": "Локальный файл .lrc для этой песни уже существует.\\nХотите перезаписать его?",
-  "saveLrcPrompt": "Хотите сохранить текущий текст как файл .lrc рядом с аудиофайлом?",
-  "overwrite": "Перезаписать",
-  "lyricsSavedSuccess": "Текст сохранен в файл .lrc",
-  "lyricsSaveError": "Ошибка при сохранении текста",
-  "equalizer": "Эквалайзер",
-  "trackDetails": "Детали трека",
-  "audioQuality": "Качество звука",
-  "formatLabel": "Формат",
-  "codecLabel": "Кодек",
-  "bitrateLabel": "Битрейт",
-  "sampleRateLabel": "Частота дискретизации",
-  "bitDepthLabel": "Разрядность (бит)",
-  "channelsLabel": "Каналы",
-  "fileSizeLabel": "Размер файла",
-  "fileLocation": "Местоположение файла",
-  "audioSource": "Источник аудио",
-  "pathLabel": "Путь",
-  "inputLabel": "Вход",
-  "engineLabel": "Движок",
-  "eqLabel": "EQ",
-  "dspLabel": "DSP",
-  "androidMixer": "Android Mixer",
-  "bypassedBitPerfect": "Обход (Bit-Perfect)",
-  "resamplingLabel": "Ресемплинг",
-  "activeNoResampling": "Активен (Без ресемплинга)",
-  "nativeRate": "Нативная частота",
-  "signalOutput": "Выходной сигнал",
-  "outputLabel": "Выход",
-  "samplingRateLabel": "Частота дискретизации",
-  "bitsLabel": "Бит",
-  "statusLabel": "Статус",
-  "unknown": "Неизвестно",
-  "unknownDevice": "Неизвестное устройство",
-  "sharedMode": "Общий",
-  "exclusiveMode": "Эксклюзивный",
-  "androidAudioTrack": "Android AudioTrack",
-  "songInformation": "Информация о песне",
-  "selectVersion": "Выберите версию",
-  "searchYoutubeHint": "Поиск в YouTube...",
-  "androidAudioEffectsNote": "Примечание: Аудиоэффекты доступны только на Android.",
-  "deletePreset": "Удалить пресет",
-  "saveAsNewPreset": "Сохранить как новый пресет",
-  "savePreset": "Сохранить пресет",
-  "enterPresetName": "Введите имя пресета (например, Мой Бас)",
-  "presetSaved": "Пресет сохранен!",
-  "miniPlayer": "Мини-плеер",
-  "listeningParty": "Прослушивание в компании",
-  "audioOutput": "Аудиовыход",
-  "lyricsTooltip": "Текст песни",
-  "queueTooltip": "Очередь",
-  "moreOptionsTooltip": "Дополнительные опции",
-  "muteTooltip": "Выключить звук",
-  "unmuteTooltip": "Включить звук",
-  "fullScreenPlayerTooltip": "Полноэкранный плеер",
-  "importLyricsTooltip": "Импортировать текст",
-  "saveLyricsTooltip": "Сохранить текст",
-  "refreshLyricsTooltip": "Обновить текст",
-  "translateLyricsTooltip": "Перевести текст",
-  "sharePlaylist": "Поделиться плейлистом",
-  "deletePlaylist": "Удалить плейлист",
-  "importViaCodeSubtitle": "Импорт плейлиста, которым поделился друг",
-  "sharePlaylistTitle": "Поделиться \"{name}\"",
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingEngine": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      },
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "@sharePlaylistTitle": {
     "placeholders": {
       "name": {
@@ -849,20 +376,858 @@
       }
     }
   },
-  "generatingShareCode": "Создание кода общего доступа...",
-  "failedToGenerateCode": "Не удалось создать код общего доступа. Проверьте соединение.",
-  "playlistReadyShare": "Ваш плейлист готов к отправке!",
-  "copyCode": "Копировать код",
+  "@showAllTitles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@switchingTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@todayLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@top3GlobalTooltip": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "@topGlobalTooltip": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@unlockedCountLabel": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@updateAvailableVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@updateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutEducationalPurpose": "Это приложение разработано только для индивидуальных и образовательных целей.",
+  "aboutLicenses": "О программе и Лицензии",
+  "aboutNotForCommercial": "Не для коммерческого использования.",
+  "accentColor": "Акцентный цвет",
+  "access": "Доступ",
+  "accessCode": "Код доступа",
+  "accountDataMergeDesc": "При синхронизации ваше имя профиля и аватар будут обновлены, но минуты прослушивания на текущем устройстве будут успешно объединены с общим итогом аккаунта.",
+  "accountLinked": "Аккаунт привязан",
+  "accountLinkedSuccessfully": "Аккаунт успешно привязан!",
+  "achievementsUnlocked": "Разблокированные достижения",
+  "activeNoResampling": "Активен (Без ресемплинга)",
+  "add": "Добавить",
+  "addFiles": "Добавить файлы",
+  "addFolder": "Добавить папку",
+  "addFoldersScan": "Добавить папки для сканирования",
+  "addToFavorite": "Добавить в избранное",
+  "addToPlaylist": "Добавить в плейлист",
+  "addToQueue": "Добавить в очередь",
+  "addedFolder": "Добавлена папка: {folder}",
+  "addedToLikedSongs": "Добавлено в любимые песни",
+  "addedToPlaylistSuccess": "Добавлено в плейлист",
+  "addedToQueue": "Добавлено в очередь",
+  "album": "Альбом",
+  "albumAddedToPlaylists": "Альбом добавлен в плейлисты",
+  "albumLabel": "Альбом",
+  "albumRemovedFromPlaylists": "Альбом удален из плейлистов",
+  "albums": "Альбомы",
+  "allDownloadsRemoved": "Все загрузки удалены",
+  "allRightsReserved": "Все права защищены.",
+  "allTime": "За все время",
+  "alreadyInLikedSongs": "Уже в любимых песнях",
+  "android14BitPerfect": "Android 14+ Bit-Perfect",
+  "androidAudioEffectsNote": "Примечание: Аудиоэффекты доступны только на Android.",
+  "androidAudioTrack": "Android AudioTrack",
+  "androidBitPerfect": "Android 14+ Bit-Perfect",
+  "androidMixer": "Android Mixer",
+  "appearance": "Внешний вид",
+  "applyOnRestart": "Изменения будут применены при следующем запуске.",
+  "arabic": "Арабский",
+  "artist": "Исполнитель",
+  "artistLabel": "Исполнитель",
+  "artists": "Исполнители",
+  "atmospheres": "Атмосферы",
+  "audioFormat": "Аудио формат",
+  "audioOutput": "Аудиовыход",
+  "audioOutputDevice": "Устройство вывода звука",
+  "audioQuality": "Качество звука",
+  "audioSource": "Источник аудио",
+  "audiophileDAC": "Включить при воспроизведении на аудиофильских ЦАП (требуется перезагрузка)",
+  "autoAddSimilar": "Автоматически добавлять похожие песни в конец очереди",
+  "autoClearAfter24h": "Через 24 часа",
+  "autoClearAfter7d": "Через 7 дней",
+  "autoClearCache": "Автоматическая очистка кэша",
+  "autoClearDisabled": "Отключено",
+  "autoClearEvery30m": "Каждые 30 мин (Только при прослушивании)",
+  "autoClearOnClose": "При закрытии приложения",
+  "autoFixComingSoon": "Авто-исправление (Скоро)",
+  "autoRestartNotSupported": "Автоматическая перезагрузка не поддерживается. Пожалуйста, перезапустите вручную.",
+  "autoTagContent": "Это приведет к поиску всех {count} песен из «{sourceName}» на Spotify и автоматической перезаписи тегов.\\n\\nЭто действие необратимо.",
+  "autoTagTitle": "⚠️ Авто-теги для {sourceName}?",
+  "automatic": "Автоматически",
+  "automaticTitleLabel": "Автоматически: {title}",
+  "autumn": "Осень",
+  "avatarPickerDesc": "Выберите шаблон или импортируйте свое фото",
+  "beFirstToClaim": "Станьте первым, кто займет первое место!",
+  "behavioralHeader": "ПОВЕДЕНЧЕСКИЕ ДОСТИЖЕНИЯ",
+  "behavioralTitles": "ПОВЕДЕНЧЕСКИЙ",
+  "binariesUpdateRequired": "Требуется обновление бинарных файлов",
+  "bitDepthLabel": "Разрядность (бит)",
+  "bitPerfectEnabled": "Режим Bit-perfect включен. Регулировка громкости может не работать.",
+  "bitPerfectWindows": "Bit-perfect аудио с автоматической частотой дискретизации (требуется перезагрузка)",
+  "bitrateLabel": "Битрейт",
+  "bitsLabel": "Бит",
+  "brazil": "Бразилия",
+  "browse": "Обзор",
+  "bypassSystemMixer": "Обходить системный микшер для USB ЦАП",
+  "bypassedBitPerfect": "Обход (Bit-Perfect)",
+  "cacheCleared": "Кэш успешно очищен!",
+  "cached": "Кэшировано",
+  "cancel": "Отмена",
+  "championChampionTooltip": "Станьте Топ-1 мира в течение 5 недель",
+  "change": "Изменить",
+  "changeFolder": "Изменить папку",
+  "changeFormatInSettings": "Пожалуйста, измените формат вывода в настройках",
+  "changeLabel": "ИЗМЕНИТЬ",
+  "changeLanguage": "Изменить язык приложения",
+  "changesApplyRestart": "Изменения будут применены при следующем запуске.",
+  "changingAudioDeviceRestart": "Для применения изменений аудиоустройства требуется перезагрузка приложения.\\n\\nПерезагрузить сейчас?",
+  "channelsLabel": "Каналы",
+  "checkAgain": "Проверить снова",
+  "checkInternetConnection": "Проверьте интернет-соединение",
+  "checkNetworkTryAgain": "Проверьте сеть и попробуйте снова",
+  "chinese": "Китайский",
+  "chooseAccentColor": "Выберите предпочитаемый статический цвет",
+  "chooseAnimationType": "Выберите тип анимации",
+  "chooseArtist": "ВЫБРАТЬ ИСПОЛНИТЕЛЯ",
+  "chooseAvatar": "Выбрать аватар",
+  "chooseYourTitle": "Выберите свой титул",
+  "circularPulse": "Круговой импульс",
+  "clearAll": "Очистить все",
+  "clearHistory": "Очистить историю",
+  "clearImported": "Очистить импортированные",
+  "clearMetadataCache": "Очистить кэш метаданных и обложек",
+  "clearPlayHistory": "Очистить историю и время прослушивания",
+  "clearStreamingCache": "Очистить кэш стриминга",
+  "close": "Закрыть",
+  "cloud": "Облако",
   "codeCopied": "Код скопирован в буфер обмена!",
-  "shareCodeUsage": "Передайте этот 6-значный код другу, чтобы он мог импортировать этот плейлист.",
-  "showInFolder": "Показать в папке",
-  "delete": "Удалить",
-  "deleteFileTitle": "Удалить файл?",
-  "deleteFileContent": "Удалить «{filename}»?\\nЭту операцию нельзя отменить.",
-  "filters": "Фильтры",
-  "fileName": "Имя файла",
+  "codeMust6Digits": "Код должен состоять из 6 цифр",
+  "codecLabel": "Кодек",
+  "comingSoon": "Скоро будет",
+  "community": "Сообщество",
+  "competitiveTitles": "КОНКУРЕНТНЫЙ",
+  "confirm": "Подтвердить",
+  "connect": "Подключить",
+  "connectToADevice": "Подключиться к устройству",
+  "connected": "Подключено",
+  "connectedToDac": "Подключено к {deviceName} - USB Bypass активен",
+  "connectedUsbDacs": "Подключенные USB ЦАП:",
+  "connecting": "Подключение...",
+  "connectionLostLeaderboard": "Соединение потеряно",
+  "connectionLostLeaderboardDesc": "Для синхронизации статистики и получения мировых рейтингов требуется активное соединение с глобальным лидербордом.",
+  "consecutivePlaysTooltip": "Слушайте одну песню {count} раз подряд",
+  "contentRegion": "Регион контента",
+  "copyCode": "Копировать код",
+  "couldNotDownloadFlac": "Не удалось загрузить FLAC.",
+  "countSongs": "{count, plural, one{1 песня} few{{count} песни} other{{count} песен}}",
+  "createPlaylist": "Создать плейлист",
+  "creatingPlaylistWithTracks": "Создание плейлиста с {count} треками...",
+  "crossfade": "Crossfade",
+  "crossfadeDesc": "Плавный переход между треками ({seconds} с)",
+  "crownedChampionTitlesHeader": "ТИТУЛЫ КОРОНОВАННЫХ ЧЕМПИОНОВ",
+  "customDevice": "Пользовательское устройство",
+  "customSelected": "Выбрано вручную",
+  "customTime": "Своё время",
+  "cyberpunk": "Киберпанк",
+  "daily": "Ежедневно",
+  "darkMode": "Темный режим",
+  "dataCleanup": "Данные и очистка",
   "dataUsage": "Использование данных",
-  "todayLabel": "Сегодня: {size}",
+  "daysShort": "Д",
+  "debugging": "Отладка",
+  "delete": "Удалить",
+  "deleteDownloadsConfirm": "Это удалит все загруженные на это устройство песни для этого плейлиста.",
+  "deleteDownloadsTitle": "Удалить загрузки?",
+  "deleteFileContent": "Удалить «{filename}»?\\nЭту операцию нельзя отменить.",
+  "deleteFileTitle": "Удалить файл?",
+  "deletePlaylist": "Удалить плейлист",
+  "deletePlaylistConfirm": "Вы уверены, что хотите удалить «{name}»?",
+  "deletePlaylistPermanentConfirm": "Вы уверены, что хотите удалить этот плейлист? (Это действие нельзя отменить)",
+  "deletePlaylistTitle": "Удалить плейлист?",
+  "deletePreset": "Удалить пресет",
+  "desertMirage": "Пустынный мираж",
+  "developerExclusiveTooltip": "Эксклюзивно для разработчиков этого приложения",
+  "deviceNameLabel": "Устройство: {deviceName}",
+  "disableCanvas": "Отключить Canvas",
+  "disableRomanization": "Отключить романизацию",
+  "disablingSharingWarning": "При отключении общего доступа код и данные будут навсегда удалены с сервера для экономии места.",
+  "discNumber": "№ диска",
+  "discography": "Дискография",
+  "discordRPC": "Discord Presence",
+  "doYouRemember": "Вы помните?",
+  "donate": "Пожертвовать",
+  "download": "Скачать",
+  "downloadAll": "Скачать всё",
+  "downloadComplete": "Загрузка завершена",
+  "downloadCompleteNotification": "Загрузка завершена",
+  "downloadError": "Ошибка загрузки",
+  "downloadFailed": "Загрузка не удалась",
+  "downloadLocation": "Место загрузки",
+  "downloadPathReset": "Путь загрузки сброшен по умолчанию.",
+  "downloadPathUpdated": "Путь загрузки обновлен: {path}",
+  "downloadSong": "Скачать песню",
+  "downloadStarted": "Загрузка началась",
+  "downloadedTo": "Загружено в: {path}",
+  "downloading": "Загрузка",
+  "downloadingFlac": "Загрузка FLAC",
+  "downloadingFormat": "Загрузка {format}",
+  "downloadingUpdate": "Скачивание обновления",
+  "downloads": "Загрузки",
+  "dspLabel": "DSP",
+  "editMetadata": "Редактировать метаданные",
+  "editNickname": "Изменить никнейм",
+  "editor": "Редактор",
+  "emptyMailbox": "Очистить почтовый ящик",
+  "emptyMailboxDesc": "Это навсегда удалит все сообщения.",
+  "emptyMailboxTitle": "Очистить почтовый ящик?",
+  "emptyPlaylist": "Пустой плейлист",
+  "emptyPlaylistSubtitle": "Создать новый пустой плейлист",
+  "enableAlphabetIndexer": "Включить алфавитный указатель прокрутки",
+  "enableAlphabetIndexerSubtitle": "Показывать индекс боковой панели A-Z в мобильном списке",
+  "enableBarVisualizer": "Включить полосовой визуализатор",
+  "endlessQueue": "Бесконечная очередь",
+  "engineLabel": "Движок",
+  "english": "Английский",
+  "enterAdminAccessCode": "Пожалуйста, введите административный код доступа",
+  "enterAdminCode": "Пожалуйста, введите административный код доступа",
+  "enterDuration": "Введите длительность...",
+  "enterPresetName": "Введите имя пресета (например, Мой Бас)",
+  "enterShareCode": "Введите 6-значный код общего доступа",
+  "eqLabel": "EQ",
+  "equalizer": "Эквалайзер",
+  "equipTitle": "ЭКИПИРОВАТЬ ТИТУЛ",
+  "equipped": "ЭКИПИРОВАНО",
+  "error": "Ошибка",
+  "errorCouldNotCreateSession": "Ошибка: Не удалось создать сессию.",
+  "errorDeleting": "Ошибка при удалении: {error}",
+  "errorSearchingStream": "Ошибка при поиске стрима.",
+  "exclusiveMode": "Эксклюзивный",
+  "exclusiveModeWarning": "Предупреждение: Эксклюзивный режим работает лучше, если вы выберете конкретное устройство выше вместо системного по умолчанию.",
+  "exclusiveTitles": "ЭКСКЛЮЗИВНЫЙ",
+  "exclusiveTitlesHeader": "ЭКСКЛЮЗИВНЫЕ ТИТУЛЫ",
+  "exclusiveWarning": "Предупреждение: Эксклюзивный режим работает лучше, если вы выберете конкретное устройство выше вместо системного по умолчанию.",
+  "exitApp": "Выход",
+  "expand": "Развернуть",
+  "externalFiles": "Внешние файлы",
+  "fadingAtEnd": "Таймер сна: Затухание в конце трека...",
+  "failedDisableSharing": "Не удалось отключить общий доступ.",
+  "failedEnableSharing": "Не удалось включить общий доступ. Проверьте соединение.",
+  "failedFetchPlaylistInfo": "Не удалось получить информацию о плейлисте",
+  "failedToConnectDac": "Не удалось подключиться к ЦАП. Проверьте разрешения USB.",
+  "failedToGenerateCode": "Не удалось создать код общего доступа. Проверьте соединение.",
+  "failedToSetAvatar": "Не удалось установить шаблон аватара",
+  "failedToUpdateMetadata": "Не удалось обновить метаданные",
+  "favoriteTrack": "Любимый трек",
+  "fetchingCanvas": "Загрузка Canvas...",
+  "fetchingLossless": "Получение качества без потерь...",
+  "fetchingLosslessAudio": "Получение аудио без потерь...",
+  "fetchingMetadataSpotify": "Получение метаданных из Spotify...",
+  "fetchingPlaylist": "Получение плейлиста...",
+  "fetchingPlaylistInfo": "Получение информации о плейлисте...",
+  "fetchingSharedPlaylist": "Получение общего плейлиста...",
+  "fetchingTracksFrom": "Получение треков из \"{name}\"...",
+  "fileLocation": "Местоположение файла",
+  "fileMissingHistory": "Файл отсутствует и не найден в истории.",
+  "fileName": "Имя файла",
+  "fileSizeLabel": "Размер файла",
+  "files": "Файлы",
+  "filters": "Фильтры",
+  "findingBestMatchYoutube": "Поиск лучшего совпадения на YouTube...",
+  "findingStream": "Поиск источника стриминга...",
+  "finishUpdate": "Завершить обновление",
+  "finishes": "Места",
+  "fixAll": "Исправить всё",
+  "flacError": "Ошибка FLAC",
+  "flacNote": "Примечание: FLAC доступен только для загрузки отдельных треков. Загрузка плейлистов будет использовать формат M4A.",
+  "flacSavedToDownloads": "FLAC сохранен в папку загрузок",
+  "flacUnavailable": "FLAC недоступен",
+  "flacUnavailableDesc": "FLAC недоступен, загрузка не удалась. Попробуйте изменить настройки.",
+  "flacUnavailableNotification": "FLAC недоступен",
+  "fluidWave": "Плавная волна",
+  "folderPath": "Папка: {path}",
+  "folders": "Папки",
+  "formatLabel": "Формат",
+  "formatSaved": "Формат сохранен!",
+  "foundExistingAccount": "Мы нашли существующий аккаунт для '{name}'.",
+  "foundResults": "Найдено: {songCount} песен, {albumCount} альбомов, {artistCount} исполнителей.",
+  "foundYoutubeResults": "Найдено {count} результатов на YouTube",
+  "freeUpSpace": "Освободить место (Текущее: {size})",
+  "french": "Французский",
+  "fromLibraryCount": "Из библиотеки ({count})",
+  "fromLibrarySection": "Из библиотеки",
+  "fullScreenPlayerTooltip": "Полноэкранный плеер",
+  "galacticSpace": "Галактический космос",
+  "gaplessPlayback": "Бесшовное Воспроизведение",
+  "gaplessPlaybackDesc": "Устранить паузы между треками",
+  "general": "Общие",
+  "generatingShareCode": "Создание кода общего доступа...",
+  "genre": "Жанр",
+  "german": "Немецкий",
+  "globalLeaderboard": "Глобальный список лидеров",
+  "globalMailbox": "Глобальный почтовый ящик",
+  "globalRank": "Глобальный ранг",
+  "globalRankings": "Глобальный рейтинг",
+  "globalRankingsDesc": "Посмотрите лучших слушателей за день, неделю и все время!",
+  "goToArtist": "Перейти к исполнителю",
+  "goToLocalLibraryToSelect": "Перейдите в локальную библиотеку, чтобы выбрать папку.",
+  "goodAfternoon": "Добрый день",
+  "goodEvening": "Добрый вечер",
+  "goodMorning": "Доброе утро",
+  "googleAccount": "Аккаунт Google",
+  "grantAccess": "Предоставить доступ",
+  "grantPermission": "Предоставить разрешение",
+  "hallOfFameHeader": "ДОСТИЖЕНИЯ ЗАЛА СЛАВЫ",
+  "hallOfFameTitles": "ЗАЛ СЛАВЫ",
+  "hideCanvas": "Не показывать видео Spotify Canvas, показывать обложку альбома вместо этого",
+  "hideRomajiPinyin": "Не показывать Romaji/Pinyin под корейскими, японскими или китайскими текстами",
+  "hideTranslation": "Скрыть перевод",
+  "highDesc": "M4A - лучший звук, сбалансированная производительность",
+  "highQuality": "Высокое качество (M4A)",
+  "hindi": "Хинди",
+  "history": "История",
+  "historySection": "История",
+  "home": "Главная",
+  "hourShort": "ч",
+  "hoursDuration": "{count, plural, one{1 час} few{{count} часа} other{{count} часов}}",
+  "hoursShort": "Ч",
+  "ignoreSubfolderScan": "Игнорировать сканирование подпапок",
+  "importAdditionalPaths": "Импорт дополнительных путей",
+  "importChoice": "Импортировать",
+  "importFailed": "Ошибка импорта: {error}",
+  "importFromGallery": "Импортировать из галереи",
+  "importFromSpotify": "Импорт из Spotify",
+  "importFromSpotifySubtitle": "Вставьте ссылку на плейлист Spotify",
+  "importFromYoutubeMusic": "Импорт из YouTube Music",
+  "importFromYoutubeMusicSubtitle": "Вставьте ссылку на плейлист YouTube Music",
+  "importLabel": "Импорт",
+  "importLyricsFile": "Импортировать файл текста",
+  "importLyricsTooltip": "Импортировать текст",
+  "importSpotifyPlaylist": "Импортировать плейлист Spotify",
+  "importViaCode": "Импорт по коду",
+  "importViaCodeSubtitle": "Импорт плейлиста, которым поделился друг",
+  "importYoutubeMusicPlaylist": "Импортировать плейлист YouTube Music",
+  "importedPlaylistName": "Плейлист \"{name}\" успешно импортирован!",
+  "importedTracks": "Успешно импортировано {count} треков!",
+  "indonesia": "Индонезия",
+  "indonesian": "Индонезийский",
+  "inputLabel": "Вход",
+  "installNow": "Установить сейчас",
+  "integration": "Интеграция",
+  "invalidAccessCode": "Неверный код доступа",
+  "invalidCode": "Неверный код доступа",
+  "invalidSpotifyUrl": "Неверный URL-адрес плейлиста Spotify",
+  "invalidYoutubeMusicUrl": "Неверная ссылка на плейлист YouTube Music",
+  "japan": "Япония",
+  "japanese": "Японский",
+  "joinUs": "Присоединяйтесь к нам",
+  "jumpBackIn": "Продолжить прослушивание",
+  "justEnjoyVibes": "Просто наслаждайтесь атмосферой.",
+  "korean": "Корейский",
+  "language": "Язык",
+  "last30DaysLabel": "Последние 30 дней: {size}",
   "last7DaysLabel": "Последние 7 дней: {size}",
-  "last30DaysLabel": "Последние 30 дней: {size}"
+  "later": "Позже",
+  "library": "Медиатека",
+  "libraryData": "Данные библиотеки",
+  "libraryNotLoaded": "Библиотека не загружена.",
+  "libraryPathReset": "Путь к библиотеке сброшен.",
+  "likedSongs": "Любимые песни",
+  "linkAccount": "Привязать аккаунт",
+  "linkAccountDesc": "Синхронизируйте и восстанавливайте свой прогресс с помощью Google",
+  "listenMinutesTooltip": "Слушайте музыку {minutes} минут",
+  "listeningParty": "Прослушивание в компании",
+  "listeningStats": "Статистика прослушивания",
+  "loadingCanvas": "Загрузка Canvas...",
+  "loadingDevices": "Загрузка устройств...",
+  "loadingError": "Не удалось загрузить данные. Пожалуйста, попробуйте еще раз.",
+  "loadingLyrics": "Загрузка текста...",
+  "localPlayHistorySaved": "Ваша локальная история прослушиваний не будет удалена.",
+  "local_library": "Локальная библиотека",
+  "lockedAtmosphere": "Заблокировано, когда активна атмосфера",
+  "losslessDesc": "FLAC - качество без потерь от Deezer/Tidal",
+  "losslessNote": "Будет использоваться FLAC без потерь, если доступно на Deezer/Tidal. В противном случае вернется к M4A.",
+  "losslessQuality": "Без потерь (Авто)",
+  "lunarNewYear": "Лунный Новый год",
+  "lyricsByLRCLIB": "Текст от LRCLIB",
+  "lyricsSaveError": "Ошибка при сохранении текста",
+  "lyricsSavedSuccess": "Текст сохранен в файл .lrc",
+  "lyricsTooltip": "Текст песни",
+  "madeForYou": "Создано для вас",
+  "manualSearch": "Поиск вручную",
+  "mergeAccountData": "Объединить данные аккаунта?",
+  "metadataCacheCleared": "Кэш метаданных очищен, начато сканирование библиотеки",
+  "metadataEditorInfo": "Вы можете быстро найти и исправить данные в редакторе метаданных.",
+  "metadataEditorNote": "Примечание: После появления статуса «Успешно сохранено» обложка альбома может измениться. Это не ошибка, а проблема с кэшем приложения, которую мы решаем. Проверьте в файловом менеджере.",
+  "metadataUpdated": "Метаданные обновлены",
+  "metadata_editor": "Редактор метаданных",
+  "min": "мин",
+  "minShortLabel": "мин",
+  "miniPlayer": "Мини-плеер",
+  "minimizeToTray": "Свернуть в трей",
+  "minimizeToTrayDescription": "Закрыть приложение в системный трей вместо выхода",
+  "minsShort": "М",
+  "minsShortLabel": "мин",
+  "minuteShort": "мин",
+  "minutes": "минут",
+  "minutesDuration": "{count, plural, one{1 минута} few{{count} минуты} other{{count} минут}}",
+  "moreOptions": "Дополнительные опции",
+  "moreOptionsTooltip": "Дополнительные опции",
+  "mostListened": "Самые прослушиваемые",
+  "mostListenedArtist": "Самый прослушиваемый исполнитель",
+  "musicFolderLocation": "Расположение папки с музыкой",
+  "musicSearch": "Поиск музыки",
+  "musicWillStopIn": "Музыка остановится через {label}",
+  "muteTooltip": "Выключить звук",
+  "myTopTrackOn": "Мой {header} на Simple Player! 🎵",
+  "nativeRate": "Нативная частота",
+  "navigation": "Навигация",
+  "newPlaylist": "Новый плейлист",
+  "nextTrack": "Следующий трек",
+  "nicknameHint": "Введите никнейм",
+  "nicknameLabel": "Никнейм",
+  "nicknameRequired": "Требуется псевдоним",
+  "nicknameRequiredDesc": "Вам нужно сначала установить свой псевдоним, чтобы просматривать глобальный список лидеров!",
+  "nicknameTakenDesc": "Этот никнейм уже используется. Пожалуйста, выберите другой.",
+  "nicknameTakenTitle": "Никнейм занят",
+  "noAlbumsFound": "Альбомы не найдены",
+  "noArtistStatsYet": "Статистики исполнителей пока нет.",
+  "noArtistsFound": "Исполнители не найдены.",
+  "noDownloadsFound": "Загрузки не найдены",
+  "noFolderSelected": "Папка не выбрана",
+  "noHistoryYet": "Истории пока нет",
+  "noInternetConnection": "Нет подключения к интернету",
+  "noLyricsAvailable": "Текст песни недоступен",
+  "noMessages": "В вашем почтовом ящике нет сообщений",
+  "noMusicPlaying": "Музыка не воспроизводится",
+  "noPlaylistsFound": "Плейлисты не найдены",
+  "noPlaylistsYet": "Плейлистов пока нет",
+  "noRankingsYet": "Рейтингов за этот период еще нет.",
+  "noResultsFound": "Результаты не найдены",
+  "noSongPlaying": "Музыка не воспроизводится",
+  "noSongsAdded": "Песни пока не добавлены",
+  "noSongsInFolder": "В этой папке песен не найдено.",
+  "noSpotifyResults": "Результатов в Spotify не найдено.",
+  "noStatsYet": "Статистики пока нет.",
+  "noStreamMatch": "Совпадений для стриминга не найдено.",
+  "noSuggestionsFound": "Предложений не найдено.",
+  "noSyncedLyricsFound": "Синхронизированный текст не найден",
+  "noTracksFound": "Треки в плейлисте не найдены",
+  "noUsbDacDetected": "USB ЦАП не обнаружен. Подключите аудиоустройство USB и нажмите «Сканировать».",
+  "noUsersFound": "Пользователи не найдены",
+  "noYoutubeResults": "Результатов на YouTube не найдено",
+  "none": "Нет",
+  "nordicAurora": "Северное сияние",
+  "notRank": "Не ранг {rank}",
+  "notRanked": "Без ранга",
+  "notRankedTop3": "ВНЕ ТОП-3",
+  "nowPlaying": "Сейчас играет",
+  "nowPlayingHeader": "Сейчас играет",
+  "nowPlayingSection": "Сейчас играет",
+  "offline": "Оффлайн",
+  "offlineStatus": "Не в сети",
+  "ok": "OK",
+  "online": "В сети",
+  "onlyScanSelected": "Сканировать только выбранные папки (включено по умолчанию)",
+  "opacity": "Прозрачность",
+  "opacityLabel": "Прозрачность: {percent}%",
+  "openProfile": "Открыть профиль",
+  "openSourceLicenses": "Лицензии с открытым исходным кодом",
+  "outputLabel": "Выход",
+  "overwrite": "Перезаписать",
+  "overwriteLrcWarning": "Локальный файл .lrc для этой песни уже существует.\\nХотите перезаписать его?",
+  "parsingPlaylistData": "Анализ данных плейлиста...",
+  "pathLabel": "Путь",
+  "permissionRequired": "Требуется разрешение",
+  "permissionRequiredDesc": "Разрешение «Доступ ко всем файлам» необходимо для редактирования тегов. Это позволяет изменять ваши музыкальные файлы напрямую.",
+  "play": "Играть",
+  "playCountLabel": "{count} воспроизведений",
+  "playNext": "Играть следующим",
+  "playPause": "Воспроизвести / Пауза",
+  "playQueue": "Играть очередь",
+  "playback": "Воспроизведение",
+  "playbackError": "Ошибка воспроизведения",
+  "player": "Игрок",
+  "playingFromAlbum": "Воспроизведение из альбома",
+  "playingNext": "Далее играет",
+  "playingTrack": "Воспроизведение трека",
+  "playlistAlbumTracks": "Треки плейлиста / альбома",
+  "playlistNameHint": "Название плейлиста",
+  "playlistNotFound": "Плейлист не найден",
+  "playlistNotFoundOrError": "Плейлист не найден или ошибка сервера",
+  "playlistReadyShare": "Ваш плейлист готов к отправке!",
+  "playlists": "Плейлисты",
+  "plays": "проигрываний",
+  "popularOnSpotify": "Популярно в Spotify",
+  "portuguese": "Португальский (Бразилия)",
+  "preferredOutputFormat": "Предпочтительный формат вывода для загрузок",
+  "preparingDownload": "Подготовка загрузки",
+  "preparingDownloadFormat": "Подготовка загрузки ({format})...",
+  "preparingDownloadNotification": "Подготовка загрузки",
+  "presetSaved": "Пресет сохранен!",
+  "preview": "ПРЕДПРОСМОТР",
+  "previousTrack": "Предыдущий трек",
+  "profileSettings": "Настройки профиля",
+  "profileStats": "Статистика профиля",
+  "progress": "Прогресс",
+  "publicSharing": "Публичный доступ",
+  "publicSharingDesc": "Любой, у кого есть код, может импортировать этот плейлист.",
+  "publicSharingDisabledDesc": "Отключено. Включите, чтобы поделиться с другими.",
+  "queueIsEmpty": "Очередь пуста",
+  "queueTooltip": "Очередь",
+  "queueUpdated": "Очередь обновлена",
+  "quickMix": "Быстрый микс",
+  "rainbowMode": "Радужный режим",
+  "rainyCity": "Дождливый город",
+  "rank": "Ранг",
+  "rankActive": "Ранг {rank} (Активен)",
+  "rankLabel": "РАНГ {rank}",
+  "reBuffering": "Буферизация...",
+  "reachDailyPlaysTooltip": "Достигните {count} воспроизведений за день",
+  "reachSpecificArtistTooltip": "Слушайте исполнителя {minutes} минут",
+  "reachWeeklyPlaysTooltip": "Достигните {count} воспроизведений за неделю",
+  "readySearchSong": "Готово. Найдите песню.",
+  "rebufferingFromCloud": "Перезагрузка из облака...",
+  "recentlyPlayed": "Недавно прослушанные",
+  "recommendationsCount": "Рекомендации ({count})",
+  "recommendationsSection": "Рекомендации",
+  "rediscover": "Откройте заново",
+  "refreshLabel": "Обновить",
+  "refreshLibrary": "Обновить библиотеку",
+  "refreshList": "Обновить список",
+  "refreshLyricsTooltip": "Обновить текст",
+  "removeAvatar": "Удалить текущий аватар",
+  "removeFromPlaylist": "Удалить из плейлиста",
+  "removedFolder": "Удалена папка: {folder}",
+  "rename": "Переименовать",
+  "renamePlaylist": "Переименовать плейлист",
+  "repeats": "повторов",
+  "requiresAndroid14": "Требуется Android 14+ и USB ЦАП",
+  "resamplingLabel": "Ресемплинг",
+  "reset": "Сбросить",
+  "resetDataUsage": "Сбросить использование данных",
+  "resetDataUsageContent": "Вы уверены, что хотите сбросить использование данных? Это не повлияет на скачанную музыку.",
+  "resetEverything": "Сбросить всё",
+  "resetLibraryContent": "Это удалит текущую папку из проигрывателя. Ваши файлы не будут удалены.",
+  "resetLibraryPath": "Сбросить путь к библиотеке",
+  "resetLibraryTitle": "Сбросить библиотеку?",
+  "resetPath": "Сбросить путь",
+  "resetStatistics": "Сбросить статистику",
+  "resetStatsContent": "Это действие необратимо.\\nВсе данные о количестве проигрываний и времени будут утеряны навсегда.",
+  "resetStatsTitle": "Сбросить статистику?",
+  "resetToAutomatic": "СБРОСИТЬ НА АВТО",
+  "resetToDefault": "Сбросить по умолчанию",
+  "resetUsage": "Сбросить использование",
+  "resetsIn": "СБРОС ЧЕРЕЗ",
+  "restartContent": "Для применения изменений аудиоустройства требуется перезагрузка приложения.\\n\\nПерезагрузить сейчас?",
+  "restartNow": "Перезагрузить сейчас",
+  "restartRequired": "Требуется перезагрузка",
+  "restoring": "Восстановление",
+  "retryConnection": "Повторить попытку",
+  "revert": "Вернуть",
+  "russian": "Русский",
+  "sakura": "Сакура",
+  "sampleRateLabel": "Частота дискретизации",
+  "samplingRateLabel": "Частота дискретизации",
+  "save": "Сохранить",
+  "saveAsNewPreset": "Сохранить как новый пресет",
+  "saveChangesToFile": "Сохранить изменения в файл",
+  "saveLabel": "Сохранить",
+  "saveLrcPrompt": "Хотите сохранить текущий текст как файл .lrc рядом с аудиофайлом?",
+  "saveLyricsTooltip": "Сохранить текст",
+  "savePlaylistContent": "Это создаст новый плейлист на основе этих песен.",
+  "savePlaylistTitle": "Сохранить «{title}»?",
+  "savePreset": "Сохранить пресет",
+  "savedAs": "Сохранено как «{name}»!",
+  "savedAsFormat": "Сохранено как {format}",
+  "savedTo": "Сохранено в «{path}»",
+  "saving": "Сохранение...",
+  "scan": "Сканировать",
+  "scanToControlPlayback": "Отсканируйте, чтобы управлять воспроизведением с телефона.",
+  "scanning": "Сканирование...",
+  "scrollForLyrics": "Прокрутите для просмотра текста",
+  "search": "Поиск",
+  "searchEngine": "Поисковая система",
+  "searchFailedStatus": "Ошибка поиска: {error}",
+  "searchHint": "Поиск...",
+  "searchSongs": "Поиск песен...",
+  "searchSongsOrAlbumsAndArtistsHint": "Поиск песен, альбомов или исполнителей...",
+  "searchSpotify": "Поиск в Spotify",
+  "searchSpotifyHint": "Поиск в Spotify...",
+  "searchUsers": "Поиск пользователей...",
+  "searchYoutubeHint": "Поиск в YouTube...",
+  "searching": "Поиск...",
+  "searchingEngine": "Поиск в {engine} по запросу '{keyword}'...",
+  "searchingSpotify": "Поиск в Spotify...",
+  "searchingSpotifyFor": "Поиск «{keyword}» в Spotify...",
+  "searchingStatus": "Поиск",
+  "secondShort": "с",
+  "secsShort": "С",
+  "seeAll": "Посмотреть все",
+  "selectDifferentFolder": "Выбрать другую папку",
+  "selectFolder": "Выбрать папку",
+  "selectMatch": "Выберите совпадение",
+  "selectSongToEdit": "Выберите песню из списка для редактирования",
+  "selectStreamingQuality": "Выберите качество стриминга",
+  "selectTrackToStart": "Выберите трек для начала",
+  "selectVersion": "Выберите версию",
+  "session": "Сессия: {id}",
+  "setCountryReleases": "Установить страну для релизов и чартов",
+  "setCustomTimer": "Установить свой таймер",
+  "settings": "Настройки",
+  "share": "Поделиться",
+  "shareCodeUsage": "Передайте этот 6-значный код другу, чтобы он мог импортировать этот плейлист.",
+  "sharePlaylist": "Поделиться плейлистом",
+  "sharePlaylistTitle": "Поделиться \"{name}\"",
+  "sharedMode": "Общий",
+  "showAllTitles": "Показать все {count} титулов",
+  "showAnimatedWaves": "Показывать анимированные волны в панели воспроизведения",
+  "showDebugButton": "Показывать плавающую кнопку отладки",
+  "showInFolder": "Показать в папке",
+  "showLess": "Показать меньше",
+  "showMore": "Показать больше",
+  "showStatusDiscord": "Показывать статус в Discord",
+  "showUnlockedOnly": "Показать только разблокированные",
+  "shuffle": "Перемешать",
+  "shuffleAll": "Перемешать всё",
+  "shufflingArtist": "Перемешивание песен {artistName}...",
+  "signInWithGoogle": "Войти через Google",
+  "signalOutput": "Выходной сигнал",
+  "singleTracks": "Отдельные треки",
+  "sleepTimer": "Таймер сна",
+  "songAlreadyInPlaylist": "Песня уже есть в плейлисте",
+  "songInformation": "Информация о песне",
+  "songLabelUpper": "ПЕСНЯ",
+  "songTitleKeyword": "Название или ключевое слово",
+  "songs": "песен",
+  "songsCount": "{count, plural, one{1 песня} few{{count} песни} other{{count} песен}}",
+  "songsInLibrary": "{count, plural, one{1 песня} few{{count} песни} other{{count} песен}} в библиотеке",
+  "songsLoadedCount": "Загружено песен: {count}...",
+  "southKorea": "Южная Корея",
+  "spanish": "Испанский",
+  "spectrumBars": "Спектральные полосы",
+  "spotify": "Spotify",
+  "standardDesc": "MP3 - меньший файл, более быстрая загрузка",
+  "standardQuality": "Стандартное (MP3)",
+  "start": "Начать",
+  "startBulkProcess": "Начать пакетную обработку",
+  "startedDownloadingAll": "Начата загрузка всех песен...",
+  "stateDisabled": "Отключено",
+  "stateEnabled": "Включено",
+  "statisticsReset": "Статистика сброшена.",
+  "stats": "Статистика",
+  "statusLabel": "Статус",
+  "statusWithText": "Статус: {status}",
+  "stopTimer": "Остановить таймер ({time})",
+  "streaming": "Стриминг",
+  "streamingQuality": "Качество стриминга",
+  "success": "Успешно",
+  "superfanHeader": "ДОСТИЖЕНИЯ СУПЕРФАНАТОВ",
+  "superfanTitles": "СУПЕРФАНАТ",
+  "supportDeveloperTooltip": "Поддержите разработчика для получения титула",
+  "switchToGridView": "Переключить на сетку",
+  "switchToListView": "Переключить на список",
+  "switchingTo": "Переключение на",
+  "syncThemeAlbumArt": "Синхронизировать тему с обложкой альбома",
+  "system": "Система",
+  "systemDefault": "Системное по умолчанию",
+  "targetLanguageLyrics": "Целевой язык для перевода текста песен",
+  "thai": "Тайский",
+  "tidalApiStatus": "Tidal API",
+  "timeBasedTitles": "НА ОСНОВЕ ВРЕМЕНИ",
+  "timeListened": "Время прослушивания",
+  "timeOverlordsHeader": "ПОВЕЛИТЕЛИ ВРЕМЕНИ",
+  "timerSetForHours": "Таймер установлен на {count} ч.",
+  "timerSetForMinutes": "Таймер установлен на {count} мин.",
+  "timerSetForSeconds": "Таймер установлен на {count} с.",
+  "tintBackground": "Окрашивать фон и визуализатор в цвет песни",
+  "title": "Название",
+  "titleLabel": "Название",
+  "todayLabel": "Сегодня: {size}",
+  "toggleDebugButton": "Переключить плавающую консоль отладки",
+  "toggleDebugConsole": "Переключить плавающую консоль отладки",
+  "toggleLyrics": "Переключить текст",
+  "top3GlobalTooltip": "Войдите в Топ-3 мира на {weeks} нед.",
+  "topArtist": "Топ исполнителей",
+  "topArtistAndTrack": "Топ исполнителей и треков",
+  "topArtists": "Топ исполнителей",
+  "topGlobalTooltip": "Войдите в топ {rank} мира",
+  "topListeners": "Топ слушателей",
+  "totalMinutesStat": "Всего минут",
+  "totalPlays": "Всего проигрываний",
+  "trackDetails": "Детали трека",
+  "trackNumber": "№ трека",
+  "tracks": "треков",
+  "translateLabel": "Перевести",
+  "translateLyrics": "Перевести текст",
+  "translateLyricsTooltip": "Перевести текст",
+  "translationLanguage": "Язык перевода",
+  "turnOffTimer": "Выключить таймер",
+  "unauthorize": "Не авторизован",
+  "underDevelopment": "Эта функция находится в разработке",
+  "underwater": "Под водой",
+  "unitedKingdom": "Великобритания",
+  "unitedStates": "США",
+  "unknown": "Неизвестно",
+  "unknownArtist": "Неизвестный исполнитель",
+  "unknownDevice": "Неизвестное устройство",
+  "unlink": "Отвязать",
+  "unlinkAccount": "Отвязать аккаунт",
+  "unlinkAccountDesc": "Ваша статистика останется на этом устройстве, но больше не будет синхронизироваться между устройствами.",
+  "unlinkAccountQuestion": "Отвязать аккаунт?",
+  "unlinkFolder": "Отвязать папку и очистить список песен",
+  "unlinkFolderClear": "Отвязать папку и очистить список песен",
+  "unlockedCountLabel": "{unlocked} / {total} Разблокировано",
+  "unmuteTooltip": "Включить звук",
+  "unsavedChanges": "Несохраненные изменения",
+  "upNext": "Далее",
+  "upNextCount": "Далее ({count})",
+  "upNextSection": "Далее",
+  "updateAvailableTitle": "Доступно обновление",
+  "updateAvailableVersion": "Доступна новая версия ({version}).",
+  "updateFailed": "Ошибка обновления: {error}",
+  "updateNow": "Обновить сейчас",
+  "updatePrompt": "Хотите скачать и установить её сейчас?",
+  "updatingYtDlp": "Обновление yt-dlp",
+  "usbAudioBypass": "USB Audio Bypass (Beta) - Прямой вывод ЦАП для Android 13 и ниже",
+  "usbAudioBypassBeta": "USB Audio Bypass (Beta) - Прямой вывод ЦАП для Android 13 и ниже",
+  "useDarkTheme": "Использовать темную тему",
+  "useMixedColors": "Использовать смешанные цвета (приоритет синхронизации)",
+  "verifiedDeveloper": "Верифицированный разработчик",
+  "version": "Версия",
+  "versionLabel": "Версия {version}",
+  "vietnamese": "Вьетнамский",
+  "viewQueue": "Просмотр очереди",
+  "visualizer": "Визуализатор",
+  "visualizerStyle": "Стиль визуализатора",
+  "wasapiExclusive": "Эксклюзивный режим WASAPI",
+  "weekly": "Еженедельно",
+  "weeks": "Недели",
+  "winter": "Зима",
+  "worldRanking": "Мировой рейтинг",
+  "worldTopArtists": "Топ исполнителей мира",
+  "year": "Год",
+  "youMayLike": "Вам может понравиться",
+  "yourPlaylists": "Ваши плейлисты",
+  "yourTopMix": "Ваш топ-микс",
+  "youtube": "YouTube",
+  "ytDlpUpdateAvailable": "Доступна новая версия yt-dlp."
 }

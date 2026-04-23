@@ -87,7 +87,7 @@ class _SakuraTreePainter extends CustomPainter {
       ];
 
       bloomPaint.color =
-          colors[random.nextInt(colors.length)].withOpacity(0.85);
+          colors[random.nextInt(colors.length)].withValues(alpha: 0.85);
       canvas.drawCircle(Offset(bloomX, bloomY), bloomSize, bloomPaint);
     }
 
@@ -95,7 +95,7 @@ class _SakuraTreePainter extends CustomPainter {
     for (int i = 0; i < 5; i++) {
       final double px = trunkX + (random.nextDouble() - 0.5) * 100;
       final double py = bottomY - 20 - random.nextDouble() * 80;
-      bloomPaint.color = const Color(0xFFFFB7C5).withOpacity(0.4);
+      bloomPaint.color = const Color(0xFFFFB7C5).withValues(alpha: 0.4);
       canvas.drawOval(
           Rect.fromCenter(center: Offset(px, py), width: 6, height: 4),
           bloomPaint);

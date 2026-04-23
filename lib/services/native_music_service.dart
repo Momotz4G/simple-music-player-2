@@ -13,17 +13,34 @@ import 'package:audio_service/audio_service.dart'; // 🚀 IMPORT
 import 'audio_handler.dart'; // 🚀 IMPORT
 import 'dart:math' as math; // 🚀 ADDED FOR EQ VOLUME CALCULATION
 import 'eq_engine.dart'; // 🚀 ADDED FOR FREQUENCY ACCESS
-import 'package:metadata_god/metadata_god.dart';
+import 'metadata_service.dart';
+import 'package:metadata_god/metadata_god.dart' show Metadata;
 import '../models/song_model.dart';
 import 'flac_downloader_service.dart'; // 🚀 IMPORT FOR VALIDATION
 import 'package:rxdart/rxdart.dart'; // 🚀 IMPORT RXDART FOR STREAM SWITCHING
 import 'ffi_audio_player.dart'; // 🚀 IMPORT FFI PLAYER
+import 'package:shared_preferences/shared_preferences.dart'; // 🚀 IMPORT PREFS
+import 'cue_parser_service.dart'; // 🚀 IMPORT CUE PATH SUPPORT
 
 class NativeMusicService {
   // Singleton pattern - ensures same player instance everywhere
   static final NativeMusicService _instance = NativeMusicService._internal();
   factory NativeMusicService() => _instance;
   static int _instanceCount = 0;
+
+  // 🚀 Formats supported by the C++ FFI engine (miniaudio + WMF backend).
+  // Miniaudio natively handles: MP3, FLAC, WAV
+  // WMF backend adds: M4A, AAC, WMA (Windows Media Foundation built-in decoders)
+  // NOT supported: DSF, DFF (DSD formats) — these fall through to just_audio (libmpv).
+  static const _ffiSupportedExtensions = {'.mp3', '.flac', '.wav', '.m4a', '.aac', '.wma', '.opus', '.ogg', '.aiff', '.aif'};
+
+  /// Returns true if the file at [path] can be decoded by the C++ FFI engine.
+  static bool _isFfiSupported(String path) {
+    final ext = path.toLowerCase();
+    final dotIndex = ext.lastIndexOf('.');
+    if (dotIndex < 0) return false;
+    return _ffiSupportedExtensions.contains(ext.substring(dotIndex));
+  }
   bool _isZombie = true; // Default to Zombie until we are RESUMED
   final ReceivePort _mutexPort = ReceivePort();
   final String _mutexName = 'simple_music_player_audio_mutex';
@@ -32,6 +49,15 @@ class NativeMusicService {
   // 🚀 Preload tracking to avoid redundant loads during crossfade
   String? _preloadedFilePath;
   SongModel? _preloadedSong;
+
+  // 🚀 CUE SHEET SUPPORT: Track start/end offsets for virtual CUE tracks.
+  // When playing a CUE track, we monitor position and fire 'completed'
+  // when the position reaches the end boundary of the track segment.
+  // _cueStartOffset adjusts position/duration streams so the UI shows
+  // relative time (0:00 = track start) instead of absolute file time.
+  Timer? _cueEndMonitor;
+  Duration? _cueStartOffset;
+  Duration? _cueEndOffset;
 
   // 🚀 Subject to track the active player for dynamic stream switching
   final BehaviorSubject<AudioPlayer> _activePlayerSubject = BehaviorSubject<AudioPlayer>();
@@ -164,9 +190,13 @@ class NativeMusicService {
       // 🚀 ERROR & STATE LOGGING
       // 🚀 Listeners moved to _setupListeners called in constructor for all platforms
 
+      // 🚀 Listeners moved to _setupListeners called in constructor for all platforms
+
       // Register pending callbacks if any
       if (_onNext != null) _audioHandler!.onSkipNext = _onNext;
       if (_onPrev != null) _audioHandler!.onSkipPrevious = _onPrev;
+      if (_onPlay != null) _audioHandler!.onPlay = _onPlay;
+      if (_onPause != null) _audioHandler!.onPause = _onPause;
 
       DebugLogService().info("NativeMusicService: AudioHandler Initialized");
       _audioHandlerReady.complete();
@@ -180,13 +210,26 @@ class NativeMusicService {
   // Callbacks
   VoidCallback? _onNext;
   VoidCallback? _onPrev;
+  VoidCallback? _onPlay;
+  VoidCallback? _onPause;
 
-  void setNotificationCallbacks({VoidCallback? onNext, VoidCallback? onPrev}) {
+  void setNotificationCallbacks({VoidCallback? onNext, VoidCallback? onPrev, VoidCallback? onPlay, VoidCallback? onPause}) {
     _onNext = onNext;
     _onPrev = onPrev;
+    _onPlay = onPlay;
+    _onPause = onPause;
     if (_audioHandler != null) {
       _audioHandler!.onSkipNext = onNext;
       _audioHandler!.onSkipPrevious = onPrev;
+      _audioHandler!.onPlay = onPlay;
+      _audioHandler!.onPause = onPause;
+    }
+  }
+
+  /// Expose method to update notification natively without a load (Used by Remote Control Slave)
+  Future<void> updateNotificationMetadata(SongModel song) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      await _updateAudioServiceMetadata(song);
     }
   }
 
@@ -194,6 +237,14 @@ class NativeMusicService {
 
   Future<void> resume() async {
     if (_isZombie) return;
+    // 🚀 FIX: Block resume while play() is in progress (e.g. FFI isolate init).
+    // Without this, an external caller (taskbar, audio session, notification)
+    // can trigger _player.play() on the just_audio shell which still holds
+    // the OLD stream source, causing two engines to output audio simultaneously.
+    if (_isLoading) {
+      DebugLogService().info("[Native] resume() BLOCKED — play() in progress.");
+      return;
+    }
     DebugLogService().info(
         "[Native] resume() called. ActiveIndex=$_activePlayerIndex");
 
@@ -214,6 +265,11 @@ class NativeMusicService {
 
   bool _isSeeking = false;
   bool get isSeeking => _isSeeking;
+
+  // 🚀 Crossfade guard: prevents crash detector from misinterpreting
+  // stream load failures during crossfade as fatal player crashes.
+  bool _isCrossfading = false;
+  bool get isCrossfading => _isCrossfading;
   int _androidStreamSeekOffset = 0; // 🚀 Sync absolute seeks coordinate offsets on Android
 
   AudioPlayer _player1 = AudioPlayer();
@@ -254,7 +310,14 @@ class NativeMusicService {
       (p, index) => (Platform.isWindows && (index == 3 || index == 4)) 
           ? (index == 3 ? (_ffiPlayer1?.positionStream ?? Stream.value(Duration.zero)) : (_ffiPlayer2?.positionStream ?? Stream.value(Duration.zero)))
           : p.positionStream.map((pos) => pos + Duration(seconds: _androidStreamSeekOffset)),
-    ).switchMap((s) => s);
+    ).switchMap((s) => s).map((pos) {
+      // 🚀 CUE SUPPORT: Adjust position relative to track start
+      if (_cueStartOffset != null) {
+        final adjusted = pos - _cueStartOffset!;
+        return adjusted.isNegative ? Duration.zero : adjusted;
+      }
+      return pos;
+    });
   }
 
   Stream<Duration?> get durationStream {
@@ -264,7 +327,18 @@ class NativeMusicService {
       (p, index) => (Platform.isWindows && (index == 3 || index == 4)) 
           ? (index == 3 ? (_ffiPlayer1?.durationStream ?? Stream.value(null)) : (_ffiPlayer2?.durationStream ?? Stream.value(null)))
           : p.durationStream,
-    ).switchMap((s) => s);
+    ).switchMap((s) => s).map((dur) {
+      // 🚀 CUE SUPPORT: Override duration with track segment duration
+      if (_cueStartOffset != null && dur != null) {
+        if (_cueEndOffset != null) {
+          return _cueEndOffset! - _cueStartOffset!;
+        }
+        // Last track: duration = total file duration - start offset
+        final adjusted = dur - _cueStartOffset!;
+        return adjusted.isNegative ? dur : adjusted;
+      }
+      return dur;
+    });
   }
 
   Stream<PlayerState> get playerStateStream {
@@ -291,7 +365,25 @@ class NativeMusicService {
     }
     */
     _androidStreamSeekOffset = 0; // 🚀 Reset stream offset on new song loads!
+    _cueEndMonitor?.cancel(); // 🚀 Cancel any previous CUE end-offset monitor
+    _cueStartOffset = null;
+    _cueEndOffset = null;
     try {
+      // 🚀 CUE SHEET SUPPORT: Resolve virtual CUE paths before loading.
+      // CUE paths encode the real audio file path + start/end offsets.
+      String actualFilePath = song.filePath;
+      if (CuePath.isCuePath(song.filePath)) {
+        actualFilePath = CuePath.extractAudioPath(song.filePath);
+        final cueStart = CuePath.extractStartOffset(song.filePath);
+        _cueStartOffset = cueStart;
+        _cueEndOffset = CuePath.extractEndOffset(song.filePath);
+        // Override initialPosition with the CUE track's start offset
+        initialPosition = cueStart;
+        debugPrint("🎵 CUE Track: ${song.title} → start=${cueStart.inMilliseconds}ms, end=${_cueEndOffset?.inMilliseconds ?? 'EOF'}ms");
+        DebugLogService().info("[Native] CUE Track resolved: ${song.title} startMs=${cueStart.inMilliseconds} endMs=${_cueEndOffset?.inMilliseconds}");
+        // Create a modified song with the real audio path for the engine
+        song = song.copyWith(filePath: actualFilePath);
+      }
       // 🚀 UPDATE METADATA (Mobile Only) - CALL BEFORE LOADING
       // This ensures title/artist updates BEFORE the player fires 'buffering' events.
       if (Platform.isAndroid || Platform.isIOS) {
@@ -412,12 +504,18 @@ class NativeMusicService {
         _preloadedFilePath = song.filePath;
         _preloadedSong = song;
       }
+      
+      final prefs = await SharedPreferences.getInstance();
+      final bool isBitPerfect = prefs.getBool('wasapiExclusive') ?? false;
+      final String? audioDeviceId = prefs.getString('audioDeviceId');
 
       // 🚀 Windows: Local file - use FFI player EXCLUSIVELY
-      // This prevents just_audio_media_kit from locking the file or crashing libmpv
-      if (Platform.isWindows && !isHttp) {
+      // This prevents just_audio_media_kit from locking the file or crashing libmpv.
+      // EXCEPTION: If Bit-Perfect (wasapiExclusive) is ON, we MUST route to just_audio (MPV),
+      // because MPV natively supports WASAPI Event-Driven Mode hardware clock switching.
+      if (Platform.isWindows && !isHttp && !isBitPerfect && _isFfiSupported(song.filePath)) {
           debugPrint("🚀 Windows Local File: Using FFI engine (${lazyLoad ? 'Inactive' : 'Active'}).");
-          
+
           bool usePlayer2;
           if (lazyLoad) {
              // For preloading, we always use the opposite of current
@@ -428,10 +526,18 @@ class NativeMusicService {
              
              // 🚀 CRITICAL: Stop the PREVIOUS FFI player and WAIT for it to stop
              if (_activePlayerIndex == 3) {
-                await _ffiPlayer1?.stop();
+                if (isBitPerfect) {
+                  await _ffiPlayer1?.releaseDevice();
+                } else {
+                  await _ffiPlayer1?.stop();
+                }
                 await Future.delayed(const Duration(milliseconds: 100)); // 🛰️ Grace period for hardware reset
              } else if (_activePlayerIndex == 4) {
-                await _ffiPlayer2?.stop();
+                if (isBitPerfect) {
+                  await _ffiPlayer2?.releaseDevice();
+                } else {
+                  await _ffiPlayer2?.stop();
+                }
                 await Future.delayed(const Duration(milliseconds: 100)); // 🛰️ Grace period for hardware reset
              }
           }
@@ -450,7 +556,12 @@ class NativeMusicService {
           final targetFFI = usePlayer2 ? _ffiPlayer2! : _ffiPlayer1!;
           
           // 🚀 ENSURE the target engine is stopped before reuse (even if it wasn't the active one)
-          await targetFFI.stop();
+          if (isBitPerfect) {
+            await targetFFI.setDevice(audioDeviceId);
+            await targetFFI.releaseDevice();
+          } else {
+            await targetFFI.stop();
+          }
           
           if (lazyLoad) {
             _currentReplayGainNext = song.replayGain ?? 0.0;
@@ -458,8 +569,8 @@ class NativeMusicService {
             _currentReplayGain = song.replayGain ?? 0.0;
           }
           
-          DebugLogService().info("[Native] Loading FFI ${usePlayer2 ? '2' : '1'} (Lazy=$lazyLoad)");
-          await targetFFI.setFilePath(song.filePath);
+          DebugLogService().info("[Native] Loading FFI ${usePlayer2 ? '2' : '1'} (Lazy=$lazyLoad, BitPerfect=$isBitPerfect)");
+          await targetFFI.setFilePath(song.filePath, bitPerfect: isBitPerfect);
           if (initialPosition != null) await targetFFI.seek(initialPosition);
           
           if (!lazyLoad) {
@@ -490,6 +601,12 @@ class NativeMusicService {
         preload: true,
       );
 
+      // 🚀 RESTORE BUGFIX: Force explicit manual seek because just_audio/media_kit 
+      // sometimes drops or ignores initialPosition during lazy load / preload phases.
+      if (initialPosition != null) {
+        await p.seek(initialPosition);
+      }
+
       // 🚀 Re-apply EQ for non-FFI players (Android/Streaming)
       if (_currentEqGains != null) {
         EqEngine.apply(
@@ -508,9 +625,19 @@ class NativeMusicService {
 
   Future<void> _switchToJustAudio() async {
     if (_activePlayerIndex == 3 || _activePlayerIndex == 4) {
-      DebugLogService().info("[Native] Switching from FFI back to just_audio");
-      await _ffiPlayer1?.stop();
-      await _ffiPlayer2?.stop();
+      final prefs = await SharedPreferences.getInstance();
+      final bool isBitPerfect = prefs.getBool('wasapiExclusive') ?? false;
+      
+      DebugLogService().info("[Native] Switching from FFI back to just_audio (BitPerfect=$isBitPerfect)");
+      
+      if (isBitPerfect) {
+        await _ffiPlayer1?.releaseDevice();
+        await _ffiPlayer2?.releaseDevice();
+      } else {
+        await _ffiPlayer1?.stop();
+        await _ffiPlayer2?.stop();
+      }
+      
       _activePlayerIndex = 1;
       _activePlayerIndexSubject.add(1);
       _activePlayerSubject.add(_player1);
@@ -653,7 +780,7 @@ class NativeMusicService {
         return null;
       }
 
-      final metadata = await MetadataGod.readMetadata(file: filePath);
+      final Metadata metadata = await MetadataService().readMetadata(filePath);
       final artBytes = metadata.picture?.data;
 
       if (artBytes == null || artBytes.isEmpty) {
@@ -684,6 +811,20 @@ class NativeMusicService {
   Future<bool> play(SongModel song, {double crossfadeDuration = 0.0, Duration? initialPosition}) async {
     final currentToken = ++_playToken;
     _androidStreamSeekOffset = 0; // 🚀 Reset stream offset on new tracks resets!
+    _cueEndMonitor?.cancel(); // 🚀 Cancel any previous CUE end-offset monitor
+    _cueStartOffset = null;
+    _cueEndOffset = null;
+    
+    // 🚀 CUE SHEET SUPPORT: Resolve virtual CUE paths before playing.
+    if (CuePath.isCuePath(song.filePath)) {
+      final actualFilePath = CuePath.extractAudioPath(song.filePath);
+      final cueStart = CuePath.extractStartOffset(song.filePath);
+      _cueStartOffset = cueStart;
+      _cueEndOffset = CuePath.extractEndOffset(song.filePath);
+      initialPosition = cueStart;
+      debugPrint("🎵 CUE Play: ${song.title} → start=${cueStart.inMilliseconds}ms, end=${_cueEndOffset?.inMilliseconds ?? 'EOF'}ms");
+      song = song.copyWith(filePath: actualFilePath);
+    }
     
     // 🚀 FIX: Mark as loading IMMEDIATELY so the crash guard (_isLoading check)
     // sees this flag during the entire play() call, including the stop() → setAudioSource() gap.
@@ -862,16 +1003,32 @@ class NativeMusicService {
         debugPrint("🎵 Android Stream Resume triggers to $uri");
       }
 
+      final prefs = await SharedPreferences.getInstance();
+      final bool isBitPerfect = prefs.getBool('wasapiExclusive') ?? false;
+
       // 🚀 Windows FFI: Load + Play directly (no redirect to load())
-      if (Platform.isWindows && !isHttp) {
+      // EXCEPTION: Bit-Perfect mode bypasses FFI and routes to MPV (just_audio)
+      // for strictly exact WASAPI Event-Driven hardware clock switching.
+      if (Platform.isWindows && !isHttp && !isBitPerfect && _isFfiSupported(song.filePath)) {
          debugPrint("🚀 Windows Local File (play): Using FFI engine directly.");
          
          // Stop previous player (FFI or just_audio)
+         // 🚀 In bit-perfect: releaseDevice() to fully uninit WASAPI exclusive session.
+         // Just stop() leaves the WASAPI session alive, blocking the new engine.
+         
          try {
            if (_activePlayerIndex == 3) {
-              await _ffiPlayer1?.stop();
+              if (isBitPerfect) {
+                await _ffiPlayer1?.releaseDevice();
+              } else {
+                await _ffiPlayer1?.stop();
+              }
            } else if (_activePlayerIndex == 4) {
-              await _ffiPlayer2?.stop();
+              if (isBitPerfect) {
+                await _ffiPlayer2?.releaseDevice();
+              } else {
+                await _ffiPlayer2?.stop();
+              }
            } else {
               // 🚀 FIX: Stop just_audio players when switching from stream to local FFI
               // Without this, the stream continues playing alongside the FFI song.
@@ -880,6 +1037,11 @@ class NativeMusicService {
            }
          } catch (e) {
            debugPrint("⚠️ Stop (prev) error (safe to ignore): $e");
+         }
+         
+         // 🛰️ Grace period for WASAPI hardware reset in exclusive mode
+         if (isBitPerfect) {
+           await Future.delayed(const Duration(milliseconds: 150));
          }
          
          // Toggle to the other engine
@@ -899,12 +1061,18 @@ class NativeMusicService {
          final targetFFI = usePlayer2 ? _ffiPlayer2! : _ffiPlayer1!;
          
          // Ensure target is clean (wrapped for safety)
-         try { await targetFFI.stop(); } catch (e) { /* fresh handle, ok */ }
+         try { 
+           if (isBitPerfect) {
+             await targetFFI.releaseDevice();
+           } else {
+             await targetFFI.stop();
+           }
+         } catch (e) { /* fresh handle, ok */ }
          
          _currentReplayGain = song.replayGain ?? 0.0;
          
          debugPrint("🚀 FFI: Loading file: ${song.filePath}");
-         await targetFFI.setFilePath(song.filePath);
+         await targetFFI.setFilePath(song.filePath, bitPerfect: isBitPerfect);
          if (initialPosition != null) await targetFFI.seek(initialPosition);
          
          _activePlayerIndex = usePlayer2 ? 4 : 3;
@@ -915,6 +1083,7 @@ class NativeMusicService {
          // 🚀 ACTUALLY START PLAYBACK
          targetFFI.play();
          debugPrint("🎵 FFI Play command sent for: ${song.title}");
+         _startCueEndMonitor(); // 🚀 CUE: Start end-offset monitor if applicable
          return true;
       }
 
@@ -924,12 +1093,25 @@ class NativeMusicService {
       // Switch back from FFI if needed
       await _switchToJustAudio();
 
+      // 🚀 Bit-Perfect Cleanup: In exclusive mode, only one instance can own the hardware.
+      // We MUST stop the inactive player to release its WASAPI session before loading the next.
+      if (Platform.isWindows && isBitPerfect) {
+        debugPrint("🚀 [Bit-Perfect] Stopping inactive player to release hardware...");
+        await _inactivePlayer.stop();
+        await Future.delayed(const Duration(milliseconds: 100)); // Hardware reset grace period
+      }
+
       if (initialPosition != null && isHttp) _isSeeking = true;
       try {
         await _player.setAudioSource(
           _createAudioSource(uri, song),
           initialPosition: isHttp ? Duration.zero : initialPosition,
         );
+
+        // 🚀 RESTORE BUGFIX: Force explicit manual seek
+        if (initialPosition != null && !isHttp) {
+          await _player.seek(initialPosition);
+        }
       } finally {
         _isSeeking = false;
       }
@@ -938,6 +1120,7 @@ class NativeMusicService {
       // 4. Force Play
       _player.play();
       debugPrint("🎵 Play command sent");
+      _startCueEndMonitor(); // 🚀 CUE: Start end-offset monitor if applicable
       return true;
     } catch (e, stackTrace) {
       debugPrint("❌ Service Error: $e");
@@ -955,6 +1138,7 @@ class NativeMusicService {
 
   Future<void> pause() async {
     if (_isZombie) return;
+    _cueEndMonitor?.cancel(); // 🚀 CUE: Pause the end-offset monitor
     if (Platform.isWindows && (_activePlayerIndex == 3 || _activePlayerIndex == 4)) {
       final player = _activePlayerIndex == 3 ? _ffiPlayer1 : _ffiPlayer2;
       await player?.pause();
@@ -966,6 +1150,9 @@ class NativeMusicService {
   }
 
   Future<void> stop() async {
+    _cueEndMonitor?.cancel(); // 🚀 CUE: Cancel the end-offset monitor
+    _cueStartOffset = null;
+    _cueEndOffset = null;
     if (Platform.isWindows && (_activePlayerIndex == 3 || _activePlayerIndex == 4)) {
       final player = _activePlayerIndex == 3 ? _ffiPlayer1 : _ffiPlayer2;
       await player?.stop();
@@ -976,11 +1163,59 @@ class NativeMusicService {
     DebugLogService().info("[Native] stop() called");
   }
 
+  /// 🚀 CUE SHEET SUPPORT: Starts a periodic timer that monitors playback position
+  /// and triggers a 'completed' state when the position reaches the CUE track's
+  /// end boundary. This allows each CUE track to auto-advance to the next track.
+  void _startCueEndMonitor() {
+    if (_cueEndOffset == null) return; // Not a CUE track, or last track (plays to EOF)
+    
+    final endMs = _cueEndOffset!.inMilliseconds;
+    DebugLogService().info("[Native] CUE End Monitor started. Will trigger completed at ${endMs}ms");
+    
+    _cueEndMonitor = Timer.periodic(const Duration(milliseconds: 200), (timer) {
+      // Get the ABSOLUTE position (before CUE offset adjustment)
+      Duration absolutePos;
+      if (Platform.isWindows && (_activePlayerIndex == 3 || _activePlayerIndex == 4)) {
+        final ffi = _activePlayerIndex == 3 ? _ffiPlayer1 : _ffiPlayer2;
+        absolutePos = ffi?.position ?? Duration.zero;
+      } else {
+        absolutePos = _player.position + Duration(seconds: _androidStreamSeekOffset);
+      }
+      
+      if (absolutePos.inMilliseconds >= endMs) {
+        DebugLogService().info("[Native] CUE End Monitor: Track boundary reached at ${absolutePos.inMilliseconds}ms (target: ${endMs}ms). Triggering completed.");
+        timer.cancel();
+        _cueEndMonitor = null;
+        
+        // Stop playback and signal completion to the player state stream
+        if (Platform.isWindows && (_activePlayerIndex == 3 || _activePlayerIndex == 4)) {
+          final ffi = _activePlayerIndex == 3 ? _ffiPlayer1 : _ffiPlayer2;
+          ffi?.pause();
+          // Emit completed state through the FFI player's state subject
+          // The FFI player monitors is_completed via polling, but we override here
+          ffi?.stop();
+        } else {
+          _player.pause();
+          _player.stop();
+        }
+      }
+    });
+  }
+
   Future<void> seek(Duration position) async {
     if (_isZombie) return;
 
+    // 🚀 CUE SUPPORT: Translate relative seek position to absolute file position
+    if (_cueStartOffset != null) {
+      position = position + _cueStartOffset!;
+      DebugLogService().info("[Native] CUE Seek: relative=${(position - _cueStartOffset!).inMilliseconds}ms → absolute=${position.inMilliseconds}ms");
+    }
+
+    DebugLogService().info("[Native] Executing SEEK to ${position.inMilliseconds}ms");
+
     if (Platform.isWindows && (_activePlayerIndex == 3 || _activePlayerIndex == 4)) {
       final player = _activePlayerIndex == 3 ? _ffiPlayer1 : _ffiPlayer2;
+      DebugLogService().info("[Native] Seek: Using Windows FFI Player ${_activePlayerIndex == 3 ? '1' : '2'}");
       await player?.seek(position);
       return;
     }
@@ -990,6 +1225,7 @@ class NativeMusicService {
     final isUrl = currentSong?.filePath.startsWith('http') ?? false;
 
     if (Platform.isAndroid && isUrl) {
+      DebugLogService().info("[Native] Seek: Using Android Stream Hot-Swapping");
       final uri = Uri.parse(currentSong!.filePath);
       final queryParams = Map<String, String>.from(uri.queryParameters);
       queryParams['start'] = position.inSeconds.toString();
@@ -1011,6 +1247,7 @@ class NativeMusicService {
       return;
     }
 
+    DebugLogService().info("[Native] Seek: Using Standard JustAudio Player");
     await _player.seek(position);
   }
 
@@ -1082,13 +1319,54 @@ class NativeMusicService {
 
 
 
-  Future<bool> _startCrossfade(SongModel song, double duration) async {
+  /// 🚀 Cancels an in-progress crossfade, clearing the fade timer and resetting state.
+  /// Called by player_provider when the incoming stream fails during crossfade.
+  void cancelCrossfade() {
+    if (!_isCrossfading) return;
+    DebugLogService().info("[Native] cancelCrossfade() — aborting active crossfade");
     _fadeTimer?.cancel();
     _fadeTimer = null;
+    _isCrossfading = false;
+    
+    // Reset fade multipliers so the next play() gets full volume
+    _ffiPlayer1FadeMult = 1.0;
+    _ffiPlayer2FadeMult = 1.0;
+    
+    // Stop both just_audio players to clear any half-loaded source
+    try {
+      _player1.stop();
+      _player2.stop();
+    } catch (e) { /* safe to ignore */ }
+    
+    if (Platform.isWindows) {
+      _updateWindowsEngineVolume();
+    }
+  }
+
+  Future<bool> _startCrossfade(SongModel song, double duration) async {
+    // 🚀 FIX: Crossfade and WASAPI exclusive mode are fundamentally incompatible.
+    // Two exclusive sessions cannot coexist — the second engine silently falls
+    // back to shared mode, causing the DAC to receive resampled audio (e.g. 44.1 kHz).
+    if (Platform.isWindows) {
+      final prefs = await SharedPreferences.getInstance();
+      final isBitPerfect = prefs.getBool('wasapiExclusive') ?? false;
+      if (isBitPerfect) {
+        DebugLogService().info("[Native] Crossfade auto-disabled in Bit-Perfect mode — using gapless transition");
+        return false;
+      }
+    }
+
+    // 🚀 RE-ENTRY GUARD: Ensure previous crossfade is fully cleared
+    if (_fadeTimer != null) {
+      DebugLogService().info("[Native] Overlapping crossfade detected — hard cancelling previous.");
+      _fadeTimer?.cancel();
+      _fadeTimer = null;
+    }
     
     final outPlayer = _player;
     final inPlayer = _inactivePlayer;
 
+    _isCrossfading = true; // 🚀 Guard: suppress crash-detector skip during crossfade
     DebugLogService().info("[Native] Starting Crossfade: ${duration}s");
 
     try {
@@ -1102,17 +1380,30 @@ class NativeMusicService {
         // Resolve online stream (simplified: reuse existing logic if possible, or skip crossfade for cloud for now)
         // For now, let's just return false to fallback to normal play if it's cloud
         DebugLogService().info("[Native] Crossfade not supported for cloud streams yet.");
+        _isCrossfading = false;
         return false;
       } else {
         // 🚀 FIX: If currently on just_audio but next song is a local file on Windows,
         // we can't crossfade through mpv (EQ won't work). Fall back to normal play()
         // which correctly routes local files through FFI.
         final isHttp = song.filePath.startsWith('http://') || song.filePath.startsWith('https://');
-        final isFfiLocal = Platform.isWindows && !isHttp;
+        final isFfiLocal = Platform.isWindows && !isHttp && _isFfiSupported(song.filePath);
 
         if (isFfiLocal && _activePlayerIndex <= 2) {
           DebugLogService().info("[Native] Crossfade: Local file after stream — falling back to FFI play()");
+          _isCrossfading = false;
           return false; // Caller will use normal play() which routes to FFI
+        }
+
+        // 🚀 FIX: Also decline crossfade when going FROM FFI (local) TO a stream.
+        // FFI and just_audio/MediaKit are entirely separate audio engines — we cannot
+        // cross-fade between them. Attempting to do so loads the stream into just_audio's
+        // inPlayer but then enters FFI fade logic, causing BOTH engines to output audio.
+        // Normal play() correctly handles the engine switch via _switchToJustAudio().
+        if (!isFfiLocal && (_activePlayerIndex == 3 || _activePlayerIndex == 4)) {
+          DebugLogService().info("[Native] Crossfade: Stream after FFI local — cannot cross-fade between engines. Falling back to normal play.");
+          _isCrossfading = false;
+          return false;
         }
         
         // 🚀 CRITICAL OPTIMIZATION: Check if already preloaded to avoid "cropping" delay
@@ -1131,7 +1422,9 @@ class NativeMusicService {
                if (targetFFI == null) return false; // Safety fallback
                
                await targetFFI.stop();
-               await targetFFI.setFilePath(song.filePath);
+               final prefs = await SharedPreferences.getInstance();
+               final bool isBitPerfect = prefs.getBool('wasapiExclusive') ?? false;
+               await targetFFI.setFilePath(song.filePath, bitPerfect: isBitPerfect);
                _currentReplayGainNext = song.replayGain ?? 0.0;
                DebugLogService().info("[Native] Crossfade: FFI engine manually prepared.");
            } else {
@@ -1167,7 +1460,7 @@ class NativeMusicService {
 
       // 🚀 Only play the just_audio placeholder if we aren't using FFI
       // Calling play() on media_kit without an audio source causes state corruption
-      final isFfiLocal = Platform.isWindows && !(song.filePath.startsWith('http://') || song.filePath.startsWith('https://'));
+      final isFfiLocal = Platform.isWindows && !(song.filePath.startsWith('http://') || song.filePath.startsWith('https://')) && _isFfiSupported(song.filePath);
       if (!isFfiLocal) {
         inPlayer.play();
       }
@@ -1248,12 +1541,14 @@ class NativeMusicService {
           } else {
              outPlayer.setVolume(_currentVolume); // Reset for next use
           }
+          _isCrossfading = false; // 🚀 Clear guard
           DebugLogService().info("[Native] Crossfade Complete");
         }
       });
 
       return true;
     } catch (e) {
+      _isCrossfading = false; // 🚀 Clear guard on error
       DebugLogService().error("Crossfade Error: $e");
       return false;
     }
@@ -1263,7 +1558,17 @@ class NativeMusicService {
       return AudioSource.uri(uri, tag: song, headers: null);
     }
 
-    // ⏱️ Passing duration in query params for MediaKit override locks
+    // 🚀 SECURITY: Don't inject override_duration for remote Tidal/Cloud streams
+    // that might have signed URLs or sensitive proxies. Only use for local/known files.
+    final bool isSignedOrCloud = uri.host.contains('tidal') || 
+                                uri.host.contains('stephanus-dev') ||
+                                song.filePath == "cloud_stream";
+
+    if (isSignedOrCloud) {
+       return AudioSource.uri(uri, tag: song);
+    }
+
+    // ⏱️ Passing duration in query params for MediaKit override locks (local/generic files)
     final updatedUri = uri.replace(
       queryParameters: {
         ...uri.queryParameters,

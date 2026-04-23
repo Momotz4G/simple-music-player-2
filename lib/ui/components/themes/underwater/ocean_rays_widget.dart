@@ -65,8 +65,8 @@ class _OceanRaysPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.white.withOpacity(opacity),
-            Colors.white.withOpacity(0.0),
+            Colors.white.withValues(alpha: opacity),
+            Colors.white.withValues(alpha: 0.0),
           ],
         ).createShader(Rect.fromLTWH(x - width / 2, 0, width, size.height))
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);

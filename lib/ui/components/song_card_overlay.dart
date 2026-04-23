@@ -88,10 +88,10 @@ class _SongCardOverlayState extends ConsumerState<SongCardOverlay> {
                   displayIcon,
                   key: _iconKey,
                   size: widget.size * 0.9,
-                  color: iconColor.withOpacity(0.9),
+                  color: iconColor.withValues(alpha: 0.9),
                   shadows: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       blurRadius: 6,
                     )
                   ],

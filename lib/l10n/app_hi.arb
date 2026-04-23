@@ -1,261 +1,19 @@
 {
-  "browse": "ब्राउज़ करें",
-  "search": "खोजें",
-  "history": "इतिहास",
-  "stats": "आंकड़े",
-  "library": "लाइब्रेरी",
-  "playlists": "प्लेलिस्ट",
-  "artists": "कलाकार",
-  "albums": "एल्बम",
-  "folders": "फ़ोल्डर",
-  "local_library": "स्थानीय लाइब्रेरी",
-  "downloads": "डाउनलोड",
-  "metadata_editor": "मेटाडेटा संपादक",
-  "editMetadata": "मेटाडेटा संपादित करें",
-  "success": "सफलता",
-  "enableAlphabetIndexer": "वर्णमाला स्क्रॉल अनुक्रमणिका सक्षम करें",
-  "enableAlphabetIndexerSubtitle": "मोबाइल सूची दृश्य पर ए-जेด साइडबार अनुक्रमणिका दिखाएं",
-  "metadataUpdated": "मेटाडेटा अपडेट किया गया",
-  "failedToUpdateMetadata": "मेटाडेटा अपडेट करने में विफल",
-  "toggleLyrics": "लिरिक्स बदलें",
-  "settings": "सेटिंग्स",
-  "navigation": "नेविगेशन",
-  "system": "सिस्टम",
-  "language": "भाषा",
-  "english": "अंग्रेज़ी",
-  "indonesian": "इंडोनेशियाई",
-  "korean": "कोरियाई",
-  "japanese": "जापानी",
-  "chinese": "चीनी",
-  "spanish": "स्पेनिश",
-  "french": "फ़्रेंच",
-  "german": "जर्मन",
-  "portuguese": "पुर्तगाली (ब्राजील)",
-  "thai": "थाई",
-  "vietnamese": "वियतनामी",
-  "arabic": "अरबी",
-  "russian": "रूसी",
-  "hindi": "हिन्दी",
-  "appearance": "दिखावट",
-  "atmospheres": "वातावरण",
-  "none": "कोई नहीं",
-  "winter": "सर्दी",
-  "autumn": "पतझड़",
-  "rainyCity": "बरसाती शहर",
-  "sakura": "सकुरा",
-  "lunarNewYear": "चंद्र नव वर्ष",
-  "cyberpunk": "साइबरपंक",
-  "underwater": "पानी के नीचे",
-  "nordicAurora": "नॉर्डिक औरोरा",
-  "galacticSpace": "गैलेक्टिक स्पेस",
-  "desertMirage": "रेगिस्तानी मिराज",
-  "general": "सामान्य",
-  "darkMode": "डार्क मोड",
-  "lockedAtmosphere": "वातावरण सक्रिय होने पर लॉक किया गया",
-  "useDarkTheme": "डार्क थीम का उपयोग करें",
-  "syncThemeAlbumArt": "एल्बम आर्ट के साथ थीम सिंक करें",
-  "tintBackground": "बैकग्राउंड और विज़ुअलाइज़र को गाने के रंग में रंगें",
-  "accentColor": "एक्सेंट कलर",
-  "chooseAccentColor": "अपना पसंदीदा स्थिर रंग चुनें",
-  "contentRegion": "कंटेंट क्षेत्र",
-  "setCountryReleases": "रिलीज़ और चार्ट के लिए देश सेट करें",
-  "unitedStates": "संयुक्त राज्य अमेरिका",
-  "indonesia": "इंडोनेशिया",
-  "southKorea": "दक्षिण कोरिया",
-  "japan": "जापान",
-  "unitedKingdom": "यूनाइटेड किंगडम",
-  "brazil": "ब्राजील",
-  "visualizer": "विज़ुअलाइज़र",
-  "enableBarVisualizer": "बार विज़ुअलाइज़र सक्षम करें",
-  "showAnimatedWaves": "प्लेबैक बार में एनिमेटेड लहरें दिखाएं",
-  "opacity": "अपारदर्शिता",
-  "visualizerStyle": "विज़ुअलाइज़र शैली",
-  "chooseAnimationType": "एनीमेशन का प्रकार चुनें",
-  "spectrumBars": "स्पेक्ट्रम बार्स",
-  "fluidWave": "फ्लुइड वेव",
-  "circularPulse": "सर्कुलर पल्स",
-  "rainbowMode": "रेनबो मोड",
-  "useMixedColors": "मिश्रित रंगों का उपयोग करें (सिंक प्राथमिकता)",
-  "integration": "एकीकरण",
-  "discordRPC": "डिस्कॉर्ड प्रेजेंस",
-  "showStatusDiscord": "डिस्कॉर्ड पर स्थिति दिखाएं",
-  "tidalApiStatus": "Tidal API",
-  "online": "ऑनलाइन",
-  "unauthorize": "अनधिकृत",
-  "offlineStatus": "ऑफ़लाइन",
-  "checkInternetConnection": "अपने इंटरनेट कनेक्शन की जाँच करें",
-  "autoClearCache": "ऑटो क्लियर कैश",
-  "autoClearDisabled": "अक्षम",
-  "autoClearOnClose": "ऐप बंद होने पर",
-  "autoClearAfter24h": "24 घंटे बाद",
-  "autoClearAfter7d": "7 दिन बाद",
-  "autoClearEvery30m": "हर 30 मिनट में (केवल सुनते समय)",
-  "musicFolderLocation": "संगीत फ़ोल्डर का स्थान",
-  "noFolderSelected": "कोई फ़ोल्डर नहीं चुना गया",
-  "change": "बदलें",
-  "expand": "विस्तार करें",
-  "ignoreSubfolderScan": "सबफ़ोल्डर स्कैन को नज़रअंदाज़ करें",
-  "onlyScanSelected": "केवल चयनित फ़ोल्डरों को स्कैन करें (डिफ़ॉल्ट रूप से चालू)",
-  "importAdditionalPaths": "अतिरिक्त पथ आयात करें",
-  "addFoldersScan": "स्कैन के लिए फ़ोल्डर जोड़ें",
-  "add": "जोड़ें",
-  "singleTracks": "एकल ट्रैक",
-  "unsavedChanges": "अनसेव्ड परिवर्तन",
-  "playlistAlbumTracks": "प्लेलिस्ट / एल्बम ट्रैक",
-  "audioFormat": "ऑडियो प्रारूप",
-  "preferredOutputFormat": "डाउनलोड के लिए पसंदीदा आउटपुट प्रारूप",
-  "flacNote": "नोट: FLAC केवल एकल ट्रैक डाउनलोड के लिए उपलब्ध है। प्लेलिस्ट डाउनलोड M4A प्रारूप का उपयोग करेंगे।",
-  "downloadLocation": "डाउनलोड स्थान",
-  "resetToDefault": "डिफ़ॉल्ट पर रीसेट करें",
-  "changeFolder": "फ़ोल्डर बदलें",
-  "streaming": "स्ट्रीमिंग",
-  "streamingQuality": "स्ट्रीमिंग गुणवत्ता",
-  "standardQuality": "मानक (MP3)",
-  "highQuality": "उच्च गुणवत्ता (M4A)",
-  "losslessQuality": "लॉसलेस (ऑटो)",
-  "standardDesc": "MP3 - छोटी फ़ाइल, तेज़ लोडिंग",
-  "highDesc": "M4A - बेहतर ध्वनि, संतुलित प्रदर्शन",
-  "losslessDesc": "FLAC - Deezer/Tidal से लॉसलेस गुणवत्ता",
-  "selectStreamingQuality": "स्ट्रीमिंग गुणवत्ता चुनें",
-  "losslessNote": "यदि Deezer/Tidal पर उपलब्ध हो तो यह FLAC लॉसलेस का उपयोग करेगा। वरना, यह M4A पर वापस चला जाएगा।",
-  "playback": "प्लेबैक",
-  "endlessQueue": "अंतहीन कतार",
-  "autoAddSimilar": "कतर के अंत में स्वचालित रूप से समान गाने जोड़ें",
-  "gaplessPlayback": "गैपलेस प्लेबैक",
-  "gaplessPlaybackDesc": "ट्रैक के बीच सन्नाटा खत्म करें",
-  "crossfade": "क्रॉसफ़ेड",
-  "crossfadeDesc": "ट्रैक के बीच फेड करें ({seconds} सेकंड)",
-  "@crossfadeDesc": {
-    "placeholders": {
-      "seconds": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter24h": {
+    "description": "Option to clear cache every 24 hours"
   },
-  "disableRomanization": "रोमानाइज़ेशन अक्षम करें",
-  "hideRomajiPinyin": "कोरियाई, जापानी या चीनी लिरिक्स के नीचे रोमाजी/पिनयिन न दिखाएं",
-  "translationLanguage": "अनुवाद भाषा",
-  "targetLanguageLyrics": "लिरिक्स अनुवाद के लिए लक्षित भाषा",
-  "disableCanvas": "कैनवास अक्षम करें",
-  "hideCanvas": "Spotify कैनवास वीडियो न दिखाएं, इसके बजाय एल्बम कवर दिखाएं",
-  "wasapiExclusive": "WASAPI एक्सक्लूसिव मोड",
-  "bitPerfectWindows": "ऑटो-सैंपल रेट के साथ बिट-परफेक्ट ऑडियो (पुनः आरंभ आवश्यक)",
-  "audiophileDAC": "ऑडियोफाइल DACs पर चलाते समय इसे सक्रिय करें (पुनः आरंभ आवश्यक)",
-  "android14BitPerfect": "Android 14+ बिट-परफेक्ट",
-  "bypassSystemMixer": "USB DAC के लिए सिस्टम मिक्सर को बायपास करें",
-  "requiresAndroid14": "Android 14+ और USB DAC की आवश्यकता है",
-  "bitPerfectEnabled": "बिट-परफेक्ट मोड सक्षम। वॉल्यूम नियंत्रण काम नहीं कर सकता है।",
-  "audioOutputDevice": "ऑडियो आउटपुट डिवाइस",
-  "loadingDevices": "डिवाइस लोड हो रहे हैं...",
-  "systemDefault": "सिस्टम डिफ़ॉल्ट",
-  "exclusiveWarning": "चेतावनी: एक्सक्लूसिव मोड बेहतर काम करता है यदि आप सिस्टम डिफ़ॉल्ट के बजाय ऊपर एक विशिष्ट डिवाइस चुनते हैं।",
-  "dataCleanup": "डेटा और सफाई",
-  "resetLibraryPath": "लाइब्रेरी पथ रीसेट करें",
-  "unlinkFolder": "फ़ोल्डर को अनलिंक करें और गानों की सूची साफ़ करें",
-  "resetLibraryTitle": "लाइब्रेरी रीसेट करें?",
-  "resetLibraryContent": "यह प्लेयर से वर्तमान फ़ोल्डर को हटा देगा। आपकी फ़ाइलें डिलीट नहीं होंगी।",
-  "resetPath": "पथ रीसेट करें",
-  "clearStreamingCache": "स्ट्रीमिंग कैश साफ़ करें",
-  "freeUpSpace": "जगह खाली करें (वर्तमान: {size})",
-  "resetStatistics": "आंकड़े रीसेट करें",
-  "clearPlayHistory": "इतिहास और सुनने का समय साफ़ करें",
-  "resetStatsTitle": "आंकड़े रीसेट करें?",
-  "resetStatsContent": "यह क्रिया अपरिवर्तनीय है।\\nसभी प्ले काउंट और समय स्थायी रूप से खो जाएंगे।",
-  "resetEverything": "सब कुछ रीसेट करें",
-  "debugging": "डीबगिंग",
-  "showDebugButton": "फ्लोटिंग डीबग बटन दिखाएं",
-  "toggleDebugButton": "फ्लोटिंग डीबग कंसोल टॉगल करें",
-  "community": "समुदाय",
-  "donate": "दान करें",
-  "joinUs": "हमसे जुड़ें",
-  "usbAudioBypass": "USB ऑडियो बायपास (बीटा) - Android 13 और उससे नीचे के लिए सीधा DAC आउटपुट",
-  "comingSoon": "जल्द आ रहा है",
-  "underDevelopment": "यह सुविधा विकास के अधीन है",
-  "version": "संस्करण",
-  "restartRequired": "पुनः आरंभ आवश्यक",
-  "restartContent": "ऑडियो डिवाइस परिवर्तन लागू करने के लिए ऐप को पुनः आरंभ करना आवश्यक है।\\n\\nअभी पुनः आरंभ करें?",
-  "later": "बाद में",
-  "restartNow": "अभी पुनः आरंभ करें",
-  "applyOnRestart": "अगली बार ऐप शुरू होने पर परिवर्तन लागू होंगे।",
-  "autoRestartNotSupported": "स्वचालित पुनः आरंभ समर्थित नहीं है। कृपया मैन्युअल रूप से पुनः आरंभ करें।",
-  "enterAdminCode": "कृपया एडमिन एक्सेस कोड दर्ज करें",
-  "accessCode": "एक्सेस कोड",
-  "cancel": "रद्द करें",
-  "access": "एक्सेस",
-  "invalidCode": "अमान्य एक्सेस कोड",
-  "formatSaved": "प्रारूप सहेजा गया!",
-  "addedFolder": "फ़ोल्डर जोड़ा गया: {folder}",
-  "removedFolder": "फ़ोल्डर हटाया गया: {folder}",
-  "downloadPathUpdated": "डाउनलोड पथ अपडेट किया गया: {path}",
-  "downloadPathReset": "डाउनलोड पथ डिफ़ॉल्ट पर रीसेट किया गया।",
-  "libraryPathReset": "लाइब्रेरी पथ रीसेट किया गया।",
-  "cacheCleared": "कैश सफलतापूर्वक साफ़ किया गया!",
-  "changesApplyRestart": "अगली बार ऐप शुरू होने पर परिवर्तन लागू होंगे।",
-  "changeLanguage": "ऐप की भाषा बदलें",
-  "unlinkFolderClear": "फ़ोल्डर को अनलिंक करें और गानों की सूची साफ़ करें",
-  "enterAdminAccessCode": "कृपया एडमिन एक्सेस कोड दर्ज करें",
-  "invalidAccessCode": "अमान्य एक्सेस कोड",
-  "androidBitPerfect": "Android 14+ बिट-परफेक्ट",
-  "customDevice": "कस्टम डिवाइस",
-  "exclusiveModeWarning": "चेतावनी: एक्सक्लूसिव मोड बेहतर काम करता है यदि आप सिस्टम डिफ़ॉल्ट के बजाय ऊपर एक विशिष्ट डिवाइस चुनते हैं।",
-  "@freeUpSpace": {
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
+  "@autoClearAfter7d": {
+    "description": "Option to clear cache every 7 days"
   },
-  "statisticsReset": "आंकड़े रीसेट किए गए।",
-  "toggleDebugConsole": "फ्लोटिंग डीबग कंसोल टॉगल करें",
-  "usbAudioBypassBeta": "USB ऑडियो बायपास (बीटा) - Android 13 और उससे नीचे के लिए सीधा DAC आउटपुट",
-  "connectedUsbDacs": "जुड़े हुए USB DAC:",
-  "scanning": "स्कैन किया जा रहा है...",
-  "scan": "स्कैन करें",
-  "noUsbDacDetected": "कोई USB DAC नहीं मिला। USB ऑडियो डिवाइस कनेक्ट करें और स्कैन दबाएं।",
-  "connected": "जुड़ा हुआ",
-  "connect": "कनेक्ट करें",
-  "failedToConnectDac": "DAC से कनेक्ट करने में विफल। USB अनुमतियों की जाँच करें।",
-  "connectedToDac": "{deviceName} से जुड़ा - USB बायपास सक्रिय",
-  "@connectedToDac": {
-    "placeholders": {
-      "deviceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearCache": {
+    "description": "Auto clear cache setting section"
   },
-  "changingAudioDeviceRestart": "ऑडियो डिवाइस परिवर्तन लागू करने के लिए ऐप को पुनः आरंभ करना आवश्यक है।\\n\\nअभी पुनः आरंभ करें?",
-  "translateLyrics": "लिरिक्स अनुवाद करें",
-  "viewQueue": "कतार देखें",
-  "loadingLyrics": "लिरिक्स लोड हो रहे हैं...",
-  "noLyricsAvailable": "कोई लिरिक्स उपलब्ध नहीं है",
-  "noSyncedLyricsFound": "कोई सिंक किए गए लिरिक्स नहीं मिले",
-  "justEnjoyVibes": "बस संगीत का आनंद लें।",
-  "scrollForLyrics": "लिरिक्स देखने के लिए स्क्रॉल करें",
-  "switchingTo": "पर स्विच किया जा रहा है",
-  "metadataEditorInfo": "आप मेटाडेटा संपादक में डेटा को जल्दी से खोज और ठीक कर सकते हैं।",
-  "metadataEditorNote": "नोट: 'सफलतापूर्वक सहेजा गया' स्थिति दिखने के बाद, एल्बम आर्ट बदल सकता है। यह कोई बग नहीं है बल्कि ऐप कैश की समस्या है जिस पर हम काम कर रहे हैं। फ़ाइल मैनेजर में जाँच करें।",
-  "close": "बंद करें",
-  "permissionRequired": "अनुमति आवश्यक",
-  "permissionRequiredDesc": "टैग संपादित करने के लिए 'सभी फ़ाइलों तक पहुँच' अनुमति की आवश्यकता है। यह आपकी संगीत फ़ाइलों को सीधे संशोधित करने की अनुमति देता है।",
-  "grantPermission": "अनुमति दें",
-  "files": "फ़ाइलें",
-  "editor": "संपादक",
-  "clearImported": "आयातित साफ़ करें",
-  "libraryData": "लाइब्रेरी डेटा",
-  "externalFiles": "बाहरी फ़ाइलें",
-  "addFiles": "फ़ाइलें जोड़ें",
-  "addFolder": "फ़ोल्डर जोड़ें",
-  "selectSongToEdit": "संपादित करने के लिए सूची से एक गाना चुनें",
-  "fixAll": "सब ठीक करें",
-  "autoTagTitle": "⚠️ {sourceName} के लिए ऑटो-टैग?",
-  "@autoTagTitle": {
-    "placeholders": {
-      "sourceName": {
-        "type": "String"
-      }
-    }
+  "@autoClearDisabled": {
+    "description": "Option to disable auto clear cache"
   },
-  "autoTagContent": "यह Spotify पर '{sourceName}' से सभी {count} गानों को खोजेगा और स्वचालित रूप से टैग बदल देगा।\\n\\nयह क्रिया अपरिवर्तनीय है।",
+  "@autoClearOnClose": {
+    "description": "Option to clear cache when app closes"
+  },
   "@autoTagContent": {
     "placeholders": {
       "count": {
@@ -266,144 +24,41 @@
       }
     }
   },
-  "startBulkProcess": "बल्क प्रक्रिया शुरू करें",
-  "title": "शीर्षक",
-  "artist": "कलाकार",
-  "album": "एल्बम",
-  "genre": "शैली",
-  "year": "वर्ष",
-  "trackNumber": "ट्रैक संख्या",
-  "discNumber": "डिस्क संख्या",
-  "autoFixComingSoon": "ऑटो-फिक्स (जल्द आ रहा है)",
-  "manualSearch": "मैन्युअल खोज",
-  "revert": "वापस लाएं",
-  "saveChangesToFile": "फ़ाइल में परिवर्तन सहेजें",
-  "searchSpotify": "Spotify पर खोजें",
-  "searchHint": "खोजें...",
-  "selectMatch": "मैच चुनें",
-  "upNext": "अगला",
-  "fetchingLossless": "लॉसलेस गुणवत्ता प्राप्त की जा रही है...",
-  "noMusicPlaying": "कोई संगीत नहीं बज रहा है",
-  "refreshList": "सूची रीफ्रेश करें",
-  "noDownloadsFound": "कोई डाउनलोड नहीं मिला",
-  "play": "चलाएं",
-  "showInFolder": "फ़ोल्डर में दिखाएं",
-  "delete": "हटाएं",
-  "deleteFileTitle": "फ़ाइल हटाएं?",
-  "deleteFileContent": "क्या आप वाकई '{filename}' को हटाना चाहते हैं?\\nयह क्रिया अपरिवर्तनीय है।",
-  "downloadedTo": "यहाँ डाउनलोड किया गया: {path}",
-  "folderPath": "फ़ोल्डर: {path}",
-  "errorDeleting": "हटाते समय त्रुटि: {error}",
-  "ok": "ठीक है",
-  "searchSongs": "गाने खोजें...",
-  "noResultsFound": "कोई परिणाम नहीं मिला",
-  "refreshLibrary": "लाइब्रेरी रीफ्रेश करें",
-  "shuffleAll": "सभी को शफल करें",
-  "switchToListView": "सूची दृश्य पर स्विच करें",
-  "switchToGridView": "ग्रिड दृश्य पर स्विच करें",
-  "songsLoadedCount": "{count} गाने लोड हुए...",
-  "grantAccess": "पहुँच प्रदान करें",
-  "selectDifferentFolder": "अलग फ़ोल्डर चुनें",
-  "selectFolder": "फ़ोल्डर चुनें",
-  "noSongsInFolder": "इस फ़ोल्डर में कोई गाना नहीं मिला।",
-  "queueUpdated": "कतार अपडेट की गई",
-  "playingNext": "अगला बज रहा है",
-  "addedToQueue": "कतार में जोड़ा गया",
-  "playingTrack": "ट्रैक बजाया जा रहा है",
-  "error": "त्रुटि",
-  "noPlaylistsFound": "कोई प्लेलिस्ट नहीं मिली",
-  "addToPlaylist": "प्लेलिस्ट में जोड़ें",
-  "songAlreadyInPlaylist": "गाना पहले से ही प्लेलिस्ट में है",
-  "addedToPlaylistSuccess": "प्लेलिस्ट में जोड़ा गया",
-  "alreadyInLikedSongs": "पहले से ही पसंद किए गए गानों में है",
-  "addedToLikedSongs": "पसंद किए गए गानों में जोड़ा गया",
-  "likedSongs": "पसंद किए गए गाने",
-  "preparingDownload": "डाउनलोड की तैयारी की जा रही है",
-  "fetchingMetadataSpotify": "Spotify से मेटाडेटा लिया जा रहा है...",
-  "preparingDownloadNotification": "डाउनलोड की तैयारी की जा रही है",
-  "downloadStarted": "डाउनलोड शुरू हुआ",
-  "downloading": "डाउनलोड हो रहा है",
-  "preparingDownloadFormat": "डाउनलोड तैयार हो रहा है ({format})...",
-  "searching": "खोज की जा रही है...",
-  "findingBestMatchYoutube": "YouTube पर सबसे अच्छा मैच खोजा जा रहा है...",
-  "downloadingFlac": "FLAC डाउनलोड हो रहा है",
-  "fetchingLosslessAudio": "लॉसलेस ऑडियो लिया जा रहा है...",
-  "downloadComplete": "डाउनलोड पूरा हुआ",
-  "flacSavedToDownloads": "FLAC डाउनलोड फ़ोल्डर में सहेजा गया",
-  "downloadCompleteNotification": "डाउनलोड पूरा हुआ",
-  "flacUnavailable": "FLAC उपलब्ध नहीं है",
-  "flacUnavailableDesc": "FLAC उपलब्ध नहीं है, डाउनलोड विफल रहा। सेटिंग्स बदलने का प्रयास करें।",
-  "flacUnavailableNotification": "FLAC उपलब्ध नहीं है",
-  "changeFormatInSettings": "कृपया सेटिंग्स में आउटपुट प्रारूप बदलें",
-  "flacError": "FLAC त्रुटि",
-  "couldNotDownloadFlac": "FLAC डाउनलोड नहीं किया जा सका।",
-  "downloadingFormat": "{format} डाउनलोड हो रहा है",
-  "savedAsFormat": "{format} के रूप में सहेजा गया",
-  "downloadFailed": "डाउनलोड विफल रहा",
-  "downloadError": "डाउनलोड त्रुटि",
-  "playNext": "अगला चलाएं",
-  "addToQueue": "कतार में जोड़ें",
-  "addToFavorite": "पसंदीदा में जोड़ें",
-  "goToArtist": "कलाकार पर जाएं",
-  "download": "डाउनलोड",
-  "noAlbumsFound": "कोई एल्बम नहीं मिला",
-  "moreOptions": "अधिक विकल्प",
-  "titleLabel": "शीर्षक",
-  "artistLabel": "कलाकार",
-  "albumLabel": "एल्बम",
-  "downloadAll": "सभी डाउनलोड करें",
-  "albumRemovedFromPlaylists": "एल्बम प्लेलिस्ट से हटा दिया गया",
-  "albumAddedToPlaylists": "एल्बम प्लेलिस्ट में जोड़ा गया",
-  "startedDownloadingAll": "सभी गाने डाउनलोड होना शुरू हुए...",
-  "playingFromAlbum": "एल्बम से चलाया जा रहा है",
-  "unknownArtist": "अज्ञात कलाकार",
-  "songsCount": "{count, plural, =1{1 गाना} other{{count} गाने}}",
-  "libraryNotLoaded": "लाइब्रेरी लोड नहीं हुई है।",
-  "noArtistsFound": "कोई कलाकार नहीं मिला।",
-  "goToLocalLibraryToSelect": "फ़ोल्डर चुनने के लिए स्थानीय लाइब्रेरी पर जाएं।",
-  "popularOnSpotify": "Spotify पर लोकप्रिय",
-  "songsInLibrary": "लाइब्रेरी में {count, plural, =1{1 गाना} other{{count} गाने}}",
-  "shuffle": "शफल करें",
-  "shufflingArtist": "{artistName} के गानों को शफल किया जा रहा है...",
-  "showMore": "अधिक दिखाएं",
-  "showLess": "कम दिखाएं",
-  "discography": "डिस्कोग्राफी",
-  "seeAll": "सभी देखें",
-  "newPlaylist": "नई प्लेलिस्ट",
-  "noPlaylistsYet": "अभी तक कोई प्लेलिस्ट नहीं है",
-  "createPlaylist": "प्लेलिस्ट बनाएं",
-  "emptyPlaylist": "खाली प्लेलिस्ट",
-  "emptyPlaylistSubtitle": "एक नई खाली प्लेलिस्ट बनाएं",
-  "importFromSpotify": "Spotify से आयात करें",
-  "importFromSpotifySubtitle": "Spotify प्लेलिस्ट लिंक पेस्ट करें",
-  "importFromYoutubeMusic": "YouTube Music से आयात करें",
-  "importFromYoutubeMusicSubtitle": "YouTube Music प्लेलिस्ट लिंक पेस्ट करें",
-  "playlistNameHint": "प्लेलिस्ट का नाम",
-  "importSpotifyPlaylist": "Spotify प्लेलिस्ट आयात करें",
-  "importYoutubeMusicPlaylist": "YouTube Music प्लेलिस्ट आयात करें",
-  "deletePlaylistTitle": "प्लेलिस्ट हटाएं?",
-  "deletePlaylistConfirm": "क्या आप वाकई '{name}' को हटाना चाहते हैं?",
-  "deletePlaylistPermanentConfirm": "क्या आप वाकई इस प्लेलिस्ट को हटाना चाहते हैं? (इस क्रिया को पूर्ववत नहीं किया जा सकता)",
-  "publicSharing": "सार्वजनिक साझाकरण",
-  "publicSharingDesc": "कोड वाला कोई भी व्यक्ति इस प्लेलिस्ट को आयात कर सकता है।",
-  "publicSharingDisabledDesc": "अक्षम। दूसरों के साथ साझा करने के लिए सक्षम करें।",
-  "failedEnableSharing": "साझाकरण सक्षम करने में विफल। कनेक्शन की जांच करें।",
-  "failedDisableSharing": "साझाकरण अक्षम करने में विफल।",
-  "disablingSharingWarning": "साझाकरण अक्षम करने से स्थान बचाने के लिए सर्वर से कोड और डेटा स्थायी रूप से हटा दिया जाएगा।",
-  "invalidSpotifyUrl": "अमान्य Spotify प्लेलिस्ट URL",
-  "invalidYoutubeMusicUrl": "अमान्य YouTube Music प्लेलिस्ट लिंक",
-  "fetchingPlaylistInfo": "प्लेलिस्ट जानकारी प्राप्त की जा रही है...",
-  "failedFetchPlaylistInfo": "प्लेलिस्ट जानकारी प्राप्त नहीं की जा सकी",
-  "fetchingTracksFrom": "\"{name}\" से ट्रैक प्राप्त किए जा रहे हैं...",
-  "@fetchingTracksFrom": {
+  "@autoTagTitle": {
     "placeholders": {
-      "name": {
+      "sourceName": {
         "type": "String"
       }
     }
   },
-  "noTracksFound": "प्लेलिस्ट में कोई ट्रैक नहीं मिला",
-  "creatingPlaylistWithTracks": "{count} ट्रैक के साथ प्लेलिस्ट बनाई जा रही है...",
+  "@automaticTitleLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@connectedToDac": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@consecutivePlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@countSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@creatingPlaylistWithTracks": {
     "placeholders": {
       "count": {
@@ -411,15 +66,117 @@
       }
     }
   },
-  "importedTracks": "{count} ट्रैक सफलतापूर्वक आयात किए गए!",
-  "@importedTracks": {
+  "@crossfadeDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@deleteFileContent": {
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@deviceNameLabel": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@downloadingFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@errorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@fetchingTracksFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@folderPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@foundExistingAccount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@foundResults": {
+    "placeholders": {
+      "songCount": {
+        "type": "int"
+      },
+      "albumCount": {
+        "type": "int"
+      },
+      "artistCount": {
+        "type": "int"
+      }
+    }
+  },
+  "@foundYoutubeResults": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "importFailed": "आयात विफल: {error}",
+  "@freeUpSpace": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@fromLibraryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@hoursDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@importFailed": {
     "placeholders": {
       "error": {
@@ -427,10 +184,6 @@
       }
     }
   },
-  "fetchingSharedPlaylist": "साझा प्लेलिस्ट प्राप्त की जा रही है...",
-  "playlistNotFoundOrError": "प्लेलिस्ट नहीं मिली या सर्वर त्रुटि",
-  "parsingPlaylistData": "प्लेलिस्ट डेटा का विश्लेषण किया जा रहा है...",
-  "importedPlaylistName": "\"{name}\" सफलतापूर्वक आयात किया गया!",
   "@importedPlaylistName": {
     "placeholders": {
       "name": {
@@ -438,184 +191,184 @@
       }
     }
   },
-  "codeMust6Digits": "कोड 6 अंकों का होना चाहिए",
-  "fetchingPlaylist": "प्लेलिस्ट प्राप्त की जा रही है...",
-  "importViaCode": "कोड के माध्यम से आयात करें",
-  "enterShareCode": "6-अंकों का साझाकरण कोड दर्ज करें",
-  "importChoice": "आयात करें",
-  "playlistNotFound": "प्लेलिस्ट नहीं मिली",
-  "noSongsAdded": "अभी तक कोई गाना नहीं जोड़ा गया है",
-  "deleteDownloadsTitle": "डाउनलोड हटाएं?",
-  "deleteDownloadsConfirm": "यह इस प्लेलिस्ट के लिए इस डिवाइस पर सभी डाउनलोड किए गए गानों को हटा देगा।",
-  "allDownloadsRemoved": "सभी डाउनलोड हटा दिए गए",
-  "rename": "नाम बदलें",
-  "removeFromPlaylist": "प्लेलिस्ट से हटाएं",
-  "renamePlaylist": "प्लेलिस्ट का नाम बदलें",
-  "listeningStats": "सुनने के आंकड़े",
-  "topArtist": "शीर्ष कलाकार",
-  "mostListened": "सबसे अधिक सुना गया",
-  "timeListened": "सुनने का समय",
-  "totalPlays": "कुल प्ले",
-  "minutes": "मिनट",
-  "tracks": "ट्रैक",
-  "songs": "गाने",
-  "noStatsYet": "अभी तक कोई आंकड़े नहीं हैं।",
-  "noArtistStatsYet": "अभी तक कलाकारों के कोई आंकड़े नहीं हैं।",
-  "plays": "प्ले",
-  "min": "मिनट",
-  "share": "साझा करें",
-  "savedTo": "'{path}' में सहेजा गया",
-  "myTopTrackOn": "Simple Player पर मेरा टॉप ट्रैक! 🎵",
-  "fileMissingHistory": "फ़ाइल गायब है और इतिहास में नहीं मिली।",
-  "restoring": "पुनर्स्थापित किया जा रहा है",
-  "reBuffering": "बफरिंग हो रही है...",
-  "nowPlaying": "अभी बज रहा है",
-  "recentlyPlayed": "हाल ही में बजाया गया",
-  "clearHistory": "इतिहास साफ़ करें",
-  "noHistoryYet": "अभी तक कोई इतिहास नहीं है",
-  "cloud": "क्लाउड",
-  "cached": "कैश किया गया",
-  "searchingStatus": "खोज की जा रही है",
-  "findingStream": "स्ट्रीमिंग स्रोत खोजा जा रहा है...",
-  "noStreamMatch": "कोई स्ट्रीमिंग मैच नहीं मिला।",
-  "errorSearchingStream": "स्ट्रीम खोजते समय त्रुटि।",
-  "rebufferingFromCloud": "क्लाउड से पुनः लोड हो रहा है...",
-  "musicSearch": "संगीत खोज",
-  "songTitleKeyword": "शीर्षक या कीवर्ड",
-  "searchSpotifyHint": "Spotify पर खोजें...",
-  "readySearchSong": "तैयार। गाना खोजें।",
-  "searchingSpotifyFor": "Spotify पर '{keyword}' खोजा जा रहा है...",
-  "offline": "ऑफ़लाइन",
-  "foundResults": "{songCount} गाने, {albumCount} एल्बम, {artistCount} कलाकार मिले।",
-  "noSpotifyResults": "Spotify से कोई परिणाम नहीं मिला।",
-  "searchFailedStatus": "खोज विफल: {error}",
-  "noInternetConnection": "कोई इंटरनेट कनेक्शन नहीं",
-  "checkNetworkTryAgain": "नेटवर्क की जाँच करें और पुन: प्रयास करें",
-  "noSuggestionsFound": "कोई सुझाव नहीं मिला।",
-  "statusWithText": "स्थिति: {status}",
-  "goodMorning": "सुप्रभात",
-  "goodAfternoon": "दोपहर का नमस्कार",
-  "goodEvening": "शुभ संध्या",
-  "jumpBackIn": "वापस लौटें",
-  "yourTopMix": "आपका टॉप मिक्स",
-  "youMayLike": "आपको पसंद आ सकता है",
-  "yourPlaylists": "आपकी प्लेलिस्ट",
-  "quickMix": "त्वरित मिक्स",
-  "madeForYou": "आपके लिए बनाया गया",
-  "rediscover": "पुनः खोजें",
-  "doYouRemember": "क्या आपको याद है?",
-  "countSongs": "{count, plural, =1{1 गाना} other{{count} गाने}}",
-  "savePlaylistTitle": "'{title}' सहेजें?",
-  "savePlaylistContent": "यह इन गानों के आधार पर एक नई प्लेलिस्ट बनाएगा।",
-  "savedAs": "'{name}' के रूप में सहेजा गया!",
-  "save": "सहेजें",
-  "searchSongsOrAlbumsAndArtistsHint": "गाने, एल्बम या कलाकार खोजें...",
-  "playQueue": "कतार चलाएं",
-  "downloadSong": "गाना डाउनलोड करें",
-  "sleepTimer": "स्लीप टाइमर",
-  "minutesDuration": "{count, plural, =1{1 मिनट} other{{count} मिनट}}",
-  "hoursDuration": "{count, plural, =1{1 घंटा} other{{count} घंटे}}",
-  "customTime": "कस्टम समय",
-  "turnOffTimer": "टाइमर बंद करें",
-  "musicWillStopIn": "संगीत {label} में बंद हो जाएगा",
-  "stopTimer": "टाइमर रोकें ({time})",
-  "setCustomTimer": "कस्टम टाइमर सेट करें",
-  "enterDuration": "अवधि दर्ज करें...",
-  "hourShort": "घंटा",
-  "minuteShort": "मिनट",
-  "secondShort": "सेकंड",
-  "timerSetForHours": "टाइमर {count} घंटे के लिए सेट किया गया",
-  "timerSetForMinutes": "टाइमर {count} मिनट के लिए सेट किया गया",
-  "timerSetForSeconds": "टाइमर {count} सेकंड के लिए सेट किया गया",
-  "start": "शुरू करें",
-  "errorCouldNotCreateSession": "त्रुटि: सत्र नहीं बनाया जा सका।",
-  "scanToControlPlayback": "अपने फोन से प्लेबैक नियंत्रित करने के लिए स्कैन करें।",
-  "session": "सत्र: {id}",
-  "loadingCanvas": "कैनवास लोड हो रहा है...",
-  "searchingSpotify": "Spotify पर खोज हो रही है...",
-  "fetchingCanvas": "कैनवास लिया जा रहा है...",
-  "nowPlayingHeader": "अभी बज रहा है",
-  "nowPlayingSection": "अभी बज रहा है",
-  "upNextSection": "अगला",
-  "recommendationsSection": "सिफ़ारिशें",
-  "fromLibrarySection": "लाइब्रेरी से",
-  "queueIsEmpty": "कतार खाली है",
-  "historySection": "इतिहास",
-  "upNextCount": "अगला ({count})",
-  "fromLibraryCount": "लाइब्रेरी से ({count})",
-  "recommendationsCount": "सिफ़ारिशें ({count})",
-  "noSongPlaying": "कोई गाना नहीं बज रहा है",
-  "selectTrackToStart": "शुरू करने के लिए एक ट्रैक चुनें",
-  "importLabel": "आयात",
-  "saveLabel": "सहेजें",
-  "refreshLabel": "रीफ्रेश",
-  "hideTranslation": "अनुवाद छिपाएं",
-  "translateLabel": "अनुवाद करें",
-  "lyricsByLRCLIB": "LRCLIB द्वारा लिरिक्स",
-  "importLyricsFile": "लिरिक्स फ़ाइल आयात करें",
-  "overwriteLrcWarning": "इस गाने के लिए एक स्थानीय .lrc फ़ाइल पहले से मौजूद है।\\nक्या आप ओवरराइट करना चाहते हैं?",
-  "saveLrcPrompt": "क्या आप वर्तमान लिरिक्स को ऑडियो फ़ाइल के बगल में .lrc फ़ाइल के रूप में सहेजना चाहते हैं?",
-  "overwrite": "ओवरराइट करें",
-  "lyricsSavedSuccess": "लिरिक्स .lrc फ़ाइल में सहेजे गए",
-  "lyricsSaveError": "लिरिक्स सहेजते समय त्रुटि",
-  "equalizer": "इक्वलाइज़र",
-  "trackDetails": "ट्रैक विवरण",
-  "audioQuality": "ऑडियो गुणवत्ता",
-  "formatLabel": "प्रारूप",
-  "codecLabel": "कोडेक",
-  "bitrateLabel": "बिटरेट",
-  "sampleRateLabel": "सैंपल रेट",
-  "bitDepthLabel": "बिट डेप्थ",
-  "channelsLabel": "चैनल",
-  "fileSizeLabel": "फ़ाइल का आकार",
-  "fileLocation": "फ़ाइल का स्थान",
-  "audioSource": "ऑडियो स्रोत",
-  "pathLabel": "पथ",
-  "inputLabel": "इनपुट",
-  "engineLabel": "इंजन",
-  "eqLabel": "EQ",
-  "dspLabel": "DSP",
-  "androidMixer": "Android मिक्सर",
-  "bypassedBitPerfect": "बायपास (बिट-परफेक्ट)",
-  "resamplingLabel": "रीसैंपलिंग",
-  "activeNoResampling": "सक्रिय (कोई रीसैंपलिंग नहीं)",
-  "nativeRate": "मूल दर",
-  "signalOutput": "सिग्नल आउटपुट",
-  "outputLabel": "आउटपुट",
-  "samplingRateLabel": "सैंपलिंग रेट",
-  "bitsLabel": "बिट्स",
-  "statusLabel": "स्थिति",
-  "unknown": "अज्ञात",
-  "unknownDevice": "अज्ञात डिवाइस",
-  "sharedMode": "साझा (Shared)",
-  "exclusiveMode": "एक्सक्लूसिव",
-  "androidAudioTrack": "Android AudioTrack",
-  "songInformation": "गाने की जानकारी",
-  "selectVersion": "संस्करण चुनें",
-  "searchYoutubeHint": "YouTube पर खोजें...",
-  "androidAudioEffectsNote": "नोट: ऑडियो प्रभाव केवल Android पर उपलब्ध हैं।",
-  "deletePreset": "प्रीसेट हटाएं",
-  "saveAsNewPreset": "नए प्रीसेट के रूप में सहेजें",
-  "savePreset": "प्रीसेट सहेजें",
-  "enterPresetName": "प्रीसेट नाम दर्ज करें (उदा: माय बास)",
-  "presetSaved": "प्रीसेट सहेजा गया!",
-  "miniPlayer": "मिनी प्लेयर",
-  "listeningParty": "लिसनिंग पार्टी",
-  "audioOutput": "ऑडियो आउटपुट",
-  "lyricsTooltip": "लिरिक्स",
-  "queueTooltip": "कतार",
-  "moreOptionsTooltip": "अधिक विकल्प",
-  "muteTooltip": "म्यूट करें",
-  "unmuteTooltip": "अनम्यूट करें",
-  "fullScreenPlayerTooltip": "फुल स्क्रीन प्लेयर",
-  "importLyricsTooltip": "लिरिक्स आयात करें",
-  "saveLyricsTooltip": "लिरिक्स सहेजें",
-  "refreshLyricsTooltip": "लिरिक्स रीफ्रेश करें",
-  "translateLyricsTooltip": "लिरिक्स अनुवाद करें",
-  "sharePlaylist": "प्लेलिस्ट साझा करें",
-  "deletePlaylist": "प्लेलिस्ट हटाएँ",
-  "importViaCodeSubtitle": "किसी मित्र द्वारा साझा की गई प्लेलिस्ट आयात करें",
-  "sharePlaylistTitle": "\"{name}\" साझा करें",
+  "@importedTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@last30DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@last7DaysLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@listenMinutesTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@minutesDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@musicWillStopIn": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@myTopTrackOn": {
+    "placeholders": {
+      "header": {
+        "type": "String"
+      }
+    }
+  },
+  "@notRank": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@opacityLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@playCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@preparingDownloadFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@rankActive": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@rankLabel": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@reachDailyPlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@reachSpecificArtistTooltip": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@reachWeeklyPlaysTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@recommendationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@savePlaylistTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedAsFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@savedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchFailedStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingEngine": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      },
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@searchingSpotifyFor": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "@session": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "@sharePlaylistTitle": {
     "placeholders": {
       "name": {
@@ -623,16 +376,858 @@
       }
     }
   },
-  "generatingShareCode": "साझाकरण कोड तैयार किया जा रहा है...",
-  "failedToGenerateCode": "साझाकरण कोड तैयार करने में विफल। कनेक्शन की जांच करें।",
-  "playlistReadyShare": "आपकी प्लेलिस्ट साझा करने के लिए तैयार है!",
-  "copyCode": "कोड कॉपी करें",
+  "@showAllTitles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@shufflingArtist": {
+    "placeholders": {
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@songsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@statusWithText": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@stopTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@switchingTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@timerSetForHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@timerSetForSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@todayLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@top3GlobalTooltip": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "@topGlobalTooltip": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "@unlockedCountLabel": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@upNextCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@updateAvailableVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@updateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutEducationalPurpose": "यह एप्लिकेशन केवल व्यक्तिगत और शैक्षिक उद्देश्यों के लिए विकसित किया गया है।",
+  "aboutLicenses": "बारे में और लाइसेंस",
+  "aboutNotForCommercial": "व्यावसायिक उपयोग के लिए नहीं।",
+  "accentColor": "एक्सेंट कलर",
+  "access": "एक्सेस",
+  "accessCode": "एक्सेस कोड",
+  "accountDataMergeDesc": "सिंक करने से, आपका प्रोफाइल नाम और अवतार अपडेट हो जाएगा, लेकिन आपके वर्तमान डिवाइस के सुनने के मिनट सफलतापूर्वक खाता कुल में मर्ज कर दिए जाएंगे।",
+  "accountLinked": "खाता लिंक किया गया",
+  "accountLinkedSuccessfully": "खाता सफलतापूर्वक लिंक किया गया!",
+  "achievementsUnlocked": "अनलॉक की गई उपलब्धियां",
+  "activeNoResampling": "सक्रिय (कोई रीसैंपलिंग नहीं)",
+  "add": "जोड़ें",
+  "addFiles": "फ़ाइलें जोड़ें",
+  "addFolder": "फ़ोल्डर जोड़ें",
+  "addFoldersScan": "स्कैन के लिए फ़ोल्डर जोड़ें",
+  "addToFavorite": "पसंदीदा में जोड़ें",
+  "addToPlaylist": "प्लेलिस्ट में जोड़ें",
+  "addToQueue": "कतार में जोड़ें",
+  "addedFolder": "फ़ोल्डर जोड़ा गया: {folder}",
+  "addedToLikedSongs": "पसंद किए गए गानों में जोड़ा गया",
+  "addedToPlaylistSuccess": "प्लेलिस्ट में जोड़ा गया",
+  "addedToQueue": "कतार में जोड़ा गया",
+  "album": "एल्बम",
+  "albumAddedToPlaylists": "एल्बम प्लेलिस्ट में जोड़ा गया",
+  "albumLabel": "एल्बम",
+  "albumRemovedFromPlaylists": "एल्बम प्लेलिस्ट से हटा दिया गया",
+  "albums": "एल्बम",
+  "allDownloadsRemoved": "सभी डाउनलोड हटा दिए गए",
+  "allRightsReserved": "सर्वाधिकार सुरक्षित।",
+  "allTime": "सारा समय",
+  "alreadyInLikedSongs": "पहले से ही पसंद किए गए गानों में है",
+  "android14BitPerfect": "Android 14+ बिट-परफेक्ट",
+  "androidAudioEffectsNote": "नोट: ऑडियो प्रभाव केवल Android पर उपलब्ध हैं।",
+  "androidAudioTrack": "Android AudioTrack",
+  "androidBitPerfect": "Android 14+ बिट-परफेक्ट",
+  "androidMixer": "Android मिक्सर",
+  "appearance": "दिखावट",
+  "applyOnRestart": "अगली बार ऐप शुरू होने पर परिवर्तन लागू होंगे।",
+  "arabic": "अरबी",
+  "artist": "कलाकार",
+  "artistLabel": "कलाकार",
+  "artists": "कलाकार",
+  "atmospheres": "वातावरण",
+  "audioFormat": "ऑडियो प्रारूप",
+  "audioOutput": "ऑडियो आउटपुट",
+  "audioOutputDevice": "ऑडियो आउटपुट डिवाइस",
+  "audioQuality": "ऑडियो गुणवत्ता",
+  "audioSource": "ऑडियो स्रोत",
+  "audiophileDAC": "ऑडियोफाइल DACs पर चलाते समय इसे सक्रिय करें (पुनः आरंभ आवश्यक)",
+  "autoAddSimilar": "कतर के अंत में स्वचालित रूप से समान गाने जोड़ें",
+  "autoClearAfter24h": "24 घंटे बाद",
+  "autoClearAfter7d": "7 दिन बाद",
+  "autoClearCache": "ऑटो क्लियर कैश",
+  "autoClearDisabled": "अक्षम",
+  "autoClearEvery30m": "हर 30 मिनट में (केवल सुनते समय)",
+  "autoClearOnClose": "ऐप बंद होने पर",
+  "autoFixComingSoon": "ऑटो-फिक्स (जल्द आ रहा है)",
+  "autoRestartNotSupported": "स्वचालित पुनः आरंभ समर्थित नहीं है। कृपया मैन्युअल रूप से पुनः आरंभ करें।",
+  "autoTagContent": "यह Spotify पर '{sourceName}' से सभी {count} गानों को खोजेगा और स्वचालित रूप से टैग बदल देगा।\\n\\nयह क्रिया अपरिवर्तनीय है।",
+  "autoTagTitle": "⚠️ {sourceName} के लिए ऑटो-टैग?",
+  "automatic": "स्वचालित",
+  "automaticTitleLabel": "स्वचालित: {title}",
+  "autumn": "पतझड़",
+  "avatarPickerDesc": "एक टेम्पलेट चुनें या अपनी फोटो आयात करें",
+  "beFirstToClaim": "शीर्ष स्थान पाने वाले पहले व्यक्ति बनें!",
+  "behavioralHeader": "व्यवहार संबंधी उपलब्धियां",
+  "behavioralTitles": "व्यवहार संबंधी",
+  "binariesUpdateRequired": "बाइनरी अपडेट आवश्यक है",
+  "bitDepthLabel": "बिट डेप्थ",
+  "bitPerfectEnabled": "बिट-परफेक्ट मोड सक्षम। वॉल्यूम नियंत्रण काम नहीं कर सकता है।",
+  "bitPerfectWindows": "ऑटो-सैंपल रेट के साथ बिट-परफेक्ट ऑडियो (पुनः आरंभ आवश्यक)",
+  "bitrateLabel": "बिटरेट",
+  "bitsLabel": "बिट्स",
+  "brazil": "ब्राजील",
+  "browse": "ब्राउज़ करें",
+  "bypassSystemMixer": "USB DAC के लिए सिस्टम मिक्सर को बायपास करें",
+  "bypassedBitPerfect": "बायपास (बिट-परफेक्ट)",
+  "cacheCleared": "कैश सफलतापूर्वक साफ़ किया गया!",
+  "cached": "कैश किया गया",
+  "cancel": "रद्द करें",
+  "championChampionTooltip": "5 अलग-अलग हफ्तों के लिए टॉप 1 ग्लोबल पर पहुंचें",
+  "change": "बदलें",
+  "changeFolder": "फ़ोल्डर बदलें",
+  "changeFormatInSettings": "कृपया सेटिंग्स में आउटपुट प्रारूप बदलें",
+  "changeLabel": "बदलें",
+  "changeLanguage": "ऐप की भाषा बदलें",
+  "changesApplyRestart": "अगली बार ऐप शुरू होने पर परिवर्तन लागू होंगे।",
+  "changingAudioDeviceRestart": "ऑडियो डिवाइस परिवर्तन लागू करने के लिए ऐप को पुनः आरंभ करना आवश्यक है।\\n\\nअभी पुनः आरंभ करें?",
+  "channelsLabel": "चैनल",
+  "checkAgain": "फिर से जाँचें",
+  "checkInternetConnection": "अपने इंटरनेट कनेक्शन की जाँच करें",
+  "checkNetworkTryAgain": "नेटवर्क की जाँच करें और पुन: प्रयास करें",
+  "chinese": "चीनी",
+  "chooseAccentColor": "अपना पसंदीदा स्थिर रंग चुनें",
+  "chooseAnimationType": "एनीमेशन का प्रकार चुनें",
+  "chooseArtist": "कलाकार चुनें",
+  "chooseAvatar": "अवातार चुनें",
+  "chooseYourTitle": "अपना शीर्षक चुनें",
+  "circularPulse": "सर्कुलर पल्स",
+  "clearAll": "सभी साफ करें",
+  "clearHistory": "इतिहास साफ़ करें",
+  "clearImported": "आयातित साफ़ करें",
+  "clearMetadataCache": "मेटाडेटा और आर्ट कैश साफ़ करें",
+  "clearPlayHistory": "इतिहास और सुनने का समय साफ़ करें",
+  "clearStreamingCache": "स्ट्रीमिंग कैश साफ़ करें",
+  "close": "बंद करें",
+  "cloud": "क्लाउड",
   "codeCopied": "कोड क्लिपबोर्ड पर कॉपी किया गया!",
-  "shareCodeUsage": "यह 6-अंकों का कोड किसी मित्र को दें ताकि वे इस प्लेलिस्ट को आयात कर सकें।",
-  "filters": "फ़िल्टर",
-  "fileName": "फ़ाइल का नाम",
+  "codeMust6Digits": "कोड 6 अंकों का होना चाहिए",
+  "codecLabel": "कोडेक",
+  "comingSoon": "जल्द आ रहा है",
+  "community": "समुदाय",
+  "competitiveTitles": "प्रतिस्पर्धी",
+  "confirm": "पुष्टि करें",
+  "connect": "कनेक्ट करें",
+  "connectToADevice": "किसी डिवाइस से कनेक्ट करें",
+  "connected": "जुड़ा हुआ",
+  "connectedToDac": "{deviceName} से जुड़ा - USB बायपास सक्रिय",
+  "connectedUsbDacs": "जुड़े हुए USB DAC:",
+  "connecting": "जुड़ रहा है...",
+  "connectionLostLeaderboard": "कनेक्शन टूट गया",
+  "connectionLostLeaderboardDesc": "वैश्विक लीडरबोर्ड को आपके आँकड़ों को सिंक करने और दुनिया भर की रैंकिंग प्राप्त करने के लिए एक सक्रिय कनेक्शन की आवश्यकता होती है।",
+  "consecutivePlaysTooltip": "एक ही गाना {count} बार लगातार सुनें",
+  "contentRegion": "कंटेंट क्षेत्र",
+  "copyCode": "कोड कॉपी करें",
+  "couldNotDownloadFlac": "FLAC डाउनलोड नहीं किया जा सका।",
+  "countSongs": "{count, plural, =1{1 गाना} other{{count} गाने}}",
+  "createPlaylist": "प्लेलिस्ट बनाएं",
+  "creatingPlaylistWithTracks": "{count} ट्रैक के साथ प्लेलिस्ट बनाई जा रही है...",
+  "crossfade": "क्रॉसफ़ेड",
+  "crossfadeDesc": "ट्रैक के बीच फेड करें ({seconds} सेकंड)",
+  "crownedChampionTitlesHeader": "ताज पहनाया चैंपियन शीर्षक",
+  "customDevice": "कस्टम डिवाइस",
+  "customSelected": "कस्टम चयनित",
+  "customTime": "कस्टम समय",
+  "cyberpunk": "साइबरपंक",
+  "daily": "दैनिक",
+  "darkMode": "डार्क मोड",
+  "dataCleanup": "डेटा और सफाई",
   "dataUsage": "डेटा उपयोग",
-  "todayLabel": "आज: {size}",
+  "daysShort": "दिन",
+  "debugging": "डीबगिंग",
+  "delete": "हटाएं",
+  "deleteDownloadsConfirm": "यह इस प्लेलिस्ट के लिए इस डिवाइस पर सभी डाउनलोड किए गए गानों को हटा देगा।",
+  "deleteDownloadsTitle": "डाउनलोड हटाएं?",
+  "deleteFileContent": "क्या आप वाकई '{filename}' को हटाना चाहते हैं?\\nयह क्रिया अपरिवर्तनीय है।",
+  "deleteFileTitle": "फ़ाइल हटाएं?",
+  "deletePlaylist": "प्लेलिस्ट हटाएँ",
+  "deletePlaylistConfirm": "क्या आप वाकई '{name}' को हटाना चाहते हैं?",
+  "deletePlaylistPermanentConfirm": "क्या आप वाकई इस प्लेलिस्ट को हटाना चाहते हैं? (इस क्रिया को पूर्ववत नहीं किया जा सकता)",
+  "deletePlaylistTitle": "प्लेलिस्ट हटाएं?",
+  "deletePreset": "प्रीसेट हटाएं",
+  "desertMirage": "रेगिस्तानी मिराज",
+  "developerExclusiveTooltip": "विशेष रूप से इस ऐप के डेवलपर्स के लिए",
+  "deviceNameLabel": "डिवाइस: {deviceName}",
+  "disableCanvas": "कैनवास अक्षम करें",
+  "disableRomanization": "रोमानाइज़ेशन अक्षम करें",
+  "disablingSharingWarning": "साझाकरण अक्षम करने से स्थान बचाने के लिए सर्वर से कोड और डेटा स्थायी रूप से हटा दिया जाएगा।",
+  "discNumber": "डिस्क संख्या",
+  "discography": "डिस्कोग्राफी",
+  "discordRPC": "डिस्कॉर्ड प्रेजेंस",
+  "doYouRemember": "क्या आपको याद है?",
+  "donate": "दान करें",
+  "download": "डाउनलोड",
+  "downloadAll": "सभी डाउनलोड करें",
+  "downloadComplete": "डाउनलोड पूरा हुआ",
+  "downloadCompleteNotification": "डाउनलोड पूरा हुआ",
+  "downloadError": "डाउनलोड त्रुटि",
+  "downloadFailed": "डाउनलोड विफल रहा",
+  "downloadLocation": "डाउनलोड स्थान",
+  "downloadPathReset": "डाउनलोड पथ डिफ़ॉल्ट पर रीसेट किया गया।",
+  "downloadPathUpdated": "डाउनलोड पथ अपडेट किया गया: {path}",
+  "downloadSong": "गाना डाउनलोड करें",
+  "downloadStarted": "डाउनलोड शुरू हुआ",
+  "downloadedTo": "यहाँ डाउनलोड किया गया: {path}",
+  "downloading": "डाउनलोड हो रहा है",
+  "downloadingFlac": "FLAC डाउनलोड हो रहा है",
+  "downloadingFormat": "{format} डाउनलोड हो रहा है",
+  "downloadingUpdate": "अपडेट डाउनलोड हो रहा है",
+  "downloads": "डाउनलोड",
+  "dspLabel": "DSP",
+  "editMetadata": "मेटाडेटा संपादित करें",
+  "editNickname": "निकनेम संपादित करें",
+  "editor": "संपादक",
+  "emptyMailbox": "मेलबॉक्स खाली करें",
+  "emptyMailboxDesc": "यह सभी संदेशों को स्थायी रूप से हटा देगा।",
+  "emptyMailboxTitle": "मेलबॉक्स खाली करें?",
+  "emptyPlaylist": "खाली प्लेलिस्ट",
+  "emptyPlaylistSubtitle": "एक नई खाली प्लेलिस्ट बनाएं",
+  "enableAlphabetIndexer": "वर्णमाला स्क्रॉल अनुक्रमणिका सक्षम करें",
+  "enableAlphabetIndexerSubtitle": "मोबाइल सूची दृश्य पर ए-जेด साइडबार अनुक्रमणिका दिखाएं",
+  "enableBarVisualizer": "बार विज़ुअलाइज़र सक्षम करें",
+  "endlessQueue": "अंतहीन कतार",
+  "engineLabel": "इंजन",
+  "english": "अंग्रेज़ी",
+  "enterAdminAccessCode": "कृपया एडमिन एक्सेस कोड दर्ज करें",
+  "enterAdminCode": "कृपया एडमिन एक्सेस कोड दर्ज करें",
+  "enterDuration": "अवधि दर्ज करें...",
+  "enterPresetName": "प्रीसेट नाम दर्ज करें (उदा: माय बास)",
+  "enterShareCode": "6-अंकों का साझाकरण कोड दर्ज करें",
+  "eqLabel": "EQ",
+  "equalizer": "इक्वलाइज़र",
+  "equipTitle": "शीर्षक लैस करें",
+  "equipped": "सुप्साजित",
+  "error": "त्रुटि",
+  "errorCouldNotCreateSession": "त्रुटि: सत्र नहीं बनाया जा सका।",
+  "errorDeleting": "हटाते समय त्रुटि: {error}",
+  "errorSearchingStream": "स्ट्रीम खोजते समय त्रुटि।",
+  "exclusiveMode": "एक्सक्लूसिव",
+  "exclusiveModeWarning": "चेतावनी: एक्सक्लूसिव मोड बेहतर काम करता है यदि आप सिस्टम डिफ़ॉल्ट के बजाय ऊपर एक विशिष्ट डिवाइस चुनते हैं।",
+  "exclusiveTitles": "अनन्य",
+  "exclusiveTitlesHeader": "अनन्य शीर्षक",
+  "exclusiveWarning": "चेतावनी: एक्सक्लूसिव मोड बेहतर काम करता है यदि आप सिस्टम डिफ़ॉल्ट के बजाय ऊपर एक विशिष्ट डिवाइस चुनते हैं।",
+  "exitApp": "बाहर निकलें",
+  "expand": "विस्तार करें",
+  "externalFiles": "बाहरी फ़ाइलें",
+  "fadingAtEnd": "स्लीप टाइमर: ट्रैक के अंत में फेड आउट हो रहा है...",
+  "failedDisableSharing": "साझाकरण अक्षम करने में विफल।",
+  "failedEnableSharing": "साझाकरण सक्षम करने में विफल। कनेक्शन की जांच करें।",
+  "failedFetchPlaylistInfo": "प्लेलिस्ट जानकारी प्राप्त नहीं की जा सकी",
+  "failedToConnectDac": "DAC से कनेक्ट करने में विफल। USB अनुमतियों की जाँच करें।",
+  "failedToGenerateCode": "साझाकरण कोड तैयार करने में विफल। कनेक्शन की जांच करें।",
+  "failedToSetAvatar": "एवतार टेम्पलेट सेट करने में विफल",
+  "failedToUpdateMetadata": "मेटाडेटा अपडेट करने में विफल",
+  "favoriteTrack": "पसंदीदा ट्रैक",
+  "fetchingCanvas": "कैनवास लिया जा रहा है...",
+  "fetchingLossless": "लॉसलेस गुणवत्ता प्राप्त की जा रही है...",
+  "fetchingLosslessAudio": "लॉसलेस ऑडियो लिया जा रहा है...",
+  "fetchingMetadataSpotify": "Spotify से मेटाडेटा लिया जा रहा है...",
+  "fetchingPlaylist": "प्लेलिस्ट प्राप्त की जा रही है...",
+  "fetchingPlaylistInfo": "प्लेलिस्ट जानकारी प्राप्त की जा रही है...",
+  "fetchingSharedPlaylist": "साझा प्लेलिस्ट प्राप्त की जा रही है...",
+  "fetchingTracksFrom": "\"{name}\" से ट्रैक प्राप्त किए जा रहे हैं...",
+  "fileLocation": "फ़ाइल का स्थान",
+  "fileMissingHistory": "फ़ाइल गायब है और इतिहास में नहीं मिली।",
+  "fileName": "फ़ाइल का नाम",
+  "fileSizeLabel": "फ़ाइल का आकार",
+  "files": "फ़ाइलें",
+  "filters": "फ़िल्टर",
+  "findingBestMatchYoutube": "YouTube पर सबसे अच्छा मैच खोजा जा रहा है...",
+  "findingStream": "स्ट्रीमिंग स्रोत खोजा जा रहा है...",
+  "finishUpdate": "अपडेट समाप्त करें",
+  "finishes": "परिणाम",
+  "fixAll": "सब ठीक करें",
+  "flacError": "FLAC त्रुटि",
+  "flacNote": "नोट: FLAC केवल एकल ट्रैक डाउनलोड के लिए उपलब्ध है। प्लेलिस्ट डाउनलोड M4A प्रारूप का उपयोग करेंगे।",
+  "flacSavedToDownloads": "FLAC डाउनलोड फ़ोल्डर में सहेजा गया",
+  "flacUnavailable": "FLAC उपलब्ध नहीं है",
+  "flacUnavailableDesc": "FLAC उपलब्ध नहीं है, डाउनलोड विफल रहा। सेटिंग्स बदलने का प्रयास करें।",
+  "flacUnavailableNotification": "FLAC उपलब्ध नहीं है",
+  "fluidWave": "फ्लुइड वेव",
+  "folderPath": "फ़ोल्डर: {path}",
+  "folders": "फ़ोल्डर",
+  "formatLabel": "प्रारूप",
+  "formatSaved": "प्रारूप सहेजा गया!",
+  "foundExistingAccount": "हमें '{name}' के लिए एक मौजूदा खाता मिला।",
+  "foundResults": "{songCount} गाने, {albumCount} एल्बम, {artistCount} कलाकार मिले।",
+  "foundYoutubeResults": "YouTube पर {count} परिणाम मिले",
+  "freeUpSpace": "जगह खाली करें (वर्तमान: {size})",
+  "french": "फ़्रेंच",
+  "fromLibraryCount": "लाइब्रेरी से ({count})",
+  "fromLibrarySection": "लाइब्रेरी से",
+  "fullScreenPlayerTooltip": "फुल स्क्रीन प्लेयर",
+  "galacticSpace": "गैलेक्टिक स्पेस",
+  "gaplessPlayback": "गैपलेस प्लेबैक",
+  "gaplessPlaybackDesc": "ट्रैक के बीच सन्नाटा खत्म करें",
+  "general": "सामान्य",
+  "generatingShareCode": "साझाकरण कोड तैयार किया जा रहा है...",
+  "genre": "शैली",
+  "german": "जर्मन",
+  "globalLeaderboard": "ग्लोबल लीडरबोर्ड",
+  "globalMailbox": "ग्लोबल मेलबॉक्स",
+  "globalRank": "वैश्विक रैंक",
+  "globalRankings": "ग्लोबल रैंकिंग",
+  "globalRankingsDesc": "दैनिक, साप्ताहिक और सर्वकालिक शीर्ष श्रोताओं को देखें!",
+  "goToArtist": "कलाकार पर जाएं",
+  "goToLocalLibraryToSelect": "फ़ोल्डर चुनने के लिए स्थानीय लाइब्रेरी पर जाएं।",
+  "goodAfternoon": "दोपहर का नमस्कार",
+  "goodEvening": "शुभ संध्या",
+  "goodMorning": "सुप्रभात",
+  "googleAccount": "Google खाता",
+  "grantAccess": "पहुँच प्रदान करें",
+  "grantPermission": "अनुमति दें",
+  "hallOfFameHeader": "हॉल ऑफ फेम उपलब्धियां",
+  "hallOfFameTitles": "हॉल ऑफ फेम",
+  "hideCanvas": "Spotify कैनवास वीडियो न दिखाएं, इसके बजाय एल्बम कवर दिखाएं",
+  "hideRomajiPinyin": "कोरियाई, जापानी या चीनी लिरिक्स के नीचे रोमाजी/पिनयिन न दिखाएं",
+  "hideTranslation": "अनुवाद छिपाएं",
+  "highDesc": "M4A - बेहतर ध्वनि, संतुलित प्रदर्शन",
+  "highQuality": "उच्च गुणवत्ता (M4A)",
+  "hindi": "हिन्दी",
+  "history": "इतिहास",
+  "historySection": "इतिहास",
+  "home": "होम",
+  "hourShort": "घंटा",
+  "hoursDuration": "{count, plural, =1{1 घंटा} other{{count} घंटे}}",
+  "hoursShort": "घं",
+  "ignoreSubfolderScan": "सबफ़ोल्डर स्कैन को नज़रअंदाज़ करें",
+  "importAdditionalPaths": "अतिरिक्त पथ आयात करें",
+  "importChoice": "आयात करें",
+  "importFailed": "आयात विफल: {error}",
+  "importFromGallery": "गैलरी से आयात करें",
+  "importFromSpotify": "Spotify से आयात करें",
+  "importFromSpotifySubtitle": "Spotify प्लेलिस्ट लिंक पेस्ट करें",
+  "importFromYoutubeMusic": "YouTube Music से आयात करें",
+  "importFromYoutubeMusicSubtitle": "YouTube Music प्लेलिस्ट लिंक पेस्ट करें",
+  "importLabel": "आयात",
+  "importLyricsFile": "लिरिक्स फ़ाइल आयात करें",
+  "importLyricsTooltip": "लिरिक्स आयात करें",
+  "importSpotifyPlaylist": "Spotify प्लेलिस्ट आयात करें",
+  "importViaCode": "कोड के माध्यम से आयात करें",
+  "importViaCodeSubtitle": "किसी मित्र द्वारा साझा की गई प्लेलिस्ट आयात करें",
+  "importYoutubeMusicPlaylist": "YouTube Music प्लेलिस्ट आयात करें",
+  "importedPlaylistName": "\"{name}\" सफलतापूर्वक आयात किया गया!",
+  "importedTracks": "{count} ट्रैक सफलतापूर्वक आयात किए गए!",
+  "indonesia": "इंडोनेशिया",
+  "indonesian": "इंडोनेशियाई",
+  "inputLabel": "इनपुट",
+  "installNow": "अभी इंस्टॉल करें",
+  "integration": "एकीकरण",
+  "invalidAccessCode": "अमान्य एक्सेस कोड",
+  "invalidCode": "अमान्य एक्सेस कोड",
+  "invalidSpotifyUrl": "अमान्य Spotify प्लेलिस्ट URL",
+  "invalidYoutubeMusicUrl": "अमान्य YouTube Music प्लेलिस्ट लिंक",
+  "japan": "जापान",
+  "japanese": "जापानी",
+  "joinUs": "हमसे जुड़ें",
+  "jumpBackIn": "वापस लौटें",
+  "justEnjoyVibes": "बस संगीत का आनंद लें।",
+  "korean": "कोरियाई",
+  "language": "भाषा",
+  "last30DaysLabel": "पिछले 30 दिन: {size}",
   "last7DaysLabel": "पिछले 7 दिन: {size}",
-  "last30DaysLabel": "पिछले 30 दिन: {size}"
+  "later": "बाद में",
+  "library": "लाइब्रेरी",
+  "libraryData": "लाइब्रेरी डेटा",
+  "libraryNotLoaded": "लाइब्रेरी लोड नहीं हुई है।",
+  "libraryPathReset": "लाइब्रेरी पथ रीसेट किया गया।",
+  "likedSongs": "पसंद किए गए गाने",
+  "linkAccount": "खाता लिंक करें",
+  "linkAccountDesc": "Google के साथ अपनी प्रगति को सिंक और रिस्टोर करें",
+  "listenMinutesTooltip": "{minutes} मिनट संगीत सुनें",
+  "listeningParty": "लिसनिंग पार्टी",
+  "listeningStats": "सुनने के आंकड़े",
+  "loadingCanvas": "कैनवास लोड हो रहा है...",
+  "loadingDevices": "डिवाइस लोड हो रहे हैं...",
+  "loadingError": "विवरण लोड करने में विफल। कृपया पुन: प्रयास करें।",
+  "loadingLyrics": "लिरिक्स लोड हो रहे हैं...",
+  "localPlayHistorySaved": "आपका स्थानीय प्ले इतिहास हटाया नहीं जाएगा।",
+  "local_library": "स्थानीय लाइब्रेरी",
+  "lockedAtmosphere": "वातावरण सक्रिय होने पर लॉक किया गया",
+  "losslessDesc": "FLAC - Deezer/Tidal से लॉसलेस गुणवत्ता",
+  "losslessNote": "यदि Deezer/Tidal पर उपलब्ध हो तो यह FLAC लॉसलेस का उपयोग करेगा। वरना, यह M4A पर वापस चला जाएगा।",
+  "losslessQuality": "लॉसलेस (ऑटो)",
+  "lunarNewYear": "चंद्र नव वर्ष",
+  "lyricsByLRCLIB": "LRCLIB द्वारा लिरिक्स",
+  "lyricsSaveError": "लिरिक्स सहेजते समय त्रुटि",
+  "lyricsSavedSuccess": "लिरिक्स .lrc फ़ाइल में सहेजे गए",
+  "lyricsTooltip": "लिरिक्स",
+  "madeForYou": "आपके लिए बनाया गया",
+  "manualSearch": "मैन्युअल खोज",
+  "mergeAccountData": "खाता डेटा मर्ज करें?",
+  "metadataCacheCleared": "मेटाडेटा कैश साफ़ कर दिया गया और लाइब्रेरी पुन: स्कैन शुरू हो गई",
+  "metadataEditorInfo": "आप मेटाडेटा संपादक में डेटा को जल्दी से खोज और ठीक कर सकते हैं।",
+  "metadataEditorNote": "नोट: 'सफलतापूर्वक सहेजा गया' स्थिति दिखने के बाद, एल्बम आर्ट बदल सकता है। यह कोई बग नहीं है बल्कि ऐप कैश की समस्या है जिस पर हम काम कर रहे हैं। फ़ाइल मैनेजर में जाँच करें।",
+  "metadataUpdated": "मेटाडेटा अपडेट किया गया",
+  "metadata_editor": "मेटाडेटा संपादक",
+  "min": "मिनट",
+  "minShortLabel": "मिनट",
+  "miniPlayer": "मिनी प्लेयर",
+  "minimizeToTray": "ट्रे में छोटा करें",
+  "minimizeToTrayDescription": "बाहर निकलने के बजाय ऐप को सिस्टम ट्रे में बंद करें",
+  "minsShort": "मि",
+  "minsShortLabel": "मिनट",
+  "minuteShort": "मिनट",
+  "minutes": "मिनट",
+  "minutesDuration": "{count, plural, =1{1 मिनट} other{{count} मिनट}}",
+  "moreOptions": "अधिक विकल्प",
+  "moreOptionsTooltip": "अधिक विकल्प",
+  "mostListened": "सबसे अधिक सुना गया",
+  "mostListenedArtist": "सबसे अधिक सुना गया कलाकार",
+  "musicFolderLocation": "संगीत फ़ोल्डर का स्थान",
+  "musicSearch": "संगीत खोज",
+  "musicWillStopIn": "संगीत {label} में बंद हो जाएगा",
+  "muteTooltip": "म्यूट करें",
+  "myTopTrackOn": "Simple Player पर मेरा टॉप ट्रैक! 🎵",
+  "nativeRate": "मूल दर",
+  "navigation": "नेविगेशन",
+  "newPlaylist": "नई प्लेलिस्ट",
+  "nextTrack": "अगला ट्रैक",
+  "nicknameHint": "अपना निकनेम दर्ज करें",
+  "nicknameLabel": "निक네म",
+  "nicknameRequired": "उपनाम आवश्यक",
+  "nicknameRequiredDesc": "ग्लोबल लीडरबोर्ड देखने के लिए आपको पहले अपना उपनाम सेट करना होगा!",
+  "nicknameTakenDesc": "यह निकनेम पहले से ही विश्व स्तर पर उपयोग में है। कृपया दूसरा चुनें।",
+  "nicknameTakenTitle": "निकनेम लिया गया है",
+  "noAlbumsFound": "कोई एल्बम नहीं मिला",
+  "noArtistStatsYet": "अभी तक कलाकारों के कोई आंकड़े नहीं हैं।",
+  "noArtistsFound": "कोई कलाकार नहीं मिला।",
+  "noDownloadsFound": "कोई डाउनलोड नहीं मिला",
+  "noFolderSelected": "कोई फ़ोल्डर नहीं चुना गया",
+  "noHistoryYet": "अभी तक कोई इतिहास नहीं है",
+  "noInternetConnection": "कोई इंटरनेट कनेक्शन नहीं",
+  "noLyricsAvailable": "कोई लिरिक्स उपलब्ध नहीं है",
+  "noMessages": "आपके मेलबॉक्स में कोई संदेश नहीं है",
+  "noMusicPlaying": "कोई संगीत नहीं बज रहा है",
+  "noPlaylistsFound": "कोई प्लेलिस्ट नहीं मिली",
+  "noPlaylistsYet": "अभी तक कोई प्लेलिस्ट नहीं है",
+  "noRankingsYet": "इस समय सीमा के लिए अभी तक कोई रैंकिंग नहीं है।",
+  "noResultsFound": "कोई परिणाम नहीं मिला",
+  "noSongPlaying": "कोई गाना नहीं बज रहा है",
+  "noSongsAdded": "अभी तक कोई गाना नहीं जोड़ा गया है",
+  "noSongsInFolder": "इस फ़ोल्डर में कोई गाना नहीं मिला।",
+  "noSpotifyResults": "Spotify से कोई परिणाम नहीं मिला।",
+  "noStatsYet": "अभी तक कोई आंकड़े नहीं हैं।",
+  "noStreamMatch": "कोई स्ट्रीमिंग मैच नहीं मिला।",
+  "noSuggestionsFound": "कोई सुझाव नहीं मिला।",
+  "noSyncedLyricsFound": "कोई सिंक किए गए लिरिक्स नहीं मिले",
+  "noTracksFound": "प्लेलिस्ट में कोई ट्रैक नहीं मिला",
+  "noUsbDacDetected": "कोई USB DAC नहीं मिला। USB ऑडियो डिवाइस कनेक्ट करें और स्कैन दबाएं।",
+  "noUsersFound": "कोई उपयोगकर्ता नहीं मिला",
+  "noYoutubeResults": "YouTube पर कोई परिणाम नहीं मिला",
+  "none": "कोई नहीं",
+  "nordicAurora": "नॉर्डिक औरोरा",
+  "notRank": "रैंक {rank} नहीं",
+  "notRanked": "रैंक नहीं",
+  "notRankedTop3": "शीर्ष 3 में नहीं",
+  "nowPlaying": "अभी बज रहा है",
+  "nowPlayingHeader": "अभी बज रहा है",
+  "nowPlayingSection": "अभी बज रहा है",
+  "offline": "ऑफ़लाइन",
+  "offlineStatus": "ऑफ़लाइन",
+  "ok": "ठीक है",
+  "online": "ऑनलाइन",
+  "onlyScanSelected": "केवल चयनित फ़ोल्डरों को स्कैन करें (डिफ़ॉल्ट रूप से चालू)",
+  "opacity": "अपारदर्शिता",
+  "opacityLabel": "अस्पष्टता: {percent}%",
+  "openProfile": "प्रोफाइल खोलें",
+  "openSourceLicenses": "ओपन सोर्स लाइसेंस",
+  "outputLabel": "आउटपुट",
+  "overwrite": "ओवरराइट करें",
+  "overwriteLrcWarning": "इस गाने के लिए एक स्थानीय .lrc फ़ाइल पहले से मौजूद है।\\nक्या आप ओवरराइट करना चाहते हैं?",
+  "parsingPlaylistData": "प्लेलिस्ट डेटा का विश्लेषण किया जा रहा है...",
+  "pathLabel": "पथ",
+  "permissionRequired": "अनुमति आवश्यक",
+  "permissionRequiredDesc": "टैग संपादित करने के लिए 'सभी फ़ाइलों तक पहुँच' अनुमति की आवश्यकता है। यह आपकी संगीत फ़ाइलों को सीधे संशोधित करने की अनुमति देता है।",
+  "play": "चलाएं",
+  "playCountLabel": "{count} नाटक",
+  "playNext": "अगला चलाएं",
+  "playPause": "चलाएं / रोकें",
+  "playQueue": "कतार चलाएं",
+  "playback": "प्लेबैक",
+  "playbackError": "प्लेबैक त्रुटि",
+  "player": "खिलाड़ी",
+  "playingFromAlbum": "एल्बम से चलाया जा रहा है",
+  "playingNext": "अगला बज रहा है",
+  "playingTrack": "ट्रैक बजाया जा रहा है",
+  "playlistAlbumTracks": "प्लेलिस्ट / एल्बम ट्रैक",
+  "playlistNameHint": "प्लेलिस्ट का नाम",
+  "playlistNotFound": "प्लेलिस्ट नहीं मिली",
+  "playlistNotFoundOrError": "प्लेलिस्ट नहीं मिली या सर्वर त्रुटि",
+  "playlistReadyShare": "आपकी प्लेलिस्ट साझा करने के लिए तैयार है!",
+  "playlists": "प्लेलिस्ट",
+  "plays": "प्ले",
+  "popularOnSpotify": "Spotify पर लोकप्रिय",
+  "portuguese": "पुर्तगाली (ब्राजील)",
+  "preferredOutputFormat": "डाउनलोड के लिए पसंदीदा आउटपुट प्रारूप",
+  "preparingDownload": "डाउनलोड की तैयारी की जा रही है",
+  "preparingDownloadFormat": "डाउनलोड तैयार हो रहा है ({format})...",
+  "preparingDownloadNotification": "डाउनलोड की तैयारी की जा रही है",
+  "presetSaved": "प्रीसेट सहेजा गया!",
+  "preview": "पूर्वावलोकन",
+  "previousTrack": "पिछला ट्रैक",
+  "profileSettings": "प्रोफ़ाइल सेटिंग्स",
+  "profileStats": "प्रोफाइल आँकड़े",
+  "progress": "प्रगति",
+  "publicSharing": "सार्वजनिक साझाकरण",
+  "publicSharingDesc": "कोड वाला कोई भी व्यक्ति इस प्लेलिस्ट को आयात कर सकता है।",
+  "publicSharingDisabledDesc": "अक्षम। दूसरों के साथ साझा करने के लिए सक्षम करें।",
+  "queueIsEmpty": "कतार खाली है",
+  "queueTooltip": "कतार",
+  "queueUpdated": "कतार अपडेट की गई",
+  "quickMix": "त्वरित मिक्स",
+  "rainbowMode": "रेनबो मोड",
+  "rainyCity": "बरसाती शहर",
+  "rank": "रैंक",
+  "rankActive": "रैंक {rank} (सक्रिय)",
+  "rankLabel": "रैंक {rank}",
+  "reBuffering": "बफरिंग हो रही है...",
+  "reachDailyPlaysTooltip": "एक ही दिन में {count} नाटकों तक पहुँचें",
+  "reachSpecificArtistTooltip": "किसी विशिष्ट कलाकार के साथ {minutes} मिनट तक पहुंचें",
+  "reachWeeklyPlaysTooltip": "एक ही सप्ताह में {count} नाटकों तक पहुँचें",
+  "readySearchSong": "तैयार। गाना खोजें।",
+  "rebufferingFromCloud": "क्लाउड से पुनः लोड हो रहा है...",
+  "recentlyPlayed": "हाल ही में बजाया गया",
+  "recommendationsCount": "सिफ़ारिशें ({count})",
+  "recommendationsSection": "सिफ़ारिशें",
+  "rediscover": "पुनः खोजें",
+  "refreshLabel": "रीफ्रेश",
+  "refreshLibrary": "लाइब्रेरी रीफ्रेश करें",
+  "refreshList": "सूची रीफ्रेश करें",
+  "refreshLyricsTooltip": "लिरिक्स रीफ्रेश करें",
+  "removeAvatar": "वर्तमान अवातार हटाएँ",
+  "removeFromPlaylist": "प्लेलिस्ट से हटाएं",
+  "removedFolder": "फ़ोल्डर हटाया गया: {folder}",
+  "rename": "नाम बदलें",
+  "renamePlaylist": "प्लेलिस्ट का नाम बदलें",
+  "repeats": "दोहराव",
+  "requiresAndroid14": "Android 14+ और USB DAC की आवश्यकता है",
+  "resamplingLabel": "रीसैंपलिंग",
+  "reset": "रीसेट",
+  "resetDataUsage": "डेटा उपयोग रीसेट करें",
+  "resetDataUsageContent": "क्या आप वाकई डेटा उपयोग को रीसेट करना चाहते हैं? इससे डाउनलोड किए गए संगीत पर कोई प्रभाव नहीं पड़ेगा।",
+  "resetEverything": "सब कुछ रीसेट करें",
+  "resetLibraryContent": "यह प्लेयर से वर्तमान फ़ोल्डर को हटा देगा। आपकी फ़ाइलें डिलीट नहीं होंगी।",
+  "resetLibraryPath": "लाइब्रेरी पथ रीसेट करें",
+  "resetLibraryTitle": "लाइब्रेरी रीसेट करें?",
+  "resetPath": "पथ रीसेट करें",
+  "resetStatistics": "आंकड़े रीसेट करें",
+  "resetStatsContent": "यह क्रिया अपरिवर्तनीय है।\\nसभी प्ले काउंट और समय स्थायी रूप से खो जाएंगे।",
+  "resetStatsTitle": "आंकड़े रीसेट करें?",
+  "resetToAutomatic": "स्वचालित पर रीसेट करें",
+  "resetToDefault": "डिफ़ॉल्ट पर रीसेट करें",
+  "resetUsage": "उपयोग रीसेट करें",
+  "resetsIn": "इसमें रीसेट होगा",
+  "restartContent": "ऑडियो डिवाइस परिवर्तन लागू करने के लिए ऐप को पुनः आरंभ करना आवश्यक है।\\n\\nअभी पुनः आरंभ करें?",
+  "restartNow": "अभी पुनः आरंभ करें",
+  "restartRequired": "पुनः आरंभ आवश्यक",
+  "restoring": "पुनर्स्थापित किया जा रहा है",
+  "retryConnection": "कनेक्शन पुन: प्रयास करें",
+  "revert": "वापस लाएं",
+  "russian": "रूसी",
+  "sakura": "सकुरा",
+  "sampleRateLabel": "सैंपल रेट",
+  "samplingRateLabel": "सैंपलिंग रेट",
+  "save": "सहेजें",
+  "saveAsNewPreset": "नए प्रीसेट के रूप में सहेजें",
+  "saveChangesToFile": "फ़ाइल में परिवर्तन सहेजें",
+  "saveLabel": "सहेजें",
+  "saveLrcPrompt": "क्या आप वर्तमान लिरिक्स को ऑडियो फ़ाइल के बगल में .lrc फ़ाइल के रूप में सहेजना चाहते हैं?",
+  "saveLyricsTooltip": "लिरिक्स सहेजें",
+  "savePlaylistContent": "यह इन गानों के आधार पर एक नई प्लेलिस्ट बनाएगा।",
+  "savePlaylistTitle": "'{title}' सहेजें?",
+  "savePreset": "प्रीसेट सहेजें",
+  "savedAs": "'{name}' के रूप में सहेजा गया!",
+  "savedAsFormat": "{format} के रूप में सहेजा गया",
+  "savedTo": "'{path}' में सहेजा गया",
+  "saving": "सहज रहा है...",
+  "scan": "स्कैन करें",
+  "scanToControlPlayback": "अपने फोन से प्लेबैक नियंत्रित करने के लिए स्कैन करें।",
+  "scanning": "स्कैन किया जा रहा है...",
+  "scrollForLyrics": "लिरिक्स देखने के लिए स्क्रॉल करें",
+  "search": "खोजें",
+  "searchEngine": "सर्च इंजन",
+  "searchFailedStatus": "खोज विफल: {error}",
+  "searchHint": "खोजें...",
+  "searchSongs": "गाने खोजें...",
+  "searchSongsOrAlbumsAndArtistsHint": "गाने, एल्बम या कलाकार खोजें...",
+  "searchSpotify": "Spotify पर खोजें",
+  "searchSpotifyHint": "Spotify पर खोजें...",
+  "searchUsers": "उपयोगकर्ता खोजें...",
+  "searchYoutubeHint": "YouTube पर खोजें...",
+  "searching": "खोज की जा रही है...",
+  "searchingEngine": "{engine} पर '{keyword}' के लिए खोज रहे हैं...",
+  "searchingSpotify": "Spotify पर खोज हो रही है...",
+  "searchingSpotifyFor": "Spotify पर '{keyword}' खोजा जा रहा है...",
+  "searchingStatus": "खोज की जा रही है",
+  "secondShort": "सेकंड",
+  "secsShort": "से",
+  "seeAll": "सभी देखें",
+  "selectDifferentFolder": "अलग फ़ोल्डर चुनें",
+  "selectFolder": "फ़ोल्डर चुनें",
+  "selectMatch": "मैच चुनें",
+  "selectSongToEdit": "संपादित करने के लिए सूची से एक गाना चुनें",
+  "selectStreamingQuality": "स्ट्रीमिंग गुणवत्ता चुनें",
+  "selectTrackToStart": "शुरू करने के लिए एक ट्रैक चुनें",
+  "selectVersion": "संस्करण चुनें",
+  "session": "सत्र: {id}",
+  "setCountryReleases": "रिलीज़ और चार्ट के लिए देश सेट करें",
+  "setCustomTimer": "कस्टम टाइमर सेट करें",
+  "settings": "सेटिंग्स",
+  "share": "साझा करें",
+  "shareCodeUsage": "यह 6-अंकों का कोड किसी मित्र को दें ताकि वे इस प्लेलिस्ट को आयात कर सकें।",
+  "sharePlaylist": "प्लेलिस्ट साझा करें",
+  "sharePlaylistTitle": "\"{name}\" साझा करें",
+  "sharedMode": "साझा (Shared)",
+  "showAllTitles": "सभी {count} शीर्षक दिखाएं",
+  "showAnimatedWaves": "प्लेबैक बार में एनिमेटेड लहरें दिखाएं",
+  "showDebugButton": "फ्लोटिंग डीबग बटन दिखाएं",
+  "showInFolder": "फ़ोल्डर में दिखाएं",
+  "showLess": "कम दिखाएं",
+  "showMore": "अधिक दिखाएं",
+  "showStatusDiscord": "डिस्कॉर्ड पर स्थिति दिखाएं",
+  "showUnlockedOnly": "केवल अनलॉक दिखाएं",
+  "shuffle": "शफल करें",
+  "shuffleAll": "सभी को शफल करें",
+  "shufflingArtist": "{artistName} के गानों को शफल किया जा रहा है...",
+  "signInWithGoogle": "Google के साथ साइन इन करें",
+  "signalOutput": "सिग्नल आउटपुट",
+  "singleTracks": "एकल ट्रैक",
+  "sleepTimer": "स्लीप टाइमर",
+  "songAlreadyInPlaylist": "गाना पहले से ही प्लेलिस्ट में है",
+  "songInformation": "गाने की जानकारी",
+  "songLabelUpper": "गाना",
+  "songTitleKeyword": "शीर्षक या कीवर्ड",
+  "songs": "गाने",
+  "songsCount": "{count, plural, =1{1 गाना} other{{count} गाने}}",
+  "songsInLibrary": "लाइब्रेरी में {count, plural, =1{1 गाना} other{{count} गाने}}",
+  "songsLoadedCount": "{count} गाने लोड हुए...",
+  "southKorea": "दक्षिण कोरिया",
+  "spanish": "स्पेनिश",
+  "spectrumBars": "स्पेक्ट्रम बार्स",
+  "spotify": "स्पॉटिफ़ाई",
+  "standardDesc": "MP3 - छोटी फ़ाइल, तेज़ लोडिंग",
+  "standardQuality": "मानक (MP3)",
+  "start": "शुरू करें",
+  "startBulkProcess": "बल्क प्रक्रिया शुरू करें",
+  "startedDownloadingAll": "सभी गाने डाउनलोड होना शुरू हुए...",
+  "stateDisabled": "अक्षम",
+  "stateEnabled": "सक्षम",
+  "statisticsReset": "आंकड़े रीसेट किए गए।",
+  "stats": "आंकड़े",
+  "statusLabel": "स्थिति",
+  "statusWithText": "स्थिति: {status}",
+  "stopTimer": "टाइमर रोकें ({time})",
+  "streaming": "स्ट्रीमिंग",
+  "streamingQuality": "स्ट्रीमिंग गुणवत्ता",
+  "success": "सफलता",
+  "superfanHeader": "सुपरफैन उपलब्धियां",
+  "superfanTitles": "सुपरफैन",
+  "supportDeveloperTooltip": "विशेष शीर्षक प्राप्त करने के लिए डेवलपर का समर्थन करें",
+  "switchToGridView": "ग्रिड दृश्य पर स्विच करें",
+  "switchToListView": "सूची दृश्य पर स्विच करें",
+  "switchingTo": "पर स्विच किया जा रहा है",
+  "syncThemeAlbumArt": "एल्बम आर्ट के साथ थीम सिंक करें",
+  "system": "सिस्टम",
+  "systemDefault": "सिस्टम डिफ़ॉल्ट",
+  "targetLanguageLyrics": "लिरिक्स अनुवाद के लिए लक्षित भाषा",
+  "thai": "थाई",
+  "tidalApiStatus": "Tidal API",
+  "timeBasedTitles": "समय आधारित",
+  "timeListened": "सुनने का समय",
+  "timeOverlordsHeader": "समय अधिपति",
+  "timerSetForHours": "टाइमर {count} घंटे के लिए सेट किया गया",
+  "timerSetForMinutes": "टाइमर {count} मिनट के लिए सेट किया गया",
+  "timerSetForSeconds": "टाइमर {count} सेकंड के लिए सेट किया गया",
+  "tintBackground": "बैकग्राउंड और विज़ुअलाइज़र को गाने के रंग में रंगें",
+  "title": "शीर्षक",
+  "titleLabel": "शीर्षक",
+  "todayLabel": "आज: {size}",
+  "toggleDebugButton": "फ्लोटिंग डीबग कंसोल टॉगल करें",
+  "toggleDebugConsole": "फ्लोटिंग डीबग कंसोल टॉगल करें",
+  "toggleLyrics": "लिरिक्स बदलें",
+  "top3GlobalTooltip": "{weeks} सप्ताह के लिए टॉप 3 ग्लोबल पर पहुंचें",
+  "topArtist": "शीर्ष कलाकार",
+  "topArtistAndTrack": "शीर्ष कलाकार और ट्रैक",
+  "topArtists": "शीर्ष कलाकार",
+  "topGlobalTooltip": "वैश्विक स्तर पर शीर्ष {rank} पर पहुंचें",
+  "topListeners": "शीर्ष श्रोता",
+  "totalMinutesStat": "कुल मिनट",
+  "totalPlays": "कुल प्ले",
+  "trackDetails": "ट्रैक विवरण",
+  "trackNumber": "ट्रैक संख्या",
+  "tracks": "ट्रैक",
+  "translateLabel": "अनुवाद करें",
+  "translateLyrics": "लिरिक्स अनुवाद करें",
+  "translateLyricsTooltip": "लिरिक्स अनुवाद करें",
+  "translationLanguage": "अनुवाद भाषा",
+  "turnOffTimer": "टाइमर बंद करें",
+  "unauthorize": "अनधिकृत",
+  "underDevelopment": "यह सुविधा विकास के अधीन है",
+  "underwater": "पानी के नीचे",
+  "unitedKingdom": "यूनाइटेड किंगडम",
+  "unitedStates": "संयुक्त राज्य अमेरिका",
+  "unknown": "अज्ञात",
+  "unknownArtist": "अज्ञात कलाकार",
+  "unknownDevice": "अज्ञात डिवाइस",
+  "unlink": "अनलिंक करें",
+  "unlinkAccount": "खाता अनलिंक करें",
+  "unlinkAccountDesc": "आपके आँकड़े इसी डिवाइस पर रहेंगे लेकिन अब डिवाइसों के बीच सिंक नहीं होंगे।",
+  "unlinkAccountQuestion": "खाता अनलिंक करें?",
+  "unlinkFolder": "फ़ोल्डर को अनलिंक करें और गानों की सूची साफ़ करें",
+  "unlinkFolderClear": "फ़ोल्डर को अनलिंक करें और गानों की सूची साफ़ करें",
+  "unlockedCountLabel": "{unlocked} / {total} अनलॉक किया गया",
+  "unmuteTooltip": "अनम्यूट करें",
+  "unsavedChanges": "अनसेव्ड परिवर्तन",
+  "upNext": "अगला",
+  "upNextCount": "अगला ({count})",
+  "upNextSection": "अगला",
+  "updateAvailableTitle": "अपडेट उपलब्ध है",
+  "updateAvailableVersion": "एक नया संस्करण ({version}) उपलब्ध है।",
+  "updateFailed": "अपडेट विफल: {error}",
+  "updateNow": "अभी अपडेट करें",
+  "updatePrompt": "क्या आप इसे अभी डाउनलोड और इंस्टॉल करना चाहते हैं?",
+  "updatingYtDlp": "yt-dlp अपडेट हो रहा है",
+  "usbAudioBypass": "USB ऑडियो बायपास (बीटा) - Android 13 और उससे नीचे के लिए सीधा DAC आउटपुट",
+  "usbAudioBypassBeta": "USB ऑडियो बायपास (बीटा) - Android 13 और उससे नीचे के लिए सीधा DAC आउटपुट",
+  "useDarkTheme": "डार्क थीम का उपयोग करें",
+  "useMixedColors": "मिश्रित रंगों का उपयोग करें (सिंक प्राथमिकता)",
+  "verifiedDeveloper": "सत्यापित डेवलपर",
+  "version": "संस्करण",
+  "versionLabel": "संस्करण {version}",
+  "vietnamese": "वियतनामी",
+  "viewQueue": "कतार देखें",
+  "visualizer": "विज़ुअलाइज़र",
+  "visualizerStyle": "विज़ुअलाइज़र शैली",
+  "wasapiExclusive": "WASAPI एक्सक्लूसिव मोड",
+  "weekly": "साप्ताहिक",
+  "weeks": "सप्ताह",
+  "winter": "सर्दी",
+  "worldRanking": "विश्व रैंकिंग",
+  "worldTopArtists": "विश्व के शीर्ष कलाकार",
+  "year": "वर्ष",
+  "youMayLike": "आपको पसंद आ सकता है",
+  "yourPlaylists": "आपकी प्लेलिस्ट",
+  "yourTopMix": "आपका टॉप मिक्स",
+  "youtube": "यूट्यूब",
+  "ytDlpUpdateAvailable": "yt-dlp का नया संस्करण उपलब्ध है."
 }

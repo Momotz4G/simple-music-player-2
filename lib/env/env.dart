@@ -86,6 +86,9 @@ abstract class Env {
   @EnviedField(
       varName: 'TIDAL_API_URL',
       obfuscate: true,
-      defaultValue: 'https://tidal-api.stephanus-dev.online')
+      defaultValue: '')
   static final String tidalApiUrl = _Env.tidalApiUrl;
+
+  @EnviedField(varName: 'SPOTIFY_BANNER_URL', obfuscate: true, defaultValue: '')
+  static final String spotifyBannerUrl = _Env.spotifyBannerUrl;
 }

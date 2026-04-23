@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -143,6 +144,43 @@ class AudioInfoService {
 
   String? _ffprobePath;
 
+  /// 🚀 CONCURRENCY LIMITER: Prevents ffprobe process storm.
+  /// Max 2 simultaneous ffprobe.exe processes to avoid overwhelming Windows.
+  static const int _maxConcurrentProbes = 4; // 🚀 Increased for faster clearing
+  static int _activeProbes = 0;
+  static final List<({Completer<void> completer, bool isPriority})> _probeQueue = [];
+
+  /// Acquire a slot to run ffprobe. Waits if at capacity.
+  static Future<void> _acquireProbeSlot(String filePath, {bool isPriority = false}) async {
+    final fileName = filePath.split(Platform.pathSeparator).last;
+    if (_activeProbes < _maxConcurrentProbes) {
+      _activeProbes++;
+      debugPrint("🎟️ AudioInfo Slot: Acquired for '$fileName' (Active: $_activeProbes)${isPriority ? " [PRIORITY]" : ""}");
+      return;
+    }
+    // Wait for a slot to free up
+    debugPrint("⏳ AudioInfo Slot: Waiting for '$fileName'... (Queue: ${_probeQueue.length + 1})${isPriority ? " [PRIORITY]" : ""}");
+    final completer = Completer<void>();
+    if (isPriority) {
+      _probeQueue.insert(0, (completer: completer, isPriority: true)); // Jump to front
+    } else {
+      _probeQueue.add((completer: completer, isPriority: false));
+    }
+    await completer.future;
+  }
+
+  /// Release a ffprobe slot, unblocking the next waiter.
+  static void _releaseProbeSlot() {
+    if (_probeQueue.isNotEmpty) {
+      final next = _probeQueue.removeAt(0);
+      next.completer.complete(); // Hand the slot to the next waiter
+      debugPrint("🎟️ AudioInfo Slot: Passed to next (Queue: ${_probeQueue.length})${next.isPriority ? " [WAS PRIORITY]" : ""}");
+    } else {
+      _activeProbes--;
+      debugPrint("🎟️ AudioInfo Slot: Released (Active: $_activeProbes)");
+    }
+  }
+
   /// Initialize ffprobe path (desktop only)
   Future<void> initialize() async {
     if (_ffprobePath != null) return;
@@ -166,12 +204,13 @@ class AudioInfoService {
   }
 
   /// Get audio info for a SongModel (Resilient)
-  Future<AudioInfo?> getAudioInfoForSong(SongModel song) async {
+  Future<AudioInfo?> getAudioInfoForSong(SongModel song, {bool isPriority = false}) async {
     // 1. Try local file if it exists
     if (!song.filePath.startsWith('http')) {
       final file = File(song.filePath);
       if (await file.exists()) {
-        return await getAudioInfo(song.filePath);
+        debugPrint("🔍 AudioInfo: Probing local file: ${song.filePath}");
+        return await getAudioInfo(song.filePath, isPriority: isPriority);
       }
     }
 
@@ -180,21 +219,26 @@ class AudioInfoService {
       // 🚀 NEW: Check if a local cached version exists before probing the URL
       final cachedPath = await _checkCachePath(song);
       if (cachedPath != null) {
-        return await getAudioInfo(cachedPath);
+        debugPrint("🔍 AudioInfo: Found cached version for URL, probing: $cachedPath");
+        return await getAudioInfo(cachedPath, isPriority: isPriority);
       }
-      return await getAudioInfo(song.filePath);
+      debugPrint("🔍 AudioInfo: Probing URL: ${song.filePath}");
+      return await getAudioInfo(song.filePath, isPriority: isPriority);
     }
 
     // 3. Try source URL if it exists
     if (song.sourceUrl != null && song.sourceUrl!.startsWith('http')) {
       final cachedPath = await _checkCachePath(song);
       if (cachedPath != null) {
-        return await getAudioInfo(cachedPath);
+        debugPrint("🔍 AudioInfo: Found cached version for sourceUrl, probing: $cachedPath");
+        return await getAudioInfo(cachedPath, isPriority: isPriority);
       }
-      return await getAudioInfo(song.sourceUrl!);
+      debugPrint("🔍 AudioInfo: Probing sourceUrl: ${song.sourceUrl}");
+      return await getAudioInfo(song.sourceUrl!, isPriority: isPriority);
     }
 
     // 4. Fallback to basic info from song metadata
+    debugPrint("🔍 AudioInfo: Falling back to basic info for: ${song.filePath}");
     return _getBasicInfo(song.filePath, 0, _getFormatFromPath(song.filePath));
   }
 
@@ -212,36 +256,169 @@ class AudioInfoService {
       if (_ffprobePath == null) await initialize();
       if (_ffprobePath == null) return {};
 
-      final result = await Process.run(
-        _ffprobePath!,
-        [
-          '-v',
-          'quiet',
-          '-print_format',
-          'json',
-          '-show_format',
-          filePath,
-        ],
-        runInShell: false,
-      );
+      await _acquireProbeSlot(filePath);
+      try {
+        final result = await Process.run(
+          _ffprobePath!,
+          [
+            '-v',
+            'quiet',
+            '-print_format',
+            'json',
+            '-show_format',
+            filePath,
+          ],
+          runInShell: false,
+        ).timeout(const Duration(seconds: 5), onTimeout: () {
+          debugPrint("⏱️ ffprobe (Tags): Timeout reached for $filePath");
+          throw TimeoutException("ffprobe timeout");
+        });
 
-      if (result.exitCode != 0) return {};
+        if (result.exitCode != 0) return {};
 
-      final json = jsonDecode(result.stdout as String);
-      final formatInfo = json['format'] as Map?;
-      final tags = formatInfo?['tags'] as Map?;
+        final json = jsonDecode(result.stdout as String);
+        final formatInfo = json['format'] as Map?;
+        final tags = formatInfo?['tags'] as Map?;
 
-      if (tags == null) return {};
-      return tags
-          .map((key, value) => MapEntry(key.toString(), value.toString()));
+        if (tags == null) return {};
+        return tags
+            .map((key, value) => MapEntry(key.toString(), value.toString()));
+      } finally {
+        _releaseProbeSlot();
+      }
     } catch (e) {
       if (kDebugMode) print('AudioInfoService getTags error: $e');
       return {};
     }
   }
 
+  /// 🚀 COMBINED: Get both tags AND audio info in a single ffprobe invocation.
+  /// This halves the number of ffprobe.exe processes during library scan.
+  Future<({Map<String, String> tags, AudioInfo? info})> getTagsAndInfo(String filePath) async {
+    try {
+      final format = _getFormatFromPath(filePath);
+      int fileSize = 0;
+      
+      if (!filePath.startsWith('http')) {
+        final file = File(filePath);
+        if (await file.exists()) {
+          fileSize = await file.length();
+        }
+      }
+
+      if (Platform.isAndroid || Platform.isIOS) {
+        final session = await FFprobeKit.getMediaInformation(filePath);
+        final mediaInfo = session.getMediaInformation();
+        if (mediaInfo == null) {
+          return (tags: <String, String>{}, info: _getBasicInfo(filePath, fileSize, format));
+        }
+        final rawTags = mediaInfo.getTags();
+        final tags = rawTags != null
+            ? Map<String, String>.from(rawTags)
+            : <String, String>{};
+        final info = await _getMobileInfo(filePath, fileSize, format);
+        return (tags: tags, info: info);
+      }
+
+      // Desktop: single ffprobe with both -show_format and -show_streams
+      if (_ffprobePath == null) await initialize();
+      if (_ffprobePath == null) {
+        return (tags: <String, String>{}, info: _getBasicInfo(filePath, fileSize, format));
+      }
+
+      await _acquireProbeSlot(filePath);
+      try {
+        final result = await Process.run(
+          _ffprobePath!,
+          [
+            '-v', 'quiet',
+            '-print_format', 'json',
+            '-show_format',
+            '-show_streams',
+            filePath,
+          ],
+          runInShell: false,
+        ).timeout(const Duration(seconds: 5), onTimeout: () {
+          debugPrint("⏱️ ffprobe (TagsAndInfo): Timeout reached for $filePath");
+          throw TimeoutException("ffprobe timeout");
+        });
+
+        if (result.exitCode != 0) {
+          return (tags: <String, String>{}, info: _getBasicInfo(filePath, fileSize, format));
+        }
+
+        final json = jsonDecode(result.stdout as String);
+        final formatInfo = json['format'] as Map?;
+        final streams = json['streams'] as List?;
+
+        // Extract tags
+        final rawTags = formatInfo?['tags'] as Map?;
+        final tags = rawTags != null
+            ? rawTags.map((key, value) => MapEntry(key.toString(), value.toString()))
+            : <String, String>{};
+
+        // Extract audio stream info
+        Map? audioStream;
+        if (streams != null) {
+          for (var stream in streams) {
+            if (stream['codec_type'] == 'audio') {
+              audioStream = stream;
+              break;
+            }
+          }
+        }
+
+        if (audioStream == null) {
+          return (tags: tags, info: _getBasicInfo(filePath, fileSize, format));
+        }
+
+        final codec = audioStream['codec_name'] as String? ?? 'unknown';
+        final sampleRate = int.tryParse(audioStream['sample_rate']?.toString() ?? '');
+        final channels = audioStream['channels'] as int?;
+        int? bitDepth = int.tryParse(audioStream['bits_per_raw_sample']?.toString() ?? '');
+        if (bitDepth == null || bitDepth == 0) {
+          bitDepth = int.tryParse(audioStream['bits_per_sample']?.toString() ?? '');
+        }
+        if (bitDepth == 0) bitDepth = null;
+
+        int? bitrate;
+        if (audioStream['bit_rate'] != null) {
+          bitrate = (int.tryParse(audioStream['bit_rate'].toString()) ?? 0) ~/ 1000;
+        } else if (formatInfo?['bit_rate'] != null) {
+          bitrate = (int.tryParse(formatInfo!['bit_rate'].toString()) ?? 0) ~/ 1000;
+        }
+
+        Duration? duration;
+        if (formatInfo?['duration'] != null) {
+          final seconds = double.tryParse(formatInfo!['duration'].toString());
+          if (seconds != null) {
+            duration = Duration(milliseconds: (seconds * 1000).round());
+          }
+        }
+
+        final info = AudioInfo(
+          format: format,
+          codec: codec,
+          bitrate: bitrate,
+          sampleRate: sampleRate,
+          channels: channels,
+          bitDepth: bitDepth,
+          fileSize: fileSize,
+          duration: duration,
+        );
+
+        return (tags: tags, info: info);
+      } finally {
+        _releaseProbeSlot();
+      }
+    } catch (e) {
+      if (kDebugMode) print('AudioInfoService getTagsAndInfo error: $e');
+      return (tags: <String, String>{}, info: null);
+    }
+  }
+
   /// Get audio info for a file or URL
-  Future<AudioInfo?> getAudioInfo(String filePath) async {
+  Future<AudioInfo?> getAudioInfo(String filePath, {bool isPriority = false}) async {
     try {
       final isUrl = filePath.startsWith('http');
       int fileSize = 0;
@@ -277,7 +454,7 @@ class AudioInfoService {
         }
 
         if (_ffprobePath != null) {
-          final info = await _getDetailedInfo(filePath, fileSize, format);
+          final info = await _getDetailedInfo(filePath, fileSize, format, isPriority: isPriority);
           
           return info;
         }
@@ -297,12 +474,19 @@ class AudioInfoService {
   Future<AudioInfo?> _getMobileInfo(
       String filePath, int fileSize, String format) async {
     try {
-      final session = await FFprobeKit.getMediaInformation(filePath);
+      debugPrint("🚀 FFprobeKit: Starting probe for $filePath");
+      final session = await FFprobeKit.getMediaInformation(filePath)
+          .timeout(const Duration(seconds: 5), onTimeout: () {
+        debugPrint("⏱️ FFprobeKit: Timeout reached for $filePath");
+        throw TimeoutException("FFprobeKit timeout");
+      });
       final mediaInfo = session.getMediaInformation();
 
       if (mediaInfo == null) {
+        debugPrint("⚠️ FFprobeKit: No media info returned for $filePath");
         return _getBasicInfo(filePath, fileSize, format);
       }
+      debugPrint("✅ FFprobeKit: Info retrieved for $filePath");
 
       // Get streams
       final streams = mediaInfo.getStreams();
@@ -455,21 +639,30 @@ class AudioInfoService {
 
   /// Get detailed info using ffprobe
   Future<AudioInfo> _getDetailedInfo(
-      String filePath, int fileSize, String format) async {
+      String filePath, int fileSize, String format, {bool isPriority = false}) async {
     try {
-      final result = await Process.run(
-        _ffprobePath!,
-        [
-          '-v',
-          'quiet',
-          '-print_format',
-          'json',
-          '-show_streams',
-          '-show_format',
-          filePath,
-        ],
-        runInShell: false,
-      );
+      await _acquireProbeSlot(filePath, isPriority: isPriority);
+      late final ProcessResult result;
+      try {
+        result = await Process.run(
+          _ffprobePath!,
+          [
+            '-v',
+            'quiet',
+            '-print_format',
+            'json',
+            '-show_streams',
+            '-show_format',
+            filePath,
+          ],
+          runInShell: false,
+        ).timeout(const Duration(seconds: 5), onTimeout: () {
+          debugPrint("⏱️ ffprobe: Timeout reached for $filePath");
+          throw TimeoutException("ffprobe timeout");
+        });
+      } finally {
+        _releaseProbeSlot();
+      }
 
       if (result.exitCode != 0) {
         return _getBasicInfo(filePath, fileSize, format);

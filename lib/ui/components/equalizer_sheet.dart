@@ -82,7 +82,7 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
                     value: eq.isEnabled,
                     onChanged: (val) => notifier.toggleEnabled(val),
                     activeColor: accentColor,
-                    activeTrackColor: accentColor.withOpacity(0.4),
+                    activeTrackColor: accentColor.withValues(alpha: 0.4),
                     inactiveThumbColor: dimText,
                     inactiveTrackColor: trackColor,
                   ),
@@ -158,7 +158,7 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
                     trackHeight: 3,
                     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
                     overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                    activeTrackColor: accentColor.withOpacity(0.7),
+                    activeTrackColor: accentColor.withValues(alpha: 0.7),
                     inactiveTrackColor: trackColor,
                     thumbColor: accentColor,
                     disabledActiveTrackColor: trackColor,
@@ -231,8 +231,8 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
                                         return Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text('-', style: TextStyle(color: (i % 2 == 0) ? dimText : trackColor.withOpacity(0.5), fontSize: 10)),
-                                            Text('-', style: TextStyle(color: (i % 2 == 0) ? dimText : trackColor.withOpacity(0.5), fontSize: 10)),
+                                            Text('-', style: TextStyle(color: (i % 2 == 0) ? dimText : trackColor.withValues(alpha: 0.5), fontSize: 10)),
+                                            Text('-', style: TextStyle(color: (i % 2 == 0) ? dimText : trackColor.withValues(alpha: 0.5), fontSize: 10)),
                                           ],
                                         );
                                       }),
@@ -252,7 +252,7 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
                                         activeTrackColor: accentColor,
                                         inactiveTrackColor: trackColor,
                                         thumbColor: accentColor,
-                                        overlayColor: accentColor.withOpacity(0.2),
+                                        overlayColor: accentColor.withValues(alpha: 0.2),
                                         showValueIndicator: ShowValueIndicator.always,
                                         valueIndicatorShape: const HorizontalValueIndicatorShape(),
                                         valueIndicatorColor: surfaceColor,

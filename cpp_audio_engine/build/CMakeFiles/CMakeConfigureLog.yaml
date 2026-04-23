@@ -130,7 +130,7 @@ events:
       The output was:
       0
       MSBuild version 17.14.23+b0019275e for .NET Framework
-      Build started 3/26/2026 1:33:16 AM.
+      Build started 3/31/2026 11:04:37 PM.
       
       Project "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\4.2.1\\CompilerIdC\\CompilerIdC.vcxproj" on node 1 (default targets).
       PrepareForBuild:
@@ -159,7 +159,7 @@ events:
           0 Warning(s)
           0 Error(s)
       
-      Time Elapsed 00:00:02.24
+      Time Elapsed 00:00:01.49
       
       
       Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.exe"
@@ -1226,9 +1226,9 @@ events:
       - "C:/Program Files/CMake/bin/"
       - "C:/Program Files/CMake/sbin/"
       - "C:/Program Files/CMake/"
-      - "C:/Program Files (x86)/audio_engine/bin/"
-      - "C:/Program Files (x86)/audio_engine/sbin/"
-      - "C:/Program Files (x86)/audio_engine/"
+      - "C:/Program Files/audio_engine/bin/"
+      - "C:/Program Files/audio_engine/sbin/"
+      - "C:/Program Files/audio_engine/"
     searched_directories:
       - "C:/Program Files/Eclipse Adoptium/jdk-17.0.17.10-hotspot/bin/rc.com"
       - "C:/Program Files/Eclipse Adoptium/jdk-17.0.17.10-hotspot/bin/rc.exe"
@@ -1380,15 +1380,15 @@ events:
       - "C:/Program Files/CMake/rc.com"
       - "C:/Program Files/CMake/rc.exe"
       - "C:/Program Files/CMake/rc"
-      - "C:/Program Files (x86)/audio_engine/bin/rc.com"
-      - "C:/Program Files (x86)/audio_engine/bin/rc.exe"
-      - "C:/Program Files (x86)/audio_engine/bin/rc"
-      - "C:/Program Files (x86)/audio_engine/sbin/rc.com"
-      - "C:/Program Files (x86)/audio_engine/sbin/rc.exe"
-      - "C:/Program Files (x86)/audio_engine/sbin/rc"
-      - "C:/Program Files (x86)/audio_engine/rc.com"
-      - "C:/Program Files (x86)/audio_engine/rc.exe"
-      - "C:/Program Files (x86)/audio_engine/rc"
+      - "C:/Program Files/audio_engine/bin/rc.com"
+      - "C:/Program Files/audio_engine/bin/rc.exe"
+      - "C:/Program Files/audio_engine/bin/rc"
+      - "C:/Program Files/audio_engine/sbin/rc.com"
+      - "C:/Program Files/audio_engine/sbin/rc.exe"
+      - "C:/Program Files/audio_engine/sbin/rc"
+      - "C:/Program Files/audio_engine/rc.com"
+      - "C:/Program Files/audio_engine/rc.exe"
+      - "C:/Program Files/audio_engine/rc"
     found: false
     search_context:
       ENV{PATH}:
@@ -1471,12 +1471,12 @@ events:
         - "C:\\Users\\MEKEW\\AppData\\Local\\Programs\\Antigravity\\bin"
         - "C:\\Users\\MEKEW\\AppData\\Roaming\\npm"
         - "C:\\Users\\MEKEW\\AppData\\Local\\Microsoft\\WinGet\\Links"
-      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/audio_engine"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files/audio_engine"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "C:/Program Files"
         - "C:/Program Files (x86)"
         - "C:/Program Files/CMake"
-        - "C:/Program Files (x86)/audio_engine"
+        - "C:/Program Files/audio_engine"
   -
     kind: "try_compile-v1"
     backtrace:
@@ -1486,8 +1486,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-2p560r"
-      binary: "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-2p560r"
+      source: "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-6ias8o"
+      binary: "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-6ias8o"
     cmakeVariables:
       CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
       CMAKE_C_FLAGS_DEBUG: "/MDd /Zi /Ob0 /Od /RTC1"
@@ -1496,39 +1496,39 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-2p560r'
+        Change Dir: 'C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-6ias8o'
         
-        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_b0d9d.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_44f8e.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
         MSBuild version 17.14.23+b0019275e for .NET Framework
-        Build started 3/26/2026 1:33:19 AM.
+        Build started 3/31/2026 11:04:39 PM.
         
-        Project "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-2p560r\\cmTC_b0d9d.vcxproj" on node 1 (default targets).
+        Project "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-6ias8o\\cmTC_44f8e.vcxproj" on node 1 (default targets).
         PrepareForBuild:
           Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
-          Creating directory "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-2p560r\\Debug\\".
-          Creating directory "cmTC_b0d9d.dir\\Debug\\cmTC_b0d9d.tlog\\".
+          Creating directory "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-6ias8o\\Debug\\".
+          Creating directory "cmTC_44f8e.dir\\Debug\\cmTC_44f8e.tlog\\".
         InitializeBuildStatus:
-          Creating "cmTC_b0d9d.dir\\Debug\\cmTC_b0d9d.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
-          Touching "cmTC_b0d9d.dir\\Debug\\cmTC_b0d9d.tlog\\unsuccessfulbuild".
+          Creating "cmTC_44f8e.dir\\Debug\\cmTC_44f8e.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_44f8e.dir\\Debug\\cmTC_44f8e.tlog\\unsuccessfulbuild".
         ClCompile:
-          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /Fo"cmTC_b0d9d.dir\\Debug\\\\" /Fd"cmTC_b0d9d.dir\\Debug\\vc143.pdb" /external:W3 /TC /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCCompilerABI.c"
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /Fo"cmTC_44f8e.dir\\Debug\\\\" /Fd"cmTC_44f8e.dir\\Debug\\vc143.pdb" /external:W3 /TC /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCCompilerABI.c"
           Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35219 for x64
           Copyright (C) Microsoft Corporation.  All rights reserved.
-          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /Fo"cmTC_b0d9d.dir\\Debug\\\\" /Fd"cmTC_b0d9d.dir\\Debug\\vc143.pdb" /external:W3 /TC /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCCompilerABI.c"
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /Fo"cmTC_44f8e.dir\\Debug\\\\" /Fd"cmTC_44f8e.dir\\Debug\\vc143.pdb" /external:W3 /TC /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCCompilerABI.c"
           CMakeCCompilerABI.c
         Link:
-          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\link.exe /OUT:"C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-2p560r\\Debug\\cmTC_b0d9d.exe" /INCREMENTAL /ILK:"cmTC_b0d9d.dir\\Debug\\cmTC_b0d9d.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-2p560r/Debug/cmTC_b0d9d.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-2p560r/Debug/cmTC_b0d9d.lib" /MACHINE:X64  /machine:x64 cmTC_b0d9d.dir\\Debug\\CMakeCCompilerABI.obj
-          cmTC_b0d9d.vcxproj -> C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-2p560r\\Debug\\cmTC_b0d9d.exe
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\link.exe /OUT:"C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-6ias8o\\Debug\\cmTC_44f8e.exe" /INCREMENTAL /ILK:"cmTC_44f8e.dir\\Debug\\cmTC_44f8e.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-6ias8o/Debug/cmTC_44f8e.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-6ias8o/Debug/cmTC_44f8e.lib" /MACHINE:X64  /machine:x64 cmTC_44f8e.dir\\Debug\\CMakeCCompilerABI.obj
+          cmTC_44f8e.vcxproj -> C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-6ias8o\\Debug\\cmTC_44f8e.exe
         FinalizeBuildStatus:
-          Deleting file "cmTC_b0d9d.dir\\Debug\\cmTC_b0d9d.tlog\\unsuccessfulbuild".
-          Touching "cmTC_b0d9d.dir\\Debug\\cmTC_b0d9d.tlog\\cmTC_b0d9d.lastbuildstate".
-        Done Building Project "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-2p560r\\cmTC_b0d9d.vcxproj" (default targets).
+          Deleting file "cmTC_44f8e.dir\\Debug\\cmTC_44f8e.tlog\\unsuccessfulbuild".
+          Touching "cmTC_44f8e.dir\\Debug\\cmTC_44f8e.tlog\\cmTC_44f8e.lastbuildstate".
+        Done Building Project "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-6ias8o\\cmTC_44f8e.vcxproj" (default targets).
         
         Build succeeded.
             0 Warning(s)
             0 Error(s)
         
-        Time Elapsed 00:00:01.00
+        Time Elapsed 00:00:00.76
         
       exitCode: 0
   -
@@ -1557,6 +1557,529 @@ events:
       - "CMakeLists.txt:2 (project)"
     message: |
       Running the C compiler's linker: "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/HostX64/x64/link.exe" "-v"
+      Microsoft (R) Incremental Linker Version 14.44.35219.0
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+...
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCXXCompilerId.cpp.in"
+    candidate_directories:
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/"
+    found: "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeCXXCompilerId.cpp.in"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.17.10-hotspot\\bin"
+        - "C:\\Program Files\\Eclipse Foundation\\jre-8.0.302.8-hotspot\\bin"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath"
+        - "C:\\Program Files (x86)\\Common Files\\Intel\\Shared Libraries\\redist\\intel64\\compiler"
+        - "C:\\Program Files\\AdoptOpenJDK\\jdk-8.0.242.08-hotspot\\bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\Windows\\System32\\OpenSSH\\"
+        - "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common"
+        - "C:\\Program Files\\Intel\\WiFi\\bin\\"
+        - "C:\\Program Files\\Common Files\\Intel\\WirelessCommon\\"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\Program Files (x86)\\Microsoft SQL Server\\150\\DTS\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\Client SDK\\ODBC\\170\\Tools\\Binn\\"
+        - "C:\\Program Files (x86)\\Microsoft SQL Server\\150\\Tools\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\150\\Tools\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\150\\DTS\\Binn\\"
+        - "C:\\Program Files\\dotnet\\"
+        - "%SPARK_HOME\\bin%"
+        - "C:\\xamppv8.2.12\\php"
+        - "C:\\composer"
+        - "C:\\Program Files (x86)\\ZeroTier\\One\\"
+        - "C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
+        - "C:\\Program Files\\nodejs\\"
+        - "C:\\Program Files\\CMake\\bin"
+        - "C:\\Users\\MEKEW\\.cargo\\bin"
+        - "C:\\Program Files\\MySQL\\MySQL Shell 8.0\\bin\\"
+        - "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.17.10-hotspot\\bin"
+        - "C:\\Program Files\\Eclipse Foundation\\jre-8.0.302.8-hotspot\\bin"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath"
+        - "C:\\Program Files (x86)\\Common Files\\Intel\\Shared Libraries\\redist\\intel64\\compiler"
+        - "C:\\Program Files\\AdoptOpenJDK\\jdk-8.0.242.08-hotspot\\bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\Windows\\System32\\OpenSSH\\"
+        - "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common"
+        - "C:\\Program Files\\Intel\\WiFi\\bin\\"
+        - "C:\\Program Files\\Common Files\\Intel\\WirelessCommon\\"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\Program Files (x86)\\Microsoft SQL Server\\150\\DTS\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\Client SDK\\ODBC\\170\\Tools\\Binn\\"
+        - "C:\\Program Files (x86)\\Microsoft SQL Server\\150\\Tools\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\150\\Tools\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\150\\DTS\\Binn\\"
+        - "C:\\Program Files\\dotnet\\"
+        - "%SPARK_HOME\\bin%"
+        - "C:\\xamppv8.2.12\\php"
+        - "C:\\composer"
+        - "C:\\Program Files (x86)\\ZeroTier\\One\\"
+        - "C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
+        - "C:\\Program Files\\nodejs\\"
+        - "C:\\Program Files\\CMake\\bin"
+        - "C:\\Users\\MEKEW\\Desktop\\IdlixDownloader-master"
+        - "C:\\Users\\MEKEW\\anaconda3\\envs\\pyspark_env\\Scripts\\"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\MEKEW\\AppData\\Roaming\\Composer\\vendor\\bin"
+        - "C:\\Users\\MEKEW\\.dotnet\\tools"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\flutter\\bin"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\Programs\\Antigravity\\bin"
+        - "C:\\Users\\MEKEW\\AppData\\Roaming\\npm"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\Microsoft\\WinGet\\Links"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files/audio_engine"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      MSBuild version 17.14.23+b0019275e for .NET Framework
+      Build started 4/3/2026 4:27:24 AM.
+      
+      Project "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\4.2.1\\CompilerIdCXX\\CompilerIdCXX.vcxproj" on node 1 (default targets).
+      PrepareForBuild:
+        Creating directory "Debug\\".
+        Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+        Creating directory "Debug\\CompilerIdCXX.tlog\\".
+      InitializeBuildStatus:
+        Creating "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+        Touching "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild".
+      ClCompile:
+        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\CL.exe /c /nologo /W0 /WX- /diagnostics:column /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\\\" /Fd"Debug\\vc143.pdb" /external:W0 /Gd /TP /FC /errorReport:queue CMakeCXXCompilerId.cpp
+        CMakeCXXCompilerId.cpp
+      Link:
+        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:".\\CompilerIdCXX.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\\CompilerIdCXX.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\\CompilerIdCXX.lib" /MACHINE:X64 Debug\\CMakeCXXCompilerId.obj
+        CompilerIdCXX.vcxproj -> C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\4.2.1\\CompilerIdCXX\\CompilerIdCXX.exe
+      PostBuildEvent:
+        for %%i in (cl.exe) do @echo CMAKE_CXX_COMPILER=%%~$PATH:i
+        :VCEnd
+        CMAKE_CXX_COMPILER=C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe
+      FinalizeBuildStatus:
+        Deleting file "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild".
+        Touching "Debug\\CompilerIdCXX.tlog\\CompilerIdCXX.lastbuildstate".
+      Done Building Project "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\4.2.1\\CompilerIdCXX\\CompilerIdCXX.vcxproj" (default targets).
+      
+      Build succeeded.
+          0 Warning(s)
+          0 Error(s)
+      
+      Time Elapsed 00:00:01.67
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.exe"
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.vcxproj"
+      
+      The CXX compiler identification is MSVC, found in:
+        C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/4.2.1/CompilerIdCXX/CompilerIdCXX.exe
+      
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:37 (find_program)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:65 (__resolve_tool_path)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:104 (__resolve_linker_path)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "_CMAKE_TOOL_WITH_PATH"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "lld-link"
+    candidate_directories:
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/"
+      - "C:/Program Files/Eclipse Adoptium/jdk-17.0.17.10-hotspot/bin/"
+      - "C:/Program Files/Eclipse Foundation/jre-8.0.302.8-hotspot/bin/"
+      - "C:/Program Files (x86)/Common Files/Oracle/Java/javapath/"
+      - "C:/Program Files (x86)/Common Files/Intel/Shared Libraries/redist/intel64/compiler/"
+      - "C:/Program Files/AdoptOpenJDK/jdk-8.0.242.08-hotspot/bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common/"
+      - "C:/Program Files/Intel/WiFi/bin/"
+      - "C:/Program Files/Common Files/Intel/WirelessCommon/"
+      - "C:/Program Files (x86)/Microsoft SQL Server/150/DTS/Binn/"
+      - "C:/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/"
+      - "C:/Program Files (x86)/Microsoft SQL Server/150/Tools/Binn/"
+      - "C:/Program Files/Microsoft SQL Server/150/Tools/Binn/"
+      - "C:/Program Files/Microsoft SQL Server/150/DTS/Binn/"
+      - "C:/Program Files/dotnet/"
+      - "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/%SPARK_HOME/bin%/"
+      - "C:/xamppv8.2.12/php/"
+      - "C:/composer/"
+      - "C:/Program Files (x86)/ZeroTier/One/"
+      - "C:/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/CMake/bin/"
+      - "C:/Users/MEKEW/.cargo/bin/"
+      - "C:/Program Files/MySQL/MySQL Shell 8.0/bin/"
+      - "C:/Users/MEKEW/Desktop/IdlixDownloader-master/"
+      - "C:/Users/MEKEW/anaconda3/envs/pyspark_env/Scripts/"
+      - "C:/Users/MEKEW/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/MEKEW/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/MEKEW/AppData/Roaming/Composer/vendor/bin/"
+      - "C:/Users/MEKEW/.dotnet/tools/"
+      - "C:/Users/MEKEW/AppData/Local/GitHubDesktop/bin/"
+      - "C:/flutter/bin/"
+      - "C:/Users/MEKEW/AppData/Local/Programs/Antigravity/bin/"
+      - "C:/Users/MEKEW/AppData/Roaming/npm/"
+      - "C:/Users/MEKEW/AppData/Local/Microsoft/WinGet/Links/"
+    searched_directories:
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/lld-link.com"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/lld-link.exe"
+      - "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/lld-link"
+      - "C:/Program Files/Eclipse Adoptium/jdk-17.0.17.10-hotspot/bin/lld-link.com"
+      - "C:/Program Files/Eclipse Adoptium/jdk-17.0.17.10-hotspot/bin/lld-link.exe"
+      - "C:/Program Files/Eclipse Adoptium/jdk-17.0.17.10-hotspot/bin/lld-link"
+      - "C:/Program Files/Eclipse Foundation/jre-8.0.302.8-hotspot/bin/lld-link.com"
+      - "C:/Program Files/Eclipse Foundation/jre-8.0.302.8-hotspot/bin/lld-link.exe"
+      - "C:/Program Files/Eclipse Foundation/jre-8.0.302.8-hotspot/bin/lld-link"
+      - "C:/Program Files (x86)/Common Files/Oracle/Java/javapath/lld-link.com"
+      - "C:/Program Files (x86)/Common Files/Oracle/Java/javapath/lld-link.exe"
+      - "C:/Program Files (x86)/Common Files/Oracle/Java/javapath/lld-link"
+      - "C:/Program Files (x86)/Common Files/Intel/Shared Libraries/redist/intel64/compiler/lld-link.com"
+      - "C:/Program Files (x86)/Common Files/Intel/Shared Libraries/redist/intel64/compiler/lld-link.exe"
+      - "C:/Program Files (x86)/Common Files/Intel/Shared Libraries/redist/intel64/compiler/lld-link"
+      - "C:/Program Files/AdoptOpenJDK/jdk-8.0.242.08-hotspot/bin/lld-link.com"
+      - "C:/Program Files/AdoptOpenJDK/jdk-8.0.242.08-hotspot/bin/lld-link.exe"
+      - "C:/Program Files/AdoptOpenJDK/jdk-8.0.242.08-hotspot/bin/lld-link"
+      - "C:/Windows/System32/lld-link.com"
+      - "C:/Windows/System32/lld-link.exe"
+      - "C:/Windows/System32/lld-link"
+      - "C:/Windows/lld-link.com"
+      - "C:/Windows/lld-link.exe"
+      - "C:/Windows/lld-link"
+      - "C:/Windows/System32/wbem/lld-link.com"
+      - "C:/Windows/System32/wbem/lld-link.exe"
+      - "C:/Windows/System32/wbem/lld-link"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/lld-link.com"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/lld-link.exe"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/lld-link"
+      - "C:/Windows/System32/OpenSSH/lld-link.com"
+      - "C:/Windows/System32/OpenSSH/lld-link.exe"
+      - "C:/Windows/System32/OpenSSH/lld-link"
+      - "C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common/lld-link.com"
+      - "C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common/lld-link.exe"
+      - "C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common/lld-link"
+      - "C:/Program Files/Intel/WiFi/bin/lld-link.com"
+      - "C:/Program Files/Intel/WiFi/bin/lld-link.exe"
+      - "C:/Program Files/Intel/WiFi/bin/lld-link"
+      - "C:/Program Files/Common Files/Intel/WirelessCommon/lld-link.com"
+      - "C:/Program Files/Common Files/Intel/WirelessCommon/lld-link.exe"
+      - "C:/Program Files/Common Files/Intel/WirelessCommon/lld-link"
+      - "C:/Program Files (x86)/Microsoft SQL Server/150/DTS/Binn/lld-link.com"
+      - "C:/Program Files (x86)/Microsoft SQL Server/150/DTS/Binn/lld-link.exe"
+      - "C:/Program Files (x86)/Microsoft SQL Server/150/DTS/Binn/lld-link"
+      - "C:/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/lld-link.com"
+      - "C:/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/lld-link.exe"
+      - "C:/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/lld-link"
+      - "C:/Program Files (x86)/Microsoft SQL Server/150/Tools/Binn/lld-link.com"
+      - "C:/Program Files (x86)/Microsoft SQL Server/150/Tools/Binn/lld-link.exe"
+      - "C:/Program Files (x86)/Microsoft SQL Server/150/Tools/Binn/lld-link"
+      - "C:/Program Files/Microsoft SQL Server/150/Tools/Binn/lld-link.com"
+      - "C:/Program Files/Microsoft SQL Server/150/Tools/Binn/lld-link.exe"
+      - "C:/Program Files/Microsoft SQL Server/150/Tools/Binn/lld-link"
+      - "C:/Program Files/Microsoft SQL Server/150/DTS/Binn/lld-link.com"
+      - "C:/Program Files/Microsoft SQL Server/150/DTS/Binn/lld-link.exe"
+      - "C:/Program Files/Microsoft SQL Server/150/DTS/Binn/lld-link"
+      - "C:/Program Files/dotnet/lld-link.com"
+      - "C:/Program Files/dotnet/lld-link.exe"
+      - "C:/Program Files/dotnet/lld-link"
+      - "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/%SPARK_HOME/bin%/lld-link.com"
+      - "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/%SPARK_HOME/bin%/lld-link.exe"
+      - "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/%SPARK_HOME/bin%/lld-link"
+      - "C:/xamppv8.2.12/php/lld-link.com"
+      - "C:/xamppv8.2.12/php/lld-link.exe"
+      - "C:/xamppv8.2.12/php/lld-link"
+      - "C:/composer/lld-link.com"
+      - "C:/composer/lld-link.exe"
+      - "C:/composer/lld-link"
+      - "C:/Program Files (x86)/ZeroTier/One/lld-link.com"
+      - "C:/Program Files (x86)/ZeroTier/One/lld-link.exe"
+      - "C:/Program Files (x86)/ZeroTier/One/lld-link"
+      - "C:/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/lld-link.com"
+      - "C:/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/lld-link.exe"
+      - "C:/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/lld-link"
+      - "C:/Program Files/Git/cmd/lld-link.com"
+      - "C:/Program Files/Git/cmd/lld-link.exe"
+      - "C:/Program Files/Git/cmd/lld-link"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/lld-link.com"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/lld-link.exe"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/lld-link"
+      - "C:/Program Files/nodejs/lld-link.com"
+      - "C:/Program Files/nodejs/lld-link.exe"
+      - "C:/Program Files/nodejs/lld-link"
+      - "C:/Program Files/CMake/bin/lld-link.com"
+      - "C:/Program Files/CMake/bin/lld-link.exe"
+      - "C:/Program Files/CMake/bin/lld-link"
+      - "C:/Users/MEKEW/.cargo/bin/lld-link.com"
+      - "C:/Users/MEKEW/.cargo/bin/lld-link.exe"
+      - "C:/Users/MEKEW/.cargo/bin/lld-link"
+      - "C:/Program Files/MySQL/MySQL Shell 8.0/bin/lld-link.com"
+      - "C:/Program Files/MySQL/MySQL Shell 8.0/bin/lld-link.exe"
+      - "C:/Program Files/MySQL/MySQL Shell 8.0/bin/lld-link"
+      - "C:/Users/MEKEW/Desktop/IdlixDownloader-master/lld-link.com"
+      - "C:/Users/MEKEW/Desktop/IdlixDownloader-master/lld-link.exe"
+      - "C:/Users/MEKEW/Desktop/IdlixDownloader-master/lld-link"
+      - "C:/Users/MEKEW/anaconda3/envs/pyspark_env/Scripts/lld-link.com"
+      - "C:/Users/MEKEW/anaconda3/envs/pyspark_env/Scripts/lld-link.exe"
+      - "C:/Users/MEKEW/anaconda3/envs/pyspark_env/Scripts/lld-link"
+      - "C:/Users/MEKEW/AppData/Local/Programs/Microsoft VS Code/bin/lld-link.com"
+      - "C:/Users/MEKEW/AppData/Local/Programs/Microsoft VS Code/bin/lld-link.exe"
+      - "C:/Users/MEKEW/AppData/Local/Programs/Microsoft VS Code/bin/lld-link"
+      - "C:/Users/MEKEW/AppData/Local/Microsoft/WindowsApps/lld-link.com"
+      - "C:/Users/MEKEW/AppData/Local/Microsoft/WindowsApps/lld-link.exe"
+      - "C:/Users/MEKEW/AppData/Local/Microsoft/WindowsApps/lld-link"
+      - "C:/Users/MEKEW/AppData/Roaming/Composer/vendor/bin/lld-link.com"
+      - "C:/Users/MEKEW/AppData/Roaming/Composer/vendor/bin/lld-link.exe"
+      - "C:/Users/MEKEW/AppData/Roaming/Composer/vendor/bin/lld-link"
+      - "C:/Users/MEKEW/.dotnet/tools/lld-link.com"
+      - "C:/Users/MEKEW/.dotnet/tools/lld-link.exe"
+      - "C:/Users/MEKEW/.dotnet/tools/lld-link"
+      - "C:/Users/MEKEW/AppData/Local/GitHubDesktop/bin/lld-link.com"
+      - "C:/Users/MEKEW/AppData/Local/GitHubDesktop/bin/lld-link.exe"
+      - "C:/Users/MEKEW/AppData/Local/GitHubDesktop/bin/lld-link"
+      - "C:/flutter/bin/lld-link.com"
+      - "C:/flutter/bin/lld-link.exe"
+      - "C:/flutter/bin/lld-link"
+      - "C:/Users/MEKEW/AppData/Local/Programs/Antigravity/bin/lld-link.com"
+      - "C:/Users/MEKEW/AppData/Local/Programs/Antigravity/bin/lld-link.exe"
+      - "C:/Users/MEKEW/AppData/Local/Programs/Antigravity/bin/lld-link"
+      - "C:/Users/MEKEW/AppData/Roaming/npm/lld-link.com"
+      - "C:/Users/MEKEW/AppData/Roaming/npm/lld-link.exe"
+      - "C:/Users/MEKEW/AppData/Roaming/npm/lld-link"
+      - "C:/Users/MEKEW/AppData/Local/Microsoft/WinGet/Links/lld-link.com"
+      - "C:/Users/MEKEW/AppData/Local/Microsoft/WinGet/Links/lld-link.exe"
+      - "C:/Users/MEKEW/AppData/Local/Microsoft/WinGet/Links/lld-link"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.17.10-hotspot\\bin"
+        - "C:\\Program Files\\Eclipse Foundation\\jre-8.0.302.8-hotspot\\bin"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath"
+        - "C:\\Program Files (x86)\\Common Files\\Intel\\Shared Libraries\\redist\\intel64\\compiler"
+        - "C:\\Program Files\\AdoptOpenJDK\\jdk-8.0.242.08-hotspot\\bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\Windows\\System32\\OpenSSH\\"
+        - "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common"
+        - "C:\\Program Files\\Intel\\WiFi\\bin\\"
+        - "C:\\Program Files\\Common Files\\Intel\\WirelessCommon\\"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\Program Files (x86)\\Microsoft SQL Server\\150\\DTS\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\Client SDK\\ODBC\\170\\Tools\\Binn\\"
+        - "C:\\Program Files (x86)\\Microsoft SQL Server\\150\\Tools\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\150\\Tools\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\150\\DTS\\Binn\\"
+        - "C:\\Program Files\\dotnet\\"
+        - "%SPARK_HOME\\bin%"
+        - "C:\\xamppv8.2.12\\php"
+        - "C:\\composer"
+        - "C:\\Program Files (x86)\\ZeroTier\\One\\"
+        - "C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
+        - "C:\\Program Files\\nodejs\\"
+        - "C:\\Program Files\\CMake\\bin"
+        - "C:\\Users\\MEKEW\\.cargo\\bin"
+        - "C:\\Program Files\\MySQL\\MySQL Shell 8.0\\bin\\"
+        - "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.17.10-hotspot\\bin"
+        - "C:\\Program Files\\Eclipse Foundation\\jre-8.0.302.8-hotspot\\bin"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath"
+        - "C:\\Program Files (x86)\\Common Files\\Intel\\Shared Libraries\\redist\\intel64\\compiler"
+        - "C:\\Program Files\\AdoptOpenJDK\\jdk-8.0.242.08-hotspot\\bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\Windows\\System32\\OpenSSH\\"
+        - "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common"
+        - "C:\\Program Files\\Intel\\WiFi\\bin\\"
+        - "C:\\Program Files\\Common Files\\Intel\\WirelessCommon\\"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\Program Files (x86)\\Microsoft SQL Server\\150\\DTS\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\Client SDK\\ODBC\\170\\Tools\\Binn\\"
+        - "C:\\Program Files (x86)\\Microsoft SQL Server\\150\\Tools\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\150\\Tools\\Binn\\"
+        - "C:\\Program Files\\Microsoft SQL Server\\150\\DTS\\Binn\\"
+        - "C:\\Program Files\\dotnet\\"
+        - "%SPARK_HOME\\bin%"
+        - "C:\\xamppv8.2.12\\php"
+        - "C:\\composer"
+        - "C:\\Program Files (x86)\\ZeroTier\\One\\"
+        - "C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
+        - "C:\\Program Files\\nodejs\\"
+        - "C:\\Program Files\\CMake\\bin"
+        - "C:\\Users\\MEKEW\\Desktop\\IdlixDownloader-master"
+        - "C:\\Users\\MEKEW\\anaconda3\\envs\\pyspark_env\\Scripts\\"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\MEKEW\\AppData\\Roaming\\Composer\\vendor\\bin"
+        - "C:\\Users\\MEKEW\\.dotnet\\tools"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\flutter\\bin"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\Programs\\Antigravity\\bin"
+        - "C:\\Users\\MEKEW\\AppData\\Roaming\\npm"
+        - "C:\\Users\\MEKEW\\AppData\\Local\\Microsoft\\WinGet\\Links"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files/audio_engine"
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:83 (try_compile)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-kkvcd3"
+      binary: "C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-kkvcd3"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /W3 /GR /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/MDd /Zi /Ob0 /Od /RTC1"
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-kkvcd3'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_255d9.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.14.23+b0019275e for .NET Framework
+        Build started 4/3/2026 4:27:26 AM.
+        
+        Project "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kkvcd3\\cmTC_255d9.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kkvcd3\\Debug\\".
+          Creating directory "cmTC_255d9.dir\\Debug\\cmTC_255d9.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_255d9.dir\\Debug\\cmTC_255d9.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_255d9.dir\\Debug\\cmTC_255d9.tlog\\unsuccessfulbuild".
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /GR /Fo"cmTC_255d9.dir\\Debug\\\\" /Fd"cmTC_255d9.dir\\Debug\\vc143.pdb" /external:W3 /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35219 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /GR /Fo"cmTC_255d9.dir\\Debug\\\\" /Fd"cmTC_255d9.dir\\Debug\\vc143.pdb" /external:W3 /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
+          CMakeCXXCompilerABI.cpp
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\link.exe /OUT:"C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kkvcd3\\Debug\\cmTC_255d9.exe" /INCREMENTAL /ILK:"cmTC_255d9.dir\\Debug\\cmTC_255d9.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-kkvcd3/Debug/cmTC_255d9.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/Users/MEKEW/source/repos/Simple_Music_Player_New_Gen/simple_music_player_2/cpp_audio_engine/build/CMakeFiles/CMakeScratch/TryCompile-kkvcd3/Debug/cmTC_255d9.lib" /MACHINE:X64  /machine:x64 cmTC_255d9.dir\\Debug\\CMakeCXXCompilerABI.obj
+          cmTC_255d9.vcxproj -> C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kkvcd3\\Debug\\cmTC_255d9.exe
+        FinalizeBuildStatus:
+          Deleting file "cmTC_255d9.dir\\Debug\\cmTC_255d9.tlog\\unsuccessfulbuild".
+          Touching "cmTC_255d9.dir\\Debug\\cmTC_255d9.tlog\\cmTC_255d9.lastbuildstate".
+        Done Building Project "C:\\Users\\MEKEW\\source\\repos\\Simple_Music_Player_New_Gen\\simple_music_player_2\\cpp_audio_engine\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kkvcd3\\cmTC_255d9.vcxproj" (default targets).
+        
+        Build succeeded.
+            0 Warning(s)
+            0 Error(s)
+        
+        Time Elapsed 00:00:00.85
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:253 (message)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        linker tool for 'CXX': C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/HostX64/x64/link.exe
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/Internal/CMakeDetermineLinkerId.cmake:38 (message)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:299 (cmake_determine_linker_id)"
+      - "C:/Program Files/CMake/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Running the CXX compiler's linker: "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/HostX64/x64/link.exe" "-v"
       Microsoft (R) Incremental Linker Version 14.44.35219.0
       Copyright (C) Microsoft Corporation.  All rights reserved.
 ...

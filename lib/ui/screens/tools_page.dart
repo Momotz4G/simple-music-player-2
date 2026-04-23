@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/library_provider.dart';
 import '../../providers/metadata_provider.dart';
-import '../../services/spotify_service.dart';
-import '../../services/hybrid_service.dart';
 import '../../models/song_model.dart';
 import '../components/smart_art.dart';
 import '../components/metadata_editor_panel.dart';
@@ -137,9 +135,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orangeAccent.withOpacity(0.1),
+                color: Colors.orangeAccent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orangeAccent.withOpacity(0.3)),
+                border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
               ),
               child: Text(
                 AppLocalizations.of(context)!.metadataEditorNote,
@@ -418,13 +416,13 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
             margin: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: metadataState.isSaving
-                  ? Colors.blue.withOpacity(0.1)
-                  : Colors.green.withOpacity(0.1),
+                  ? Colors.blue.withValues(alpha: 0.1)
+                  : Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                   color: metadataState.isSaving
-                      ? Colors.blue.withOpacity(0.3)
-                      : Colors.green.withOpacity(0.3)),
+                      ? Colors.blue.withValues(alpha: 0.3)
+                      : Colors.green.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,7 +463,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.edit_note,
-                          size: 64, color: Colors.grey.withOpacity(0.5)),
+                          size: 64, color: Colors.grey.withValues(alpha: 0.5)),
                       const SizedBox(height: 16),
                       Text(AppLocalizations.of(context)!.selectSongToEdit,
                           style: const TextStyle(color: Colors.grey)),
@@ -509,7 +507,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                           ? Icons.keyboard_arrow_down_rounded
                           : Icons.keyboard_arrow_right_rounded,
                       size: 18,
-                      color: text.withOpacity(0.7)),
+                      color: text.withValues(alpha: 0.7)),
                   const SizedBox(width: 8),
                   Text(title,
                       style: TextStyle(
@@ -550,7 +548,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
         : Colors.black;
     return ListTile(
       selected: isSelected,
-      selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
+      selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
       // ✅ FIX: Use SmartArt here
       leading: SmartArt(
         path: song.filePath,

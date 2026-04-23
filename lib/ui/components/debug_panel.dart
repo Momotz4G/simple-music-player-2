@@ -14,6 +14,8 @@ class DebugFloatingButton extends StatefulWidget {
 
 class _DebugFloatingButtonState extends State<DebugFloatingButton> {
   bool _isPanelOpen = false;
+  double _right = 24.0;
+  double _bottom = 140.0;
 
   @override
   Widget build(BuildContext context) {
@@ -25,20 +27,29 @@ class _DebugFloatingButtonState extends State<DebugFloatingButton> {
 
         // Floating Debug Button
         Positioned(
-          right: 16,
-          bottom: 130,
-          child: FloatingActionButton.small(
-            heroTag: 'debug_fab',
-            backgroundColor: Colors.orange.withOpacity(0.9),
-            onPressed: () {
+          right: _right,
+          bottom: _bottom,
+          child: GestureDetector(
+            onPanUpdate: (details) {
               setState(() {
-                _isPanelOpen = !_isPanelOpen;
+                final size = MediaQuery.of(context).size;
+                _right = (_right - details.delta.dx).clamp(0.0, size.width - 40.0);
+                _bottom = (_bottom - details.delta.dy).clamp(0.0, size.height - 40.0);
               });
             },
-            child: Icon(
-              _isPanelOpen ? Icons.close : Icons.bug_report,
-              color: Colors.white,
-              size: 20,
+            child: FloatingActionButton.small(
+              heroTag: 'debug_fab',
+              backgroundColor: Colors.orange.withValues(alpha: 0.9),
+              onPressed: () {
+                setState(() {
+                  _isPanelOpen = !_isPanelOpen;
+                });
+              },
+              child: Icon(
+                _isPanelOpen ? Icons.close : Icons.bug_report,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
           ),
         ),
@@ -169,12 +180,12 @@ class _DebugPanelState extends State<DebugPanel> {
     return Container(
       height: 300,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.95),
+        color: Colors.black.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.5), width: 1),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.5), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -186,7 +197,7 @@ class _DebugPanelState extends State<DebugPanel> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.2),
+              color: Colors.orange.withValues(alpha: 0.2),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(11)),
             ),
@@ -284,7 +295,7 @@ class _DebugPanelState extends State<DebugPanel> {
                           right: 16,
                           bottom: 16,
                           child: FloatingActionButton.small(
-                            backgroundColor: Colors.orange.withOpacity(0.9),
+                            backgroundColor: Colors.orange.withValues(alpha: 0.9),
                             onPressed: _scrollToBottom,
                             child: const Icon(Icons.arrow_downward,
                                 color: Colors.white, size: 16),
@@ -298,7 +309,7 @@ class _DebugPanelState extends State<DebugPanel> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
+              color: Colors.orange.withValues(alpha: 0.1),
               borderRadius:
                   const BorderRadius.vertical(bottom: Radius.circular(11)),
             ),
@@ -312,7 +323,7 @@ class _DebugPanelState extends State<DebugPanel> {
                 Text(
                   'BlueStacks Debug Mode',
                   style: TextStyle(
-                    color: Colors.orange.withOpacity(0.5),
+                    color: Colors.orange.withValues(alpha: 0.5),
                     fontSize: 10,
                     fontStyle: FontStyle.italic,
                   ),
@@ -378,7 +389,7 @@ class _LogItemState extends State<_LogItem> {
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         decoration: BoxDecoration(
           color: _isExpanded
-              ? Colors.white.withOpacity(0.05)
+              ? Colors.white.withValues(alpha: 0.05)
               : null, // Highlight if expanded
           borderRadius: BorderRadius.circular(4),
         ),
@@ -391,7 +402,7 @@ class _LogItemState extends State<_LogItem> {
               child: Text(
                 widget.log.formattedTime,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   fontSize: 10,
                   fontFamily: 'monospace',
                 ),
@@ -428,7 +439,7 @@ class _LogItemState extends State<_LogItem> {
                       child: Text(
                         _isExpanded ? 'Tap to collapse' : 'Tap to expand',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                           fontSize: 9,
                           fontStyle: FontStyle.italic,
                         ),

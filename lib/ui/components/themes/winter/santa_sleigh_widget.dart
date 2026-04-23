@@ -83,8 +83,8 @@ class _SantaPainter extends CustomPainter {
         isDark ? const Color(0xFFC48A5A) : const Color(0xFF8B5A2B);
     final Color darkBrown = const Color(0xFF5C4033);
     final Color reinsColor = isDark
-        ? Colors.redAccent.withOpacity(0.5)
-        : Colors.red.withOpacity(0.8);
+        ? Colors.redAccent.withValues(alpha: 0.5)
+        : Colors.red.withValues(alpha: 0.8);
 
     canvas.save();
     // Translate canvas to the current X and Y origin for drawing everything relative
@@ -191,7 +191,7 @@ class _SantaPainter extends CustomPainter {
           ..color = Colors.red
           ..style = PaintingStyle.fill;
         final Paint glowPaint = Paint()
-          ..color = Colors.redAccent.withOpacity(0.6)
+          ..color = Colors.redAccent.withValues(alpha: 0.6)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
         canvas.drawCircle(const Offset(-52, -20), 4, glowPaint);
         canvas.drawCircle(const Offset(-52, -20), 3, redPaint);

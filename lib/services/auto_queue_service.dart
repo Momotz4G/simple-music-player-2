@@ -36,64 +36,44 @@ class AutoQueueService {
     _lastFetchTime = DateTime.now();
 
     try {
-      print(
-          "🔎 AutoQueue: Looking up IDs for '${currentSong.title}' by '${currentSong.artist}'");
-
       // Try to get Spotify track ID if not already present
       String? trackId = currentSong.spotifyId;
       String? artistId = currentSong.spotifyArtistId;
 
-      print("   - Cached trackId: $trackId");
-      print("   - Cached artistId: $artistId");
-
       // If we don't have spotify IDs, try to look them up
       if (trackId == null) {
-        print("🔍 AutoQueue: Looking up track ID...");
         trackId = await SpotifyService.getTrackId(
           currentSong.title,
           currentSong.artist,
         );
-        print("   - Found trackId: $trackId");
       }
 
       // If we still don't have track ID, try artist ID
       if (trackId == null && artistId == null) {
-        print("🔍 AutoQueue: Looking up artist ID...");
         artistId = await SpotifyService.getArtistId(
           artistName: currentSong.artist,
           trackTitle: currentSong.title,
         );
-        print("   - Found artistId: $artistId");
       }
 
       // If we still have no seeds, try a simpler search
       if (trackId == null && artistId == null) {
-        print("⚠️ AutoQueue: No IDs found, trying simple artist search...");
         // Try just artist name search
         artistId = await SpotifyService.getArtistId(
           artistName: currentSong.artist,
         );
-        print("   - Simple artist search result: $artistId");
       }
 
       // If STILL no seeds, we can't get recommendations
       if (trackId == null && artistId == null) {
-        print("❌ AutoQueue: Could not find any Spotify IDs for seeding");
         return [];
       }
 
-      print(
-          "🎯 AutoQueue: Fetching recommendations with trackId=$trackId, artistId=$artistId");
-
-      List<SongMetadata> recommendations =
-          await SpotifyService.getRecommendations(
+      List<SongMetadata> recommendations = await SpotifyService.getRecommendations(
         seedTracks: trackId != null ? [trackId] : null,
         seedArtists: artistId != null ? [artistId] : null,
         limit: 20,
       );
-
-      print(
-          "📥 AutoQueue: Received ${recommendations.length} raw recommendations");
 
       // Filter out recently recommended songs
       recommendations = recommendations.where((meta) {
@@ -124,10 +104,6 @@ class AutoQueueService {
       print(
           "✅ AutoQueue: Got ${songs.length} recommendations for '${currentSong.title}'");
       return songs;
-    } catch (e, stack) {
-      print("❌ AutoQueue Error: $e");
-      print("   Stack: $stack");
-      return [];
     } finally {
       _isFetching = false;
     }
@@ -156,7 +132,7 @@ class AutoQueueService {
   /// Reset the recommendation cache (call when starting new playlist)
   void resetCache() {
     _recentlyRecommended.clear();
-    print("🔄 AutoQueue: Cache cleared");
+    // print("🔄 AutoQueue: Cache cleared");
   }
 
   /// Check if we should fetch more recommendations

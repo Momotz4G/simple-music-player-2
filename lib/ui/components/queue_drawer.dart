@@ -24,19 +24,11 @@ class QueueDrawer extends ConsumerWidget {
 
     List<SongModel> upNextFromLibrary = [];
 
-    if (currentSong != null && playlist.isNotEmpty) {
-      int currentIndex =
-          playlist.indexWhere((s) => s.filePath == currentSong.filePath);
-      
-      if (currentIndex == -1) {
-        // Fallback for when filePath is changed by JIT streaming/caching
-        currentIndex =
-            playlist.indexWhere((s) => s.title == currentSong.title);
-      }
-
+    if (playlist.isNotEmpty) {
+      int currentIndex = notifier.currentPlaylistIndex;
       final bool isLoopAll = playerState.loopMode == ja.LoopMode.all;
 
-      if (currentIndex != -1) {
+      if (currentIndex >= 0 && currentIndex < playlist.length) {
         final int fullPlaylistLength = playlist.length;
         // No limit needed with Slivers! It handles thousands easily.
         final int itemsToDisplay = fullPlaylistLength;
@@ -50,7 +42,7 @@ class QueueDrawer extends ConsumerWidget {
             break;
           }
 
-          if (playlist[nextIndex].filePath != currentSong.filePath) {
+          if (playlist[nextIndex].filePath != currentSong?.filePath) {
             upNextFromLibrary.add(playlist[nextIndex]);
           }
         }
@@ -170,7 +162,7 @@ class QueueDrawer extends ConsumerWidget {
                         ),
                       ],
 
-                      // 3. FROM LIBRARY (Context Queue - Reorderable Sliver)
+                      // 3. FROM LIBRARY / PLAYING FROM (Remote)
                       if (upNextFromLibrary.isNotEmpty) ...[
                         SliverToBoxAdapter(
                           child: Padding(

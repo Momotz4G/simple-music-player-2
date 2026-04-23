@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:metadata_god/metadata_god.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:window_manager/window_manager.dart';
@@ -106,14 +106,12 @@ Future<void> main() async {
   // These settings only apply when media_kit is the active backend (Windows/Linux/macOS).
   // On Android/iOS, just_audio uses the native ExoPlayer backend which handles buffering internally.
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-    JustAudioMediaKit.bufferSize = 128 * 1024 * 1024; // 128MB Cache
-    JustAudioMediaKit.demuxerMaxBackBytes =
-        64 * 1024 * 1024; // 64MB Back buffer
-    JustAudioMediaKit.demuxerReadaheadSecs = 30.0; // 30 seconds readahead (Up from 15)
-    JustAudioMediaKit.audioBuffer = 5.0; // 5 seconds audio buffer (Up from 2)
-    JustAudioMediaKit.audioPitchCorrection = false; // Save CPU for DSD
-    JustAudioMediaKit.audioResampleMaxOutputSampleRate =
-        192000; // Cap to 192kHz if hardware/CPU is struggling
+    JustAudioMediaKit.bufferSize = 512 * 1024; // 0.5MB (Minimum to avoid lavf cache errors)
+    JustAudioMediaKit.demuxerMaxBackBytes = 512 * 1024; 
+    JustAudioMediaKit.demuxerReadaheadSecs = 10.0; 
+    JustAudioMediaKit.audioBuffer = 1.0; 
+    JustAudioMediaKit.audioPitchCorrection = false; 
+    JustAudioMediaKit.audioResampleMaxOutputSampleRate = 192000; 
   }
   // 🚀 FIX: Do NOT pass android: true — this would replace the native ExoPlayer
   // backend with media_kit (FFmpeg/mpv), which causes playback hangs on Android.
@@ -189,10 +187,9 @@ Future<void> main() async {
   }
 
   // 3. Load Environment Variables
-  // dotEnvFuture = dotenv.load(fileName: ".env").catchError((e) {
-  //   print(
-  //       "Warning: .env file not found or failed to load. Using fallback values.");
-  // });
+  await dotenv.load(fileName: ".env").catchError((e) {
+    debugPrint("Warning: .env file not found or failed to load. Using fallback values.");
+  });
 
   debugPrint("🚀 [Main] FLUTTER RUNAPP STARTING");
   runApp(
@@ -232,26 +229,33 @@ class MyApp extends ConsumerWidget {
         final settings = ref.watch(settingsProvider);
         final accentColor = settings.accentColor;
 
-        // Legacy Provider Bridge (for LibraryPage)
-        final libInstance = ref.watch(libraryProvider);
-
         // Force initialize Data Usage Singleton pointers
         ref.read(dataUsageProvider);
 
-        return p.MultiProvider(
-          providers: [
-            p.ChangeNotifierProvider.value(value: libInstance),
-          ],
-          child: MaterialApp(
-            title: 'Music Player',
-            debugShowCheckedModeBanner: false,
-            themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            theme: AppTheme.lightTheme(accentColor),
-            darkTheme: AppTheme.darkTheme(accentColor),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            locale: Locale(settings.appLocale),
-            home: const MainShell(),
+        return MaterialApp(
+          title: 'Music Player',
+          debugShowCheckedModeBanner: false,
+          themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          theme: AppTheme.lightTheme(accentColor),
+          darkTheme: AppTheme.darkTheme(accentColor),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: Locale(settings.appLocale),
+          // 🚀 FIX: Use ref.read() instead of ref.watch() for the legacy provider bridge.
+          // ref.watch() here was rebuilding the ENTIRE MainShell (2000+ line widget)
+          // on every libraryProvider.notifyListeners() — including every search keystroke.
+          // The legacy bridge only needs the instance reference; reactive updates
+          // are handled by Riverpod's own ref.watch() in individual widgets.
+          home: Consumer(
+            builder: (context, dynamicRef, _) {
+              final libInstance = dynamicRef.read(libraryProvider);
+              return p.MultiProvider(
+                providers: [
+                  p.ChangeNotifierProvider.value(value: libInstance),
+                ],
+                child: const MainShell(),
+              );
+            },
           ),
         );
         // }

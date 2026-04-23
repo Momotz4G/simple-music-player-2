@@ -58,6 +58,8 @@
 	<key>NSAppleMusicUsageDescription</key>
 	<string>We need access to your music library to play local songs.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Used to save album art images.</string>
+	<string>Used to set and save profile pictures and album art.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to take a new profile photo.</string>
 </dict>
 </plist>

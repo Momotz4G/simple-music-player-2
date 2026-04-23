@@ -3,7 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:metadata_god/metadata_god.dart';
+import 'package:metadata_god/metadata_god.dart' show Metadata, Picture;
+import '../services/metadata_service.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -305,8 +306,8 @@ class SmartDownloadService {
         }
       }
 
-      await MetadataGod.writeMetadata(
-        file: filePath,
+      await MetadataService().writeMetadata(
+        filePath: filePath,
         metadata: Metadata(
           title: metadata.title,
           artist: metadata.artist,
@@ -575,6 +576,7 @@ class SmartDownloadService {
       onProgress: (_) {}, // No UI progress for background preload
       onComplete: (success) => completer.complete(success),
       audioFormat: audioFormat,
+      isQuiet: true, // 🚀 Crucial: Prevents Win32 IPC buffer overflow crashing TaskRunner
     );
 
     final success = await completer.future;

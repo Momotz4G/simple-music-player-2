@@ -31,7 +31,7 @@ class AlbumModel {
       releaseDate: json['release_date'] ?? "",
     );
   }
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'title': title,
@@ -39,5 +39,15 @@ class AlbumModel {
       'imageUrl': imageUrl,
       'releaseDate': releaseDate,
     };
+  }
+
+  factory AlbumModel.fromMap(Map<String, dynamic> map) {
+    return AlbumModel(
+      id: map['id'] ?? "",
+      title: map['title'] ?? "",
+      artist: map['artist'] ?? "",
+      imageUrl: map['imageUrl'] ?? "",
+      releaseDate: map['releaseDate'] ?? "",
+    );
   }
 }

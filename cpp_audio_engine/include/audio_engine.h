@@ -17,8 +17,10 @@ extern "C" {
 typedef void* AudioHandle;
 
 ENGINE_API AudioHandle Engine_Create(void);
+ENGINE_API void Engine_SetOutputDevice(AudioHandle handle, const char* deviceId);
 ENGINE_API void Engine_Dispose(AudioHandle handle);
-ENGINE_API bool Engine_PlayFile(AudioHandle handle, const char* filepath);
+ENGINE_API void Engine_ReleaseDevice(AudioHandle handle);
+ENGINE_API bool Engine_PlayFile(AudioHandle handle, const char* filepath, bool bit_perfect);
 ENGINE_API void Engine_Play(AudioHandle handle);
 ENGINE_API void Engine_Pause(AudioHandle handle);
 ENGINE_API void Engine_Stop(AudioHandle handle);

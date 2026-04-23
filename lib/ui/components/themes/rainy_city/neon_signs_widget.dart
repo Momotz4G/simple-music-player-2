@@ -47,7 +47,7 @@ class _NeonSignsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final wirePaint = Paint()
-      ..color = Colors.black.withOpacity(0.6)
+      ..color = Colors.black.withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -82,11 +82,11 @@ class _NeonSignsPainter extends CustomPainter {
     final double opacity = isOff ? 0.1 : flicker;
 
     final glowPaint = Paint()
-      ..color = color.withOpacity(opacity * 0.4)
+      ..color = color.withValues(alpha: opacity * 0.4)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10.0);
 
     final textStyle = TextStyle(
-      color: color.withOpacity(opacity),
+      color: color.withValues(alpha: opacity),
       fontSize: 14,
       fontWeight: FontWeight.bold,
       fontFamily: 'monospace', // Gives it a blocky feel
@@ -114,7 +114,7 @@ class _NeonSignsPainter extends CustomPainter {
 
     // Vertical "hangers" for sign
     final hangerPaint = Paint()
-      ..color = Colors.black.withOpacity(0.4)
+      ..color = Colors.black.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     canvas.drawLine(pos.translate(5, -10), pos.translate(5, 0), hangerPaint);

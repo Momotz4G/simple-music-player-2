@@ -1,7 +1,7 @@
 name: simple_music_player_2
 description: "A new modern Flutter music player."
 publish_to: 'none'
-version: 2.5.5+1
+version: 2.6.0+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -49,6 +49,7 @@ dependencies:
   palette_generator: ^0.3.3
   bitsdojo_window: ^0.1.5
   window_manager: ^0.3.9
+  tray_manager: ^0.2.3
 
   # Shareable Card for stats
   screenshot: ^3.0.0
@@ -72,6 +73,9 @@ dependencies:
   # Utilities
   uuid: ^4.3.3
   ffi: ^2.1.0
+  logging: ^1.2.0
+  rxdart: ^0.27.7
+  audio_session: ^0.1.18
 
   # Databases
   isar: ^3.1.0+1
@@ -95,6 +99,8 @@ dependencies:
   open_filex: ^4.4.0  # For auto-installing APK updates
   flutter_inappwebview: ^6.1.5
   url_launcher: ^6.3.2
+  file_selector: ^1.1.0
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:
@@ -128,3 +134,4 @@ flutter:
   assets:
     - assets/
     - assets/binaries/
+    - assets/avatars/

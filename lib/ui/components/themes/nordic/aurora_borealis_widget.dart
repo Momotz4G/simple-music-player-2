@@ -70,9 +70,9 @@ class _AuroraPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          auroraColor.withOpacity(0.0),
-          auroraColor.withOpacity(baseOpacity),
-          auroraColor.withOpacity(0.0),
+          auroraColor.withValues(alpha: 0.0),
+          auroraColor.withValues(alpha: baseOpacity),
+          auroraColor.withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.4))
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);

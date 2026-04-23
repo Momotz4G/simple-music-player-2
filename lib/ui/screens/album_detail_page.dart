@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:palette_generator/palette_generator.dart';
-import 'package:metadata_god/metadata_god.dart';
+import '../../services/metadata_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/album_model.dart';
 
@@ -144,7 +144,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
         final file = File(firstSong.filePath);
         if (await file.exists()) {
           final metadata =
-              await MetadataGod.readMetadata(file: firstSong.filePath);
+              await MetadataService().readMetadata(firstSong.filePath);
           if (metadata.picture != null) {
             if (mounted) {
               setState(() {

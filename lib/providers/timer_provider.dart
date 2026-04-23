@@ -17,6 +17,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
 
   void startTimer(Duration duration) {
     _cancel(); // Stop any existing timer
+    _ref.read(playerProvider.notifier).setSleepPending(false);
     state = TimerState(isActive: true, remaining: duration);
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -25,24 +26,22 @@ class TimerNotifier extends StateNotifier<TimerState> {
       if (newRemaining.inSeconds <= 0) {
         // --- TIME'S UP LOGIC ---
 
-        // 1. Get the current Player State
-        final playerState = _ref.read(playerProvider);
+        // 1. Mark player as sleep pending so it will fade out at end of track
+        _ref.read(playerProvider.notifier).setSleepPending(true);
 
-        // 2. Only toggle if it is CURRENTLY PLAYING
-        if (playerState.isPlaying) {
-          _ref.read(playerProvider.notifier).togglePlay();
-        }
-
-        // 3. Reset Timer
-        cancelTimer();
+        // 2. Reset TimerUI
+        cancelTimer(resetSleepPending: false);
       } else {
         state = TimerState(isActive: true, remaining: newRemaining);
       }
     });
   }
 
-  void cancelTimer() {
+  void cancelTimer({bool resetSleepPending = true}) {
     _cancel();
+    if (resetSleepPending) {
+      _ref.read(playerProvider.notifier).setSleepPending(false);
+    }
     state = TimerState(isActive: false, remaining: Duration.zero);
   }
 

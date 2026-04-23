@@ -244,7 +244,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                       content: _buildStateText(
                         (_bitPerfectEnabled || isExclusive) && !eq.isEnabled
                             ? "Disabled (Bit-Perfect)"
-                            : "Disabled",
+                            : l10n.stateDisabled,
                         l10n,
                       ),
                     ),
@@ -253,14 +253,14 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                       iconColor: eq.isEnabled ? Colors.green : Colors.grey,
                       title: l10n.eqLabel,
                       isActive: eq.isEnabled,
-                      content: _buildStateText(eq.isEnabled ? "Enabled" : "Disabled", l10n),
+                      content: _buildStateText(eq.isEnabled ? l10n.stateEnabled : l10n.stateDisabled, l10n),
                     ),
                     _buildNode(
                       icon: Icons.graphic_eq,
                       iconColor: Colors.grey,
                       title: l10n.dspLabel,
                       isActive: false,
-                      content: _buildStateText("Disabled", l10n),
+                      content: _buildStateText(l10n.stateDisabled, l10n),
                     ),
 
                     // Android Mixer node (only show on Android)
