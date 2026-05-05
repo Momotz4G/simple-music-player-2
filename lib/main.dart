@@ -22,6 +22,7 @@ import 'ui/screens/main_shell.dart';
 import 'services/metrics_service.dart';
 import 'services/db_service.dart';
 import 'services/youtube_downloader_service.dart';
+import 'services/pocketbase_service.dart';
 import 'l10n/app_localizations.dart';
 
 // late final Future<void> dotEnvFuture;
@@ -29,20 +30,67 @@ import 'l10n/app_localizations.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 0. Load SharedPreferences FIRST
+  final prefs = await SharedPreferences.getInstance();
+  final isOfflineMode = prefs.getBool('isOfflineMode') ?? false;
+  PocketBaseService.isOffline = isOfflineMode;
+
   // 1. Initialize Utilities
   try {
-    await MetadataGod.initialize();
+    await MetadataGod.initialize().timeout(const Duration(seconds: 3));
   } catch (e) {
-    debugPrint("⚠️ MetadataGod Init Failed: $e");
+    debugPrint("⚠️ MetadataGod failed: $e");
   }
 
-  final prefs = await SharedPreferences.getInstance();
+  // 🎵 Initialize MediaKit audio backend
+  try {
+    if (Platform.isWindows) {
+      final wasapiExclusive = prefs.getBool('wasapiExclusive') ?? false;
+      if (wasapiExclusive) {
+        JustAudioMediaKit.audioExclusive = true;
+        debugPrint("🎵 [Main] WASAPI Exclusive Mode ENABLED");
+      }
+
+      // Restore saved audio device (with validation)
+      final audioDeviceId = prefs.getString('audioDeviceId');
+      if (audioDeviceId != null) {
+        try {
+          final devices = await JustAudioMediaKit.listAudioDevices();
+          final exists = devices.any((d) => d['name'] == audioDeviceId);
+          if (exists) {
+            JustAudioMediaKit.audioDeviceId = audioDeviceId;
+            debugPrint("🎵 [Main] Audio Device Override: $audioDeviceId");
+          } else {
+            debugPrint("⚠️ [Main] Saved audio device '$audioDeviceId' not found. Falling back to default.");
+            await prefs.remove('audioDeviceId');
+            JustAudioMediaKit.audioDeviceId = null;
+          }
+        } catch (e) {
+          debugPrint("⚠️ [Main] Error validating audio device: $e");
+        }
+      }
+    }
+
+    // 🚀 Optimize for DSD/Hi-Res (Desktop only - media_kit backend)
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      JustAudioMediaKit.bufferSize = 512 * 1024; // 0.5MB
+      JustAudioMediaKit.demuxerMaxBackBytes = 512 * 1024;
+      JustAudioMediaKit.demuxerReadaheadSecs = 10.0;
+      JustAudioMediaKit.audioBuffer = 1.0;
+      JustAudioMediaKit.audioPitchCorrection = false;
+      JustAudioMediaKit.audioResampleMaxOutputSampleRate = 192000;
+    }
+
+    // Do NOT pass android: true — native ExoPlayer handles Android playback.
+    // DSD on Android is handled via USB Audio bypass separately.
+    JustAudioMediaKit.ensureInitialized(macOS: true);
+  } catch (e) {
+    debugPrint("⚠️ Audio Backend failed: $e");
+  }
+
   final autoClearCache = prefs.getString('autoClearCache') ?? 'disabled';
   if (autoClearCache == 'after_24h' || autoClearCache == 'after_7d' || autoClearCache == 'on_close') {
     if (autoClearCache == 'on_close') {
-      // Swipe-kills prevent code from running during AppLifecycleState.detached.
-      // So if set to "on close", we just unconditionally clear it on the NEXT startup.
-      debugPrint("🧹 Auto Clear Cache triggered on startup (Mode: on_close)");
       await YoutubeDownloaderService().clearCache();
     } else {
       final lastClearStr = prefs.getString('lastCacheClearTimestamp');
@@ -52,74 +100,20 @@ Future<void> main() async {
           final now = DateTime.now();
           final hoursDiff = now.difference(lastClear).inHours;
           final shouldClear = (autoClearCache == 'after_24h' && hoursDiff >= 24) ||
-              (autoClearCache == 'after_7d' && hoursDiff >= 168); // 7 * 24 = 168
+              (autoClearCache == 'after_7d' && hoursDiff >= 168);
 
           if (shouldClear) {
-            debugPrint("🧹 Auto Clear Cache triggered (Mode: $autoClearCache)");
             await YoutubeDownloaderService().clearCache();
             await prefs.setString('lastCacheClearTimestamp', now.toIso8601String());
           }
         }
       } else {
-        // First time running with this setting
         await prefs.setString('lastCacheClearTimestamp', DateTime.now().toIso8601String());
       }
     }
   }
 
-  // 🎵 Initialize MediaKit audio backend for Windows/Linux
-  // Read WASAPI exclusive setting from SharedPreferences (must be done before AudioPlayer is created)
-  if (Platform.isWindows) {
-    final wasapiExclusive = prefs.getBool('wasapiExclusive') ?? false;
-    if (wasapiExclusive) {
-      JustAudioMediaKit.audioExclusive = true;
-      debugPrint("🎵 [Main] WASAPI Exclusive Mode ENABLED");
-    } else {
-      debugPrint("🎵 [Main] WASAPI Exclusive Mode DISABLED (default)");
-    }
-
-    final audioDeviceId = prefs.getString('audioDeviceId');
-    if (audioDeviceId != null) {
-      // 🚀 JustAudioMediaKit.audioDeviceId = audioDeviceId;
-      // 🚀 SANITY CHECK: Verify the device still exists before applying it
-      () async {
-        try {
-          final devices = await JustAudioMediaKit.listAudioDevices();
-          final exists = devices.any((d) => d['name'] == audioDeviceId);
-
-          if (exists) {
-            JustAudioMediaKit.audioDeviceId = audioDeviceId;
-            debugPrint("🎵 [Main] Audio Device Override: $audioDeviceId");
-          } else {
-            debugPrint(
-                "⚠️ [Main] Saved audio device '$audioDeviceId' not found. Falling back to default.");
-            await prefs.remove('audioDeviceId');
-            JustAudioMediaKit.audioDeviceId = null;
-          }
-        } catch (e) {
-          debugPrint("⚠️ [Main] Error validating audio device: $e");
-        }
-      }();
-    }
-  }
-  // 🚀 OPTIMIZE FOR DSD/HI-RES (Desktop Only - media_kit backend)
-  // These settings only apply when media_kit is the active backend (Windows/Linux/macOS).
-  // On Android/iOS, just_audio uses the native ExoPlayer backend which handles buffering internally.
-  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-    JustAudioMediaKit.bufferSize = 512 * 1024; // 0.5MB (Minimum to avoid lavf cache errors)
-    JustAudioMediaKit.demuxerMaxBackBytes = 512 * 1024; 
-    JustAudioMediaKit.demuxerReadaheadSecs = 10.0; 
-    JustAudioMediaKit.audioBuffer = 1.0; 
-    JustAudioMediaKit.audioPitchCorrection = false; 
-    JustAudioMediaKit.audioResampleMaxOutputSampleRate = 192000; 
-  }
-  // 🚀 FIX: Do NOT pass android: true — this would replace the native ExoPlayer
-  // backend with media_kit (FFmpeg/mpv), which causes playback hangs on Android.
-  // DSD on Android is handled separately via USB Audio bypass.
-  JustAudioMediaKit.ensureInitialized(macOS: true);
-
   // 🚀 LOGGING SYSTEM BRIDGE
-  // Connect hierarchical 'logging' package (used by MediaKit fork) to our internal DebugLogService
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) {
     final service = DebugLogService();
@@ -134,23 +128,14 @@ Future<void> main() async {
     }
   });
 
-  DebugLogService().info("🚀 App Lifecycle Start");
-
-  // Initialize Analytics (Startup)
-  // 🚀 Reduced timeout for faster offline startup
+  // Initialize Analytics
   try {
-    await MetricsService().init().timeout(const Duration(seconds: 5),
-        onTimeout: () {
-      debugPrint("⚠️ MetricsService init timed out in main");
-    });
+    await MetricsService().init().timeout(const Duration(seconds: 3));
   } catch (e) {
     debugPrint("⚠️ Critical Metrics Init Error: $e");
   }
 
-  debugPrint("🚀 [Main] Metrics Init Done");
-
-  // SYNC LOCAL STATS (Non-blocking for faster startup)
-  // 🚀 Run in background without awaiting to prevent startup delay
+  // SYNC LOCAL STATS
   () async {
     try {
       final dbService = DBService();
@@ -160,38 +145,49 @@ Future<void> main() async {
       if (totalPlays > 0) {
         await MetricsService()
             .syncLocalStats(totalPlays)
-            .timeout(const Duration(seconds: 5), onTimeout: () {
-          debugPrint("⚠️ syncLocalStats timed out - skipping cloud sync");
-        });
-        debugPrint("✅ Startup: Synced $totalPlays local plays to cloud.");
+            .timeout(const Duration(seconds: 5));
       }
     } catch (e) {
       debugPrint("⚠️ Startup Sync Warning: $e");
     }
-  }(); // Fire-and-forget - don't block startup
+  }();
 
-
-  // 2. Initialize Window Manager (Required for Full Screen toggle or Desktop)
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    await windowManager.ensureInitialized();
+  // 2. Initialize Window Manager
+  try {
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      await windowManager.ensureInitialized().timeout(const Duration(seconds: 2));
+      const windowOptions = WindowOptions(
+        size: Size(1280, 800),
+        center: true,
+        backgroundColor: Colors.transparent,
+        skipTaskbar: false,
+        titleBarStyle: TitleBarStyle.hidden,
+      );
+      await windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      });
+    }
+  } catch (e) {
+    debugPrint("⚠️ WindowManager failed: $e");
   }
 
   // Initialize SMTC
-  if (Platform.isWindows) {
-    try {
-      await SMTCWindows.initialize();
-      debugPrint("🚀 [Main] SMTC Initialized");
-    } catch (e) {
-      debugPrint("Failed to initialize SMTC: $e");
+  try {
+    if (Platform.isWindows) {
+      await SMTCWindows.initialize().timeout(const Duration(seconds: 3));
     }
+  } catch (e) {
+    debugPrint("⚠️ SMTC failed: $e");
   }
 
   // 3. Load Environment Variables
-  await dotenv.load(fileName: ".env").catchError((e) {
-    debugPrint("Warning: .env file not found or failed to load. Using fallback values.");
-  });
+  try {
+    await dotenv.load(fileName: ".env").timeout(const Duration(seconds: 2));
+  } catch (e) {
+    debugPrint("⚠️ DotEnv failed: $e");
+  }
 
-  debugPrint("🚀 [Main] FLUTTER RUNAPP STARTING");
   runApp(
     ProviderScope(
       overrides: [
@@ -202,14 +198,12 @@ Future<void> main() async {
   );
 
   // 4. Configure Custom Window (BitsDojo)
-  // 4. Configure Custom Window (BitsDojo)
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     doWhenWindowReady(() {
       const initialSize = Size(1280, 800);
       appWindow.minSize = const Size(800, 600);
       appWindow.size = initialSize;
       appWindow.alignment = Alignment.center;
-      appWindow.title = "Simple Music Player";
       appWindow.title = "Simple Music Player";
       appWindow.show();
       debugPrint("🚀 [Main] BitsDojo Window Shown");

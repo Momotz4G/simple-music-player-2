@@ -34,8 +34,10 @@ class RemoteControlService {
 
     if (_userId != null) {
       DebugLogService().info("📡 Remote: Active for User: $_userId, Device: $_deviceName");
-      // Start Heartbeat
-      registerHeartbeat();
+      // Start Heartbeat only if online and enabled
+      if (!PocketBaseService.isOffline && PocketBaseService.enableRemoteControl) {
+        registerHeartbeat();
+      }
     } else {
       DebugLogService().error("📡 Remote Error: No user ID provided. Discovery disabled.");
     }
@@ -58,6 +60,8 @@ class RemoteControlService {
   // Start listening for commands
   Future<void> startListening(
       {required Function(String action, dynamic value) onCommand}) async {
+    
+    if (PocketBaseService.isOffline || !PocketBaseService.enableRemoteControl) return; // 🔒 OFFLINE or Remote Disabled
     
     // 0. FETCH INITIAL STATE IMMEDIATELY
     final initialSession = await PocketBaseService().getSessionData();
@@ -225,6 +229,7 @@ class RemoteControlService {
   Timer? _heartbeatTimer;
 
   void registerHeartbeat() {
+    if (PocketBaseService.isOffline || !PocketBaseService.enableRemoteControl) return; // 🔒 OFFLINE or Disabled
     _heartbeatTimer?.cancel();
     // Immediate heartbeat
     _updateDeviceListInSession();
@@ -235,6 +240,7 @@ class RemoteControlService {
   }
 
   Future<void> _updateDeviceListInSession() async {
+    if (PocketBaseService.isOffline) return; // 🔒 OFFLINE MODE
     if (_userId == null || _deviceId == null || _deviceName == null) return;
 
     try {
@@ -344,6 +350,7 @@ class RemoteControlService {
     Map<String, dynamic>? albumDetails,
     bool forceActive = false,
   }) async {
+    if (PocketBaseService.isOffline || !PocketBaseService.enableRemoteControl) return; // 🔒 OFFLINE or Remote Disabled
     if (_userId == null || _deviceId == null) return;
 
     final data = <String, dynamic>{};
@@ -398,6 +405,7 @@ class RemoteControlService {
   // --- COMMAND HANDLING ---
 
   Future<void> sendCommand(String action, {dynamic payload}) async {
+    if (PocketBaseService.isOffline || !PocketBaseService.enableRemoteControl) return; // 🔒 OFFLINE or Remote Disabled
     if (_userId == null) return;
     
     final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -412,6 +420,7 @@ class RemoteControlService {
 
   // Broadcast Search Results (Party Mode)
   void updateSearchResults(dynamic results) {
+    if (PocketBaseService.isOffline) return; // 🔒 OFFLINE MODE
     if (_userId == null) return;
 
     PocketBaseService().updateSession({

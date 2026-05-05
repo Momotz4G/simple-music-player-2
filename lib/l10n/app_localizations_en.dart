@@ -2378,4 +2378,283 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'A new version of yt-dlp is available.';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
+
+  @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get offlineModeHeader => 'OFFLINE MODE';
+
+  @override
+  String get offlineModeTitle => 'Offline Mode';
+
+  @override
+  String get offlineModeActive => 'ACTIVE';
+
+  @override
+  String get offlineModeEnabledStatus => 'Offline Mode Enabled';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'Disabled ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => 'All Enabled';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'Network lockdown active. Stats are saved locally.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'Disable all network services and play local library only.';
+
+  @override
+  String get enableOfflineModeQuestion => 'Enable Offline Mode?';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'This will completely disable all network communication. The following features will be turned off:';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'Your stats will sync automatically when you turn this off.';
+
+  @override
+  String get enableOfflineModeBtn => 'Enable Offline Mode';
+
+  @override
+  String get onlineModeRestored => 'Online mode restored. Syncing stats...';
+
+  @override
+  String get disableServicesTitle => 'Disable Services';
+
+  @override
+  String get manageIndividualFeatures => 'Manage individual online features';
+
+  @override
+  String get featureCloudSync => 'Cloud Stats Sync';
+
+  @override
+  String get featureCloudSyncDesc => 'Listening stats saved locally only';
+
+  @override
+  String get featureCloudSyncLongDesc =>
+      'Sync listening metrics with PocketBase';
+
+  @override
+  String get featureLeaderboard => 'Global Leaderboard';
+
+  @override
+  String get featureLeaderboardDesc => 'Rank updates paused';
+
+  @override
+  String get featureLeaderboardLongDesc => 'Show and update your rank publicly';
+
+  @override
+  String get featureOnlineLyrics => 'Online Lyrics Search';
+
+  @override
+  String get featureOnlineLyricsDesc => 'Only local .lrc/.ttml files';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'Fetch lyrics from LRCLIB/Spotify';
+
+  @override
+  String get featureAiLyrics => 'AI Lyrics Generator';
+
+  @override
+  String get featureAiLyricsDesc => 'Automatic synchronized lyrics disabled';
+
+  @override
+  String get featureAiLyricsLongDesc => 'Generate synchronized lyrics via AI';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'Background videos disabled';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'Background videos for tracks';
+
+  @override
+  String get featureOnlineSearch => 'Online Search';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube search disabled';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'Spotify and YouTube remote search';
+
+  @override
+  String get featureConnectDevice => 'Connect to a Device';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'Remote control & Listening parties disabled';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'Remote control and listening parties';
+
+  @override
+  String get lyricsEditorTitle => 'Lyrics Editor';
+
+  @override
+  String get clearAllQuestion => 'Clear All?';
+
+  @override
+  String get clearAllDesc =>
+      'This will clear the current editor state. It will NOT delete your local files unless you Save afterwards.';
+
+  @override
+  String get clearBtn => 'Clear';
+
+  @override
+  String get lyricsApplied => 'Lyrics applied to panel!';
+
+  @override
+  String get chooseFormat => 'Choose your preferred format:';
+
+  @override
+  String get lrcFormat => 'LRC (Standard Synced)';
+
+  @override
+  String get lrcFormatDesc => 'Universal format, works everywhere.';
+
+  @override
+  String get ttmlFormat => 'TTML (High Precision)';
+
+  @override
+  String get ttmlFormatDesc => 'Better for AI generation & detailed sync.';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'Saved to $extension file successfully!';
+  }
+
+  @override
+  String get failedToSave => 'Failed to save lyrics file.';
+
+  @override
+  String get generationFailed => 'Generation Failed';
+
+  @override
+  String get aiLyricsGenerationTitle => 'AI Lyrics Generation';
+
+  @override
+  String get syncedMode => 'Synced';
+
+  @override
+  String get plainMode => 'Plain';
+
+  @override
+  String get addLineToTop => 'Add to Top';
+
+  @override
+  String get addLineToEnd => 'Add to End';
+
+  @override
+  String get lyricTextHint => 'Lyric text...';
+
+  @override
+  String get insertAfter => 'Insert After';
+
+  @override
+  String get removeLine => 'Remove Line';
+
+  @override
+  String get romajiHint => 'Romaji / Transliteration (Optional)...';
+
+  @override
+  String get startLabel => 'Start: ';
+
+  @override
+  String get setStartTooltip => 'Set Start to Current Position';
+
+  @override
+  String get endLabel => 'End: ';
+
+  @override
+  String get setEndTooltip => 'Set End to Current Position';
+
+  @override
+  String get playFromLine => 'Play from this line';
+
+  @override
+  String get pasteLyricsHint => 'Paste your lyrics here...';
+
+  @override
+  String get applyBtn => 'Apply';
+
+  @override
+  String get saveLocallyBtn => 'Save Locally';
+
+  @override
+  String get editLyricsTooltip => 'Edit Lyrics';
+
+  @override
+  String get saveLyricsTitle => 'Save Lyrics';
+
+  @override
+  String get aiGenerate => 'AI Generate';
+
+  @override
+  String get aiLyricsInitializing => 'Initializing...';
+
+  @override
+  String get aiLyricsUploading => 'Uploading song to server...';
+
+  @override
+  String get aiLyricsUploadFailed => 'Error: Upload failed.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'Upload completed!';
+
+  @override
+  String get aiLyricsVerifying => 'Verify status server...';
+
+  @override
+  String get aiLyricsStatusOk => 'Status code 200 OK!';
+
+  @override
+  String get aiLyricsPolling => 'Getting Lyrics... Please be patient!';
+
+  @override
+  String get aiLyricsReceiving => 'Lyrics Received';
+
+  @override
+  String get aiLyricsParsing => 'Parsing Lyrics...';
+
+  @override
+  String get aiLyricsSuccess => 'Lyrics generated successful!';
+
+  @override
+  String get aiLyricsLocalFileMissing => 'Error: Local audio file not found.';
+
+  @override
+  String get aiLyricsComplete => 'Complete!';
 }

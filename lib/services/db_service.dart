@@ -59,43 +59,55 @@ class DBService {
   }
 
   // 2. Save Scanned Songs (The "Scanner" Logic)
-  // This is smart: It updates existing songs instead of duplicating them.
-  // 2. Save Scanned Songs (The "Scanner" Logic)
-  // This is smart: It updates existing songs instead of duplicating them.
+  // 🚀 PERF FIX: Pre-loads existing songs into a Map for O(1) lookup
+  // instead of N individual Isar filter queries per batch.
   Future<void> saveSongs(List<Song> newSongs) async {
     final isar = await db;
 
-    // Using a Transaction (Txn) ensures all data is saved safely at once.
     await isar.writeTxn(() async {
-      for (final newSong in newSongs) {
-        // 🚀 Canonicalize path for consistent matching (especially on Windows)
-        final canonicalPath = p.canonicalize(newSong.path);
-        newSong.path = canonicalPath;
+      // 🚀 Build canonical paths first
+      final List<String> canonicalPaths = [];
+      for (final song in newSongs) {
+        canonicalPaths.add(p.canonicalize(song.path));
+      }
 
-        // Check if this path already exists
-        final existingSong =
-            await isar.songs.filter().pathEqualTo(canonicalPath).findFirst();
-
-        if (existingSong != null) {
-          // UPDATE: Keep ID, update fields
-          existingSong.title = newSong.title;
-          existingSong.artist = newSong.artist;
-          existingSong.album = newSong.album;
-          existingSong.duration = newSong.duration;
-          existingSong.year = newSong.year;
-          existingSong.trackNumber = newSong.trackNumber;
-          existingSong.discNumber = newSong.discNumber;
-          existingSong.genre = newSong.genre;
-          // Note: We keep existingSong.path as it might have different casing
-          // but canonicalize ensures we match it correctly.
-          existingSong.path = canonicalPath;
-
-          await isar.songs.put(existingSong);
-        } else {
-          // INSERT: New song
-          await isar.songs.put(newSong);
+      // 🚀 Batch lookup: Find all existing songs matching these paths
+      final Map<String, Song> existingMap = {};
+      for (final cp in canonicalPaths) {
+        final existing = await isar.songs.filter().pathEqualTo(cp).findFirst();
+        if (existing != null) {
+          existingMap[cp] = existing;
         }
       }
+
+      // 🚀 Merge: Update existing or prepare new
+      final List<Song> songsToSave = [];
+      for (int i = 0; i < newSongs.length; i++) {
+        final newSong = newSongs[i];
+        final canonicalPath = canonicalPaths[i];
+        newSong.path = canonicalPath;
+
+        final existing = existingMap[canonicalPath];
+        if (existing != null) {
+          // UPDATE: Keep ID and stats (playCount, lastPlayed, accentColor)
+          existing.title = newSong.title;
+          existing.artist = newSong.artist;
+          existing.album = newSong.album;
+          existing.duration = newSong.duration;
+          existing.year = newSong.year;
+          existing.trackNumber = newSong.trackNumber;
+          existing.discNumber = newSong.discNumber;
+          existing.genre = newSong.genre;
+          existing.path = canonicalPath;
+          songsToSave.add(existing);
+        } else {
+          // INSERT: New song
+          songsToSave.add(newSong);
+        }
+      }
+
+      // 🚀 Single batch write instead of N individual puts
+      await isar.songs.putAll(songsToSave);
     });
   }
 

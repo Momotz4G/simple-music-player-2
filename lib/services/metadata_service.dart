@@ -36,7 +36,7 @@ class MetadataService {
     
     // Poison Pill Protection
     final ext = p.extension(filePath).toLowerCase();
-    final unsafeExtensions = ['.wav', '.dsf', '.dff', '.mp4', '.m4v', '.ogg', '.opus', '.ape', '.aiff', '.aif'];
+    final unsafeExtensions = ['.wav', '.dsf', '.dff', '.mp4', '.m4v', '.ogg', '.opus', '.ape', '.aiff', '.aif', '.alac'];
     if (unsafeExtensions.contains(ext)) {
       return await _readMetadataViaFFprobe(filePath);
     }
@@ -48,43 +48,35 @@ class MetadataService {
     }
   }
 
-  /// Processes a batch of tracks sequentially on the main thread.
-  /// (FFI calls take ~1-2ms and are completely safe on the main thread, 
-  /// UNLESS they are poisonous extensions, which we deflect).
+  /// Processes a batch of tracks sequentially to avoid burst-blocking the main thread.
+  /// 🚀 PERF FIX: Previously used Future.wait() which fired all 20 reads concurrently,
+  /// causing ~40ms of FFI jank per chunk. Sequential processing yields to the event loop
+  /// between each read, keeping the UI responsive during scan.
   Future<List<Metadata?>> readMetadataBatch(List<String> filePaths) async {
     if (filePaths.isEmpty) return [];
     await _ensureInitialized();
     
-    final unsafeExtensions = ['.wav', '.dsf', '.dff', '.mp4', '.m4v', '.ogg', '.opus', '.ape', '.aiff', '.aif'];
+    final unsafeExtensions = ['.wav', '.dsf', '.dff', '.mp4', '.m4v', '.ogg', '.opus', '.ape', '.aiff', '.aif', '.alac'];
 
-    // 🚀 Process the chunk CONCURRENTLY to utilize all ffprobe concurrency slots
-    final futures = filePaths.map((path) async {
-      if (!Platform.isWindows) {
-        try {
-          return await MetadataGod.readMetadata(file: path);
-        } catch (_) {
-          return null;
-        }
-      } else {
-        final ext = p.extension(path).toLowerCase();
-        if (unsafeExtensions.contains(ext)) {
-          try {
-            return await _readMetadataViaFFprobe(path);
-          } catch (_) {
-            return null;
-          }
+    final List<Metadata?> results = [];
+    for (final path in filePaths) {
+      try {
+        if (!Platform.isWindows) {
+          results.add(await MetadataGod.readMetadata(file: path));
         } else {
-          try {
-            return await MetadataGod.readMetadata(file: path);
-          } catch (_) {
-            return null;
+          final ext = p.extension(path).toLowerCase();
+          if (unsafeExtensions.contains(ext)) {
+            results.add(await _readMetadataViaFFprobe(path));
+          } else {
+            results.add(await MetadataGod.readMetadata(file: path));
           }
         }
+      } catch (_) {
+        results.add(null);
       }
-    });
+    }
 
-    final results = await Future.wait(futures);
-    return results.toList();
+    return results;
   }
 
   /// Writes metadata to a file.

@@ -35,6 +35,7 @@ class LibraryProvider extends ChangeNotifier {
   bool _isPermissionDenied = false;
   bool _disposed = false; // 🚀 Track disposal state
   int _scanToken = 0; // 🚀 Cancellation token for scan operations
+  int _scanProgress = 0; // 🚀 Live counter for songs found during scan
 
   List<SongModel> get songs => _searchQuery.isEmpty ? _songs : _filteredSongs;
   List<SongModel> get allSongs => _songs; // 🚀 Unfiltered — for grouped providers
@@ -42,6 +43,7 @@ class LibraryProvider extends ChangeNotifier {
   bool get hasSearchQuery => _searchQuery.isNotEmpty; // 🚀 UI can distinguish empty search vs empty library
   int get totalSongCount => _songs.length; // 🚀 Total before filtering
   bool get isLoading => _isLoading;
+  int get scanProgress => _scanProgress; // 🚀 Live scan progress for loading UI
   String? get selectedFolder => _selectedFolder;
   String? get error => _error;
   bool get isPermissionDenied => _isPermissionDenied;
@@ -57,8 +59,8 @@ class LibraryProvider extends ChangeNotifier {
     '.opus',
     '.dsf',
     '.dff',
-    '.aiff',
-    '.aif'
+    '.aif',
+    '.alac'
   ];
 
   LibraryProvider(this.ref) {
@@ -117,6 +119,7 @@ class LibraryProvider extends ChangeNotifier {
     // 🚀 Capture dependencies at ENTRY
     final dbService = ref.read(dbServiceProvider);
     final settings = ref.read(settingsProvider);
+    final myToken = _scanToken; // 🚀 Track token to detect setFolder() cancellation
 
     final prefs = await SharedPreferences.getInstance();
     if (_disposed) return;
@@ -124,7 +127,7 @@ class LibraryProvider extends ChangeNotifier {
 
     // 1. First, load whatever is already in the DB (Instant Load)
     await _fetchFromDatabase(dbService, settings);
-    if (_disposed) return;
+    if (_disposed || _scanToken != myToken) return; // 🚀 Abort if setFolder() was called
 
     // 2. Then, if we have a main path, verify it and scan for changes
     if (savedPath != null) {
@@ -132,17 +135,18 @@ class LibraryProvider extends ChangeNotifier {
       _selectedFolder = canonicalPath;
       _safeNotify();
       await _scanFolder(canonicalPath, dbService, settings);
-      if (_disposed) return;
+      if (_disposed || _scanToken != myToken) return; // 🚀 Abort if setFolder() was called
     }
 
     // 3. Also scan additional folders from settings
     for (final folder in settings.additionalMusicFolders) {
+      if (_scanToken != myToken) return; // 🚀 Abort if setFolder() was called
       await _scanFolder(p.canonicalize(folder), dbService, settings);
-      if (_disposed) return;
+      if (_disposed || _scanToken != myToken) return;
     }
 
     // 4. Clean up stale DB entries that no longer exist on disk
-    if (_songs.isNotEmpty) {
+    if (_songs.isNotEmpty && _scanToken == myToken) {
       final existingPaths = _songs.map((s) => s.filePath).toList();
       await dbService.cleanMissingSongs(existingPaths);
     }
@@ -186,10 +190,9 @@ class LibraryProvider extends ChangeNotifier {
       _songs = allSongs;
     }
 
-    // 🚀 DEDUPLICATE by filePath — prevents stale DB entries from
-    // creating duplicates during the old-load + new-scan overlap window
+    // 🚀 DEDUPLICATE by canonicalized filePath (handles case/encoding differences)
     final seen = <String>{};
-    _songs = _songs.where((s) => seen.add(s.filePath)).toList();
+    _songs = _songs.where((s) => seen.add(p.canonicalize(s.filePath))).toList();
 
     _sortSongs();
 
@@ -266,6 +269,15 @@ class LibraryProvider extends ChangeNotifier {
         if (!_disposed) {
           _scanFolder(canonicalPath, dbService, settings);
         }
+      }).catchError((e, stack) {
+        // 🚀 SAFETY NET: Catch any unhandled errors from the background scan
+        // Without this, errors in _scanFolder crash the entire app silently.
+        debugPrint("❌ [setFolder] Background scan error: $e");
+        debugPrint("❌ [setFolder] Stack: $stack");
+        _isLoading = false;
+        _scanProgress = 0;
+        _error = "Scan failed: $e";
+        _safeNotify();
       });
       
       debugPrint("📂 [setFolder] Method completed — UI thread released.");
@@ -291,6 +303,7 @@ class LibraryProvider extends ChangeNotifier {
     _isLoading = true;
     _error = null;
     _isPermissionDenied = false;
+    _scanProgress = 0; // 🚀 Reset progress counter
     _safeNotify();
 
     try {
@@ -310,31 +323,44 @@ class LibraryProvider extends ChangeNotifier {
         
         // Listen to the directory stream and yield frequently to avoid freezing the UI Isolate
         int filesScanned = 0;
-        await for (final FileSystemEntity entity in dir.list(
-          recursive: !_ignoreSubfolders, 
-          followLinks: false
-        )) {
-          if (_disposed || _scanToken != myToken) return;
-          filesScanned++;
-          
-          if (entity is File) {
-            String extension = p.extension(entity.path).toLowerCase();
-            if (_audioExtensions.contains(extension)) {
-              final canonicalPath = p.canonicalize(entity.path);
-              if (!existingPaths.contains(canonicalPath)) {
-                pathsToProcess.add(entity.path);
+        debugPrint("🔍 [_scanFolder] Starting directory walk (recursive: ${!_ignoreSubfolders})...");
+        try {
+          await for (final FileSystemEntity entity in dir.list(
+            recursive: !_ignoreSubfolders, 
+            followLinks: false
+          )) {
+            if (_disposed || _scanToken != myToken) return;
+            filesScanned++;
+            
+            try {
+              if (entity is File) {
+                String extension = p.extension(entity.path).toLowerCase();
+                if (_audioExtensions.contains(extension)) {
+                  final canonicalPath = p.canonicalize(entity.path);
+                  if (!existingPaths.contains(canonicalPath)) {
+                    pathsToProcess.add(entity.path);
+                  }
+                }
+                // 🚀 CUE SUPPORT: Also collect .cue files for parsing
+                if (extension == '.cue') {
+                  cueFilesToProcess.add(entity.path);
+                }
               }
+            } catch (fileErr) {
+              // 🚀 Skip individual files that fail (e.g. Unicode path issues)
+              debugPrint("⚠️ [_scanFolder] Skipping file: ${entity.path} — $fileErr");
             }
-            // 🚀 CUE SUPPORT: Also collect .cue files for parsing
-            if (extension == '.cue') {
-              cueFilesToProcess.add(entity.path);
+            // Yield to the event loop so the UI doesn't hang
+            if (filesScanned % 100 == 0) {
+              debugPrint("🔍 [_scanFolder] Walk progress: $filesScanned files scanned...");
+              await Future.delayed(Duration.zero);
             }
           }
-          // Yield to the event loop so the UI doesn't hang
-          if (filesScanned % 100 == 0) {
-            await Future.delayed(Duration.zero);
-          }
+        } catch (walkErr) {
+          // 🚀 Catch dir.list() stream errors (permissions, broken symlinks, etc.)
+          debugPrint("⚠️ [_scanFolder] Directory walk error after $filesScanned files: $walkErr");
         }
+        debugPrint("🔍 [_scanFolder] Walk complete: $filesScanned total files scanned.");
         
         debugPrint("🔍 [_scanFolder] Found ${pathsToProcess.length} NEW track paths, ${cueFilesToProcess.length} CUE sheets out of total recursive file scope.");
 
@@ -369,9 +395,9 @@ class LibraryProvider extends ChangeNotifier {
 
           if (batchToAdd.isNotEmpty) {
             await dbService.saveSongs(batchToAdd);
-            debugPrint("🔍 [_scanFolder] Saved chunk index $i to DB (${batchToAdd.length} songs)");
-            await _fetchFromDatabase(dbService, settings);
-            _safeNotify();
+            _scanProgress += batchToAdd.length;
+            debugPrint("🔍 [_scanFolder] Saved chunk $i to DB (${batchToAdd.length} songs, progress: $_scanProgress)");
+            _safeNotify(); // 🚀 Only updates scanProgress counter — NO full DB reload
           }
           await Future.delayed(Duration.zero);
         }
@@ -420,9 +446,9 @@ class LibraryProvider extends ChangeNotifier {
 
             if (cueBatch.isNotEmpty) {
               await dbService.saveSongs(cueBatch);
-              debugPrint("🎵 [_scanFolder] Saved ${cueBatch.length} CUE virtual tracks from ${p.basename(cuePath)}");
-              await _fetchFromDatabase(dbService, settings);
-              _safeNotify();
+              _scanProgress += cueBatch.length;
+              debugPrint("🎵 [_scanFolder] Saved ${cueBatch.length} CUE tracks from ${p.basename(cuePath)}, progress: $_scanProgress");
+              _safeNotify(); // 🚀 Only updates scanProgress counter — NO full DB reload
             }
             await Future.delayed(Duration.zero);
           }
@@ -437,7 +463,8 @@ class LibraryProvider extends ChangeNotifier {
       _error = "Scan failed: $e";
     } finally {
       if (_scanToken == myToken) {
-        await _fetchFromDatabase(dbService, settings);
+        await _fetchFromDatabase(dbService, settings); // 🚀 Single authoritative reload
+        _scanProgress = 0;
         _isLoading = false;
         _safeNotify();
       }
@@ -530,36 +557,45 @@ class LibraryProvider extends ChangeNotifier {
 
   static final RegExp _splitPattern = RegExp(r'(\d+)|(\D+)');
 
+  /// 🚀 OPTIMIZED SORT: Pre-computes regex tokens in O(N) before sorting.
+  /// Previously, regex was evaluated inside every comparison (O(N log N) evals).
+  /// For 800 songs this reduces regex calls from ~16,000 to ~800.
   void _sortSongs() {
-    _songs.sort((a, b) =>
-        _naturalCompare(p.basename(a.filePath), p.basename(b.filePath)));
-  }
+    if (_songs.length <= 1) return;
 
-  int _naturalCompare(String a, String b) {
-    a = a.toLowerCase();
-    b = b.toLowerCase();
-    
-    final matchesA =
-        _splitPattern.allMatches(a).map((m) => m.group(0)!).toList();
-    final matchesB =
-        _splitPattern.allMatches(b).map((m) => m.group(0)!).toList();
-
-    int i = 0;
-    while (i < matchesA.length && i < matchesB.length) {
-      final partA = matchesA[i];
-      final partB = matchesB[i];
-      final int? numA = int.tryParse(partA);
-      final int? numB = int.tryParse(partB);
-      if (numA != null && numB != null) {
-        final int comparison = numA.compareTo(numB);
-        if (comparison != 0) return comparison;
-      } else {
-        final int comparison = partA.compareTo(partB);
-        if (comparison != 0) return comparison;
-      }
-      i++;
+    // 1. Pre-compute tokens for every song in O(N)
+    final Map<String, List<Object>> tokenCache = {};
+    for (final song in _songs) {
+      final name = p.basename(song.filePath).toLowerCase();
+      tokenCache[song.filePath] = _splitPattern
+          .allMatches(name)
+          .map((m) {
+            final s = m.group(0)!;
+            final n = int.tryParse(s);
+            return (n as Object?) ?? s; // int or String
+          })
+          .toList();
     }
-    return matchesA.length.compareTo(matchesB.length);
+
+    // 2. Sort using cached tokens — O(1) lookup per comparison
+    _songs.sort((a, b) {
+      final tokensA = tokenCache[a.filePath]!;
+      final tokensB = tokenCache[b.filePath]!;
+      int i = 0;
+      while (i < tokensA.length && i < tokensB.length) {
+        final partA = tokensA[i];
+        final partB = tokensB[i];
+        if (partA is int && partB is int) {
+          final cmp = partA.compareTo(partB);
+          if (cmp != 0) return cmp;
+        } else {
+          final cmp = partA.toString().compareTo(partB.toString());
+          if (cmp != 0) return cmp;
+        }
+        i++;
+      }
+      return tokensA.length.compareTo(tokensB.length);
+    });
   }
 
   Future<void> resetLibrary() async {

@@ -277,7 +277,29 @@ class PlaylistsPage extends ConsumerWidget {
               },
             ),
             const Divider(),
-            // Option 3: Import via Code
+            // Option 4: Import from M3U
+            ListTile(
+              leading: const Icon(Icons.file_upload_outlined,
+                  color: Colors.blue),
+              title: Text(AppLocalizations.of(context)!.importFromM3u),
+              subtitle: Text(AppLocalizations.of(context)!.importFromM3uSubtitle),
+              onTap: () async {
+                final l10n = AppLocalizations.of(context)!;
+                final messenger = ScaffoldMessenger.of(context);
+                Navigator.pop(context);
+                
+                await notifier.importM3uPlaylist(
+                  onStatus: (statusKey, {args}) {
+                    final msg = _getLocalizedStatus(l10n, statusKey, args);
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(msg)),
+                    );
+                  }
+                );
+              },
+            ),
+            const Divider(),
+            // Option 5: Import via Code
             ListTile(
               leading: Icon(Icons.share_outlined,
                   color: Theme.of(context).colorScheme.primary),
@@ -580,6 +602,7 @@ class PlaylistsPage extends ConsumerWidget {
     switch (key) {
       case "invalidSpotifyUrl": return "❌ ${l10n.invalidSpotifyUrl}";
       case "invalidYoutubeMusicUrl": return "❌ ${l10n.invalidYoutubeMusicUrl}";
+      case "invalidM3uFile": return "❌ Invalid M3U File";
       case "fetchingPlaylistInfo": return "📋 ${l10n.fetchingPlaylistInfo}";
       case "failedFetchPlaylistInfo": return "❌ ${l10n.failedFetchPlaylistInfo}";
       case "fetchingTracksFrom": return "🎵 ${l10n.fetchingTracksFrom(args?['name'] ?? '')}";

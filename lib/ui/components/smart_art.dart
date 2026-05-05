@@ -38,6 +38,8 @@ class SmartArt extends StatefulWidget {
     _noArtPaths.remove(path); // 🚀 Clear absolute negative cache
     _globalVersion++;
     _pathVersions[path] = _globalVersion;
+    // 🚀 Clear persistent negative cache flag
+    ArtCacheService().clearNoArtFlag(path);
     // Also clear Flutter's image cache for this file
     imageCache.clear();
     imageCache.clearLiveImages();
@@ -150,14 +152,29 @@ class _SmartArtState extends State<SmartArt> {
 
         // DISK CACHE MISS: Fallback
         return FutureBuilder<bool>(
-          future: File(widget.path).exists(),
+          future: Future.wait([
+            File(widget.path).exists(),
+            ArtCacheService().hasNoArtFlag(widget.path),
+          ]).then((results) {
+            final exists = results[0] as bool;
+            final hasNoArt = results[1] as bool;
+            if (!exists) return false; // file doesn't exist
+            if (hasNoArt) {
+              // 🚀 PERSISTENT NEGATIVE CACHE HIT: Skip all FFI/disk scans
+              SmartArt._noArtPaths.add(widget.path);
+              return false;
+            }
+            return true; // file exists and might have art
+          }),
           builder: (context, existsSnapshot) {
             if (existsSnapshot.connectionState != ConnectionState.done) {
               return _buildPlaceholder();
             }
 
             if (existsSnapshot.data != true) {
-              SmartArt._nonExistentPaths.add(widget.path);
+              if (!SmartArt._noArtPaths.contains(widget.path)) {
+                SmartArt._nonExistentPaths.add(widget.path);
+              }
               return _buildPlaceholder();
             }
 
@@ -174,6 +191,8 @@ class _SmartArtState extends State<SmartArt> {
                     return _buildFileImage(folderArtSnapshot.data!);
                   }
                   SmartArt._noArtPaths.add(widget.path);
+                  // 🚀 Persist the negative result so it survives app restart
+                  ArtCacheService().setNoArtFlag(widget.path);
                   return _buildPlaceholder();
                 },
               );
@@ -203,6 +222,8 @@ class _SmartArtState extends State<SmartArt> {
                       return _buildFileImage(folderArtSnapshot.data!);
                     }
                     SmartArt._noArtPaths.add(widget.path);
+                    // 🚀 Persist the negative result so it survives app restart
+                    ArtCacheService().setNoArtFlag(widget.path);
                     return _buildPlaceholder();
                   },
                 );

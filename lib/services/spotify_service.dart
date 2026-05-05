@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'vps_scraper_service.dart';
 import 'db_service.dart';
+import 'pocketbase_service.dart';
 import '../utils/request_queue.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../env/env.dart';
@@ -169,8 +170,8 @@ class SpotifyService {
 
   // --- 3. SEARCH METADATA (Rich Data for Editor) ---
   static Future<List<Map<String, dynamic>>> searchMetadata(String query) async {
+    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch) return []; // 🔒 OFFLINE or Online Search Disabled
     final token = await _getTokenWithFallback(preferPrimary: true);
-    if (token == null) throw Exception("Spotify Auth Failed - No token available");
 
     try {
       final uri = Uri.https('api.spotify.com', '/v1/search', {
@@ -599,6 +600,7 @@ class SpotifyService {
   // --- 9. GET NEW RELEASES (Dynamic) ---
   static Future<List<Map<String, dynamic>>> getNewReleases(
       {String market = 'US'}) async {
+    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch) return []; // 🔒 OFFLINE or Online Search Disabled
     final token = await _getAccessToken();
     if (token == null) return [];
 
@@ -666,9 +668,9 @@ class SpotifyService {
 
   static Future<Map<String, dynamic>> searchAll(String query,
       {int limit = 5}) async {
+    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch) return {'songs': [], 'albums': [], 'artists': []}; // 🔒 OFFLINE or Online Search Disabled
     // Uses PRIMARY (CLIENT_ID_1) first for remote search, falls back to SECONDARY on 429
     final token = await _getTokenWithFallback(preferPrimary: true);
-    if (token == null) throw Exception("Spotify Auth Failed - No token available");
 
     // Correct URL for searching (uses $query)
     final url = Uri.parse(

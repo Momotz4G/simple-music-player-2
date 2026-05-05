@@ -44,9 +44,16 @@ class AuthService {
           _linkedUserId = savedUserId;
           DebugLogService().info("🔐 AuthService: Restored session for $_linkedEmail");
         } else {
-          // Token expired, clear
-          await _clearSavedSession();
-          DebugLogService().info("🔐 AuthService: Saved token expired, cleared");
+          // Token expired — clear ONLY the token, NOT the identity link.
+          // pb_linked_user_id must survive so MetricsService uses the correct
+          // identity on next startup instead of falling back to hardware hash
+          // (which would create a duplicate metrics record).
+          await _clearExpiredToken();
+          // Keep identity state so the user stays "linked" but needs re-auth
+          _isLinked = true;
+          _linkedEmail = savedEmail;
+          _linkedUserId = savedUserId;
+          DebugLogService().info("🔐 AuthService: Token expired for $_linkedEmail, identity preserved. Re-auth needed.");
         }
       }
     } catch (e) {
@@ -130,14 +137,24 @@ class AuthService {
       _linkedEmail = null;
       _linkedUserId = null;
 
-      await _clearSavedSession();
+      await _clearFullSession();
       DebugLogService().info("🔐 Signed out, reverted to anonymous mode");
     } catch (e) {
       DebugLogService().error("⚠️ Sign out error: $e");
     }
   }
 
-  Future<void> _clearSavedSession() async {
+  /// 🔒 Soft clear: Only remove the expired JWT token.
+  /// Preserves pb_linked_user_id so identity doesn't revert to hardware hash.
+  Future<void> _clearExpiredToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('pb_auth_token');
+    // NOTE: pb_linked_email and pb_linked_user_id are intentionally KEPT
+    // so the next startup still resolves to the correct user identity.
+  }
+
+  /// 🗑️ Hard clear: Remove ALL auth state (explicit sign-out only).
+  Future<void> _clearFullSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('pb_auth_token');
     await prefs.remove('pb_linked_email');

@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
 class WikipediaService {
   /// Fetches the main image URL for an artist from Wikipedia.
-
   /// 1. Searches for the artist page using OpenSearch.
   /// 2. Fetches the page info to get the 'original' source of the main image.
   static Future<String?> getArtistImage(String artistName) async {
+    if (PocketBaseService.isOffline) return null; // 🔒 OFFLINE MODE
     try {
       // 1. Search for the page
       final searchUri = Uri.parse(

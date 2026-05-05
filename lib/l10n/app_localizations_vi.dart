@@ -2406,4 +2406,288 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'Đã có phiên bản mới của yt-dlp.';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
+
+  @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get offlineModeHeader => 'CHẾ ĐỘ NGOẠI TUYẾN';
+
+  @override
+  String get offlineModeTitle => 'Chế độ ngoại tuyến';
+
+  @override
+  String get offlineModeActive => 'ĐANG HOẠT ĐỘNG';
+
+  @override
+  String get offlineModeEnabledStatus => 'Đã bật chế độ ngoại tuyến';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'Đã tắt ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => 'Đã bật tất cả';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'Đang khóa mạng. Thống kê được lưu cục bộ.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'Tắt tất cả các dịch vụ mạng và chỉ phát thư viện cục bộ.';
+
+  @override
+  String get enableOfflineModeQuestion => 'Bật chế độ ngoại tuyến?';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'Thao tác này sẽ tắt hoàn toàn mọi giao tiếp mạng. Các tính năng sau sẽ bị tắt:';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'Thống kê của bạn sẽ tự động đồng bộ hóa khi bạn tắt tính năng này.';
+
+  @override
+  String get enableOfflineModeBtn => 'Bật chế độ ngoại tuyến';
+
+  @override
+  String get onlineModeRestored =>
+      'Đã khôi phục chế độ trực tuyến. Đang đồng bộ thống kê...';
+
+  @override
+  String get disableServicesTitle => 'Tắt các dịch vụ';
+
+  @override
+  String get manageIndividualFeatures =>
+      'Quản lý các tính năng trực tuyến riêng lẻ';
+
+  @override
+  String get featureCloudSync => 'Đồng bộ thống kê đám mây';
+
+  @override
+  String get featureCloudSyncDesc => 'Thống kê nghe chỉ được lưu cục bộ';
+
+  @override
+  String get featureCloudSyncLongDesc => 'Đồng bộ chỉ số nghe với PocketBase';
+
+  @override
+  String get featureLeaderboard => 'Bảng xếp hạng toàn cầu';
+
+  @override
+  String get featureLeaderboardDesc => 'Đã tạm dừng cập nhật xếp hạng';
+
+  @override
+  String get featureLeaderboardLongDesc =>
+      'Hiển thị và cập nhật xếp hạng của bạn công khai';
+
+  @override
+  String get featureOnlineLyrics => 'Tìm kiếm lời bài hát trực tuyến';
+
+  @override
+  String get featureOnlineLyricsDesc => 'Chỉ các tệp .lrc/.ttml cục bộ';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'Lấy lời bài hát từ LRCLIB/Spotify';
+
+  @override
+  String get featureAiLyrics => 'Trình tạo lời bài hát AI';
+
+  @override
+  String get featureAiLyricsDesc => 'Đã tắt lời bài hát khớp nhạc tự động';
+
+  @override
+  String get featureAiLyricsLongDesc => 'Tạo lời bài hát khớp nhạc qua AI';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'Đã tắt video nền';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'Video nền cho các bài hát';
+
+  @override
+  String get featureOnlineSearch => 'Tìm kiếm trực tuyến';
+
+  @override
+  String get featureOnlineSearchDesc => 'Đã tắt tìm kiếm Spotify/YouTube';
+
+  @override
+  String get featureOnlineSearchLongDesc =>
+      'Tìm kiếm từ xa trên Spotify và YouTube';
+
+  @override
+  String get featureConnectDevice => 'Kết nối với thiết bị';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'Đã tắt điều khiển từ xa và nhóm nghe nhạc';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'Điều khiển từ xa và nhóm nghe nhạc';
+
+  @override
+  String get lyricsEditorTitle => 'Trình chỉnh sửa lời bài hát';
+
+  @override
+  String get clearAllQuestion => 'Xóa tất cả?';
+
+  @override
+  String get clearAllDesc =>
+      'Thao tác này sẽ xóa trạng thái trình chỉnh sửa hiện tại. Nó sẽ KHÔNG xóa các tệp cục bộ của bạn trừ khi bạn Lưu sau đó.';
+
+  @override
+  String get clearBtn => 'Xóa';
+
+  @override
+  String get lyricsApplied => 'Lời bài hát đã được áp dụng vào bảng!';
+
+  @override
+  String get chooseFormat => 'Chọn định dạng ưa thích của bạn:';
+
+  @override
+  String get lrcFormat => 'LRC (Đồng bộ chuẩn)';
+
+  @override
+  String get lrcFormatDesc => 'Định dạng phổ biến, hoạt động ở mọi nơi.';
+
+  @override
+  String get ttmlFormat => 'TTML (Độ chính xác cao)';
+
+  @override
+  String get ttmlFormatDesc =>
+      'Tốt hơn cho việc tạo bằng AI & đồng bộ chi tiết.';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'Đã lưu vào tệp $extension thành công!';
+  }
+
+  @override
+  String get failedToSave => 'Không lưu được tệp lời bài hát.';
+
+  @override
+  String get generationFailed => 'Tạo thất bại';
+
+  @override
+  String get aiLyricsGenerationTitle => 'Tạo lời bài hát bằng AI';
+
+  @override
+  String get syncedMode => 'Đã đồng bộ';
+
+  @override
+  String get plainMode => 'Văn bản thuần túy';
+
+  @override
+  String get addLineToTop => 'Thêm vào đầu';
+
+  @override
+  String get addLineToEnd => 'Thêm vào cuối';
+
+  @override
+  String get lyricTextHint => 'Văn bản lời bài hát...';
+
+  @override
+  String get insertAfter => 'Chèn sau';
+
+  @override
+  String get removeLine => 'Xóa dòng';
+
+  @override
+  String get romajiHint => 'Romaji / Phiên âm (Tùy chọn)...';
+
+  @override
+  String get startLabel => 'Bắt đầu: ';
+
+  @override
+  String get setStartTooltip => 'Đặt bắt đầu thành vị trí hiện tại';
+
+  @override
+  String get endLabel => 'Kết thúc: ';
+
+  @override
+  String get setEndTooltip => 'Đặt kết thúc thành vị trí hiện tại';
+
+  @override
+  String get playFromLine => 'Phát từ dòng này';
+
+  @override
+  String get pasteLyricsHint => 'Dán lời bài hát của bạn vào đây...';
+
+  @override
+  String get applyBtn => 'Áp dụng';
+
+  @override
+  String get saveLocallyBtn => 'Lưu cục bộ';
+
+  @override
+  String get editLyricsTooltip => 'Chỉnh sửa lời bài hát';
+
+  @override
+  String get saveLyricsTitle => 'Lưu lời bài hát';
+
+  @override
+  String get aiGenerate => 'Tạo bằng AI';
+
+  @override
+  String get aiLyricsInitializing => 'Đang khởi tạo...';
+
+  @override
+  String get aiLyricsUploading => 'Đang tải bài hát lên máy chủ...';
+
+  @override
+  String get aiLyricsUploadFailed => 'Lỗi: Tải lên thất bại.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'Tải lên hoàn tất!';
+
+  @override
+  String get aiLyricsVerifying => 'Đang xác minh trạng thái máy chủ...';
+
+  @override
+  String get aiLyricsStatusOk => 'Mã trạng thái 200 OK!';
+
+  @override
+  String get aiLyricsPolling => 'Đang lấy lời bài hát... Vui lòng kiên nhẫn!';
+
+  @override
+  String get aiLyricsReceiving => 'Đã nhận lời bài hát';
+
+  @override
+  String get aiLyricsParsing => 'Đang phân tích lời bài hát...';
+
+  @override
+  String get aiLyricsSuccess => 'Tạo lời bài hát thành công!';
+
+  @override
+  String get aiLyricsLocalFileMissing =>
+      'Lỗi: Không tìm thấy tệp âm thanh cục bộ.';
+
+  @override
+  String get aiLyricsComplete => 'Hoàn tất!';
 }

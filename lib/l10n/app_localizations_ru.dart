@@ -2410,4 +2410,294 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'Доступна новая версия yt-dlp.';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
+
+  @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get offlineModeHeader => 'ОФЛАЙН-РЕЖИМ';
+
+  @override
+  String get offlineModeTitle => 'Офлайн-режим';
+
+  @override
+  String get offlineModeActive => 'АКТИВНО';
+
+  @override
+  String get offlineModeEnabledStatus => 'Офлайн-режим включен';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'Отключено ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => 'Все включено';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'Сеть заблокирована. Статистика сохраняется локально.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'Отключить все сетевые службы и воспроизводить только локальную библиотеку.';
+
+  @override
+  String get enableOfflineModeQuestion => 'Включить офлайн-режим?';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'Это полностью отключит всю сетевую связь. Следующие функции будут отключены:';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'Ваша статистика автоматически синхронизируется, когда вы это выключите.';
+
+  @override
+  String get enableOfflineModeBtn => 'Включить офлайн-режим';
+
+  @override
+  String get onlineModeRestored =>
+      'Онлайн-режим восстановлен. Синхронизация статистики...';
+
+  @override
+  String get disableServicesTitle => 'Отключить службы';
+
+  @override
+  String get manageIndividualFeatures =>
+      'Управление отдельными онлайн-функциями';
+
+  @override
+  String get featureCloudSync => 'Синхронизация статистики в облаке';
+
+  @override
+  String get featureCloudSyncDesc =>
+      'Статистика прослушивания сохраняется только локально';
+
+  @override
+  String get featureCloudSyncLongDesc =>
+      'Синхронизация метрик прослушивания с PocketBase';
+
+  @override
+  String get featureLeaderboard => 'Глобальная таблица лидеров';
+
+  @override
+  String get featureLeaderboardDesc => 'Обновление рейтинга приостановлено';
+
+  @override
+  String get featureLeaderboardLongDesc =>
+      'Публичное отображение и обновление вашего рейтинга';
+
+  @override
+  String get featureOnlineLyrics => 'Поиск текстов песен онлайн';
+
+  @override
+  String get featureOnlineLyricsDesc => 'Только локальные файлы .lrc/.ttml';
+
+  @override
+  String get featureOnlineLyricsLongDesc =>
+      'Загрузка текстов песен из LRCLIB/Spotify';
+
+  @override
+  String get featureAiLyrics => 'ИИ-генератор текстов песен';
+
+  @override
+  String get featureAiLyricsDesc =>
+      'Автоматическая синхронизация текстов отключена';
+
+  @override
+  String get featureAiLyricsLongDesc =>
+      'Генерация синхронизированных текстов через ИИ';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'Фоновое видео отключено';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'Фоновые видео для треков';
+
+  @override
+  String get featureOnlineSearch => 'Онлайн-поиск';
+
+  @override
+  String get featureOnlineSearchDesc => 'Поиск в Spotify/YouTube отключен';
+
+  @override
+  String get featureOnlineSearchLongDesc =>
+      'Удаленный поиск в Spotify и YouTube';
+
+  @override
+  String get featureConnectDevice => 'Подключиться к устройству';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'Дистанционное управление и прослушивание в группах отключены';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'Дистанционное управление и прослушивание в группах';
+
+  @override
+  String get lyricsEditorTitle => 'Редактор текста песен';
+
+  @override
+  String get clearAllQuestion => 'Очистить все?';
+
+  @override
+  String get clearAllDesc =>
+      'Это очистит текущее состояние редактора. Ваши локальные файлы НЕ будут удалены, если вы не сохраните их позже.';
+
+  @override
+  String get clearBtn => 'Очистить';
+
+  @override
+  String get lyricsApplied => 'Текст песни применен к панели!';
+
+  @override
+  String get chooseFormat => 'Выберите предпочтительный формат:';
+
+  @override
+  String get lrcFormat => 'LRC (Стандартная синхронизация)';
+
+  @override
+  String get lrcFormatDesc => 'Универсальный формат, работает везде.';
+
+  @override
+  String get ttmlFormat => 'TTML (Высокая точность)';
+
+  @override
+  String get ttmlFormatDesc =>
+      'Лучше для генерации ИИ и детальной синхронизации.';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'Успешно сохранено в файл $extension!';
+  }
+
+  @override
+  String get failedToSave => 'Не удалось сохранить файл текста песни.';
+
+  @override
+  String get generationFailed => 'Генерация не удалась';
+
+  @override
+  String get aiLyricsGenerationTitle => 'Генерация текста песни ИИ';
+
+  @override
+  String get syncedMode => 'Синхронизировано';
+
+  @override
+  String get plainMode => 'Обычный текст';
+
+  @override
+  String get addLineToTop => 'Добавить в начало';
+
+  @override
+  String get addLineToEnd => 'Добавить в конец';
+
+  @override
+  String get lyricTextHint => 'Текст песни...';
+
+  @override
+  String get insertAfter => 'Вставить после';
+
+  @override
+  String get removeLine => 'Удалить строку';
+
+  @override
+  String get romajiHint => 'Ромаджи / Транслитерация (Опционально)...';
+
+  @override
+  String get startLabel => 'Начало: ';
+
+  @override
+  String get setStartTooltip => 'Установить начало на текущую позицию';
+
+  @override
+  String get endLabel => 'Конец: ';
+
+  @override
+  String get setEndTooltip => 'Установить конец на текущую позицию';
+
+  @override
+  String get playFromLine => 'Воспроизвести с этой строки';
+
+  @override
+  String get pasteLyricsHint => 'Вставьте текст песни здесь...';
+
+  @override
+  String get applyBtn => 'Применить';
+
+  @override
+  String get saveLocallyBtn => 'Сохранить локально';
+
+  @override
+  String get editLyricsTooltip => 'Редактировать текст песни';
+
+  @override
+  String get saveLyricsTitle => 'Сохранить текст песни';
+
+  @override
+  String get aiGenerate => 'Генерация ИИ';
+
+  @override
+  String get aiLyricsInitializing => 'Инициализация...';
+
+  @override
+  String get aiLyricsUploading => 'Загрузка песни на сервер...';
+
+  @override
+  String get aiLyricsUploadFailed => 'Ошибка: Загрузка не удалась.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'Загрузка завершена!';
+
+  @override
+  String get aiLyricsVerifying => 'Проверка статуса сервера...';
+
+  @override
+  String get aiLyricsStatusOk => 'Статус-код 200 OK!';
+
+  @override
+  String get aiLyricsPolling =>
+      'Получение текста песни... Пожалуйста, подождите!';
+
+  @override
+  String get aiLyricsReceiving => 'Текст песни получен';
+
+  @override
+  String get aiLyricsParsing => 'Анализ текста песни...';
+
+  @override
+  String get aiLyricsSuccess => 'Текст песни успешно сгенерирован!';
+
+  @override
+  String get aiLyricsLocalFileMissing =>
+      'Ошибка: Локальный аудиофайл не найден.';
+
+  @override
+  String get aiLyricsComplete => 'Завершено!';
 }

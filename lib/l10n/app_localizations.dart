@@ -4429,6 +4429,540 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A new version of yt-dlp is available.'**
   String get ytDlpUpdateAvailable;
+
+  /// No description provided for @importFromM3u.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from M3U'**
+  String get importFromM3u;
+
+  /// No description provided for @importFromM3uSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import an M3U playlist file'**
+  String get importFromM3uSubtitle;
+
+  /// No description provided for @exportToM3u.
+  ///
+  /// In en, this message translates to:
+  /// **'Export to M3U'**
+  String get exportToM3u;
+
+  /// No description provided for @invalidM3uFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid M3U File'**
+  String get invalidM3uFile;
+
+  /// No description provided for @generateAiLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate AI Lyrics'**
+  String get generateAiLyrics;
+
+  /// No description provided for @aiLyricsGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating AI Lyrics...'**
+  String get aiLyricsGenerating;
+
+  /// No description provided for @aiLyricsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate AI lyrics.'**
+  String get aiLyricsFailed;
+
+  /// No description provided for @aiLyricsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error generating AI lyrics.'**
+  String get aiLyricsError;
+
+  /// No description provided for @offlineModeHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'OFFLINE MODE'**
+  String get offlineModeHeader;
+
+  /// No description provided for @offlineModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Mode'**
+  String get offlineModeTitle;
+
+  /// No description provided for @offlineModeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE'**
+  String get offlineModeActive;
+
+  /// No description provided for @offlineModeEnabledStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Mode Enabled'**
+  String get offlineModeEnabledStatus;
+
+  /// No description provided for @offlineModeDisabledStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled ({count})'**
+  String offlineModeDisabledStatus(int count);
+
+  /// No description provided for @offlineModeAllEnabledStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'All Enabled'**
+  String get offlineModeAllEnabledStatus;
+
+  /// No description provided for @offlineModeLockdownDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Network lockdown active. Stats are saved locally.'**
+  String get offlineModeLockdownDesc;
+
+  /// No description provided for @offlineModeMainDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable all network services and play local library only.'**
+  String get offlineModeMainDesc;
+
+  /// No description provided for @enableOfflineModeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Offline Mode?'**
+  String get enableOfflineModeQuestion;
+
+  /// No description provided for @offlineModeConfirmationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This will completely disable all network communication. The following features will be turned off:'**
+  String get offlineModeConfirmationDesc;
+
+  /// No description provided for @offlineModeSyncRestoreNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stats will sync automatically when you turn this off.'**
+  String get offlineModeSyncRestoreNote;
+
+  /// No description provided for @enableOfflineModeBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Offline Mode'**
+  String get enableOfflineModeBtn;
+
+  /// No description provided for @onlineModeRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Online mode restored. Syncing stats...'**
+  String get onlineModeRestored;
+
+  /// No description provided for @disableServicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Services'**
+  String get disableServicesTitle;
+
+  /// No description provided for @manageIndividualFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage individual online features'**
+  String get manageIndividualFeatures;
+
+  /// No description provided for @featureCloudSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Stats Sync'**
+  String get featureCloudSync;
+
+  /// No description provided for @featureCloudSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening stats saved locally only'**
+  String get featureCloudSyncDesc;
+
+  /// No description provided for @featureCloudSyncLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync listening metrics with PocketBase'**
+  String get featureCloudSyncLongDesc;
+
+  /// No description provided for @featureLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Global Leaderboard'**
+  String get featureLeaderboard;
+
+  /// No description provided for @featureLeaderboardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank updates paused'**
+  String get featureLeaderboardDesc;
+
+  /// No description provided for @featureLeaderboardLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Show and update your rank publicly'**
+  String get featureLeaderboardLongDesc;
+
+  /// No description provided for @featureOnlineLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Online Lyrics Search'**
+  String get featureOnlineLyrics;
+
+  /// No description provided for @featureOnlineLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Only local .lrc/.ttml files'**
+  String get featureOnlineLyricsDesc;
+
+  /// No description provided for @featureOnlineLyricsLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch lyrics from LRCLIB/Spotify'**
+  String get featureOnlineLyricsLongDesc;
+
+  /// No description provided for @featureAiLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Lyrics Generator'**
+  String get featureAiLyrics;
+
+  /// No description provided for @featureAiLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic synchronized lyrics disabled'**
+  String get featureAiLyricsDesc;
+
+  /// No description provided for @featureAiLyricsLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate synchronized lyrics via AI'**
+  String get featureAiLyricsLongDesc;
+
+  /// No description provided for @featureSpotifyCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify Canvas'**
+  String get featureSpotifyCanvas;
+
+  /// No description provided for @featureSpotifyCanvasDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Background videos disabled'**
+  String get featureSpotifyCanvasDesc;
+
+  /// No description provided for @featureSpotifyCanvasLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Background videos for tracks'**
+  String get featureSpotifyCanvasLongDesc;
+
+  /// No description provided for @featureOnlineSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Online Search'**
+  String get featureOnlineSearch;
+
+  /// No description provided for @featureOnlineSearchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify/YouTube search disabled'**
+  String get featureOnlineSearchDesc;
+
+  /// No description provided for @featureOnlineSearchLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify and YouTube remote search'**
+  String get featureOnlineSearchLongDesc;
+
+  /// No description provided for @featureConnectDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a Device'**
+  String get featureConnectDevice;
+
+  /// No description provided for @featureConnectDeviceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote control & Listening parties disabled'**
+  String get featureConnectDeviceDesc;
+
+  /// No description provided for @featureConnectDeviceLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote control and listening parties'**
+  String get featureConnectDeviceLongDesc;
+
+  /// No description provided for @lyricsEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics Editor'**
+  String get lyricsEditorTitle;
+
+  /// No description provided for @clearAllQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All?'**
+  String get clearAllQuestion;
+
+  /// No description provided for @clearAllDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This will clear the current editor state. It will NOT delete your local files unless you Save afterwards.'**
+  String get clearAllDesc;
+
+  /// No description provided for @clearBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearBtn;
+
+  /// No description provided for @lyricsApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics applied to panel!'**
+  String get lyricsApplied;
+
+  /// No description provided for @chooseFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your preferred format:'**
+  String get chooseFormat;
+
+  /// No description provided for @lrcFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'LRC (Standard Synced)'**
+  String get lrcFormat;
+
+  /// No description provided for @lrcFormatDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Universal format, works everywhere.'**
+  String get lrcFormatDesc;
+
+  /// No description provided for @ttmlFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'TTML (High Precision)'**
+  String get ttmlFormat;
+
+  /// No description provided for @ttmlFormatDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Better for AI generation & detailed sync.'**
+  String get ttmlFormatDesc;
+
+  /// No description provided for @savedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {extension} file successfully!'**
+  String savedSuccessfully(String extension);
+
+  /// No description provided for @failedToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save lyrics file.'**
+  String get failedToSave;
+
+  /// No description provided for @generationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation Failed'**
+  String get generationFailed;
+
+  /// No description provided for @aiLyricsGenerationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Lyrics Generation'**
+  String get aiLyricsGenerationTitle;
+
+  /// No description provided for @syncedMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get syncedMode;
+
+  /// No description provided for @plainMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain'**
+  String get plainMode;
+
+  /// No description provided for @addLineToTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Top'**
+  String get addLineToTop;
+
+  /// No description provided for @addLineToEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to End'**
+  String get addLineToEnd;
+
+  /// No description provided for @lyricTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyric text...'**
+  String get lyricTextHint;
+
+  /// No description provided for @insertAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert After'**
+  String get insertAfter;
+
+  /// No description provided for @removeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Line'**
+  String get removeLine;
+
+  /// No description provided for @romajiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Romaji / Transliteration (Optional)...'**
+  String get romajiHint;
+
+  /// No description provided for @startLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Start: '**
+  String get startLabel;
+
+  /// No description provided for @setStartTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Start to Current Position'**
+  String get setStartTooltip;
+
+  /// No description provided for @endLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End: '**
+  String get endLabel;
+
+  /// No description provided for @setEndTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Set End to Current Position'**
+  String get setEndTooltip;
+
+  /// No description provided for @playFromLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Play from this line'**
+  String get playFromLine;
+
+  /// No description provided for @pasteLyricsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste your lyrics here...'**
+  String get pasteLyricsHint;
+
+  /// No description provided for @applyBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get applyBtn;
+
+  /// No description provided for @saveLocallyBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Locally'**
+  String get saveLocallyBtn;
+
+  /// No description provided for @editLyricsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Lyrics'**
+  String get editLyricsTooltip;
+
+  /// No description provided for @saveLyricsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Lyrics'**
+  String get saveLyricsTitle;
+
+  /// No description provided for @aiGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Generate'**
+  String get aiGenerate;
+
+  /// No description provided for @aiLyricsInitializing.
+  ///
+  /// In en, this message translates to:
+  /// **'Initializing...'**
+  String get aiLyricsInitializing;
+
+  /// No description provided for @aiLyricsUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading song to server...'**
+  String get aiLyricsUploading;
+
+  /// No description provided for @aiLyricsUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: Upload failed.'**
+  String get aiLyricsUploadFailed;
+
+  /// No description provided for @aiLyricsUploadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload completed!'**
+  String get aiLyricsUploadSuccess;
+
+  /// No description provided for @aiLyricsVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify status server...'**
+  String get aiLyricsVerifying;
+
+  /// No description provided for @aiLyricsStatusOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Status code 200 OK!'**
+  String get aiLyricsStatusOk;
+
+  /// No description provided for @aiLyricsPolling.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting Lyrics... Please be patient!'**
+  String get aiLyricsPolling;
+
+  /// No description provided for @aiLyricsReceiving.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics Received'**
+  String get aiLyricsReceiving;
+
+  /// No description provided for @aiLyricsParsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Parsing Lyrics...'**
+  String get aiLyricsParsing;
+
+  /// No description provided for @aiLyricsSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics generated successful!'**
+  String get aiLyricsSuccess;
+
+  /// No description provided for @aiLyricsLocalFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: Local audio file not found.'**
+  String get aiLyricsLocalFileMissing;
+
+  /// No description provided for @aiLyricsComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete!'**
+  String get aiLyricsComplete;
 }
 
 class _AppLocalizationsDelegate

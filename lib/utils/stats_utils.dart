@@ -1,4 +1,5 @@
 import '../providers/stats_provider.dart';
+import '../l10n/app_localizations.dart';
 
 enum TitleCategory { time, behavior, competitive, hallOfFame, exclusive, superfan }
 
@@ -504,6 +505,14 @@ class StatsUtils {
           final pattern = t.name.split('[Artist]').first;
           if (titleName.startsWith(pattern)) return t;
         } else if (t.name == titleName) {
+          // 🚀 COMPETITIVE GUARD: Don't show "Top X Global" unless user actually holds that rank
+          if (t.category == TitleCategory.competitive) {
+            if (t.name == "Top 1 Global" && userRank == 1) return t;
+            if (t.name == "Top 2 Global" && userRank == 2) return t;
+            if (t.name == "Top 3 Global" && userRank == 3) return t;
+            // Rank doesn't match anymore — skip, fall through to automatic title
+            continue;
+          }
           return t;
         }
       }
@@ -521,6 +530,16 @@ class StatsUtils {
     return musicTitles.first;
   }
 
+  static String resolveDisplayName(TitleDefinition def, String? savedTitle) {
+    if (def.isDynamic && savedTitle != null) {
+      final prefix = def.name.split('[Artist]').first;
+      if (savedTitle.startsWith(prefix)) {
+        return savedTitle;
+      }
+    }
+    return def.name;
+  }
+
   static bool isTitleUnlocked(TitleDefinition t, int totalMinutes, int maxStreak,
       {int userRank = 0, int weeklyWins = 0, int weeklyPodiums = 0, String? userRole, 
        int dailyPlays = 0, int weeklyPlays = 0, Map<String, int>? artistMinutes}) {
@@ -530,8 +549,9 @@ class StatsUtils {
     if (t.category == TitleCategory.behavior) {
       // Intensity checks
       if (t.name == "Binge Listener") return dailyPlays >= t.requiredMinutes;
-      if (t.name == "Music Marathoner" || t.name == "Unstoppable Pulse" || t.name == "Atomic Rhythm") 
+      if (t.name == "Music Marathoner" || t.name == "Unstoppable Pulse" || t.name == "Atomic Rhythm") {
         return weeklyPlays >= t.requiredMinutes;
+      }
       
       // Default behavior: Consecutive loops (Repeat Offender, etc.)
       return maxStreak >= t.requiredMinutes;
@@ -547,10 +567,12 @@ class StatsUtils {
       return false;
     }
     if (t.category == TitleCategory.hallOfFame) {
-      if (t.name == "Weekly Veteran" || t.name == "Consistent Elite")
+      if (t.name == "Weekly Veteran" || t.name == "Consistent Elite") {
         return weeklyPodiums >= t.requiredMinutes;
-      if (t.name == "Five-Star Champion")
+      }
+      if (t.name == "Five-Star Champion") {
         return weeklyWins >= t.requiredMinutes;
+      }
       return false;
     }
     if (t.category == TitleCategory.exclusive) {
@@ -647,5 +669,9 @@ class StatsUtils {
     final lastMondayGMT7 = DateTime.utc(nowGMT7.year, nowGMT7.month, nowGMT7.day - daysToSubtract);
     // Subtract 7h
     return lastMondayGMT7.subtract(const Duration(hours: 7)).toIso8601String().replaceFirst('T', ' ');
+  }
+
+  static String formatMinutes(int minutes, AppLocalizations l10n) {
+    return l10n.minutesDuration(minutes);
   }
 }

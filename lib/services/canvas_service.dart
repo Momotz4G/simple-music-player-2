@@ -4,12 +4,14 @@ import 'package:html/parser.dart' as parser;
 import 'package:path_provider/path_provider.dart'; // Added
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Added
 import '../providers/data_usage_provider.dart'; // Added
+import 'pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
 class CanvasService {
   static const String _baseUrl = "https://www.canvasdownloader.com/canvas";
   static Ref? globalRef; // Added for Data Usage tracking
 
   static Future<File?> downloadCanvasToCache(String videoUrl) async {
+    if (PocketBaseService.isOffline || !PocketBaseService.enableCanvas) return null; // 🔒 OFFLINE or Canvas Disabled
     try {
       final tempDir = await getTemporaryDirectory();
       // Safe file name from URL
@@ -64,6 +66,7 @@ class CanvasService {
   }
 
   static Future<String?> getCanvasUrl(String spotifyTrackUrl) async {
+    if (PocketBaseService.isOffline || !PocketBaseService.enableCanvas) return null; // 🔒 OFFLINE or Canvas Disabled
     try {
       final uri =
           Uri.parse("$_baseUrl?link=${Uri.encodeComponent(spotifyTrackUrl)}");

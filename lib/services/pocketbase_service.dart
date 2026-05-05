@@ -20,18 +20,37 @@ class PocketBaseService {
   bool _initialized = false;
   String? _userId;
 
+  /// 🔒 OFFLINE MODE: Static flags to block network operations
+  static bool isOffline = false;
+  static bool enableCloudSync = true;
+  static bool enableLeaderboard = true;
+  static bool enableOnlineLyrics = true;
+  static bool enableAiLyrics = true;
+  static bool enableOnlineSearch = true;
+  static bool enableRemoteControl = true;
+  static bool enableCanvas = true;
+
   String? get userId => _userId; // 🚀 Exposed for rank verification logic
 
   Future<void> init({String? userId}) async {
+    if (isOffline) {
+      _initialized = true;
+      return;
+    }
     if (_initialized && userId == _userId) return;
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      if (userId != null && userId != _userId) {
-        DebugLogService().info("📡 Session: Identity Changed. Clearing stale session token.");
+      // 🚀 FIX: Compare against PERSISTED user ID, not just in-memory _userId.
+      // _userId is always null on first cold start, which previously caused
+      // "Identity Changed" to fire every single startup (false positive).
+      final persistedUserId = _userId ?? prefs.getString('pb_user_id');
+      if (userId != null && persistedUserId != null && userId != persistedUserId) {
+        DebugLogService().info("📡 Session: Identity Changed ($persistedUserId → $userId). Clearing stale session token.");
         _userId = userId;
         // 🚀 CRITICAL: Force clear local storage so ensureUniqueSession performs a fresh search
         await prefs.remove('pb_session_id');
+        await prefs.remove('pb_metrics_id'); // Clear cached metrics ID for old identity
       }
 
       if (userId != null) {
@@ -128,6 +147,7 @@ class PocketBaseService {
 
   // SAVE DATA (Upsert: Create or Update) - No List permission needed
   Future<void> saveData(Map<String, dynamic> data, {File? avatarFile, bool clearAvatar = false}) async {
+    if (isOffline || !enableCloudSync) return; // 🔒 OFFLINE or Cloud Sync Disabled
     if (!_initialized || _userId == null) return;
 
     // 🚀 Inject Real Hostname & Nickname
@@ -136,11 +156,17 @@ class PocketBaseService {
     final customNickname = prefs.getString('custom_nickname');
     final selectedTitle = prefs.getString('selected_title');
     
+    // 🚀 COMPETITIVE GUARD: Never auto-inject "Top X Global" from local prefs
+    // These titles must be validated against actual rank before writing.
+    // Without this, old clients re-push stale competitive titles on every heartbeat.
+    final _competitiveTitles = {'Top 1 Global', 'Top 2 Global', 'Top 3 Global'};
+    final isCompetitiveTitle = selectedTitle != null && _competitiveTitles.contains(selectedTitle);
+    
     final dataWithHost = {
       ...data, 
       'hostname': hostname,
       'nickname': customNickname ?? '',
-      if (!data.containsKey('selected_title') && selectedTitle != null && selectedTitle.isNotEmpty)
+      if (!data.containsKey('selected_title') && selectedTitle != null && selectedTitle.isNotEmpty && !isCompetitiveTitle)
         'selected_title': selectedTitle,
       if (clearAvatar) 'avatar': null,
     };
@@ -220,10 +246,16 @@ class PocketBaseService {
           await prefs.setString('pb_metrics_id', existingId);
 
           debugPrint("📊 Found and updated existing metrics record: $existingId");
+          return;
         } catch (e) {
           debugPrint("⚠️ Failed to update metrics record: $e");
+          // 🚀 SELF-HEALING: If the found record can't be updated (400 = corrupted/wiped),
+          // clear cache so we fall through to create a new record.
+          _cachedMetricsId = null;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('pb_metrics_id');
+          // Fall through to create new record below
         }
-        return;
       }
     } catch (e) {
       debugPrint("⚠️ Search existing record error: $e");
@@ -283,6 +315,7 @@ class PocketBaseService {
 
   // GET DATA (Read Current Metrics) - No List permission needed
   Future<Map<String, dynamic>?> getUserMetrics() async {
+    if (isOffline || !enableCloudSync) return null; // 🔒 OFFLINE or Cloud Sync Disabled
     if (!_initialized || _userId == null) return null;
 
     // 1. Try cached ID
@@ -359,6 +392,7 @@ class PocketBaseService {
   /// Determines the user's global rank by counting how many users have strictly more total minutes.
   /// Rank = (Count of users with > minutes) + 1
   Future<int> calculateUserRank(int minutes) async {
+    if (isOffline || !enableLeaderboard) return 0; // 🔒 OFFLINE or Leaderboard Disabled
     if (!_initialized) return 0;
     try {
       final records = await pb.collection('metrics').getList(
@@ -437,6 +471,7 @@ class PocketBaseService {
   /// Takes the old anonymous user_id's metrics row and reassigns it to the new authenticated user_id.
   /// If the new user_id already has a metrics row (cross-device), merges the data.
   Future<bool> migrateAnonymousToLinked(String newUserId, {String? fromUserId}) async {
+    if (isOffline) return false; // 🔒 OFFLINE MODE
     if (!_initialized) return false;
     
     // Use explicit fromUserId (crash recovery) or fallback to internal _userId
@@ -581,6 +616,7 @@ class PocketBaseService {
     File? avatarFile,
     bool clearAvatar = false,
   }) async {
+    if (isOffline) return; // 🔒 OFFLINE MODE
     // Requires a linked account
     final linkedUserId = AuthService().linkedUserId;
     if (linkedUserId == null) return;
@@ -678,6 +714,7 @@ class PocketBaseService {
   // VERIFY ADMIN/VIEWER CODE (Requires Admin Auth to read settings)
   // Returns: 'admin', 'viewer', or null if invalid
   Future<String?> verifyAdminAccessCode(String inputCode) async {
+    if (isOffline) return null; // 🔒 OFFLINE MODE
     try {
       // Authenticate as admin first to access locked settings
       // Authenticate using isolated admin client so we don't drop the user's active session
@@ -717,6 +754,7 @@ class PocketBaseService {
   // ADMIN: FETCH ALL USERS (Requires Admin Auth)
   // Returns: { 'items': List<Map>, 'totalCount': int }
   Future<Map<String, dynamic>> fetchAllMetrics() async {
+    if (isOffline) return {'items': [], 'totalCount': 0}; // 🔒 OFFLINE MODE
     try {
       // Authenticate as admin if not already
       // Authenticate using isolated admin client
@@ -724,7 +762,7 @@ class PocketBaseService {
 
       final records = await adminPb.collection('metrics').getList(
             page: 1,
-            perPage: 100, // Preview limit
+            perPage: 500, // Must be high enough to capture all active users even with duplicates
             sort: '-last_active',
           );
       return {
@@ -739,6 +777,7 @@ class PocketBaseService {
 
   // FETCH LEADERBOARD (Available to users)
   Future<List<Map<String, dynamic>>> fetchLeaderboard({required String sortBy, int limit = 50, String? filter}) async {
+    if (isOffline || !enableLeaderboard) return []; // 🔒 OFFLINE MODE or Leaderboard Disabled
     try {
       // Authenticate as admin since metrics list might be restricted
       final adminPb = await _getAdminClient();
@@ -759,6 +798,7 @@ class PocketBaseService {
 
   // FETCH ARTIST LEADERBOARD
   Future<List<Map<String, dynamic>>> fetchArtistLeaderboard({required String sortBy, int limit = 50, String? filter}) async {
+    if (isOffline || !enableLeaderboard) return []; // 🔒 OFFLINE MODE or Leaderboard Disabled
     try {
       final adminPb = await _getAdminClient();
 
@@ -778,6 +818,7 @@ class PocketBaseService {
 
   // INCREMENT ARTIST PLAY
   Future<void> incrementArtistPlay(String artistName) async {
+    if (isOffline) return; // 🔒 OFFLINE MODE
     if (artistName.isEmpty || artistName == "Unknown" || artistName == "N/A") return;
     
     try {
@@ -844,6 +885,7 @@ class PocketBaseService {
 
   // CHECK NICKNAME UNIQUENESS
   Future<bool> isNicknameTaken(String nickname) async {
+    if (isOffline) return false; // 🔒 OFFLINE MODE
     try {
       final adminPb = await _getAdminClient();
       
@@ -862,6 +904,7 @@ class PocketBaseService {
 
   // ADMIN: DELETE USER METRICS RECORD
   Future<bool> deleteMetricsRecord(String recordId) async {
+    if (isOffline) return false; // 🔒 OFFLINE MODE
     try {
       // Authenticate as admin using isolated client
       final adminPb = await _getAdminClient();
@@ -878,6 +921,7 @@ class PocketBaseService {
   // --- GLOBAL BROADCASTS ---
   
   Future<void> sendGlobalBroadcast(String message) async {
+    if (isOffline) return; // 🔒 OFFLINE MODE
     try {
       // Authenticate using isolated admin client
       final adminPb = await _getAdminClient();
@@ -893,6 +937,7 @@ class PocketBaseService {
   }
 
   Future<List<Map<String, dynamic>>> fetchRecentBroadcasts() async {
+    if (isOffline) return []; // 🔒 OFFLINE MODE
     try {
       await _ensureInitialized();
       final records = await pb.collection('broadcasts').getList(
@@ -914,6 +959,7 @@ class PocketBaseService {
   }
 
   Future<void> listenForBroadcasts(Function(String, String) onMessage) async {
+    if (isOffline) return; // 🔒 OFFLINE MODE
     try {
       await _ensureInitialized();
 
@@ -945,6 +991,7 @@ class PocketBaseService {
   }
 
   Future<String?> _ensureUniqueSession({bool forceRegenerate = false}) async {
+    if (isOffline) return null; // 🔒 OFFLINE MODE
     if (!_initialized || _userId == null) return null;
 
     // 1. Force Regenerate: Delete existing records and start fresh
@@ -1051,6 +1098,7 @@ class PocketBaseService {
 
   // UPDATE SESSION (Broadcast State)
   Future<void> updateSession(Map<String, dynamic> data) async {
+    if (isOffline) return; // 🔒 OFFLINE MODE
     final recordId = await _ensureUniqueSession();
     if (recordId == null) return;
 
@@ -1058,12 +1106,25 @@ class PocketBaseService {
       await pb.collection('sessions').update(recordId, body: data);
     } catch (e) {
       if (e is ClientException) {
-        // 🚀 SELF-HEALING: If 400 or 404, the session is likely stale or corrupted.
-        // Clear it so the next call regenerates a fresh one.
+        // 🚀 SELF-HEALING: If 400 or 404, the session is stale/corrupted.
+        // Force regenerate a fresh session and retry ONCE.
         if (e.statusCode == 400 || e.statusCode == 404) {
-          DebugLogService().warning("⚠️ PB: Session $recordId is stale. Clearing for self-healing.");
+          DebugLogService().warning("⚠️ PB: Session $recordId is stale. Force regenerating...");
           _cachedSessionId = null;
-          SharedPreferences.getInstance().then((p) => p.remove('pb_session_id'));
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('pb_session_id');
+          
+          // Force create a brand new session
+          try {
+            final newId = await _ensureUniqueSession(forceRegenerate: true);
+            if (newId != null) {
+              await pb.collection('sessions').update(newId, body: data);
+              DebugLogService().success("✅ PB: Session self-healed! New ID: $newId");
+              return;
+            }
+          } catch (retryErr) {
+            DebugLogService().error("⚠️ PB: Session self-heal retry also failed: $retryErr");
+          }
         }
         DebugLogService().error("⚠️ PB: Update 400 Detail: ${e.response}");
       }
@@ -1073,6 +1134,7 @@ class PocketBaseService {
 
   // GET SESSION DATA (Polling)
   Future<Map<String, dynamic>?> getSessionData() async {
+    if (isOffline) return null; // 🔒 OFFLINE MODE
     final recordId = await _ensureUniqueSession();
     if (recordId == null) return null;
 
@@ -1099,6 +1161,7 @@ class PocketBaseService {
   // SUBSCRIBE (Listen for Commands)
   Future<void> subscribeToSession(
       Function(Map<String, dynamic>) onUpdate) async {
+    if (isOffline) return; // 🔒 OFFLINE MODE
     final recordId = await _ensureUniqueSession();
     if (recordId == null) return;
 
@@ -1121,6 +1184,7 @@ class PocketBaseService {
   }
 
   void unsubscribe() {
+    if (isOffline) return; // 🔒 OFFLINE MODE
     pb.collection('sessions').unsubscribe();
   }
 
@@ -1128,6 +1192,7 @@ class PocketBaseService {
 
   /// Shares a playlist and returns a 6-digit share code
   Future<String?> sharePlaylist(String playlistId, Map<String, dynamic> playlistData) async {
+    if (isOffline) return null; // 🔒 OFFLINE MODE
     try {
       await _ensureInitialized();
 
@@ -1195,6 +1260,7 @@ class PocketBaseService {
 
   /// Deletes a shared playlist from the database
   Future<bool> unsharePlaylist(String playlistId) async {
+    if (isOffline) return false; // 🔒 OFFLINE MODE
     try {
       await _ensureInitialized();
       
@@ -1217,6 +1283,7 @@ class PocketBaseService {
 
   /// Checks if a playlist is currently shared and returns its code
   Future<String?> getShareCode(String playlistId) async {
+    if (isOffline) return null; // 🔒 OFFLINE MODE
     try {
       await _ensureInitialized();
       
@@ -1236,6 +1303,7 @@ class PocketBaseService {
 
   /// Fetches a shared playlist by its 6-digit code
   Future<Map<String, dynamic>?> fetchSharedPlaylist(String shareCode) async {
+    if (isOffline) return null; // 🔒 OFFLINE MODE
     if (!_initialized) return null;
 
     try {

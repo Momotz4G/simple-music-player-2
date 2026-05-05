@@ -22,7 +22,9 @@ import '../../utils/chinese_romanizer.dart';
 import '../../utils/korean_romanizer.dart';
 import '../../utils/translation_service.dart';
 import '../../services/spotify_service.dart';
-import '../../services/db_service.dart'; // 🚀 Added for Caching
+import '../../services/db_service.dart';
+import 'package:flutter/scheduler.dart';
+import '../widgets/smooth_highlight_text.dart';
 
 class FullScreenPlayer extends ConsumerStatefulWidget {
   const FullScreenPlayer({super.key});
@@ -32,7 +34,7 @@ class FullScreenPlayer extends ConsumerStatefulWidget {
 }
 
 class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
-    with WindowListener {
+    with WindowListener, SingleTickerProviderStateMixin {
   VideoPlayerController? _videoController;
   bool _isLoading = false;
   String _loadingStatus = "";
@@ -50,6 +52,13 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
   final ItemPositionsListener _lyricPositionsListener =
       ItemPositionsListener.create();
   int _activeLyricIndex = -1;
+  bool _isUserScrolling = false;
+  Timer? _scrollResumeTimer;
+
+  // Smooth position ticker
+  Ticker? _ticker;
+  double _smoothPosition = 0;
+  Duration _lastTick = Duration.zero;
 
   @override
   void initState() {
@@ -59,8 +68,10 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
       windowManager.addListener(this);
     }
 
-    // 1. Setup Window
+    // 1. Setup Window & Ticker
     _initWindowMode();
+    _ticker = createTicker(_onTick);
+    _ticker!.start();
 
     // 2. Setup UI Timers
     _startHideTimer();
@@ -88,7 +99,39 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
     }
     _videoController?.dispose();
     _hideTimer?.cancel();
+    _ticker?.dispose();
+    _scrollResumeTimer?.cancel();
     super.dispose();
+  }
+
+  void _onTick(Duration elapsed) {
+    if (!mounted) return;
+    
+    final player = ref.read(playerProvider);
+    if (!player.isPlaying) {
+      _lastTick = elapsed;
+      return;
+    }
+
+    if (_lastTick != Duration.zero) {
+      final delta = (elapsed - _lastTick).inMicroseconds / 1000000.0;
+      _smoothPosition += delta;
+      
+      // Sync with real position periodically
+      final realPos = player.currentPosition;
+      if ((realPos - _smoothPosition).abs() > 0.1) {
+        _smoothPosition = realPos;
+      }
+
+      // High-frequency sync check
+      if (!_isUserScrolling && _showLyrics) {
+        final lyricsState = ref.read(lyricsProvider);
+        if (lyricsState.parsedLyrics.isNotEmpty) {
+          _syncLyrics(_smoothPosition, lyricsState.parsedLyrics, lyricsState.syncOffset);
+        }
+      }
+    }
+    _lastTick = elapsed;
   }
 
 
@@ -430,12 +473,9 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
         builder: (context, ref, child) {
           final lyricsState = ref.watch(lyricsProvider);
 
-          // Sync scrolling if lyrics are visible
-          ref.listen<PlayerState>(playerProvider, (prev, next) {
-            if (_showLyrics && lyricsState.parsedLyrics.isNotEmpty) {
-              _syncLyrics(next.currentPosition, lyricsState.parsedLyrics,
-                  lyricsState.syncOffset);
-            }
+          // Sync position on seek
+          ref.listen<double>(playerProvider.select((s) => s.currentPosition), (prev, next) {
+            _smoothPosition = next;
           });
 
           return MouseRegion(
@@ -1076,15 +1116,23 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40),
-      child: ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-        child: ScrollablePositionedList.builder(
-          itemCount: state.parsedLyrics.length,
-          itemScrollController: _lyricScrollController,
-          itemPositionsListener: _lyricPositionsListener,
-          padding: const EdgeInsets.only(top: 100, bottom: 300),
+    return Listener(
+      onPointerDown: (_) => _isUserScrolling = true,
+      onPointerUp: (_) {
+        _scrollResumeTimer?.cancel();
+        _scrollResumeTimer = Timer(const Duration(seconds: 3), () {
+          if (mounted) _isUserScrolling = false;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+          child: ScrollablePositionedList.builder(
+            itemCount: state.parsedLyrics.length,
+            itemScrollController: _lyricScrollController,
+            itemPositionsListener: _lyricPositionsListener,
+            padding: const EdgeInsets.only(top: 100, bottom: 300),
           itemBuilder: (context, index) {
             final line = state.parsedLyrics[index];
             final isActive = index == _activeLyricIndex;
@@ -1102,15 +1150,30 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        line.text,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: isActive ? 32 : 28,
-                          fontWeight: FontWeight.bold,
-                          height: 1.3,
-                        ),
-                      ),
+                        !isActive
+                            ? Text(
+                                line.text,
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.3,
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
+                              )
+                            : SmoothHighlightText(
+                                text: line.text,
+                                startTime: line.time,
+                                endTime: index + 1 < state.parsedLyrics.length
+                                    ? state.parsedLyrics[index + 1].time
+                                    : line.time + 5.0,
+                                initialPosition: _smoothPosition,
+                                isPlaying: ref.watch(playerProvider).isPlaying,
+                                syncOffset: state.syncOffset,
+                                activeColor: Colors.white,
+                                inactiveColor: Colors.white.withValues(alpha: 0.3),
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                              ),
                       // Optional: Romanization/Translation
                       _buildSubLine(line.text, index, state),
                     ],
@@ -1119,6 +1182,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
               ),
             );
           },
+          ),
         ),
       ),
     );
@@ -1158,28 +1222,49 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
       return const SizedBox.shrink();
     }
 
+    final isActive = index == _activeLyricIndex;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (romanized != null && romanized != original)
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              romanized,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            child: !isActive
+                ? Text(
+                    romanized,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )
+                : SmoothHighlightText(
+                    text: romanized,
+                    startTime: lyricsState.parsedLyrics[index].time,
+                    endTime: index + 1 < lyricsState.parsedLyrics.length
+                        ? lyricsState.parsedLyrics[index + 1].time
+                        : lyricsState.parsedLyrics[index].time + 5.0,
+                    initialPosition: _smoothPosition,
+                    isPlaying: ref.watch(playerProvider).isPlaying,
+                    syncOffset: lyricsState.syncOffset,
+                    activeColor: Colors.white70,
+                    inactiveColor: Colors.white.withValues(alpha: 0.2),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    isItalic: true,
+                    spacing: 6.0,
+                  ),
           ),
         if (translation != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               '($translation)',
-              style: const TextStyle(
-                color: Colors.white38,
+              style: TextStyle(
+                color: isActive
+                    ? Colors.white.withValues(alpha: 0.4)
+                    : Colors.white.withValues(alpha: 0.15),
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic,
@@ -1222,9 +1307,9 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
       if (_activeLyricIndex >= 0 && _lyricScrollController.isAttached) {
         _lyricScrollController.scrollTo(
           index: _activeLyricIndex,
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeOutCubic,
-          alignment: 0.3, // Center-ish
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeOutQuart,
+          alignment: 0.4, // Slightly above center
         );
       }
     }

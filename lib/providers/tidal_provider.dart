@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/tidal_service.dart';
+import '../services/pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
 class TidalStatusState {
   final TidalApiStatus status;
@@ -57,6 +58,11 @@ class TidalStatusNotifier extends AsyncNotifier<TidalStatusState> {
   }
 
   Future<TidalStatusState> _fetchStatus() async {
+    // 🔒 OFFLINE MODE
+    if (PocketBaseService.isOffline) {
+      return TidalStatusState(status: TidalApiStatus.offlineStatus);
+    }
+
     // 1. Check Internet Connectivity First
     try {
       final result = await InternetAddress.lookup('google.com')

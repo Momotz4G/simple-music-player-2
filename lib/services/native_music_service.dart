@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart'; // 🚀 IMPORT
-import 'package:flutter/foundation.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'debug_log_service.dart';
 import 'dart:isolate'; // 🚀 IMPORT ISOLATE
@@ -21,6 +20,7 @@ import 'package:rxdart/rxdart.dart'; // 🚀 IMPORT RXDART FOR STREAM SWITCHING
 import 'ffi_audio_player.dart'; // 🚀 IMPORT FFI PLAYER
 import 'package:shared_preferences/shared_preferences.dart'; // 🚀 IMPORT PREFS
 import 'cue_parser_service.dart'; // 🚀 IMPORT CUE PATH SUPPORT
+import 'package:just_audio_media_kit/just_audio_media_kit.dart'; // 🚀 IMPORT JUST_AUDIO_MEDIA_KIT
 
 class NativeMusicService {
   // Singleton pattern - ensures same player instance everywhere
@@ -74,7 +74,7 @@ class NativeMusicService {
     _activePlayerSubject.add(_player1); // Initialize subject with default player
     
     DebugLogService().info(
-        "NativeMusicService Created. Count=$_instanceCount Hash=${hashCode} PID=${pid} Isolate=${Isolate.current.debugName} InitialState=ZOMBIE");
+        "NativeMusicService Created. Count=$_instanceCount Hash=$hashCode PID=$pid Isolate=${Isolate.current.debugName} InitialState=ZOMBIE");
 
     // 🚀 INITIALIZE AUDIO HANDLER (Mobile Only)
     _setupListeners(1);
@@ -140,12 +140,85 @@ class NativeMusicService {
   void _becomeZombie() {
     _isZombie = true;
     _hasClaimedMutex = false;
+    
+    DebugLogService().info("NativeMusicService: Downgraded to ZOMBIE. Releasing hardware...");
+    
+    // 🚀 RELEASE HARDWARE: When being usurped by a new instance, we MUST release WASAPI
+    // so the new instance can actually play audio.
+    _releaseHardwareGracefully().then((_) {
+      DebugLogService().info("NativeMusicService: ZOMBIE cleanup complete.");
+    });
+  }
+
+  /// 🚀 Shared helper to release WASAPI and other native locks
+  Future<void> _releaseHardwareGracefully() async {
     try {
-      _player.stop();
-    } catch (e) {
-      DebugLogService().error("Error stopping during zombification: $e");
-    }
-    DebugLogService().info("NativeMusicService: Downgraded to ZOMBIE.");
+      final prefs = await SharedPreferences.getInstance();
+      final bool wasapiOn = prefs.getBool('wasapiExclusive') ?? false;
+
+      for (var p in [_player1, _player2]) {
+        try {
+          await p.stop();
+          if (wasapiOn) {
+            await JustAudioMediaKit.setAudioFilter("");
+            await p.setAudioSource(
+              AudioSource.uri(Uri.parse("data:audio/wav;base64,UklGRiQAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=")),
+            );
+          }
+          // We don't necessarily dispose() here because we might become master again later (though unlikely in this app's architecture)
+          // But for safety, stopping and clearing source is enough for WASAPI release.
+        } catch (_) {}
+      }
+      
+      if (wasapiOn) {
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+    } catch (_) {}
+  }
+
+  /// 🛑 GRACEFUL SHUTDOWN: Dispose all native audio resources before process exit.
+  /// Must be called BEFORE appWindow.close() to prevent heap corruption (0xc0000374).
+  /// The FFI worker isolates have a 200ms polling timer calling native C functions —
+  /// if the process tears down while those timers are still alive, they access freed
+  /// memory and crash ntdll.dll.
+  Future<void> shutdown() async {
+    DebugLogService().info("[Native] shutdown() — Disposing all audio resources...");
+    _isZombie = true; // Block any new play/resume calls
+
+    // 1. Cancel any active crossfade/CUE timers
+    _fadeTimer?.cancel();
+    _cueEndMonitor?.cancel();
+
+    // 2. Stop and dispose FFI worker isolates (kills their polling timers)
+    try {
+      await _ffiPlayer1?.dispose();
+    } catch (_) {}
+    try {
+      await _ffiPlayer2?.dispose();
+    } catch (_) {}
+    _ffiPlayer1 = null;
+    _ffiPlayer2 = null;
+
+    // 3. Stop and Release just_audio players (WASAPI Exclusive Fix)
+    await _releaseHardwareGracefully();
+    try {
+      await _player1.dispose();
+    } catch (_) {}
+    try {
+      await _player2.dispose();
+    } catch (_) {}
+
+    // 4. Close stream subjects
+    try {
+      await _activePlayerSubject.close();
+      await _activePlayerIndexSubject.close();
+    } catch (_) {}
+
+    // 5. Release IsolateNameServer mutex
+    IsolateNameServer.removePortNameMapping(_mutexName);
+    _mutexPort.close();
+
+    DebugLogService().info("[Native] shutdown() — All audio resources disposed.");
   }
 
   final Completer<void> _sessionReady = Completer<void>();
@@ -390,7 +463,7 @@ class NativeMusicService {
         await _updateAudioServiceMetadata(song);
       }
       DebugLogService().info(
-          "[Native] load() called. ServiceHash=${this.hashCode}, PlayerHash=${_player.hashCode}");
+          "[Native] load() called. ServiceHash=$hashCode, PlayerHash=${_player.hashCode}");
       DebugLogService().info("[Native] load() called for: ${song.title}");
       debugPrint("🎵 Service Pre-Loading: ${song.title}");
       final maskedPath = song.filePath.startsWith('http') ? (Uri.parse(song.filePath).host) : song.filePath;
@@ -897,7 +970,7 @@ class NativeMusicService {
 
     try {
       DebugLogService().info(
-          "[Native] play() called. ServiceHash=${this.hashCode}, PlayerHash=${_player.hashCode}");
+          "[Native] Switching stream context: Service=$hashCode Engine=${_player.hashCode}");
       DebugLogService().info("[Native] play() called for: ${song.title}");
       debugPrint("🎵 Service Loading: ${song.title}");
       final maskedPath = song.filePath.startsWith('http') ? (Uri.parse(song.filePath).host) : song.filePath;
@@ -986,7 +1059,7 @@ class NativeMusicService {
         }
 
         final fileSize = await file.length();
-        debugPrint("🎵 File size: ${fileSize} bytes");
+        debugPrint("🎵 File size: $fileSize bytes");
       }
 
       // 2. Stop previous playback explicitly to clear buffers

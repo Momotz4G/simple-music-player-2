@@ -2327,4 +2327,275 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlp 有新版本可用。';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
+
+  @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get offlineModeHeader => '离线模式';
+
+  @override
+  String get offlineModeTitle => '离线模式';
+
+  @override
+  String get offlineModeActive => '已激活';
+
+  @override
+  String get offlineModeEnabledStatus => '离线模式已启用';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return '已禁用 ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => '全部启用';
+
+  @override
+  String get offlineModeLockdownDesc => '网络锁定已激活。统计数据保存在本地。';
+
+  @override
+  String get offlineModeMainDesc => '禁用所有网络服务，仅播放本地音乐库。';
+
+  @override
+  String get enableOfflineModeQuestion => '启用离线模式？';
+
+  @override
+  String get offlineModeConfirmationDesc => '这将完全禁用所有网络通信。以下功能将被关闭：';
+
+  @override
+  String get offlineModeSyncRestoreNote => '禁用此项后，您的统计数据将自动同步。';
+
+  @override
+  String get enableOfflineModeBtn => '启用离线模式';
+
+  @override
+  String get onlineModeRestored => '在线模式已恢复。正在同步统计数据...';
+
+  @override
+  String get disableServicesTitle => '禁用服务';
+
+  @override
+  String get manageIndividualFeatures => '管理单个在线功能';
+
+  @override
+  String get featureCloudSync => '云统计同步';
+
+  @override
+  String get featureCloudSyncDesc => '听歌统计仅保存在本地';
+
+  @override
+  String get featureCloudSyncLongDesc => '将听歌指标与 PocketBase 同步';
+
+  @override
+  String get featureLeaderboard => '全球排行榜';
+
+  @override
+  String get featureLeaderboardDesc => '排名更新已暂停';
+
+  @override
+  String get featureLeaderboardLongDesc => '公开显示并更新您的排名';
+
+  @override
+  String get featureOnlineLyrics => '在线歌词搜索';
+
+  @override
+  String get featureOnlineLyricsDesc => '仅限本地 .lrc/.ttml 文件';
+
+  @override
+  String get featureOnlineLyricsLongDesc => '从 LRCLIB/Spotify 获取歌词';
+
+  @override
+  String get featureAiLyrics => 'AI 歌词生成器';
+
+  @override
+  String get featureAiLyricsDesc => '自动同步歌词已禁用';
+
+  @override
+  String get featureAiLyricsLongDesc => '通过 AI 生成同步歌词';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => '背景视频已禁用';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => '曲目的背景视频';
+
+  @override
+  String get featureOnlineSearch => '在线搜索';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube 搜索已禁用';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'Spotify 和 YouTube 远程搜索';
+
+  @override
+  String get featureConnectDevice => '连接到设备';
+
+  @override
+  String get featureConnectDeviceDesc => '远程控制和听歌派对已禁用';
+
+  @override
+  String get featureConnectDeviceLongDesc => '远程控制和听歌派对';
+
+  @override
+  String get lyricsEditorTitle => '歌词编辑器';
+
+  @override
+  String get clearAllQuestion => '全部清除？';
+
+  @override
+  String get clearAllDesc => '这将清除当前的编辑器状态。除非您之后保存，否则不会删除您的本地文件。';
+
+  @override
+  String get clearBtn => '清除';
+
+  @override
+  String get lyricsApplied => '歌词已应用到面板！';
+
+  @override
+  String get chooseFormat => '选择您喜欢的格式：';
+
+  @override
+  String get lrcFormat => 'LRC (标准同步)';
+
+  @override
+  String get lrcFormatDesc => '通用格式，随处可用。';
+
+  @override
+  String get ttmlFormat => 'TTML (高精度)';
+
+  @override
+  String get ttmlFormatDesc => '更适合 AI 生成和详细同步。';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return '成功保存到 $extension 文件！';
+  }
+
+  @override
+  String get failedToSave => '保存歌词文件失败。';
+
+  @override
+  String get generationFailed => '生成失败';
+
+  @override
+  String get aiLyricsGenerationTitle => 'AI 歌词生成';
+
+  @override
+  String get syncedMode => '已同步';
+
+  @override
+  String get plainMode => '纯文本';
+
+  @override
+  String get addLineToTop => '添加到顶部';
+
+  @override
+  String get addLineToEnd => '添加到末尾';
+
+  @override
+  String get lyricTextHint => '歌词文本...';
+
+  @override
+  String get insertAfter => '在后插入';
+
+  @override
+  String get removeLine => '删除行';
+
+  @override
+  String get romajiHint => '罗马拼音 / 译音 (可选)...';
+
+  @override
+  String get startLabel => '开始: ';
+
+  @override
+  String get setStartTooltip => '将开始设为当前位置';
+
+  @override
+  String get endLabel => '结束: ';
+
+  @override
+  String get setEndTooltip => '将结束设为当前位置';
+
+  @override
+  String get playFromLine => '从这一行播放';
+
+  @override
+  String get pasteLyricsHint => '在此粘贴歌词...';
+
+  @override
+  String get applyBtn => '应用';
+
+  @override
+  String get saveLocallyBtn => '本地保存';
+
+  @override
+  String get editLyricsTooltip => '编辑歌词';
+
+  @override
+  String get saveLyricsTitle => '保存歌词';
+
+  @override
+  String get aiGenerate => 'AI 生成';
+
+  @override
+  String get aiLyricsInitializing => '正在初始化...';
+
+  @override
+  String get aiLyricsUploading => '正在上传歌曲到服务器...';
+
+  @override
+  String get aiLyricsUploadFailed => '错误：上传失败。';
+
+  @override
+  String get aiLyricsUploadSuccess => '上传完成！';
+
+  @override
+  String get aiLyricsVerifying => '正在验证服务器状态...';
+
+  @override
+  String get aiLyricsStatusOk => '状态码 200 OK!';
+
+  @override
+  String get aiLyricsPolling => '正在获取歌词... 请耐心等待！';
+
+  @override
+  String get aiLyricsReceiving => '已收到歌词';
+
+  @override
+  String get aiLyricsParsing => '正在解析歌词...';
+
+  @override
+  String get aiLyricsSuccess => '歌词生成成功！';
+
+  @override
+  String get aiLyricsLocalFileMissing => '错误：未找到本地音频文件。';
+
+  @override
+  String get aiLyricsComplete => '完成！';
 }

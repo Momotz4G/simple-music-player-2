@@ -55,11 +55,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   late AppLocalizations _l10n;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _l10n = AppLocalizations.of(context)!;
-  }
+
 
   @override
   void initState() {
@@ -249,6 +245,10 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10nObj = AppLocalizations.of(context);
+    if (l10nObj == null) return const SizedBox.shrink();
+    _l10n = l10nObj;
+
     final library = p.Provider.of<LibraryProvider>(context);
     final allSongs = library.songs;
     _generateQuickMix(allSongs);

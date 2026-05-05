@@ -1,8 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../models/playlist_model.dart';
 import '../models/song_model.dart';
@@ -82,7 +86,9 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
                   artUrl: song.onlineArtUrl,
                   sourceUrl: song.sourceUrl, // SAVE SOURCE URL
                   isrc: song.isrc, // SAVE ISRC
-                  duration: song.duration.toInt()) // SAVE DURATION
+                  duration: song.duration.toInt(), // SAVE DURATION
+                  spotifyId: song.spotifyId, // 🚀 SAVE SPOTIFY ID
+                )
             ])
           else
             p
@@ -111,6 +117,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
                       sourceUrl: s.sourceUrl, // SAVE SOURCE URL
                       isrc: s.isrc, // SAVE ISRC
                       duration: s.duration.toInt(), // SAVE DURATION
+                      spotifyId: s.spotifyId, // 🚀 SAVE SPOTIFY ID
                     ))
           ])
         else
@@ -370,6 +377,182 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
       onStatus?.call("importFailed", args: {'error': e.toString()});
       return null;
     }
+  }
+
+  // 🚀 M3U PLAYLIST EXPORT/IMPORT
+  
+  Future<void> exportM3uPlaylist(String playlistId, {Function(String statusKey, {Map<String, dynamic>? args})? onStatus}) async {
+    try {
+      final playlist = state.firstWhere((p) => p.id == playlistId);
+      final buffer = StringBuffer();
+      buffer.writeln("#EXTM3U");
+      
+      for (final entry in playlist.entries) {
+        final durationStr = entry.duration != null ? entry.duration.toString() : "-1";
+        final artistStr = entry.artist ?? "Unknown Artist";
+        final titleStr = entry.title ?? "Unknown Title";
+        
+        buffer.writeln("#EXTINF:$durationStr,$artistStr - $titleStr");
+        
+        if (entry.album != null && entry.album!.isNotEmpty) {
+          buffer.writeln("#EXTALB:${entry.album}");
+        }
+        if (entry.artUrl != null && entry.artUrl!.isNotEmpty) {
+          buffer.writeln("#EXTART:${entry.artUrl}");
+        }
+        
+        if (entry.spotifyId != null && entry.spotifyId!.isNotEmpty) {
+          buffer.writeln("spotify-track://${entry.spotifyId}");
+        } else if (entry.sourceUrl != null && entry.sourceUrl!.isNotEmpty) {
+          buffer.writeln(entry.sourceUrl);
+        } else {
+          // Prevent exporting local temp/cache paths which break cross-device portability
+          if (entry.path.contains('SimpleMusicCache') || 
+              entry.path.contains('Temp') || 
+              entry.path.contains('/cache/') ||
+              entry.path == 'cloud_stream') {
+            final query = Uri.encodeComponent('$artistStr $titleStr');
+            buffer.writeln("yt-search://$query");
+          } else {
+            buffer.writeln(entry.path);
+          }
+        }
+      }
+      
+      String? outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save Playlist As',
+        fileName: '${playlist.name}.m3u',
+        type: FileType.custom,
+        allowedExtensions: ['m3u'],
+      );
+
+      if (outputFile == null) {
+        // User canceled the picker
+        return;
+      }
+
+      final file = File(outputFile);
+      await file.writeAsString(buffer.toString());
+      
+      onStatus?.call("exportedM3u");
+    } catch (e) {
+      print("Export M3U Error: $e");
+      onStatus?.call("exportFailed", args: {'error': e.toString()});
+    }
+  }
+
+  Future<String?> importM3uPlaylist({Function(String statusKey, {Map<String, dynamic>? args})? onStatus}) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['m3u', 'm3u8'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final lines = await file.readAsLines();
+        
+        if (lines.isEmpty || !lines[0].startsWith("#EXTM3U")) {
+          onStatus?.call("invalidM3uFile");
+          return null;
+        }
+
+        final playlistName = result.files.single.name.replaceAll(RegExp(r'\.m3u8?$'), '');
+        final entries = <PlaylistEntry>[];
+        
+        String? currentTitle;
+        String? currentArtist;
+        int? currentDuration;
+        String? currentAlbum;
+        String? currentArtUrl;
+
+        for (int i = 1; i < lines.length; i++) {
+          final line = lines[i].trim();
+          if (line.isEmpty) continue;
+
+          if (line.startsWith("#EXTINF:")) {
+            // Parse #EXTINF:duration,Artist - Title
+            final info = line.substring(8);
+            final parts = info.split(',');
+            if (parts.isNotEmpty) {
+              currentDuration = int.tryParse(parts[0]);
+              if (parts.length > 1) {
+                final trackInfo = parts.sublist(1).join(',');
+                final trackParts = trackInfo.split(' - ');
+                if (trackParts.length > 1) {
+                  currentArtist = trackParts[0].trim();
+                  currentTitle = trackParts.sublist(1).join(' - ').trim();
+                } else {
+                  currentTitle = trackInfo.trim();
+                  currentArtist = "Unknown Artist";
+                }
+              }
+            }
+          } else if (line.startsWith("#EXTALB:")) {
+            currentAlbum = line.substring(8);
+          } else if (line.startsWith("#EXTART:")) {
+            currentArtUrl = line.substring(8);
+          } else if (!line.startsWith("#")) {
+            // URI line
+            String path = "cloud_stream";
+            String? spotifyId;
+            String? sourceUrl;
+
+            if (line.startsWith("spotify-track://")) {
+              spotifyId = line.replaceFirst("spotify-track://", "");
+            } else if (line.startsWith("yt-search://")) {
+              path = "cloud_stream";
+            } else if (line.startsWith("http://") || line.startsWith("https://")) {
+              sourceUrl = line;
+            } else {
+              path = line;
+            }
+
+            entries.add(PlaylistEntry(
+              path: path,
+              dateAdded: DateTime.now(),
+              title: currentTitle ?? "Unknown Title",
+              artist: currentArtist ?? "Unknown Artist",
+              album: currentAlbum,
+              duration: currentDuration,
+              spotifyId: spotifyId,
+              sourceUrl: sourceUrl,
+              artUrl: currentArtUrl,
+            ));
+
+            // Reset for next track
+            currentTitle = null;
+            currentArtist = null;
+            currentDuration = null;
+            currentAlbum = null;
+            currentArtUrl = null;
+          }
+        }
+
+        if (entries.isEmpty) {
+          onStatus?.call("noTracksFound");
+          return null;
+        }
+
+        final newId = _uuid.v4();
+        final newPlaylist = PlaylistModel(
+          id: newId,
+          name: playlistName,
+          entries: entries,
+          createdAt: DateTime.now(),
+        );
+
+        state = [...state, newPlaylist];
+        await _save();
+
+        onStatus?.call("importedTracks", args: {'count': entries.length});
+        return newId;
+      }
+    } catch (e) {
+      print("Import M3U Error: $e");
+      onStatus?.call("importFailed", args: {'error': e.toString()});
+    }
+    return null;
   }
 
   // 🚀 SHAREABLE PLAYLISTS (PocketBase)

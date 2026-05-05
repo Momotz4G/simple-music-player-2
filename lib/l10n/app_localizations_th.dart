@@ -2378,4 +2378,285 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'มี yt-dlp เวอร์ชันใหม่พร้อมใช้งาน';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
+
+  @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get offlineModeHeader => 'โหมดออฟไลน์';
+
+  @override
+  String get offlineModeTitle => 'โหมดออฟไลน์';
+
+  @override
+  String get offlineModeActive => 'เปิดใช้งาน';
+
+  @override
+  String get offlineModeEnabledStatus => 'เปิดใช้งานโหมดออฟไลน์แล้ว';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'ปิดใช้งาน ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => 'เปิดใช้งานทั้งหมด';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'การล็อกดาวน์เครือข่ายเปิดใช้งานอยู่ สถิติจะถูกบันทึกไว้ในเครื่อง';
+
+  @override
+  String get offlineModeMainDesc =>
+      'ปิดใช้งานบริการเครือข่ายทั้งหมดและเล่นเฉพาะคลังเพลงในเครื่องเท่านั้น';
+
+  @override
+  String get enableOfflineModeQuestion => 'เปิดใช้งานโหมดออฟไลน์?';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'การดำเนินการนี้จะปิดใช้งานการสื่อสารเครือข่ายทั้งหมดโดยสิ้นเชิง ฟีเจอร์ต่อไปนี้จะถูกปิด:';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'สถิติของคุณจะซิงค์โดยอัตโนมัติเมื่อคุณปิดสิ่งนี้';
+
+  @override
+  String get enableOfflineModeBtn => 'เปิดใช้งานโหมดออฟไลน์';
+
+  @override
+  String get onlineModeRestored => 'กู้คืนโหมดออนไลน์แล้ว กำลังซิงค์สถิติ...';
+
+  @override
+  String get disableServicesTitle => 'ปิดใช้งานบริการ';
+
+  @override
+  String get manageIndividualFeatures => 'จัดการฟีเจอร์ออนไลน์แต่ละรายการ';
+
+  @override
+  String get featureCloudSync => 'ซิงค์สถิติคลาวด์';
+
+  @override
+  String get featureCloudSyncDesc => 'บันทึกสถิติการฟังไว้ในเครื่องเท่านั้น';
+
+  @override
+  String get featureCloudSyncLongDesc => 'ซิงค์ข้อมูลการฟังกับ PocketBase';
+
+  @override
+  String get featureLeaderboard => 'กระดานผู้นำระดับโลก';
+
+  @override
+  String get featureLeaderboardDesc => 'หยุดการอัปเดตอันดับชั่วคราว';
+
+  @override
+  String get featureLeaderboardLongDesc =>
+      'แสดงและอัปเดตอันดับของคุณแบบสาธารณะ';
+
+  @override
+  String get featureOnlineLyrics => 'ค้นหาเนื้อเพลงออนไลน์';
+
+  @override
+  String get featureOnlineLyricsDesc =>
+      'เฉพาะไฟล์ .lrc/.ttml ในเครื่องเท่านั้น';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'ดึงเนื้อเพลงจาก LRCLIB/Spotify';
+
+  @override
+  String get featureAiLyrics => 'ตัวสร้างเนื้อเพลงด้วย AI';
+
+  @override
+  String get featureAiLyricsDesc => 'ปิดใช้งานเนื้อเพลงซิงค์อัตโนมัติ';
+
+  @override
+  String get featureAiLyricsLongDesc => 'สร้างเนื้อเพลงซิงค์ด้วย AI';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'ปิดใช้งานวิดีโอพื้นหลัง';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'วิดีโอพื้นหลังสำหรับแทร็ก';
+
+  @override
+  String get featureOnlineSearch => 'ค้นหาออนไลน์';
+
+  @override
+  String get featureOnlineSearchDesc => 'ปิดใช้งานการค้นหา Spotify/YouTube';
+
+  @override
+  String get featureOnlineSearchLongDesc =>
+      'ค้นหาทางไกลผ่าน Spotify และ YouTube';
+
+  @override
+  String get featureConnectDevice => 'เชื่อมต่อกับอุปกรณ์';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'ปิดใช้งานการควบคุมระยะไกลและปาร์ตี้การฟัง';
+
+  @override
+  String get featureConnectDeviceLongDesc => 'การควบคุมระยะไกลและปาร์ตี้การฟัง';
+
+  @override
+  String get lyricsEditorTitle => 'ตัวแก้ไขเนื้อเพลง';
+
+  @override
+  String get clearAllQuestion => 'ล้างทั้งหมด?';
+
+  @override
+  String get clearAllDesc =>
+      'นี่จะล้างสถานะตัวแก้ไขปัจจุบัน จะไม่ลบไฟล์ในเครื่องของคุณเว้นแต่คุณจะบันทึกในภายหลัง';
+
+  @override
+  String get clearBtn => 'ล้าง';
+
+  @override
+  String get lyricsApplied => 'ใช้เนื้อเพลงกับแผงแล้ว!';
+
+  @override
+  String get chooseFormat => 'เลือกรูปแบบที่คุณต้องการ:';
+
+  @override
+  String get lrcFormat => 'LRC (ซิงค์มาตรฐาน)';
+
+  @override
+  String get lrcFormatDesc => 'รูปแบบสากล ใช้งานได้ทุกที่';
+
+  @override
+  String get ttmlFormat => 'TTML (ความแม่นยำสูง)';
+
+  @override
+  String get ttmlFormatDesc =>
+      'ดีกว่าสำหรับการสร้างโดย AI และการซิงค์โดยละเอียด';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'บันทึกลงในไฟล์ $extension สำเร็จแล้ว!';
+  }
+
+  @override
+  String get failedToSave => 'บันทึกไฟล์เนื้อเพลงล้มเหลว';
+
+  @override
+  String get generationFailed => 'การสร้างล้มเหลว';
+
+  @override
+  String get aiLyricsGenerationTitle => 'การสร้างเนื้อเพลงโดย AI';
+
+  @override
+  String get syncedMode => 'ซิงค์แล้ว';
+
+  @override
+  String get plainMode => 'ข้อความธรรมดา';
+
+  @override
+  String get addLineToTop => 'เพิ่มที่ด้านบน';
+
+  @override
+  String get addLineToEnd => 'เพิ่มที่ส่วนท้าย';
+
+  @override
+  String get lyricTextHint => 'ข้อความเนื้อเพลง...';
+
+  @override
+  String get insertAfter => 'แทรกหลังจากนี้';
+
+  @override
+  String get removeLine => 'ลบแถว';
+
+  @override
+  String get romajiHint => 'โรมาจิ / การถอดอักษร (ไม่บังคับ)...';
+
+  @override
+  String get startLabel => 'เริ่ม: ';
+
+  @override
+  String get setStartTooltip => 'ตั้งค่าเริ่มเป็นตำแหน่งปัจจุบัน';
+
+  @override
+  String get endLabel => 'จบ: ';
+
+  @override
+  String get setEndTooltip => 'ตั้งค่าจบเป็นตำแหน่งปัจจุบัน';
+
+  @override
+  String get playFromLine => 'เล่นจากบรรทัดนี้';
+
+  @override
+  String get pasteLyricsHint => 'วางเนื้อเพลงของคุณที่นี่...';
+
+  @override
+  String get applyBtn => 'นำไปใช้';
+
+  @override
+  String get saveLocallyBtn => 'บันทึกในเครื่อง';
+
+  @override
+  String get editLyricsTooltip => 'แก้ไขเนื้อเพลง';
+
+  @override
+  String get saveLyricsTitle => 'บันทึกเนื้อเพลง';
+
+  @override
+  String get aiGenerate => 'สร้างโดย AI';
+
+  @override
+  String get aiLyricsInitializing => 'กำลังเริ่มต้น...';
+
+  @override
+  String get aiLyricsUploading => 'กำลังอัปโหลดเพลงไปยังเซิร์ฟเวอร์...';
+
+  @override
+  String get aiLyricsUploadFailed => 'ข้อผิดพลาด: การอัปโหลดล้มเหลว';
+
+  @override
+  String get aiLyricsUploadSuccess => 'อัปโหลดเสร็จสมบูรณ์!';
+
+  @override
+  String get aiLyricsVerifying => 'กำลังตรวจสอบสถานะเซิร์ฟเวอร์...';
+
+  @override
+  String get aiLyricsStatusOk => 'รหัสสถานะ 200 OK!';
+
+  @override
+  String get aiLyricsPolling => 'กำลังรับเนื้อเพลง... กรุณารอสักครู่!';
+
+  @override
+  String get aiLyricsReceiving => 'ได้รับเนื้อเพลงแล้ว';
+
+  @override
+  String get aiLyricsParsing => 'กำลังวิเคราะห์เนื้อเพลง...';
+
+  @override
+  String get aiLyricsSuccess => 'สร้างเนื้อเพลงสำเร็จแล้ว!';
+
+  @override
+  String get aiLyricsLocalFileMissing => 'ข้อผิดพลาด: ไม่พบไฟล์เสียงในเครื่อง';
+
+  @override
+  String get aiLyricsComplete => 'เสร็จสิ้น!';
 }

@@ -71,13 +71,13 @@ class _TitlePickerDialogState extends ConsumerState<TitlePickerDialog> {
     }
     if (t.category == TitleCategory.competitive) {
       if (t.name == "Top 1 Global") {
-        return _userRank == 1 ? 1 : 0;
+        return _userRank == 1 ? t.requiredMinutes : 0;
       }
       if (t.name == "Top 2 Global") {
-        return _userRank == 2 ? 1 : 0;
+        return _userRank == 2 ? t.requiredMinutes : 0;
       }
       if (t.name == "Top 3 Global") {
-        return _userRank == 3 ? 1 : 0;
+        return _userRank == 3 ? t.requiredMinutes : 0;
       }
       return 0;
     }

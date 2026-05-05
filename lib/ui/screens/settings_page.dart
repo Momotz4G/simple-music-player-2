@@ -8,7 +8,7 @@ import '../../utils/folder_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart'; // Import for device list
-import '../../l10n/app_localizations.dart';
+import 'package:simple_music_player_2/l10n/app_localizations.dart';
 
 import '../../providers/settings_provider.dart';
 import '../../providers/library_provider.dart';
@@ -43,6 +43,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   String _savedPattern = "{artist} - {title}";
   String _savedPlaylistPattern = "{artist} - {title}";
 
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _offlineModeKey = GlobalKey();
+
   // Audio Device Handling
   List<Map<String, String>> _audioDevices = [];
   bool _loadingAudioDevices = false;
@@ -55,6 +58,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool get _unsavedSingle => _formatCtrl.text != _savedPattern;
   bool get _unsavedPlaylist =>
       _playlistFormatCtrl.text != _savedPlaylistPattern;
+
+  late AppLocalizations _l10n;
 
   String _getStreamingQualityDescription(String quality) {
     switch (quality) {
@@ -74,13 +79,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     super.initState();
     _loadCacheSize();
     _loadFormat();
-    _loadVersion();
     if (Platform.isWindows) {
       _loadAudioDevices();
     }
     if (Platform.isAndroid) {
       _checkAndroidSupport();
     }
+
+    // 🚀 Check for initial navigation signals
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final section = ref.read(settingsNavigationProvider);
+      if (section == SettingsSection.offlineMode) {
+        _scrollToOffline();
+        ref.read(settingsNavigationProvider.notifier).state = SettingsSection.none;
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _l10n = AppLocalizations.of(context)!;
+    _loadVersion();
   }
 
   Future<void> _checkAndroidSupport() async {
@@ -113,7 +134,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (mounted) {
       setState(() {
         _versionText =
-            "${AppLocalizations.of(context)!.version} ${info.version}";
+            "${_l10n.version} ${info.version}";
       });
     }
   }
@@ -122,7 +143,24 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   void dispose() {
     _formatCtrl.dispose();
     _playlistFormatCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToOffline() {
+    // 🚀 Increased delay to ensure the ListView has fully rendered the target child
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      final context = _offlineModeKey.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.fastOutSlowIn,
+          alignment: 0.1, // Scroll to near the top of the viewport
+        );
+      }
+    });
   }
 
   Future<void> _loadCacheSize() async {
@@ -223,6 +261,118 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  void _showGranularServicesDialog(BuildContext context, Color textColor, Color subtitleColor, bool isDark) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Theme.of(context).cardColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(AppLocalizations.of(context)!.disableServicesTitle, style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final settings = ref.watch(settingsProvider);
+                  final settingsNotifier = ref.read(settingsProvider.notifier);
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildGranularToggle(
+                        title: AppLocalizations.of(context)!.featureCloudSync,
+                        subtitle: AppLocalizations.of(context)!.featureCloudSyncLongDesc,
+                        icon: Icons.cloud_sync_rounded,
+                        value: settings.enableCloudSync,
+                        isOfflineMode: settings.isOfflineMode,
+                        activeColor: Colors.red[400]!,
+                        textColor: textColor,
+                        subtitleColor: subtitleColor,
+                        onChanged: (val) => settingsNotifier.toggleCloudSync(val),
+                      ),
+                      _buildGranularToggle(
+                        title: AppLocalizations.of(context)!.featureLeaderboard,
+                        subtitle: AppLocalizations.of(context)!.featureLeaderboardLongDesc,
+                        icon: Icons.leaderboard_rounded,
+                        value: settings.enableLeaderboard,
+                        isOfflineMode: settings.isOfflineMode,
+                        activeColor: Colors.amber[400]!,
+                        textColor: textColor,
+                        subtitleColor: subtitleColor,
+                        onChanged: (val) => settingsNotifier.toggleLeaderboard(val),
+                      ),
+                      _buildGranularToggle(
+                        title: AppLocalizations.of(context)!.featureOnlineLyrics,
+                        subtitle: AppLocalizations.of(context)!.featureOnlineLyricsLongDesc,
+                        icon: Icons.lyrics_rounded,
+                        value: settings.enableOnlineLyrics,
+                        isOfflineMode: settings.isOfflineMode,
+                        activeColor: Colors.blue[400]!,
+                        textColor: textColor,
+                        subtitleColor: subtitleColor,
+                        onChanged: (val) => settingsNotifier.toggleOnlineLyrics(val),
+                      ),
+                      _buildGranularToggle(
+                        title: AppLocalizations.of(context)!.featureAiLyrics,
+                        subtitle: AppLocalizations.of(context)!.featureAiLyricsLongDesc,
+                        icon: Icons.auto_awesome_rounded,
+                        value: settings.enableAiLyrics,
+                        isOfflineMode: settings.isOfflineMode,
+                        activeColor: Colors.purple[400]!,
+                        textColor: textColor,
+                        subtitleColor: subtitleColor,
+                        onChanged: (val) => settingsNotifier.toggleAiLyrics(val),
+                      ),
+                      _buildGranularToggle(
+                        title: AppLocalizations.of(context)!.featureSpotifyCanvas,
+                        subtitle: AppLocalizations.of(context)!.featureSpotifyCanvasLongDesc,
+                        icon: Icons.video_library_rounded,
+                        value: settings.enableCanvas,
+                        isOfflineMode: settings.isOfflineMode,
+                        activeColor: Colors.green[400]!,
+                        textColor: textColor,
+                        subtitleColor: subtitleColor,
+                        onChanged: (val) => settingsNotifier.toggleCanvas(val),
+                      ),
+                      _buildGranularToggle(
+                        title: AppLocalizations.of(context)!.featureOnlineSearch,
+                        subtitle: AppLocalizations.of(context)!.featureOnlineSearchLongDesc,
+                        icon: Icons.search_rounded,
+                        value: settings.enableOnlineSearch,
+                        isOfflineMode: settings.isOfflineMode,
+                        activeColor: Colors.teal[400]!,
+                        textColor: textColor,
+                        subtitleColor: subtitleColor,
+                        onChanged: (val) => settingsNotifier.toggleOnlineSearch(val),
+                      ),
+                      _buildGranularToggle(
+                        title: AppLocalizations.of(context)!.featureConnectDevice,
+                        subtitle: AppLocalizations.of(context)!.featureConnectDeviceLongDesc,
+                        icon: Icons.devices_rounded,
+                        value: settings.enableRemoteControl,
+                        isOfflineMode: settings.isOfflineMode,
+                        activeColor: Colors.orange[400]!,
+                        textColor: textColor,
+                        subtitleColor: subtitleColor,
+                        onChanged: (val) => settingsNotifier.toggleRemoteControl(val),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(AppLocalizations.of(context)!.close),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
@@ -231,7 +381,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
-    final subtitleColor = isDark ? Colors.grey : Colors.grey[600];
+    final Color subtitleColor = (isDark ? Colors.grey : Colors.grey[600])!;
     final accentColor = settings.accentColor;
 
     final List<Color> accentColors = [
@@ -243,10 +393,36 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       const Color(0xFF55EFC4),
     ];
 
+    int disabledCount = 0;
+    if (!settings.enableCloudSync) disabledCount++;
+    if (!settings.enableLeaderboard) disabledCount++;
+    if (!settings.enableOnlineLyrics) disabledCount++;
+    if (!settings.enableAiLyrics) disabledCount++;
+    if (!settings.enableCanvas) disabledCount++;
+    if (!settings.enableOnlineSearch) disabledCount++;
+    if (!settings.enableRemoteControl) disabledCount++;
+
+    // 🚀 LISTEN FOR NAVIGATION SIGNALS (e.g. from MainShell reminder)
+    ref.listen<SettingsSection>(settingsNavigationProvider, (prev, next) {
+      if (next == SettingsSection.offlineMode) {
+        _scrollToOffline();
+        // Reset the signal so it doesn't re-trigger on rebuild
+        Future.microtask(() {
+          ref.read(settingsNavigationProvider.notifier).state =
+              SettingsSection.none;
+        });
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: ListView(
-        padding: const EdgeInsets.all(32),
+        controller: _scrollController,
+        cacheExtent: 9999,
+        padding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width > 600 ? 32 : 16,
+          vertical: 24,
+        ),
         children: [
           Padding(
             padding: EdgeInsets.only(
@@ -420,7 +596,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             // Disabled when an atmosphere is on
             onChanged: settings.atmosphereTheme != AtmosphereTheme.none
                 ? null
-                : (val) => settingsNotifier.toggleTheme(val),
+                : (val) => settingsNotifier.toggleDarkMode(val),
           ),
           SwitchListTile(
             title: Text(AppLocalizations.of(context)!.syncThemeAlbumArt,
@@ -430,7 +606,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             value: settings.syncThemeWithAlbumArt,
             activeThumbColor: accentColor,
             onChanged: (val) =>
-                settingsNotifier.toggleSyncThemeWithAlbumArt(val),
+                settingsNotifier.toggleThemeSync(val),
           ),
           ListTile(
             title: Text(AppLocalizations.of(context)!.accentColor,
@@ -1189,7 +1365,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 style: TextStyle(color: subtitleColor)),
             value: settings.disableRomanization,
             activeThumbColor: accentColor,
-            onChanged: (val) => settingsNotifier.toggleDisableRomanization(val),
+            onChanged: (val) => settingsNotifier.toggleRomanization(val),
           ),
           ListTile(
             title: Text(AppLocalizations.of(context)!.translationLanguage,
@@ -1801,6 +1977,244 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             },
           ),
           const SizedBox(height: 30),
+          Text(AppLocalizations.of(context)!.offlineModeHeader,
+              key: _offlineModeKey,
+              style:
+                  TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: settings.isOfflineMode
+                    ? Colors.orange.withValues(alpha: 0.5)
+                    : Colors.transparent,
+              ),
+              color: settings.isOfflineMode
+                  ? Colors.orange.withValues(alpha: 0.08)
+                  : Colors.transparent,
+            ),
+            child: SwitchListTile(
+              title: Row(
+                children: [
+                  Icon(
+                    settings.isOfflineMode ? Icons.wifi_off_rounded : Icons.wifi_rounded,
+                    color: settings.isOfflineMode ? Colors.orange : textColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(AppLocalizations.of(context)!.offlineModeTitle,
+                      style: TextStyle(
+                        color: settings.isOfflineMode ? Colors.orange : textColor,
+                        fontWeight: FontWeight.bold,
+                      )),
+                  if (settings.isOfflineMode) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
+                      ),
+                      child: Text(AppLocalizations.of(context)!.offlineModeActive,
+                          style: const TextStyle(
+                              fontSize: 9,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1)),
+                    ),
+                  ],
+                ],
+              ),
+              subtitle: Text(
+                settings.isOfflineMode
+                    ? AppLocalizations.of(context)!.offlineModeLockdownDesc
+                    : AppLocalizations.of(context)!.offlineModeMainDesc,
+                style: TextStyle(color: subtitleColor, fontSize: 12),
+              ),
+              value: settings.isOfflineMode,
+              activeThumbColor: Colors.orange,
+              activeTrackColor: Colors.orange.withValues(alpha: 0.3),
+              onChanged: (val) async {
+                if (val) {
+                  // Show confirmation dialog when ENABLING
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      title: Row(
+                        children: [
+                          Icon(Icons.wifi_off_rounded, color: Colors.orange, size: 24),
+                          const SizedBox(width: 10),
+                          Text(AppLocalizations.of(context)!.enableOfflineModeQuestion,
+                              style: TextStyle(
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18)),
+                        ],
+                      ),
+                      content: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.offlineModeConfirmationDesc,
+                              style: TextStyle(color: subtitleColor, fontSize: 13),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildOfflineFeatureItem(Icons.cloud_off_rounded, AppLocalizations.of(context)!.featureCloudSync, AppLocalizations.of(context)!.featureCloudSyncDesc, Colors.red),
+                            _buildOfflineFeatureItem(Icons.leaderboard_rounded, AppLocalizations.of(context)!.featureLeaderboard, AppLocalizations.of(context)!.featureLeaderboardDesc, Colors.amber),
+                            _buildOfflineFeatureItem(Icons.lyrics_rounded, AppLocalizations.of(context)!.featureOnlineLyrics, AppLocalizations.of(context)!.featureOnlineLyricsDesc, Colors.blue),
+                            _buildOfflineFeatureItem(Icons.auto_awesome_rounded, AppLocalizations.of(context)!.featureAiLyrics, AppLocalizations.of(context)!.featureAiLyricsDesc, Colors.purple),
+                            _buildOfflineFeatureItem(Icons.video_library_rounded, AppLocalizations.of(context)!.featureSpotifyCanvas, AppLocalizations.of(context)!.featureSpotifyCanvasDesc, Colors.green),
+                            _buildOfflineFeatureItem(Icons.search_off_rounded, AppLocalizations.of(context)!.featureOnlineSearch, AppLocalizations.of(context)!.featureOnlineSearchDesc, Colors.teal),
+                            _buildOfflineFeatureItem(Icons.devices_rounded, AppLocalizations.of(context)!.featureConnectDevice, AppLocalizations.of(context)!.featureConnectDeviceDesc, Colors.orange),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline_rounded, color: Colors.blue, size: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      AppLocalizations.of(context)!.offlineModeSyncRestoreNote,
+                                      style: TextStyle(color: Colors.blue[300], fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: Text("Cancel", style: TextStyle(color: subtitleColor)),
+                        ),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.wifi_off_rounded, size: 16),
+                          label: Text(AppLocalizations.of(context)!.enableOfflineModeBtn),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) {
+                    settingsNotifier.toggleOfflineMode(true);
+                  }
+                } else {
+                  // Disabling: trigger catch-up sync
+                  settingsNotifier.toggleOfflineMode(false);
+                  // Trigger a full sync to push accumulated offline stats
+                  Future.microtask(() {
+                    ref.read(statsProvider.notifier).syncNow();
+                  });
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.cloud_sync_rounded, color: Colors.white, size: 18),
+                            const SizedBox(width: 8),
+                            Text(AppLocalizations.of(context)!.onlineModeRestored),
+                          ],
+                        ),
+                        backgroundColor: Colors.green[700],
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+
+          // --- GRANULAR SERVICE CONTROLS ---
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: settings.isOfflineMode ? null : () => _showGranularServicesDialog(context, textColor, subtitleColor, isDark),
+                child: Opacity(
+                  opacity: settings.isOfflineMode ? 0.5 : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[400]!.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.miscellaneous_services_rounded, color: Colors.blue[400], size: 24),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(AppLocalizations.of(context)!.disableServicesTitle, style: TextStyle(color: textColor, fontWeight: FontWeight.w600, fontSize: 16)),
+                              const SizedBox(height: 2),
+                              Text(AppLocalizations.of(context)!.manageIndividualFeatures, style: TextStyle(color: subtitleColor, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: settings.isOfflineMode 
+                                ? Colors.grey[500]!.withValues(alpha: 0.2) 
+                                : (disabledCount > 0 ? Colors.red[400]!.withValues(alpha: 0.2) : Colors.green[400]!.withValues(alpha: 0.2)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            settings.isOfflineMode 
+                                ? AppLocalizations.of(context)!.offlineModeEnabledStatus 
+                                : (disabledCount > 0 ? AppLocalizations.of(context)!.offlineModeDisabledStatus(disabledCount) : AppLocalizations.of(context)!.offlineModeAllEnabledStatus),
+                            style: TextStyle(
+                              color: settings.isOfflineMode 
+                                  ? Colors.grey[400] 
+                                  : (disabledCount > 0 ? Colors.red[400] : Colors.green[400]),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.chevron_right_rounded, color: subtitleColor),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
 
           // DEBUGGING
           Text(AppLocalizations.of(context)!.debugging.toUpperCase(),
@@ -1814,7 +2228,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 style: TextStyle(color: subtitleColor)),
             value: settings.showDebugButton,
             activeThumbColor: accentColor,
-            onChanged: (val) => settingsNotifier.toggleShowDebugButton(val),
+            onChanged: (val) => settingsNotifier.toggleDebugButton(val),
           ),
           const SizedBox(height: 30),
 
@@ -1858,7 +2272,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           ),
                           onPressed: () async {
                             final url = Uri.parse(
-                                'https://discord.com/invite/WkmB8kJWR');
+                                'https://discord.gg/9uwUaAdXtC');
                             if (await canLaunchUrl(url)) {
                               await launchUrl(url,
                                   mode: LaunchMode.externalApplication);
@@ -2260,6 +2674,68 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ),
       ),
       showCheckmark: false,
+    );
+  }
+
+  Widget _buildOfflineFeatureItem(IconData icon, String title, String subtitle, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGranularToggle({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool value,
+    required bool isOfflineMode,
+    required Color activeColor,
+    required Color textColor,
+    required Color subtitleColor,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Opacity(
+      opacity: isOfflineMode ? 0.4 : 1.0,
+      child: IgnorePointer(
+        ignoring: isOfflineMode,
+        child: SwitchListTile(
+          secondary: Icon(icon,
+              color: value && !isOfflineMode ? activeColor : Colors.grey,
+              size: 18),
+          title: Text(title,
+              style: TextStyle(
+                  color: textColor, fontSize: 13, fontWeight: FontWeight.w600)),
+          subtitle: Text(subtitle,
+              style: TextStyle(color: subtitleColor, fontSize: 11)),
+          value: isOfflineMode ? false : value,
+          onChanged: onChanged,
+          activeColor: activeColor,
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+      ),
     );
   }
 }

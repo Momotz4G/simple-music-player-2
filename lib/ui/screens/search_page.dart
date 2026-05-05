@@ -16,6 +16,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../models/song_model.dart';
+import '../../services/pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -42,29 +43,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   late AppLocalizations _l10n;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final newL10n = AppLocalizations.of(context)!;
-    
-    // 🚀 Robust Locale Switching: Update status if it's currently a "ready" or "offline" string
-    // This fixes the bug where it gets "stuck" in a previous language.
-    if (_currentStatus.isEmpty || 
-        _currentStatus == _l10n.readySearchSong || 
-        _currentStatus == _l10n.offline ||
-        _currentStatus == 'Ready. Search for a song.' ||
-        _currentStatus == 'Offline') {
-      _currentStatus = newL10n.readySearchSong;
-    }
-    
-    _l10n = newL10n;
-  }
+
 
   @override
   void initState() {
     super.initState();
-    // Check connectivity on load and periodically
-    _checkConnectivity();
+    // Periodic check is fine
     _connectivityTimer = Timer.periodic(
       const Duration(seconds: 5),
       (_) => _checkConnectivity(),
@@ -77,7 +61,26 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _l10n = AppLocalizations.of(context)!;
+    // Perform initial connectivity check here instead of initState
+    _checkConnectivity();
+  }
+
   Future<void> _checkConnectivity() async {
+    // 🔒 OFFLINE MODE: Force offline state
+    if (PocketBaseService.isOffline) {
+      if (mounted) {
+        setState(() {
+          _isOnline = false;
+          _currentStatus = "Offline Mode Active";
+        });
+      }
+      return;
+    }
+
     try {
       final result = await InternetAddress.lookup('google.com')
           .timeout(const Duration(seconds: 3));
@@ -123,7 +126,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   void _onSearchQueryChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-    if (query.isEmpty) {
+    // 🔒 OFFLINE MODE: Disable suggestions
+    if (PocketBaseService.isOffline || query.isEmpty) {
       setState(() {
         _isSuggesting = false;
         _songSuggestions = [];
@@ -232,6 +236,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   // --- 1. Search Logic ---
   Future<void> _runSearch() async {
+    // 🔒 OFFLINE MODE: Block search
+    if (PocketBaseService.isOffline) return;
+
     final keyword = _urlController.text.trim();
     if (keyword.isEmpty) {
       setState(() {
@@ -328,6 +335,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10nObj = AppLocalizations.of(context);
+    if (l10nObj == null) return const SizedBox.shrink();
+    _l10n = l10nObj;
+
+    // 🚀 Robust Locale Switching: Update status if it's currently a "ready" or "offline" string
+    if (_currentStatus.isEmpty || 
+        _currentStatus == 'Ready. Search for a song.' ||
+        _currentStatus == 'Offline') {
+      _currentStatus = _l10n.readySearchSong;
+    }
     // 🚀 3. KEEP LISTENING for subsequent searches
     ref.listen<SongMetadata?>(searchBridgeProvider, (previous, next) {
       if (next != null) {

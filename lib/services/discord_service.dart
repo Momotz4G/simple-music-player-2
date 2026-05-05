@@ -4,6 +4,7 @@ import 'package:flutter_discord_rpc/flutter_discord_rpc.dart' as rpc;
 import '../models/song_model.dart';
 import '../env/env.dart';
 import 'debug_log_service.dart';
+import 'pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
 class DiscordService {
   static final DiscordService _instance = DiscordService._internal();
@@ -175,6 +176,16 @@ class DiscordService {
 
   void _performUpdate() {
     if (!_isEnabled || !_isConnected || _lastSong == null) return;
+
+    // 🔒 OFFLINE MODE: Clear activity instead of updating
+    if (PocketBaseService.isOffline) {
+      try {
+        rpc.FlutterDiscordRPC.instance.clearActivity();
+      } catch (e) {
+        _isConnected = false;
+      }
+      return;
+    }
 
     try {
       final int startTimestamp =

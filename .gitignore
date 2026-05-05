@@ -57,9 +57,11 @@ RobloxCampingGame/
 tidal-api/
 spotify-artist-banner/
 scratch/
+landing_page/
 
 # Helper scripts
 cleanup_pocketbase.dart
+cleanup_titles.dart
 
 *.hprof
 *.backup
@@ -67,4 +69,6 @@ cleanup_pocketbase.dart
 search_output.json
 engine_log.txt
 /Experimental Version/
+ai-lyrics-generator/
+backend/
 

@@ -40,6 +40,8 @@ class StatsNotifier extends StateNotifier<StatsState> {
   Timer? _syncTimer;
 
   void _triggerSync() {
+    // 🔒 OFFLINE MODE: Skip cloud sync, stats are saved locally in Isar
+    if (ref.read(settingsProvider).isOfflineMode) return;
     _syncTimer?.cancel();
     _syncTimer = Timer(const Duration(seconds: 2), () => syncNow()); // Reduced to 2s for faster sync
   }
@@ -120,6 +122,10 @@ class StatsNotifier extends StateNotifier<StatsState> {
       mostListenedPlays: calculated.topTrack?.value,
       artistMinutes: calculated.artistMinutes,
     );
+
+    // 🚀 REFRESH LOCAL: Ensure local counters (wins, podiums, streak) 
+    // are updated if the cloud has higher values.
+    await pullAndSyncRemoteData();
   }
 
   Future<void> _checkForHistoricalRewards() async {

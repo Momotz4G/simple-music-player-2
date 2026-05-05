@@ -64,6 +64,10 @@ class _DeviceSelectorDialogState extends ConsumerState<DeviceSelectorDialog> {
 
   @override
   Widget build(BuildContext context) {
+    if (PocketBaseService.isOffline) {
+      return _buildOfflineState(context);
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: BoxDecoration(
@@ -355,6 +359,42 @@ class _DeviceSelectorDialogState extends ConsumerState<DeviceSelectorDialog> {
             child: Text(
               "Switching devices will maintain your position and queue.",
               style: TextStyle(fontSize: 11, color: Colors.blue),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOfflineState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.wifi_off_rounded, size: 64, color: colorScheme.error.withValues(alpha: 0.7)),
+          const SizedBox(height: 16),
+          Text(
+            "Offline Mode Active",
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Listening Parties and Remote Device control are disabled while Offline Mode is active. Please turn off Offline Mode in Settings to use these features.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8)),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Close"),
             ),
           ),
         ],

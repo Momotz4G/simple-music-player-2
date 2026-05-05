@@ -1,11 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:just_audio_media_kit/just_audio_media_kit.dart';
-import 'package:simple_music_player_2/services/android_audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:simple_music_player_2/utils/translation_service.dart';
-import 'package:path/path.dart' as p;
+import 'package:simple_music_player_2/services/android_audio_service.dart';
+import 'package:simple_music_player_2/services/pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
 // NEW ENUMS
 enum VisualizerStyle { spectrum, wave, pulse }
@@ -25,6 +23,19 @@ enum AtmosphereTheme {
   galactic,
   desertMirage
 }
+
+enum SettingsSection {
+  none,
+  appearance,
+  visualizer,
+  integration,
+  searchEngine,
+  library,
+  offlineMode,
+}
+
+final settingsNavigationProvider =
+    StateProvider<SettingsSection>((ref) => SettingsSection.none);
 
 // --- STATE DEFINITION ---
 class SettingsState {
@@ -60,6 +71,16 @@ class SettingsState {
   final bool enableAlphabetIndexer; // NEW: Enable side Alphabet scroll indexer on mobile
   final bool minimizeToTrayOnClose;
   final SearchEngine searchEngine; // NEW: Spotify vs YouTube
+  final bool isOfflineMode; // 🔒 Offline Mode: Disables all network services
+
+  // Granular Service Controls
+  final bool enableCloudSync;
+  final bool enableLeaderboard;
+  final bool enableOnlineLyrics;
+  final bool enableAiLyrics;
+  final bool enableOnlineSearch;
+  final bool enableRemoteControl;
+  final bool enableCanvas;
 
   SettingsState({
     this.isDarkMode = true,
@@ -91,6 +112,14 @@ class SettingsState {
     this.enableAlphabetIndexer = false, // Default: Off
     this.minimizeToTrayOnClose = true,
     this.searchEngine = SearchEngine.spotify, // Default: Spotify
+    this.isOfflineMode = false, // Default: Online
+    this.enableCloudSync = true,
+    this.enableLeaderboard = true,
+    this.enableOnlineLyrics = true,
+    this.enableAiLyrics = true,
+    this.enableOnlineSearch = true,
+    this.enableRemoteControl = true,
+    this.enableCanvas = true,
   });
 
   SettingsState copyWith({
@@ -123,6 +152,14 @@ class SettingsState {
     bool? enableAlphabetIndexer,
     bool? minimizeToTrayOnClose,
     SearchEngine? searchEngine,
+    bool? isOfflineMode,
+    bool? enableCloudSync,
+    bool? enableLeaderboard,
+    bool? enableOnlineLyrics,
+    bool? enableAiLyrics,
+    bool? enableOnlineSearch,
+    bool? enableRemoteControl,
+    bool? enableCanvas,
   }) {
     return SettingsState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -157,6 +194,14 @@ class SettingsState {
           enableAlphabetIndexer ?? this.enableAlphabetIndexer,
       minimizeToTrayOnClose: minimizeToTrayOnClose ?? this.minimizeToTrayOnClose,
       searchEngine: searchEngine ?? this.searchEngine,
+      isOfflineMode: isOfflineMode ?? this.isOfflineMode,
+      enableCloudSync: enableCloudSync ?? this.enableCloudSync,
+      enableLeaderboard: enableLeaderboard ?? this.enableLeaderboard,
+      enableOnlineLyrics: enableOnlineLyrics ?? this.enableOnlineLyrics,
+      enableAiLyrics: enableAiLyrics ?? this.enableAiLyrics,
+      enableOnlineSearch: enableOnlineSearch ?? this.enableOnlineSearch,
+      enableRemoteControl: enableRemoteControl ?? this.enableRemoteControl,
+      enableCanvas: enableCanvas ?? this.enableCanvas,
     );
   }
 }
@@ -205,18 +250,29 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final minimizeToTrayOnClose = _prefs.getBool('minimizeToTrayOnClose') ?? true;
     final searchEngineIndex = _prefs.getInt('searchEngine') ?? SearchEngine.spotify.index;
     final searchEngine = SearchEngine.values[searchEngineIndex];
+    final isOfflineMode = _prefs.getBool('isOfflineMode') ?? false;
+    final enableCloudSync = _prefs.getBool('enableCloudSync') ?? true;
+    final enableLeaderboard = _prefs.getBool('enableLeaderboard') ?? true;
+    final enableOnlineLyrics = _prefs.getBool('enableOnlineLyrics') ?? true;
+    final enableAiLyrics = _prefs.getBool('enableAiLyrics') ?? true;
+    final enableOnlineSearch = _prefs.getBool('enableOnlineSearch') ?? true;
+    final enableRemoteControl = _prefs.getBool('enableRemoteControl') ?? true;
+    final enableCanvas = _prefs.getBool('enableCanvas') ?? true;
 
     // Load Theme Enum
     final themeIndex = _prefs.getInt('atmosphereTheme') ??
-        (enableSnowEffect
-            ? AtmosphereTheme.winter.index
-            : AtmosphereTheme.none.index);
+        AtmosphereTheme.none.index;
     final theme = AtmosphereTheme.values[themeIndex];
 
-    // Initialize Android Bit-Perfect mode if enabled
-    if (androidBitPerfect) {
-      AndroidAudioService.setBitPerfectMode(true);
-    }
+    // Sync static PocketBase flags
+    PocketBaseService.isOffline = isOfflineMode;
+    PocketBaseService.enableCloudSync = enableCloudSync;
+    PocketBaseService.enableLeaderboard = enableLeaderboard;
+    PocketBaseService.enableOnlineLyrics = enableOnlineLyrics;
+    PocketBaseService.enableAiLyrics = enableAiLyrics;
+    PocketBaseService.enableOnlineSearch = enableOnlineSearch;
+    PocketBaseService.enableRemoteControl = enableRemoteControl;
+    PocketBaseService.enableCanvas = enableCanvas;
 
     state = SettingsState(
       isDarkMode: isDark,
@@ -248,178 +304,161 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       enableAlphabetIndexer: enableAlphabetIndexer,
       minimizeToTrayOnClose: minimizeToTrayOnClose,
       searchEngine: searchEngine,
+      isOfflineMode: isOfflineMode,
+      enableCloudSync: enableCloudSync,
+      enableLeaderboard: enableLeaderboard,
+      enableOnlineLyrics: enableOnlineLyrics,
+      enableAiLyrics: enableAiLyrics,
+      enableOnlineSearch: enableOnlineSearch,
+      enableRemoteControl: enableRemoteControl,
+      enableCanvas: enableCanvas,
     );
   }
 
-  Future<void> toggleTheme(bool isDark) async {
-    await _prefs.setBool('isDarkMode', isDark);
+  void toggleDarkMode(bool isDark) {
+    _prefs.setBool('isDarkMode', isDark);
     state = state.copyWith(isDarkMode: isDark);
   }
 
-  Future<void> setAccentColor(Color color) async {
-    await _prefs.setInt('accentColor', color.value);
+  void setAccentColor(Color color) {
+    _prefs.setInt('accentColor', color.toARGB32());
     state = state.copyWith(accentColor: color);
   }
 
-  Future<void> toggleDiscordRpc(bool enabled) async {
-    await _prefs.setBool('enableDiscordRpc', enabled);
+  void toggleDiscordRpc(bool enabled) {
+    _prefs.setBool('enableDiscordRpc', enabled);
     state = state.copyWith(enableDiscordRpc: enabled);
   }
 
-  Future<void> toggleVisualizer(bool enabled) async {
-    await _prefs.setBool('enableVisualizer', enabled);
+  void toggleVisualizer(bool enabled) {
+    _prefs.setBool('enableVisualizer', enabled);
     state = state.copyWith(enableVisualizer: enabled);
   }
 
-  Future<void> setVisualizerOpacity(double value) async {
-    await _prefs.setDouble('visualizerOpacity', value);
-    state = state.copyWith(visualizerOpacity: value);
+  void setVisualizerOpacity(double opacity) {
+    _prefs.setDouble('visualizerOpacity', opacity);
+    state = state.copyWith(visualizerOpacity: opacity);
   }
 
-  Future<void> toggleVisualizerRainbow(bool enabled) async {
-    await _prefs.setBool('isVisualizerRainbow', enabled);
+  void toggleVisualizerRainbow(bool enabled) {
+    _prefs.setBool('isVisualizerRainbow', enabled);
     state = state.copyWith(isVisualizerRainbow: enabled);
   }
 
-  Future<void> toggleSyncThemeWithAlbumArt(bool enabled) async {
-    await _prefs.setBool('syncThemeWithAlbumArt', enabled);
+  void toggleThemeSync(bool enabled) {
+    _prefs.setBool('syncThemeWithAlbumArt', enabled);
     state = state.copyWith(syncThemeWithAlbumArt: enabled);
   }
 
-  // Set Style
-  Future<void> setVisualizerStyle(VisualizerStyle style) async {
-    await _prefs.setInt('visualizerStyle', style.index);
+  void setVisualizerStyle(VisualizerStyle style) {
+    _prefs.setInt('visualizerStyle', style.index);
     state = state.copyWith(visualizerStyle: style);
   }
 
-  // Extension Output file
-  Future<void> setAudioFormat(String format) async {
-    await _prefs.setString('audioFormat', format);
+  void setAudioFormat(String format) {
+    _prefs.setString('audioFormat', format);
     state = state.copyWith(audioFormat: format);
   }
 
-  // Set Market Region for Spotify Recommendation Latest Released
-  Future<void> setSpotifyMarket(String market) async {
-    await _prefs.setString('spotifyMarket', market);
+  void setSpotifyMarket(String market) {
+    _prefs.setString('spotifyMarket', market);
     state = state.copyWith(spotifyMarket: market);
   }
 
-  // Set Streaming Quality (standard, high, lossless)
-  Future<void> setStreamingQuality(String quality) async {
-    await _prefs.setString('streamingQuality', quality);
+  void setStreamingQuality(String quality) {
+    _prefs.setString('streamingQuality', quality);
     state = state.copyWith(streamingQuality: quality);
   }
 
-  Future<void> toggleShowDebugButton(bool enabled) async {
-    await _prefs.setBool('showDebugButton', enabled);
-    state = state.copyWith(showDebugButton: enabled);
+  void toggleDebugButton(bool show) {
+    _prefs.setBool('showDebugButton', show);
+    state = state.copyWith(showDebugButton: show);
   }
 
-  Future<void> toggleIgnoreSubfolders(bool enabled) async {
-    await _prefs.setBool('ignoreSubfolders', enabled);
-    state = state.copyWith(ignoreSubfolders: enabled);
+  void toggleIgnoreSubfolders(bool ignore) {
+    _prefs.setBool('ignoreSubfolders', ignore);
+    state = state.copyWith(ignoreSubfolders: ignore);
   }
 
-  Future<void> toggleDisableCanvas(bool enabled) async {
-    await _prefs.setBool('disableCanvas', enabled);
-    state = state.copyWith(disableCanvas: enabled);
+  void toggleDisableCanvas(bool disable) {
+    _prefs.setBool('disableCanvas', disable);
+    state = state.copyWith(disableCanvas: disable);
   }
 
-  Future<void> toggleDisableRomanization(bool enabled) async {
-    await _prefs.setBool('disableRomanization', enabled);
-    state = state.copyWith(disableRomanization: enabled);
-  }
-
-  Future<void> setTranslationLanguage(String langCode) async {
-    await _prefs.setString('translationLanguage', langCode);
-    TranslationService.clearCache(); // Flush cache when language changes
-    state = state.copyWith(translationLanguage: langCode);
-  }
-
-  /// Toggle WASAPI exclusive mode (Windows only)
-  Future<void> toggleWasapiExclusive(bool enabled) async {
-    if (Platform.isWindows) {
-      JustAudioMediaKit.audioExclusive = enabled;
-      debugPrint("🎵 [Settings] WASAPI Exclusive Mode: ${enabled ? 'ENABLED' : 'DISABLED'}");
-    }
-    await _prefs.setBool('wasapiExclusive', enabled);
-    state = state.copyWith(wasapiExclusive: enabled);
-  }
-
-  /// Set Audio Device ID (Windows only)
-  Future<void> setAudioDeviceId(String? deviceId) async {
-    if (Platform.isWindows) {
-      JustAudioMediaKit.audioDeviceId = deviceId;
-      debugPrint("🎵 [Settings] Audio Device Override: $deviceId");
-    }
-    if (deviceId == null) {
-      await _prefs.remove('audioDeviceId');
-    } else {
-      await _prefs.setString('audioDeviceId', deviceId);
-    }
-    state = state.copyWith(audioDeviceId: deviceId);
-  }
-
-  // Additional Music Folders
   Future<void> addMusicFolder(String path) async {
-    final canonicalPath = p.canonicalize(path);
-    if (state.additionalMusicFolders.contains(canonicalPath)) return;
-    final newFolders = [...state.additionalMusicFolders, canonicalPath];
-    await _prefs.setStringList('additionalMusicFolders', newFolders);
-    state = state.copyWith(additionalMusicFolders: newFolders);
+    final folders = List<String>.from(state.additionalMusicFolders);
+    if (!folders.contains(path)) {
+      folders.add(path);
+      await _prefs.setStringList('additionalMusicFolders', folders);
+      state = state.copyWith(additionalMusicFolders: folders);
+    }
   }
 
   Future<void> removeMusicFolder(String path) async {
-    final canonicalPath = p.canonicalize(path);
-    final newFolders =
-        state.additionalMusicFolders.where((f) => f != canonicalPath).toList();
-    await _prefs.setStringList('additionalMusicFolders', newFolders);
-    state = state.copyWith(additionalMusicFolders: newFolders);
+    final folders = List<String>.from(state.additionalMusicFolders);
+    if (folders.contains(path)) {
+      folders.remove(path);
+      await _prefs.setStringList('additionalMusicFolders', folders);
+      state = state.copyWith(additionalMusicFolders: folders);
+    }
   }
 
   Future<void> clearAllMusicFolders() async {
-    await _prefs.remove('additionalMusicFolders');
+    await _prefs.setStringList('additionalMusicFolders', []);
     state = state.copyWith(additionalMusicFolders: []);
+  }
+
+  void toggleWasapiExclusive(bool enabled) {
+    _prefs.setBool('wasapiExclusive', enabled);
+    state = state.copyWith(wasapiExclusive: enabled);
+  }
+
+  void setAudioDeviceId(String? id) {
+    if (id == null) {
+      _prefs.remove('audioDeviceId');
+    } else {
+      _prefs.setString('audioDeviceId', id);
+    }
+    state = state.copyWith(audioDeviceId: id);
   }
 
   /// Toggle Android 14+ Bit-Perfect Mode
   Future<void> toggleAndroidBitPerfect(bool enabled) async {
-    // Attempt to set mode via MethodChannel
-    final success = await AndroidAudioService.setBitPerfectMode(enabled);
-    if (!success) {
-      // If native call failed (e.g. no USB device), do not update state to true
-      // But if we were trying to disable, allow it.
-      if (enabled) return;
+    if (Platform.isAndroid) {
+      // Attempt to set mode via native MethodChannel
+      final success = await AndroidAudioService.setBitPerfectMode(enabled);
+      if (!success) {
+        // If native call failed (e.g. no USB device), do not update state to true
+        // But if we were trying to disable, allow it.
+        if (enabled) return;
+      }
     }
-
     await _prefs.setBool('androidBitPerfect', enabled);
     state = state.copyWith(androidBitPerfect: enabled);
   }
 
-  /// Toggle Snow Effect (Lacy backward compatibility)
-  Future<void> toggleSnowEffect(bool enabled) async {
-    await setAtmosphereTheme(
-        enabled ? AtmosphereTheme.winter : AtmosphereTheme.none);
+  void toggleRomanization(bool disabled) {
+    _prefs.setBool('disableRomanization', disabled);
+    state = state.copyWith(disableRomanization: disabled);
   }
 
-  /// Set Active Atmosphere Theme
-  Future<void> setAtmosphereTheme(AtmosphereTheme theme) async {
-    await _prefs.setInt('atmosphereTheme', theme.index);
-    // Sync deprecated bool
-    await _prefs.setBool('enableSnowEffect', theme == AtmosphereTheme.winter);
-    state = state.copyWith(
-      atmosphereTheme: theme,
-      enableSnowEffect: theme == AtmosphereTheme.winter,
-    );
+  void setTranslationLanguage(String langCode) {
+    _prefs.setString('translationLanguage', langCode);
+    state = state.copyWith(translationLanguage: langCode);
   }
 
-  Future<void> setAppLocale(String localeCode) async {
-    await _prefs.setString('appLocale', localeCode);
-    state = state.copyWith(appLocale: localeCode);
+  void setAtmosphereTheme(AtmosphereTheme theme) {
+    _prefs.setInt('atmosphereTheme', theme.index);
+    state = state.copyWith(atmosphereTheme: theme);
   }
 
-  Future<void> setAutoClearCache(String mode) async {
-    await _prefs.setString('autoClearCache', mode);
+  void setAppLocale(String locale) {
+    _prefs.setString('appLocale', locale);
+    state = state.copyWith(appLocale: locale);
+  }
+
+  void setAutoClearCache(String mode) {
+    _prefs.setString('autoClearCache', mode);
     state = state.copyWith(autoClearCache: mode);
   }
 
@@ -446,6 +485,80 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> setSearchEngine(SearchEngine engine) async {
     await _prefs.setInt('searchEngine', engine.index);
     state = state.copyWith(searchEngine: engine);
+  }
+
+  /// 🔒 Toggle Offline Mode (Network Lockdown)
+  Future<void> toggleOfflineMode(bool enabled) async {
+    await _prefs.setBool('isOfflineMode', enabled);
+    PocketBaseService.isOffline = enabled; // Sync static flag
+    
+    if (enabled) {
+      // Explicitly turn off all services
+      await toggleCloudSync(false);
+      await toggleLeaderboard(false);
+      await toggleOnlineLyrics(false);
+      await toggleAiLyrics(false);
+      await toggleOnlineSearch(false);
+      await toggleRemoteControl(false);
+      await toggleCanvas(false);
+    } else {
+      // Master toggle is turning off Offline Mode -> Force ENABLE all services
+      await toggleCloudSync(true);
+      await toggleLeaderboard(true);
+      await toggleOnlineLyrics(true);
+      await toggleAiLyrics(true);
+      await toggleOnlineSearch(true);
+      await toggleRemoteControl(true);
+      await toggleCanvas(true);
+      
+      // Clean up the unused state variable just in case
+      await _prefs.remove('disabledServicesBeforeOffline');
+    }
+
+    state = state.copyWith(isOfflineMode: enabled);
+    debugPrint("🔒 [Settings] Offline Mode: ${enabled ? 'ENABLED' : 'DISABLED'}");
+  }
+
+  Future<void> toggleCloudSync(bool enabled) async {
+    await _prefs.setBool('enableCloudSync', enabled);
+    PocketBaseService.enableCloudSync = enabled;
+    state = state.copyWith(enableCloudSync: enabled);
+  }
+
+  Future<void> toggleLeaderboard(bool enabled) async {
+    await _prefs.setBool('enableLeaderboard', enabled);
+    PocketBaseService.enableLeaderboard = enabled;
+    state = state.copyWith(enableLeaderboard: enabled);
+  }
+
+  Future<void> toggleOnlineLyrics(bool enabled) async {
+    await _prefs.setBool('enableOnlineLyrics', enabled);
+    PocketBaseService.enableOnlineLyrics = enabled;
+    state = state.copyWith(enableOnlineLyrics: enabled);
+  }
+
+  Future<void> toggleAiLyrics(bool enabled) async {
+    await _prefs.setBool('enableAiLyrics', enabled);
+    PocketBaseService.enableAiLyrics = enabled;
+    state = state.copyWith(enableAiLyrics: enabled);
+  }
+
+  Future<void> toggleOnlineSearch(bool enabled) async {
+    await _prefs.setBool('enableOnlineSearch', enabled);
+    PocketBaseService.enableOnlineSearch = enabled;
+    state = state.copyWith(enableOnlineSearch: enabled);
+  }
+
+  Future<void> toggleRemoteControl(bool enabled) async {
+    await _prefs.setBool('enableRemoteControl', enabled);
+    PocketBaseService.enableRemoteControl = enabled;
+    state = state.copyWith(enableRemoteControl: enabled);
+  }
+
+  Future<void> toggleCanvas(bool enabled) async {
+    await _prefs.setBool('enableCanvas', enabled);
+    PocketBaseService.enableCanvas = enabled;
+    state = state.copyWith(enableCanvas: enabled);
   }
 }
 

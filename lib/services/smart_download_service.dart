@@ -21,6 +21,7 @@ import '../models/download_progress.dart';
 import 'debug_log_service.dart'; // Import DebugLogService
 import '../services/deezer_service.dart'; // Import DeezerService
 import '../utils/filename_helper.dart';
+import 'pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
 class SmartDownloadService {
   final YoutubeDownloaderService _ytDlpService = YoutubeDownloaderService();
@@ -50,6 +51,7 @@ class SmartDownloadService {
 
   // --- Search Logic ---
   Future<DebugMatchResult?> searchYouTubeForMatch(SongMetadata metadata) async {
+    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch) return null; // 🔒 OFFLINE or Online Search Disabled
     final yt = YoutubeExplode();
     List<YoutubeSearchResult> youtubeMatches = [];
 
@@ -418,6 +420,9 @@ class SmartDownloadService {
   // BACKGROUND CACHE (PRELOAD) FUNCTION
   // Now respects streaming quality for FLAC support
   Future<void> cacheSong(SongMetadata metadata, {String? youtubeUrl, String? streamUrl}) async {
+    // 🔒 OFFLINE MODE: Skip all background preloading
+    if (PocketBaseService.isOffline) return;
+
     DebugLogService()
         .info("📥 SmartDownload: cacheSong called for ${metadata.title}");
     final fileName = FilenameHelper.sanitize("${metadata.artist} - ${metadata.title}");

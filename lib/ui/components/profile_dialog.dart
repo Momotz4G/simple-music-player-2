@@ -603,8 +603,33 @@ class _ProfileDialogState extends ConsumerState<ProfileDialog> {
                         context: context,
                         builder: (ctx) => AlertDialog(
                           title: Text(AppLocalizations.of(context)!.unlinkAccountQuestion),
-                          content: Text(
-                              AppLocalizations.of(context)!.unlinkAccountDesc),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(AppLocalizations.of(context)!.unlinkAccountDesc),
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+                                    const SizedBox(width: 12),
+                                    const Expanded(
+                                      child: Text(
+                                        "Your local device stats will be wiped so you can start fresh. Don't worry, your progress is safely saved to your cloud account!",
+                                        style: TextStyle(fontSize: 12, color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                           actions: [
                             TextButton(
                                 onPressed: () => Navigator.pop(ctx, false),
@@ -612,7 +637,7 @@ class _ProfileDialogState extends ConsumerState<ProfileDialog> {
                             TextButton(
                                 onPressed: () => Navigator.pop(ctx, true),
                                 child: Text(AppLocalizations.of(context)!.unlink,
-                                    style: const TextStyle(color: Colors.red))),
+                                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold))),
                           ],
                         ),
                       );

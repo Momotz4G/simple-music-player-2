@@ -67,14 +67,34 @@ class AdminStatsPage extends StatelessWidget {
           }
 
           final result = snapshot.data;
-          final docs = result?.items ?? [];
+          final rawDocs = result?.items ?? [];
           final totalUsersInDb =
               result?.totalCount ?? 0; // Real total from database
 
-          if (docs.isEmpty) {
+          if (rawDocs.isEmpty) {
             return const Center(
                 child: Text("No user data found (PocketBase Mode)."));
           }
+
+          // 🚀 DEDUPLICATE: Keep only the latest record per user_id
+          // Duplicates cause the heartbeat's record to be different from what's shown here,
+          // making users appear offline even when they're active.
+          final Map<String, AdminUserData> uniqueUsers = {};
+          for (final user in rawDocs) {
+            final uid = user.id; // user.id is user_id from metrics_service mapping
+            final existing = uniqueUsers[uid];
+            if (existing == null) {
+              uniqueUsers[uid] = user;
+            } else {
+              // Keep the one with the more recent last_active
+              final existingTime = _parseTimestamp(existing.data['last_active']);
+              final newTime = _parseTimestamp(user.data['last_active']);
+              if (newTime != null && (existingTime == null || newTime.isAfter(existingTime))) {
+                uniqueUsers[uid] = user;
+              }
+            }
+          }
+          final docs = uniqueUsers.values.toList();
 
           // 🚀 METRICS AGGREGATION
           final activeUsers = docs.where((user) {

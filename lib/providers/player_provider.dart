@@ -685,16 +685,18 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         state = state.copyWith(isPlaying: false);
       } else {
         _isHandlingCompletion = true;
+        _isRecoveringFromCrash = true;
         _musicService.recreateActivePlayer(); // 🚀 Recreate dead player
         _finalizePlaySession();
         
         // 🚀 Throttled Retry
         final errorToken = _playRequestToken;
-        Future.delayed(const Duration(milliseconds: 1500), () {
+        Future.delayed(const Duration(milliseconds: 1500), () async {
             // 🚀 FIX: Prevent auto-skip if user already initiated a new playback request
             if (errorToken == _playRequestToken) {
-              playNext(autoPlay: true);
+              await playNext(autoPlay: true);
             }
+            _isRecoveringFromCrash = false;
         });
       }
     });
@@ -1913,8 +1915,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       return;
     }
 
-    // 🚀 REPEAT ONE: If triggered automatically, perform a repeat instead of skipping
-    if (autoPlay && state.loopMode == ja.LoopMode.one) {
+    // 🚀 REPEAT ONE: If triggered automatically, perform a repeat instead of skipping.
+    // EXCEPTION: If we are recovering from a crash, ignore loop mode and skip to next 
+    // to prevent infinite retry loop on a dead/broken stream.
+    if (autoPlay && state.loopMode == ja.LoopMode.one && !_isRecoveringFromCrash) {
       await _forceLoopOne();
       return;
     }

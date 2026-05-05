@@ -35,7 +35,6 @@ class MetricsService {
     try {
       // 0. Load Persistent Device ID
       final hardwareId = await getDeviceIdentifier();
-      debugPrint("📊 MetricsService: Stable Hardware ID loaded: $hardwareId");
 
       // 🔗 If account is linked via Google OAuth, use the linked user ID instead
       final prefs = await SharedPreferences.getInstance();
@@ -44,12 +43,7 @@ class MetricsService {
       // 🚀 CRITICAL FIX: Update internal _userId to the synchronized identity
       _userId = linkedUserId ?? hardwareId;
       
-      if (linkedUserId != null) {
-        debugPrint("🔗 MetricsService: Using linked user ID: $linkedUserId");
-      }
-
       // 1. Initialize PocketBase (Unified for all platforms)
-      debugPrint("🚀 Initializing PocketBase Service...");
       await PocketBaseService().init(userId: _userId);
 
       _initialized = true;
@@ -64,9 +58,7 @@ class MetricsService {
       _startHeartbeat();
 
       // 4. Update Identity info
-      debugPrint("📊 MetricsService: Updating Identity...");
       await _updateUserIdentity();
-      debugPrint("📊 MetricsService: Identity Updated.");
     } catch (e) {
       debugPrint("⚠️ MetricsService Init Error: $e");
       _initialized = true; // Non-blocking failure
@@ -132,6 +124,7 @@ class MetricsService {
   }
 
   Future<void> trackSongPlayModel(SongModel song, {int? localTotal, int? totalMinutes}) async {
+    if (PocketBaseService.isOffline) return; // 🔒 OFFLINE MODE: Skip cloud tracking
     await _incrementUserStat('play_count');
     // Global Artist Tracking
     if (song.artist != null && song.artist!.isNotEmpty) {
@@ -404,13 +397,13 @@ class MetricsService {
 
   void _startHeartbeat() {
     // Send immediate heartbeat on startup
-    if (_initialized && _userId != null) {
+    if (_initialized && _userId != null && !PocketBaseService.isOffline) {
       PocketBaseService().sendHeartbeat();
     }
 
     // Then send every 45 seconds
     Stream.periodic(const Duration(seconds: 45)).listen((_) {
-      if (_initialized && _userId != null) {
+      if (_initialized && _userId != null && !PocketBaseService.isOffline) {
         PocketBaseService().sendHeartbeat();
       }
     });
@@ -419,7 +412,16 @@ class MetricsService {
   // --- IDENTITY ---
 
   Future<void> _updateUserIdentity() async {
-    if (!_initialized || _userId == null) return;
+    debugPrint("📊 [MetricsService] _updateUserIdentity started");
+    if (PocketBaseService.isOffline) {
+      debugPrint("📊 [MetricsService] _updateUserIdentity skipped (OFFLINE)");
+      return; // 🔒 OFFLINE MODE
+    }
+    if (!_initialized) {
+      debugPrint("📊 [MetricsService] _updateUserIdentity skipped (NOT INITIALIZED)");
+      return;
+    }
+    if (_userId == null) return;
     try {
       final hostname = Platform.localHostname;
       final os = Platform.operatingSystem;
@@ -491,6 +493,7 @@ class MetricsService {
       debugPrint("⚠️ syncAdvancedStats: SKIPPED - initialized=$_initialized, userId=$_userId");
       return;
     }
+    if (PocketBaseService.isOffline) return; // 🔒 OFFLINE MODE: Skip cloud sync
     try {
       // 🚀 CRITICAL FIX: Never overwrite cloud with lower local values (Multi-device protection)
       final currentCloud = await PocketBaseService().getUserMetrics();
@@ -530,16 +533,26 @@ class MetricsService {
           ? maxRepeatStreak
           : (maxRepeatStreak != null ? cloudMaxRepeatStreak : null);
 
+      final cloudWins = currentCloud?['weekly_wins_count'] ?? 0;
+      final cloudPodiums = currentCloud?['weekly_podiums_count'] ?? 0;
+      final safeWins = (weeklyWinsCount != null && weeklyWinsCount > cloudWins)
+          ? weeklyWinsCount
+          : (weeklyWinsCount != null ? cloudWins : null);
+      final safePodiums = (weeklyPodiumsCount != null && weeklyPodiumsCount > cloudPodiums)
+          ? weeklyPodiumsCount
+          : (weeklyPodiumsCount != null ? cloudPodiums : null);
+
       final cloudTitle = currentCloud?['selected_title'] as String?;
       
       // 🚀 TITLE PROTECTION: Never let a low-rarity title from another device overwrite a prestige cloud title.
+      // Note: Competitive titles ("Top X Global") CAN be saved here when intentionally equipped.
+      // The DISPLAY side validates them against actual rank — if rank doesn't match, it shows the fallback title.
       bool shouldUpdateTitle = true;
       if (selectedTitle != null && cloudTitle != null && selectedTitle != cloudTitle) {
         final newDef = StatsUtils.resolveTitleDefinition(selectedTitle, safeMinutes ?? totalMinutes ?? 0);
         final cloudDef = StatsUtils.resolveTitleDefinition(cloudTitle, cloudMinutes);
         
         // If current cloud title is higher rarity, don't downgrade it.
-        // Special case: Developer/Contributor (Rarity 6/5) always protected unless the new title is the same or special.
         if (cloudDef.rarityTier > newDef.rarityTier) {
           shouldUpdateTitle = false;
           debugPrint("🛡️ Title Protection: Blocked downgrading cloud title '$cloudTitle' (Tier ${cloudDef.rarityTier}) to '$selectedTitle' (Tier ${newDef.rarityTier})");
@@ -563,9 +576,8 @@ class MetricsService {
         if (currentRepeatStreak != null) 'current_repeat_streak': currentRepeatStreak,
         if (lastRepeatSongId != null) 'last_repeat_song_id': lastRepeatSongId,
         if (lastRepeatTime != null) 'last_repeat_time': lastRepeatTime,
-        if (weeklyWinsCount != null) 'weekly_wins_count': weeklyWinsCount,
-        if (weeklyPodiumsCount != null)
-          'weekly_podiums_count': weeklyPodiumsCount,
+        if (safeWins != null) 'weekly_wins_count': safeWins,
+        if (safePodiums != null) 'weekly_podiums_count': safePodiums,
         if (selectedTitle != null && shouldUpdateTitle) 'selected_title': selectedTitle,
         if (safeTopArtistPlays != null) 'top_artist_plays': safeTopArtistPlays,
         if (safeMostListenedPlays != null) 'most_listened_plays': safeMostListenedPlays,

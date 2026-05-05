@@ -11,6 +11,7 @@ class PlaylistEntry {
   final String? sourceUrl;
   final String? isrc; // 🚀 ADD ISRC
   final int? duration; // 🚀 ADD DURATION (Seconds)
+  final String? spotifyId; // 🚀 ADD SPOTIFY ID
 
   PlaylistEntry({
     required this.path,
@@ -22,6 +23,7 @@ class PlaylistEntry {
     this.sourceUrl,
     this.isrc,
     this.duration,
+    this.spotifyId,
   });
 
   Map<String, dynamic> toMap() => {
@@ -34,6 +36,7 @@ class PlaylistEntry {
         'sourceUrl': sourceUrl,
         'isrc': isrc,
         'duration': duration,
+        'spotifyId': spotifyId,
       };
 
   factory PlaylistEntry.fromMap(Map<String, dynamic> map) {
@@ -47,6 +50,7 @@ class PlaylistEntry {
       sourceUrl: map['sourceUrl'] == 'null' ? null : map['sourceUrl'],
       isrc: map['isrc'],
       duration: map['duration'],
+      spotifyId: map['spotifyId'],
     );
   }
 }

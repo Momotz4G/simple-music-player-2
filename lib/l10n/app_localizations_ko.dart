@@ -2338,4 +2338,276 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlp의 새 버전을 사용할 수 있습니다.';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
+
+  @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get offlineModeHeader => '오프라인 모드';
+
+  @override
+  String get offlineModeTitle => '오프라인 모드';
+
+  @override
+  String get offlineModeActive => '활성';
+
+  @override
+  String get offlineModeEnabledStatus => '오프라인 모드 활성화됨';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return '비활성화됨 ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => '모두 활성화됨';
+
+  @override
+  String get offlineModeLockdownDesc => '네트워크 차단 활성 상태입니다. 통계는 로컬에 저장됩니다.';
+
+  @override
+  String get offlineModeMainDesc => '모든 네트워크 서비스를 비활성화하고 로컬 라이브러리만 재생합니다.';
+
+  @override
+  String get enableOfflineModeQuestion => '오프라인 모드를 활성화할까요?';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      '모든 네트워크 통신이 완전히 중단됩니다. 다음 기능들이 종료됩니다:';
+
+  @override
+  String get offlineModeSyncRestoreNote => '이 기능을 끄면 통계가 자동으로 동기화됩니다.';
+
+  @override
+  String get enableOfflineModeBtn => '오프라인 모드 활성화';
+
+  @override
+  String get onlineModeRestored => '온라인 모드 복구됨. 통계 동기화 중...';
+
+  @override
+  String get disableServicesTitle => '서비스 비활성화';
+
+  @override
+  String get manageIndividualFeatures => '개별 온라인 기능 관리';
+
+  @override
+  String get featureCloudSync => '클라우드 통계 동기화';
+
+  @override
+  String get featureCloudSyncDesc => '청취 통계가 로컬에만 저장됨';
+
+  @override
+  String get featureCloudSyncLongDesc => '청취 메트릭을 PocketBase와 동기화';
+
+  @override
+  String get featureLeaderboard => '글로벌 리더보드';
+
+  @override
+  String get featureLeaderboardDesc => '순위 업데이트 일시 중지됨';
+
+  @override
+  String get featureLeaderboardLongDesc => '순위를 공개적으로 표시 및 업데이트';
+
+  @override
+  String get featureOnlineLyrics => '온라인 가사 검색';
+
+  @override
+  String get featureOnlineLyricsDesc => '로컬 .lrc/.ttml 파일만 사용';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'LRCLIB/Spotify에서 가사 가져오기';
+
+  @override
+  String get featureAiLyrics => 'AI 가사 생성기';
+
+  @override
+  String get featureAiLyricsDesc => '자동 동기화 가사 비활성화됨';
+
+  @override
+  String get featureAiLyricsLongDesc => 'AI를 통한 동기화 가사 생성';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => '배경 동영상 비활성화됨';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => '트랙 배경 동영상';
+
+  @override
+  String get featureOnlineSearch => '온라인 검색';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube 검색 비활성화됨';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'Spotify 및 YouTube 원격 검색';
+
+  @override
+  String get featureConnectDevice => '기기에 연결';
+
+  @override
+  String get featureConnectDeviceDesc => '원격 제어 및 리스닝 파티 비활성화됨';
+
+  @override
+  String get featureConnectDeviceLongDesc => '원격 제어 및 리스닝 파티';
+
+  @override
+  String get lyricsEditorTitle => '가사 편집기';
+
+  @override
+  String get clearAllQuestion => '모두 지우시겠습니까?';
+
+  @override
+  String get clearAllDesc => '현재 편집기 상태를 지웁니다. 나중에 저장하지 않는 한 로컬 파일은 삭제되지 않습니다.';
+
+  @override
+  String get clearBtn => '지우기';
+
+  @override
+  String get lyricsApplied => '가사가 패널에 적용되었습니다!';
+
+  @override
+  String get chooseFormat => '선호하는 형식을 선택하세요:';
+
+  @override
+  String get lrcFormat => 'LRC (표준 동기화)';
+
+  @override
+  String get lrcFormatDesc => '어디서나 작동하는 범용 형식입니다.';
+
+  @override
+  String get ttmlFormat => 'TTML (고정밀)';
+
+  @override
+  String get ttmlFormatDesc => 'AI 생성 및 세부 동기화에 더 적합합니다.';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return '$extension 파일로 성공적으로 저장되었습니다!';
+  }
+
+  @override
+  String get failedToSave => '가사 파일 저장에 실패했습니다.';
+
+  @override
+  String get generationFailed => '생성 실패';
+
+  @override
+  String get aiLyricsGenerationTitle => 'AI 가사 생성';
+
+  @override
+  String get syncedMode => '동기화됨';
+
+  @override
+  String get plainMode => '일반 텍스트';
+
+  @override
+  String get addLineToTop => '맨 위에 추가';
+
+  @override
+  String get addLineToEnd => '맨 뒤에 추가';
+
+  @override
+  String get lyricTextHint => '가사 텍스트...';
+
+  @override
+  String get insertAfter => '뒤에 삽입';
+
+  @override
+  String get removeLine => '줄 삭제';
+
+  @override
+  String get romajiHint => '로마자 / 음역 (선택 사항)...';
+
+  @override
+  String get startLabel => '시작: ';
+
+  @override
+  String get setStartTooltip => '시작을 현재 위치로 설정';
+
+  @override
+  String get endLabel => '종료: ';
+
+  @override
+  String get setEndTooltip => '종료를 현재 위치로 설정';
+
+  @override
+  String get playFromLine => '이 줄부터 재생';
+
+  @override
+  String get pasteLyricsHint => '여기에 가사를 붙여넣으세요...';
+
+  @override
+  String get applyBtn => '적용';
+
+  @override
+  String get saveLocallyBtn => '로컬에 저장';
+
+  @override
+  String get editLyricsTooltip => '가사 편집';
+
+  @override
+  String get saveLyricsTitle => '가사 저장';
+
+  @override
+  String get aiGenerate => 'AI 생성';
+
+  @override
+  String get aiLyricsInitializing => '초기화 중...';
+
+  @override
+  String get aiLyricsUploading => '노래를 서버에 업로드 중...';
+
+  @override
+  String get aiLyricsUploadFailed => '오류: 업로드 실패.';
+
+  @override
+  String get aiLyricsUploadSuccess => '업로드 완료!';
+
+  @override
+  String get aiLyricsVerifying => '서버 상태 확인 중...';
+
+  @override
+  String get aiLyricsStatusOk => '상태 코드 200 OK!';
+
+  @override
+  String get aiLyricsPolling => '가사 가져오는 중... 잠시만 기다려 주세요!';
+
+  @override
+  String get aiLyricsReceiving => '가사 수신됨';
+
+  @override
+  String get aiLyricsParsing => '가사 분석 중...';
+
+  @override
+  String get aiLyricsSuccess => '가사 생성 성공!';
+
+  @override
+  String get aiLyricsLocalFileMissing => '오류: 로컬 오디오 파일을 찾을 수 없습니다.';
+
+  @override
+  String get aiLyricsComplete => '완료!';
 }

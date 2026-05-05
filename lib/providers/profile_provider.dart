@@ -567,12 +567,16 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       await AuthService().signOut();
       await PocketBaseService().revertToAnonymous();
 
-      // 2. Clear local identity (The Clean Unlink)
+      // 2. Clear local identity & STATS (The Clean Unlink)
       // This ensures the device doesn't keep the cloud name/avatar after log out.
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('custom_nickname');
       await prefs.remove('selected_title');
       await prefs.remove('cached_avatar_url');
+
+      // 🚀 CRITICAL: Wipe local stats so the new anonymous user starts fresh!
+      // This prevents the "2000 minutes cloned to new ID" bug.
+      await ref.read(statsProvider.notifier).resetStats();
 
       // 3. Reset local state
       state = state.copyWith(
@@ -582,7 +586,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         clearLinkedEmail: true,
       );
       
-      DebugLogService().info("🔐 Account unlinked. Identity cleared, local stats preserved.");
+      DebugLogService().info("🔐 Account unlinked. Identity & local stats cleared.");
     } catch (e) {
       // Log silently
     }

@@ -582,6 +582,8 @@ class AudioInfoService {
         return 'DSF';
       case 'dff':
         return 'DFF';
+      case 'alac':
+        return 'ALAC';
       default:
         return ext.toUpperCase();
     }

@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'pocketbase_service.dart';
 import '../models/download_progress.dart';
 
 class UpdateService {
@@ -24,18 +25,19 @@ class UpdateService {
   /// Checks if a new version is available.
   /// Returns the release data if an update is available, null otherwise.
   Future<Map<String, dynamic>?> checkForUpdate() async {
+    if (PocketBaseService.isOffline) return null;
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
 
-      print("Checking for updates... Current version: $currentVersion");
+      debugPrint("Checking for updates... Current version: $currentVersion");
 
       final response = await http.get(Uri.parse(_releasesUrl));
 
       if (response.statusCode == 200) {
         final List releases = json.decode(response.body);
         if (releases.isEmpty) {
-          print("No releases found.");
+          debugPrint("No releases found.");
           return null;
         }
 
@@ -48,21 +50,22 @@ class UpdateService {
         final latestVersion = tagName.replaceAll('v', '');
 
         if (_isNewer(latestVersion, currentVersion)) {
-          print("Update available: $latestVersion");
+          debugPrint("Update available: $latestVersion");
           return releaseData;
         } else {
-          print("App is up to date.");
+          debugPrint("App is up to date.");
         }
       } else {
-        print("Failed to check for updates: ${response.statusCode}");
+        debugPrint("Failed to check for updates: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error checking for updates: $e");
+      debugPrint("Error checking for updates: $e");
     }
     return null;
   }
 
   Future<Map<String, dynamic>?> getLatestRelease() async {
+    if (PocketBaseService.isOffline) return null;
     try {
       final response = await http.get(Uri.parse(_releasesUrl));
       if (response.statusCode == 200) {
@@ -72,7 +75,7 @@ class UpdateService {
         }
       }
     } catch (e) {
-      print("Error fetching latest release: $e");
+      debugPrint("Error fetching latest release: $e");
     }
     return null;
   }
@@ -107,7 +110,7 @@ class UpdateService {
       final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
       final List<String> supportedAbis = androidInfo.supportedAbis;
 
-      print("Device supported ABIs: $supportedAbis");
+      debugPrint("Device supported ABIs: $supportedAbis");
 
       // Naming convention:
       // Universal: Simple.Music.Player.apk
@@ -123,7 +126,7 @@ class UpdateService {
           orElse: () => null,
         );
         if (bestAsset != null) {
-          print("Found exact ABI match: ${bestAsset['name']}");
+          debugPrint("Found exact ABI match: ${bestAsset['name']}");
           break;
         }
       }
@@ -135,7 +138,7 @@ class UpdateService {
               a['name'].toString().toLowerCase() == "simple.music.player.apk",
           orElse: () => null,
         );
-        if (bestAsset != null) print("Using universal APK");
+        if (bestAsset != null) debugPrint("Using universal APK");
       }
 
       // 3. Fallback to any .apk if still no match
@@ -144,7 +147,7 @@ class UpdateService {
           (a) => a['name'].toString().toLowerCase().endsWith(".apk"),
           orElse: () => null,
         );
-        if (bestAsset != null) print("Falling back to first available APK");
+        if (bestAsset != null) debugPrint("Falling back to first available APK");
       }
 
       if (bestAsset != null) {
@@ -215,7 +218,7 @@ class UpdateService {
   /// Downloads the installer asset and executes it.
   Future<void> downloadAndInstall(String downloadUrl, String fileName) async {
     try {
-      print("Downloading update from: $downloadUrl");
+      debugPrint("Downloading update from: $downloadUrl");
 
       final tempDir = await getTemporaryDirectory();
       final filePath = "${tempDir.path}/$fileName";
@@ -301,11 +304,11 @@ class UpdateService {
         // 🚀 MARK AS PENDING Update before attempting install
         await _markPendingUpdate(filePath);
       } else {
-        print("Failed to download update: ${response.statusCode}");
+        debugPrint("Failed to download update: ${response.statusCode}");
         throw Exception("Failed to download update");
       }
     } catch (e) {
-      print("Error downloading/installing update: $e");
+      debugPrint("Error downloading/installing update: $e");
       progressNotifier.value = null;
       rethrow;
     }
@@ -317,7 +320,7 @@ class UpdateService {
     await sink.close();
     client.close();
 
-    print("Download complete. Executing installer: $filePath");
+    debugPrint("Download complete. Executing installer: $filePath");
 
     // Give UI a moment to show "Installing..." if it hasn't yet
     await Future.delayed(const Duration(milliseconds: 500));
@@ -336,7 +339,7 @@ class UpdateService {
         final result = await _openApkForInstall(filePath);
 
         if (result) {
-          print("APK installer opened successfully");
+          debugPrint("APK installer opened successfully");
 
           // 🚀 CLEAR pending update once opened
           await _clearPendingUpdate();
@@ -348,7 +351,7 @@ class UpdateService {
           await Future.delayed(const Duration(seconds: 1));
           progressNotifier.value = null;
         } else {
-          print("Failed to open APK installer");
+          debugPrint("Failed to open APK installer");
           
           // 🚀 DO NOT clear progress if we failed, user might be in settings
           progressNotifier.value = DownloadProgress(
@@ -363,7 +366,7 @@ class UpdateService {
           progressNotifier.value = null;
         }
       } catch (e) {
-        print("Error opening APK: $e");
+        debugPrint("Error opening APK: $e");
         progressNotifier.value = null;
       }
 
@@ -397,8 +400,8 @@ class UpdateService {
         status: "IPA downloaded! Open in AltStore to install.",
       );
 
-      print("IPA downloaded to: $filePath");
-      print("iOS: User must install via AltStore, Sideloadly, or similar tool");
+      debugPrint("IPA downloaded to: $filePath");
+      debugPrint("iOS: User must install via AltStore, Sideloadly, or similar tool");
 
       // Keep message visible for a few seconds
       await Future.delayed(const Duration(seconds: 3));
@@ -415,8 +418,14 @@ class UpdateService {
       );
     }
 
-    // Exit the app so the installer can replace files (desktop only)
+    // 🚀 CLEANUP & EXIT for Desktop
     if (!Platform.isAndroid && !Platform.isIOS) {
+      // Clear markers before exiting so they don't block future update checks
+      await _clearPendingUpdate();
+      await _markFileForCleanup(filePath);
+      
+      debugPrint("🚀 Update process handed off to system. Exiting app.");
+      await Future.delayed(const Duration(milliseconds: 200));
       exit(0);
     }
   }
@@ -430,17 +439,17 @@ class UpdateService {
       // This gives a better heads-up if the user is about to be sent to Settings.
       final status = await Permission.requestInstallPackages.status;
       if (!status.isGranted) {
-        print("⚠️ Install Unknown Apps permission not granted.");
+        debugPrint("⚠️ Install Unknown Apps permission not granted.");
         // We still call OpenFilex because it triggers the Android Intent to the settings page!
       }
 
       // Use open_filex to open the APK
       // This triggers the Android package installer dialog
       final result = await OpenFilex.open(filePath);
-      print("OpenFilex result: ${result.type} - ${result.message}");
+      debugPrint("OpenFilex result: ${result.type} - ${result.message}");
       return result.type == ResultType.done;
     } catch (e) {
-      print("Error opening APK: $e");
+      debugPrint("Error opening APK: $e");
       return false;
     }
   }
@@ -450,9 +459,9 @@ class UpdateService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('pending_cleanup_file', filePath);
-      print("Marked for cleanup: $filePath");
+      debugPrint("Marked for cleanup: $filePath");
     } catch (e) {
-      print("Error marking for cleanup: $e");
+      debugPrint("Error marking for cleanup: $e");
     }
   }
 
@@ -460,13 +469,13 @@ class UpdateService {
   Future<void> _markPendingUpdate(String filePath) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('pending_update_apk', filePath);
-    print("🚀 Marked pending update APK: $filePath");
+    debugPrint("🚀 Marked pending update APK: $filePath");
   }
 
   Future<void> _clearPendingUpdate() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('pending_update_apk');
-    print("🚀 Cleared pending update APK marker.");
+    debugPrint("🚀 Cleared pending update APK marker.");
   }
 
   Future<String?> getPendingUpdatePath() async {
@@ -480,7 +489,7 @@ class UpdateService {
 
   /// Triggers the external installer for an existing file
   Future<void> installExistingApk(String filePath) async {
-    print("🚀 Resuming installation of: $filePath");
+    debugPrint("🚀 Resuming installation of: $filePath");
     await _finishInstallation(
       // Mocked components
       _DummyIOSink(),
@@ -494,17 +503,39 @@ class UpdateService {
   static Future<void> cleanupOldUpdates() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      
+      // 1. Clean up explicitly marked files
       final pendingFile = prefs.getString('pending_cleanup_file');
-
       if (pendingFile != null && pendingFile.isNotEmpty) {
         final file = File(pendingFile);
         if (await file.exists()) {
-          await file.delete();
-          print("🗑️ Cleaned up old update file: $pendingFile");
+          try {
+            await file.delete();
+            debugPrint("🗑️ Cleaned up old update file: $pendingFile");
+          } catch (e) {
+            debugPrint("⚠️ Could not delete old update file (might be in use): $e");
+          }
         }
-
-        // Clear the marker
         await prefs.remove('pending_cleanup_file');
+      }
+
+      // 2. 🚀 Windows/Desktop Cleanup: If we are starting up, any 'pending' update 
+      // from a previous session should be considered finished or stale.
+      // This prevents the old installer from blocking the "New Update Available" popup.
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        final pendingUpdate = prefs.getString('pending_update_apk');
+        if (pendingUpdate != null && pendingUpdate.isNotEmpty) {
+          final file = File(pendingUpdate);
+          if (await file.exists()) {
+            try {
+              await file.delete();
+              debugPrint("🗑️ Cleaned up stale desktop installer: $pendingUpdate");
+            } catch (e) {
+               debugPrint("⚠️ Could not delete stale installer (might be in use): $e");
+            }
+          }
+          await prefs.remove('pending_update_apk');
+        }
       }
     } catch (e) {
       print("Error cleaning up old updates: $e");
@@ -535,7 +566,7 @@ class _DummyIOSink implements IOSink {
   @override
   void writeln([Object? object = ""]) {}
   @override
-  set encoding(Encoding _encoding) {}
+  set encoding(Encoding encoding) {}
   @override
   Encoding get encoding => utf8;
 }

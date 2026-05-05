@@ -471,8 +471,10 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                     strokeWidth: 2, color: textColor)),
             const SizedBox(height: 20),
             Text(
-                AppLocalizations.of(context)!
-                    .songsLoadedCount(library.songs.length),
+                library.scanProgress > 0
+                    ? AppLocalizations.of(context)!
+                        .songsLoadedCount(library.scanProgress)
+                    : 'Scanning...',
                 style: TextStyle(
                     color: textColor,
                     fontSize: 18,
@@ -1060,9 +1062,10 @@ class SongListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playerState = ref.watch(playerProvider);
+    // 🚀 SELECTIVE WATCH: Only rebuild when the current song changes, not on every position tick
+    final currentFilePath = ref.watch(playerProvider.select((s) => s.currentSong?.filePath));
     final notifier = ref.read(playerProvider.notifier);
-    final isPlaying = playerState.currentSong?.filePath == song.filePath;
+    final isPlaying = currentFilePath == song.filePath;
     final activeColor = Theme.of(context).primaryColor;
 
     final titleColor = isDark ? Colors.white : Colors.black;
@@ -1185,9 +1188,10 @@ class SongGridTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playerState = ref.watch(playerProvider);
+    // 🚀 SELECTIVE WATCH: Only rebuild when the current song changes, not on every position tick
+    final currentFilePath = ref.watch(playerProvider.select((s) => s.currentSong?.filePath));
     final notifier = ref.read(playerProvider.notifier);
-    final isPlaying = playerState.currentSong?.filePath == song.filePath;
+    final isPlaying = currentFilePath == song.filePath;
     final activeColor = Theme.of(context).primaryColor;
 
     final settings = ref.watch(settingsProvider);

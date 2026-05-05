@@ -2403,4 +2403,290 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlp का नया संस्करण उपलब्ध है.';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
+
+  @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get offlineModeHeader => 'ऑफ़लाइन मोड';
+
+  @override
+  String get offlineModeTitle => 'ऑफ़लाइन मोड';
+
+  @override
+  String get offlineModeActive => 'सक्रिय';
+
+  @override
+  String get offlineModeEnabledStatus => 'ऑफ़लाइन मोड सक्षम है';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'अक्षम ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => 'सभी सक्षम';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'नेटवर्क लॉकडाउन सक्रिय है। आंकड़े स्थानीय रूप से सहेजे जाते हैं।';
+
+  @override
+  String get offlineModeMainDesc =>
+      'सभी नेटवर्क सेवाओं को अक्षम करें और केवल स्थानीय लाइब्रेरी चलाएं।';
+
+  @override
+  String get enableOfflineModeQuestion => 'ऑफ़लाइन मोड सक्षम करें?';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'यह सभी नेटवर्क संचार को पूरी तरह से अक्षम कर देगा। निम्नलिखित सुविधाएं बंद कर दी जाएंगी:';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'जब आप इसे बंद करेंगे तो आपके आंकड़े स्वचालित रूप से सिंक हो जाएंगे।';
+
+  @override
+  String get enableOfflineModeBtn => 'ऑफ़लाइन मोड सक्षम करें';
+
+  @override
+  String get onlineModeRestored => 'ऑनलाइन मोड बहाल। आंकड़े सिंक हो रहे हैं...';
+
+  @override
+  String get disableServicesTitle => 'सेवाएं अक्षम करें';
+
+  @override
+  String get manageIndividualFeatures =>
+      'व्यक्तिगत ऑनलाइन सुविधाओं का प्रबंधन करें';
+
+  @override
+  String get featureCloudSync => 'क्लाउड आँकड़े सिंक';
+
+  @override
+  String get featureCloudSyncDesc =>
+      'सुनने के आँकड़े केवल स्थानीय रूप से सहेजे गए';
+
+  @override
+  String get featureCloudSyncLongDesc =>
+      'PocketBase के साथ सुनने के मेट्रिक्स सिंक करें';
+
+  @override
+  String get featureLeaderboard => 'वैश्विक लीडरबोर्ड';
+
+  @override
+  String get featureLeaderboardDesc => 'रैंक अपडेट रोक दिए गए';
+
+  @override
+  String get featureLeaderboardLongDesc =>
+      'सार्वजनिक रूप से अपनी रैंक दिखाएं और अपडेट करें';
+
+  @override
+  String get featureOnlineLyrics => 'ऑनलाइन गीत खोज';
+
+  @override
+  String get featureOnlineLyricsDesc => 'केवल स्थानीय .lrc/.ttml फ़ाइलें';
+
+  @override
+  String get featureOnlineLyricsLongDesc =>
+      'LRCLIB/Spotify से गीत प्राप्त करें';
+
+  @override
+  String get featureAiLyrics => 'एआई गीत जनरेटर';
+
+  @override
+  String get featureAiLyricsDesc => 'स्वचालित सिंक्रनाइज़ गीत अक्षम';
+
+  @override
+  String get featureAiLyricsLongDesc =>
+      'एआई के माध्यम से सिंक्रनाइज़ गीत उत्पन्न करें';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'पृष्ठभूमि वीडियो अक्षम';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'ट्रैक के लिए पृष्ठभूमि वीडियो';
+
+  @override
+  String get featureOnlineSearch => 'ऑनलाइन खोज';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube खोज अक्षम';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'Spotify और YouTube रिमोट खोज';
+
+  @override
+  String get featureConnectDevice => 'किसी डिवाइस से कनेक्ट करें';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'रिमोट कंट्रोल और लिसनिंग पार्टियां अक्षम';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'रिमोट कंट्रोल और लिसनिंग पार्टियां';
+
+  @override
+  String get lyricsEditorTitle => 'लिरिक्स संपादक';
+
+  @override
+  String get clearAllQuestion => 'सब साफ़ करें?';
+
+  @override
+  String get clearAllDesc =>
+      'यह वर्तमान संपादक स्थिति को साफ़ कर देगा। जब तक आप बाद में सहेजते नहीं हैं, यह आपकी स्थानीय फ़ाइलों को नहीं हटाएगा।';
+
+  @override
+  String get clearBtn => 'साफ़ करें';
+
+  @override
+  String get lyricsApplied => 'लिरिक्स पैनल पर लागू किए गए!';
+
+  @override
+  String get chooseFormat => 'अपना पसंदीदा प्रारूप चुनें:';
+
+  @override
+  String get lrcFormat => 'LRC (मानक सिंक)';
+
+  @override
+  String get lrcFormatDesc => 'यूनिवर्सल प्रारूप, हर जगह काम करता है।';
+
+  @override
+  String get ttmlFormat => 'TTML (उच्च परिशुद्धता)';
+
+  @override
+  String get ttmlFormatDesc => 'एआई जनरेशन और विस्तृत सिंक के लिए बेहतर।';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return '$extension फ़ाइल में सफलतापूर्वक सहेजा गया!';
+  }
+
+  @override
+  String get failedToSave => 'लिरिक्स फ़ाइल सहेजने में विफल।';
+
+  @override
+  String get generationFailed => 'जनरेशन विफल';
+
+  @override
+  String get aiLyricsGenerationTitle => 'एआई लिरिक्स जनरेशन';
+
+  @override
+  String get syncedMode => 'सिंक किया गया';
+
+  @override
+  String get plainMode => 'सादा';
+
+  @override
+  String get addLineToTop => 'शीर्ष पर जोड़ें';
+
+  @override
+  String get addLineToEnd => 'अंत में जोड़ें';
+
+  @override
+  String get lyricTextHint => 'लिरिक्स टेक्स्ट...';
+
+  @override
+  String get insertAfter => 'बाद में डालें';
+
+  @override
+  String get removeLine => 'पंक्ति हटाएं';
+
+  @override
+  String get romajiHint => 'रोमाजी / लिप्यंतरण (वैकल्पिक)...';
+
+  @override
+  String get startLabel => 'आरंभ: ';
+
+  @override
+  String get setStartTooltip => 'आरंभ को वर्तमान स्थिति पर सेट करें';
+
+  @override
+  String get endLabel => 'अंत: ';
+
+  @override
+  String get setEndTooltip => 'अंत को वर्तमान स्थिति पर सेट करें';
+
+  @override
+  String get playFromLine => 'इस पंक्ति से चलाएं';
+
+  @override
+  String get pasteLyricsHint => 'अपने लिरिक्स यहाँ पेस्ट करें...';
+
+  @override
+  String get applyBtn => 'लागू करें';
+
+  @override
+  String get saveLocallyBtn => 'स्थानीय रूप से सहेजें';
+
+  @override
+  String get editLyricsTooltip => 'लिरिक्स संपादित करें';
+
+  @override
+  String get saveLyricsTitle => 'लिरिक्स सहेजें';
+
+  @override
+  String get aiGenerate => 'एआई जनरेट';
+
+  @override
+  String get aiLyricsInitializing => 'आरंभ किया जा रहा है...';
+
+  @override
+  String get aiLyricsUploading => 'गाना सर्वर पर अपलोड किया जा रहा है...';
+
+  @override
+  String get aiLyricsUploadFailed => 'त्रुटि: अपलोड विफल।';
+
+  @override
+  String get aiLyricsUploadSuccess => 'अपलोड पूरा हुआ!';
+
+  @override
+  String get aiLyricsVerifying => 'सर्वर स्थिति की पुष्टि की जा रही है...';
+
+  @override
+  String get aiLyricsStatusOk => 'स्थिति कोड 200 OK!';
+
+  @override
+  String get aiLyricsPolling =>
+      'लिरिक्स प्राप्त किए जा रहे हैं... कृपया धैर्य रखें!';
+
+  @override
+  String get aiLyricsReceiving => 'लिरिक्स प्राप्त हुए';
+
+  @override
+  String get aiLyricsParsing => 'लिरिक्स का विश्लेषण किया जा रहा है...';
+
+  @override
+  String get aiLyricsSuccess => 'लिरिक्स सफलतापूर्वक जनरेट हुए!';
+
+  @override
+  String get aiLyricsLocalFileMissing =>
+      'त्रुटि: स्थानीय ऑडियो फ़ाइल नहीं मिली।';
+
+  @override
+  String get aiLyricsComplete => 'पूरा हुआ!';
 }

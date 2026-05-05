@@ -2342,4 +2342,276 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlpの新しいバージョンが利用可能です。';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
+
+  @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get offlineModeHeader => 'オフラインモード';
+
+  @override
+  String get offlineModeTitle => 'オフラインモード';
+
+  @override
+  String get offlineModeActive => 'アクティブ';
+
+  @override
+  String get offlineModeEnabledStatus => 'オフラインモード有効';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return '無効 ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => 'すべて有効';
+
+  @override
+  String get offlineModeLockdownDesc => 'ネットワーク制限中。統計はローカルに保存されます。';
+
+  @override
+  String get offlineModeMainDesc => 'すべてのネットワークサービスを無効にし、ローカルライブラリのみ再生します。';
+
+  @override
+  String get enableOfflineModeQuestion => 'オフラインモードを有効にしますか？';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'すべてのネットワーク通信が完全に切断されます。以下の機能がオフになります：';
+
+  @override
+  String get offlineModeSyncRestoreNote => 'これをオフにすると、統計が自動的に同期されます。';
+
+  @override
+  String get enableOfflineModeBtn => 'オフラインモードを有効にする';
+
+  @override
+  String get onlineModeRestored => 'オンラインモードが復旧しました。統計を同期中...';
+
+  @override
+  String get disableServicesTitle => 'サービスを無効にする';
+
+  @override
+  String get manageIndividualFeatures => '個別のオンライン機能を管理する';
+
+  @override
+  String get featureCloudSync => 'クラウド統計同期';
+
+  @override
+  String get featureCloudSyncDesc => '再生統計はローカルのみに保存されます';
+
+  @override
+  String get featureCloudSyncLongDesc => '再生メトリクスをPocketBaseと同期する';
+
+  @override
+  String get featureLeaderboard => 'グローバルリーダーボード';
+
+  @override
+  String get featureLeaderboardDesc => 'ランク更新を停止中';
+
+  @override
+  String get featureLeaderboardLongDesc => 'ランクを公開・更新する';
+
+  @override
+  String get featureOnlineLyrics => 'オンライン歌詞検索';
+
+  @override
+  String get featureOnlineLyricsDesc => 'ローカルの .lrc/.ttml ファイルのみ';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'LRCLIB/Spotify から歌詞を取得する';
+
+  @override
+  String get featureAiLyrics => 'AI歌詞ジェネレーター';
+
+  @override
+  String get featureAiLyricsDesc => '自動同期歌詞を無効化';
+
+  @override
+  String get featureAiLyricsLongDesc => 'AIで同期歌詞を生成する';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => '背景ビデオを無効化';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'トラックの背景ビデオ';
+
+  @override
+  String get featureOnlineSearch => 'オンライン検索';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube検索を無効化';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'SpotifyとYouTubeのリモート検索';
+
+  @override
+  String get featureConnectDevice => 'デバイスに接続';
+
+  @override
+  String get featureConnectDeviceDesc => 'リモート制御・リスニングパーティを無効化';
+
+  @override
+  String get featureConnectDeviceLongDesc => 'リモート制御とリスニングパーティ';
+
+  @override
+  String get lyricsEditorTitle => '歌詞エディタ';
+
+  @override
+  String get clearAllQuestion => 'すべてクリアしますか？';
+
+  @override
+  String get clearAllDesc => '現在のエディタの状態をクリアします。保存しない限り、ローカルファイルは削除されません。';
+
+  @override
+  String get clearBtn => 'クリア';
+
+  @override
+  String get lyricsApplied => '歌詞をパネルに適用しました！';
+
+  @override
+  String get chooseFormat => '優先する形式を選択してください：';
+
+  @override
+  String get lrcFormat => 'LRC (標準同期)';
+
+  @override
+  String get lrcFormatDesc => 'ユニバーサル形式、どこでも動作します。';
+
+  @override
+  String get ttmlFormat => 'TTML (高精度)';
+
+  @override
+  String get ttmlFormatDesc => 'AI生成や詳細な同期に適しています。';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return '$extension ファイルの保存に成功しました！';
+  }
+
+  @override
+  String get failedToSave => '歌詞ファイルの保存に失敗しました。';
+
+  @override
+  String get generationFailed => '生成失敗';
+
+  @override
+  String get aiLyricsGenerationTitle => 'AI歌詞生成';
+
+  @override
+  String get syncedMode => '同期済み';
+
+  @override
+  String get plainMode => 'プレーン';
+
+  @override
+  String get addLineToTop => '先頭に追加';
+
+  @override
+  String get addLineToEnd => '末尾に追加';
+
+  @override
+  String get lyricTextHint => '歌詞テキスト...';
+
+  @override
+  String get insertAfter => '後ろに挿入';
+
+  @override
+  String get removeLine => '行を削除';
+
+  @override
+  String get romajiHint => 'ローマ字 / 音訳 (任意)...';
+
+  @override
+  String get startLabel => '開始: ';
+
+  @override
+  String get setStartTooltip => '開始時間を現在位置に設定';
+
+  @override
+  String get endLabel => '終了: ';
+
+  @override
+  String get setEndTooltip => '終了時間を現在位置に設定';
+
+  @override
+  String get playFromLine => 'この行から再生';
+
+  @override
+  String get pasteLyricsHint => 'ここに歌詞を貼り付けてください...';
+
+  @override
+  String get applyBtn => '適用';
+
+  @override
+  String get saveLocallyBtn => 'ローカルに保存';
+
+  @override
+  String get editLyricsTooltip => '歌詞を編集';
+
+  @override
+  String get saveLyricsTitle => '歌詞を保存';
+
+  @override
+  String get aiGenerate => 'AI生成';
+
+  @override
+  String get aiLyricsInitializing => '初期化中...';
+
+  @override
+  String get aiLyricsUploading => '曲をサーバーにアップロード中...';
+
+  @override
+  String get aiLyricsUploadFailed => 'エラー: アップロードに失敗しました。';
+
+  @override
+  String get aiLyricsUploadSuccess => 'アップロード完了！';
+
+  @override
+  String get aiLyricsVerifying => 'サーバーのステータスを確認中...';
+
+  @override
+  String get aiLyricsStatusOk => 'ステータスコード 200 OK!';
+
+  @override
+  String get aiLyricsPolling => '歌詞を取得中... 少々お待ちください！';
+
+  @override
+  String get aiLyricsReceiving => '歌詞を受信しました';
+
+  @override
+  String get aiLyricsParsing => '歌詞を解析中...';
+
+  @override
+  String get aiLyricsSuccess => '歌詞の生成に成功しました！';
+
+  @override
+  String get aiLyricsLocalFileMissing => 'エラー: ローカルオーディオファイルが見つかりません。';
+
+  @override
+  String get aiLyricsComplete => '完了！';
 }

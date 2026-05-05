@@ -5,7 +5,9 @@ import 'package:ffi/ffi.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:metadata_god/metadata_god.dart' show Metadata;
+import 'package:metadata_god/metadata_god.dart' show Metadata;
 import 'metadata_service.dart';
+import 'pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
 // --- NATIVE C FUNCTION SIGNATURE (Unified Wrapper) ---
 // We define the signature for the single function exposed by our C++ wrapper.
@@ -58,6 +60,12 @@ class AcoustIdService {
   /// --------------------------------------------------------------------------
 
   Future<List<MusicBrainzRecord>> identifyFile(String filePath) async {
+    // 🔒 OFFLINE MODE: Skip native fingerprinting & API lookup, fallback to local tags
+    if (PocketBaseService.isOffline) {
+      print("🔒 Offline Mode: Skipping AcoustID fingerprinting.");
+      return _localMetadataFallback(filePath);
+    }
+
     // 1. Lazy load native library if not already
     if (!_isNativeLoaded) _loadNativeLibrary();
 
@@ -74,9 +82,13 @@ class AcoustIdService {
       }
     }
 
-    // 2. Fallback: Use MetadataService (Safe background scan)
+    // 3. Fallback: Use MetadataService (Safe background scan)
+    return _localMetadataFallback(filePath);
+  }
+
+  Future<List<MusicBrainzRecord>> _localMetadataFallback(String filePath) async {
     print("⚠️ Using Metadata Fallback...");
-    final Metadata metadata = await MetadataService().readMetadata(filePath);
+    final Metadata? metadata = await MetadataService().readMetadata(filePath);
     final title = metadata?.title ?? "";
     final artist = metadata?.artist ?? "";
 

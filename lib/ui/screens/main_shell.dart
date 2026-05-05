@@ -119,6 +119,7 @@ import '../components/debug_panel.dart';
 import '../components/whats_new_dialog.dart';
 import '../../utils/toast_utils.dart';
 import '../../services/pocketbase_service.dart';
+import '../../services/native_music_service.dart';
 import '../../providers/mailbox_provider.dart'; // 🚀 IMPORT
 import '../components/mailbox_dialog.dart'; // 🚀 IMPORT
 import '../../providers/profile_provider.dart'; // 🚀 IMPORT
@@ -162,12 +163,19 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
     // 🚀 CHECK FOR UPDATES ON STARTUP
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestPermissions(); // 🚀 Request Permissions
+      
+      // 🚀 CLEANUP OLD UPDATE APKs (Free ~300MB after successful update)
+      // Do this BEFORE checking for updates so stale markers don't block the check
+      UpdateService.cleanupOldUpdates();
+
       _checkForUpdates();
       _checkWhatsNew();
       _startConnectivityMonitor(); // 🚀 Start monitoring
-
-      // 🚀 CLEANUP OLD UPDATE APKs (Free ~300MB after successful update)
-      UpdateService.cleanupOldUpdates();
+      
+      // 🚀 Delay reminder slightly to ensure window is visible and stable
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _checkOfflineModeStatus(); 
+      });
 
       // 🚀 CHECK FOR INTERRUPTED UPDATES (Android)
       _checkPendingUpdate();
@@ -195,9 +203,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
               notifier.playPrevious();
               break;
             case 'exit_app':
-              _isExiting = true;
-              await windowManager.setPreventClose(false);
-              appWindow.close();
+              await _performGracefulExit();
               break;
           }
         });
@@ -216,8 +222,50 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
         .addListener(_onBinariesUpdate);
   }
 
+  // 🚀 OFFLINE MODE REMINDER
+  void _checkOfflineModeStatus() {
+    if (PocketBaseService.isOffline) {
+      final colorScheme = Theme.of(context).colorScheme;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Theme.of(context).cardColor,
+          title: Row(
+            children: [
+              Icon(Icons.wifi_off_rounded, color: colorScheme.error),
+              const SizedBox(width: 8),
+              const Text("Offline Mode Active"),
+            ],
+          ),
+          content: const Text(
+            "The app is currently running in Offline Mode. Online features such as syncing, search, and remote control are disabled.\n\nYou can turn this off in Settings when you are ready to reconnect.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Got it"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // 🚀 Navigate to settings AND signal to scroll to offline section
+                ref.read(settingsNavigationProvider.notifier).state =
+                    SettingsSection.offlineMode;
+                ref
+                    .read(libraryPresentationProvider.notifier)
+                    .setView(LibraryView.settings);
+                Navigator.of(context).pop();
+              },
+              child: const Text("Open Settings"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   // 🚀 CONNECTIVITY MONITOR
   void _startConnectivityMonitor() {
+    if (PocketBaseService.isOffline) return; // 🔒 OFFLINE MODE: Skip monitoring
     _checkConnectivity(); // Initial check
     _connectivityTimer = Timer.periodic(
       const Duration(seconds: 5),
@@ -470,10 +518,43 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
     if (minimizeToTray) {
       TrayService().minimizeToTray();
     } else {
-      _isExiting = true;
-      await windowManager.setPreventClose(false);
-      appWindow.close();
+      await _performGracefulExit();
     }
+  }
+
+  /// 🛑 GRACEFUL EXIT: Dispose native resources before process termination.
+  /// Prevents heap corruption crash (0xc0000374) caused by FFI worker isolates
+  /// still polling native memory while the process tears down.
+  Future<void> _performGracefulExit() async {
+    if (_isExiting) return;
+    _isExiting = true;
+    debugPrint("🛑 [MainShell] Graceful exit starting...");
+
+    // 1. Stop all native audio (FFI workers, just_audio, timers)
+    try {
+      await NativeMusicService().shutdown()
+          .timeout(const Duration(seconds: 2), onTimeout: () {
+        debugPrint("⚠️ [MainShell] Audio shutdown timed out, forcing exit.");
+      });
+    } catch (e) {
+      debugPrint("⚠️ [MainShell] Audio shutdown error: $e");
+    }
+
+    // 2. Disconnect PocketBase realtime (prevents SSE teardown race)
+    try {
+      await PocketBaseService().pb.realtime.unsubscribe();
+    } catch (_) {}
+
+    // 3. Brief grace period for native IOCP threads to settle
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    // 4. Close the window and force process termination
+    await windowManager.setPreventClose(false);
+    appWindow.close();
+    
+    // 🚀 HARD EXIT: Ensure all native background threads (MPV, FFI) are killed
+    // to release any lingering hardware locks (WASAPI Exclusive).
+    exit(0);
   }
 
   Future<void> _checkWhatsNew() async {
@@ -888,7 +969,13 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+    
+    // 🚀 SAFETY: If localization is not yet ready, show a placeholder to avoid LateInitializationError
+    if (l10n == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     // 🚀 Update Tray Menu localization if on desktop
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       TrayService().updateLocalizedMenu(l10n);

@@ -2388,4 +2388,290 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlp versi baru telah tersedia.';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'File M3U tidak valid';
+
+  @override
+  String get generateAiLyrics => 'Buat Lirik AI';
+
+  @override
+  String get aiLyricsGenerating => 'Membuat Lirik AI...';
+
+  @override
+  String get aiLyricsFailed => 'Gagal membuat lirik AI.';
+
+  @override
+  String get aiLyricsError => 'Kesalahan saat membuat lirik AI.';
+
+  @override
+  String get offlineModeHeader => 'MODE OFFLINE';
+
+  @override
+  String get offlineModeTitle => 'Mode Offline';
+
+  @override
+  String get offlineModeActive => 'AKTIF';
+
+  @override
+  String get offlineModeEnabledStatus => 'Mode Offline Diaktifkan';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'Dinonaktifkan ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => 'Semua Diaktifkan';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'Lockdown jaringan aktif. Statistik disimpan secara lokal.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'Matikan semua layanan jaringan dan putar perpustakaan lokal saja.';
+
+  @override
+  String get enableOfflineModeQuestion => 'Aktifkan Mode Offline?';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'Ini akan mematikan semua komunikasi jaringan sepenuhnya. Fitur-fitur berikut akan dimatikan:';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'Statistik Anda akan disinkronkan secara otomatis saat Anda mematikan ini.';
+
+  @override
+  String get enableOfflineModeBtn => 'Aktifkan Mode Offline';
+
+  @override
+  String get onlineModeRestored =>
+      'Mode online dipulihkan. Menyinkronkan statistik...';
+
+  @override
+  String get disableServicesTitle => 'Matikan Layanan';
+
+  @override
+  String get manageIndividualFeatures => 'Kelola fitur online individu';
+
+  @override
+  String get featureCloudSync => 'Sinkronisasi Statistik Cloud';
+
+  @override
+  String get featureCloudSyncDesc =>
+      'Statistik mendengarkan hanya disimpan secara lokal';
+
+  @override
+  String get featureCloudSyncLongDesc =>
+      'Sinkronkan metrik mendengarkan dengan PocketBase';
+
+  @override
+  String get featureLeaderboard => 'Papan Peringkat Global';
+
+  @override
+  String get featureLeaderboardDesc => 'Pembaruan peringkat dijeda';
+
+  @override
+  String get featureLeaderboardLongDesc =>
+      'Tampilkan dan perbarui peringkat Anda secara publik';
+
+  @override
+  String get featureOnlineLyrics => 'Pencarian Lirik Online';
+
+  @override
+  String get featureOnlineLyricsDesc => 'Hanya file .lrc/.ttml lokal';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'Ambil lirik dari LRCLIB/Spotify';
+
+  @override
+  String get featureAiLyrics => 'Generator Lirik AI';
+
+  @override
+  String get featureAiLyricsDesc => 'Lirik sinkron otomatis dinonaktifkan';
+
+  @override
+  String get featureAiLyricsLongDesc => 'Buat lirik sinkron melalui AI';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'Video latar belakang dinonaktifkan';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'Video latar belakang untuk trek';
+
+  @override
+  String get featureOnlineSearch => 'Pencarian Online';
+
+  @override
+  String get featureOnlineSearchDesc =>
+      'Pencarian Spotify/YouTube dinonaktifkan';
+
+  @override
+  String get featureOnlineSearchLongDesc =>
+      'Pencarian jarak jauh Spotify dan YouTube';
+
+  @override
+  String get featureConnectDevice => 'Sambungkan ke Perangkat';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'Remote control & Listening party dinonaktifkan';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'Remote control dan listening party';
+
+  @override
+  String get lyricsEditorTitle => 'Editor Lirik';
+
+  @override
+  String get clearAllQuestion => 'Bersihkan Semua?';
+
+  @override
+  String get clearAllDesc =>
+      'Ini akan membersihkan status editor saat ini. Ini TIDAK akan menghapus file lokal Anda kecuali Anda menyimpannya setelahnya.';
+
+  @override
+  String get clearBtn => 'Bersihkan';
+
+  @override
+  String get lyricsApplied => 'Lirik diterapkan ke panel!';
+
+  @override
+  String get chooseFormat => 'Pilih format pilihan Anda:';
+
+  @override
+  String get lrcFormat => 'LRC (Sinkronisasi Standar)';
+
+  @override
+  String get lrcFormatDesc => 'Format universal, berfungsi di mana saja.';
+
+  @override
+  String get ttmlFormat => 'TTML (Presisi Tinggi)';
+
+  @override
+  String get ttmlFormatDesc =>
+      'Lebih baik untuk pembuatan AI & sinkronisasi mendetail.';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'Berhasil disimpan ke file $extension!';
+  }
+
+  @override
+  String get failedToSave => 'Gagal menyimpan file lirik.';
+
+  @override
+  String get generationFailed => 'Pembuatan Gagal';
+
+  @override
+  String get aiLyricsGenerationTitle => 'Pembuatan Lirik AI';
+
+  @override
+  String get syncedMode => 'Sinkron';
+
+  @override
+  String get plainMode => 'Teks Biasa';
+
+  @override
+  String get addLineToTop => 'Tambah ke Atas';
+
+  @override
+  String get addLineToEnd => 'Tambah ke Akhir';
+
+  @override
+  String get lyricTextHint => 'Teks lirik...';
+
+  @override
+  String get insertAfter => 'Sisipkan Setelah';
+
+  @override
+  String get removeLine => 'Hapus Baris';
+
+  @override
+  String get romajiHint => 'Romaji / Transliterasi (Opsional)...';
+
+  @override
+  String get startLabel => 'Mulai: ';
+
+  @override
+  String get setStartTooltip => 'Atur Mulai ke Posisi Sekarang';
+
+  @override
+  String get endLabel => 'Selesai: ';
+
+  @override
+  String get setEndTooltip => 'Atur Selesai ke Posisi Sekarang';
+
+  @override
+  String get playFromLine => 'Putar dari baris ini';
+
+  @override
+  String get pasteLyricsHint => 'Tempel lirik Anda di sini...';
+
+  @override
+  String get applyBtn => 'Terapkan';
+
+  @override
+  String get saveLocallyBtn => 'Simpan Lokal';
+
+  @override
+  String get editLyricsTooltip => 'Edit Lirik';
+
+  @override
+  String get saveLyricsTitle => 'Simpan Lirik';
+
+  @override
+  String get aiGenerate => 'Buat AI';
+
+  @override
+  String get aiLyricsInitializing => 'Menginisialisasi...';
+
+  @override
+  String get aiLyricsUploading => 'Mengunggah lagu ke server...';
+
+  @override
+  String get aiLyricsUploadFailed => 'Kesalahan: Unggahan gagal.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'Unggahan selesai!';
+
+  @override
+  String get aiLyricsVerifying => 'Memverifikasi status server...';
+
+  @override
+  String get aiLyricsStatusOk => 'Kode status 200 OK!';
+
+  @override
+  String get aiLyricsPolling => 'Mendapatkan Lirik... Harap bersabar!';
+
+  @override
+  String get aiLyricsReceiving => 'Lirik Diterima';
+
+  @override
+  String get aiLyricsParsing => 'Mengurai Lirik...';
+
+  @override
+  String get aiLyricsSuccess => 'Lirik berhasil dibuat!';
+
+  @override
+  String get aiLyricsLocalFileMissing =>
+      'Kesalahan: File audio lokal tidak ditemukan.';
+
+  @override
+  String get aiLyricsComplete => 'Selesai!';
 }

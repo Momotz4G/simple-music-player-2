@@ -270,7 +270,12 @@ class UserProfileOverlay extends ConsumerWidget {
                     StatsUtils.resolveTitleDefinition(
                         selectedTitle, totalMinutes,
                         userRank: userRank),
-                    displayName: selectedTitle,
+                    displayName: StatsUtils.resolveDisplayName(
+                      StatsUtils.resolveTitleDefinition(
+                          selectedTitle, totalMinutes,
+                          userRank: userRank),
+                      selectedTitle,
+                    ),
                     width: 180,
                     height: 32,
                   ),
@@ -575,9 +580,15 @@ class _AchievementGalleryState extends ConsumerState<_AchievementGallery> {
     }
 
     final allUnlocked = StatsUtils.musicTitles
-        .where((t) =>
-            t.name != "Developer" &&
-            (t.name == widget.selectedTitle || StatsUtils.isTitleUnlocked(
+        .where((t) {
+            if (t.name == "Developer") return false;
+            
+            // 🚀 COMPETITIVE GUARD: Never force-show "Top X Global" from selected_title
+            // — must be validated by actual rank via isTitleUnlocked
+            final isForceEquipped = t.name == widget.selectedTitle && 
+                                    t.category != TitleCategory.competitive;
+            
+            return isForceEquipped || StatsUtils.isTitleUnlocked(
               t,
               widget.totalMin,
               widget.maxStreak,
@@ -588,7 +599,8 @@ class _AchievementGalleryState extends ConsumerState<_AchievementGallery> {
               dailyPlays: widget.dailyPlays,
               weeklyPlays: widget.weeklyPlays,
               artistMinutes: effectiveArtistMinutes,
-            )))
+            );
+        })
         .toList();
 
     if (allUnlocked.isEmpty) return const SizedBox.shrink();

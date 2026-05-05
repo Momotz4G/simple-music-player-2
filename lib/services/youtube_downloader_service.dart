@@ -94,7 +94,13 @@ class YoutubeDownloaderService {
       final fileName = _getExecutableName(binary);
       final file = File('${binDir.path}/$fileName');
 
-      // ALWAYS copy/overwrite binaries from assets to ensure users get latest version on app update
+      // 🚀 OPTIMIZATION: Only copy binaries if they don't exist.
+      // Overwriting binaries on every startup triggers Windows Defender "suspicious dropper" heuristics.
+      if (await file.exists()) {
+        if (kDebugMode) print('📦 Binary already exists: ${file.path}');
+        continue;
+      }
+
       try {
         final byteData = await rootBundle.load('assets/binaries/$assetName');
         await file.writeAsBytes(
@@ -108,7 +114,7 @@ class YoutubeDownloaderService {
           await Process.run('chmod', ['+x', file.path]);
         }
 
-        if (kDebugMode) print('📦 Updated binary: $assetName -> ${file.path}');
+        if (kDebugMode) print('📦 Extracted binary: $assetName -> ${file.path}');
       } catch (e) {
         print("Error copying binary $binary: $e");
       }

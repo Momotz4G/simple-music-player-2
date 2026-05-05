@@ -2388,4 +2388,285 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'تحديث yt-dlp متاح.';
+
+  @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
+
+  @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get offlineModeHeader => 'وضع عدم الاتصال';
+
+  @override
+  String get offlineModeTitle => 'وضع عدم الاتصال';
+
+  @override
+  String get offlineModeActive => 'نشط';
+
+  @override
+  String get offlineModeEnabledStatus => 'تم تمكين وضع عدم الاتصال';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'معطل ($count)';
+  }
+
+  @override
+  String get offlineModeAllEnabledStatus => 'الكل مُمكّن';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'إغلاق الشبكة نشط. يتم حفظ الإحصائيات محليًا.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'تعطيل جميع خدمات الشبكة وتشغيل المكتبة المحلية فقط.';
+
+  @override
+  String get enableOfflineModeQuestion => 'هل تريد تمكين وضع عدم الاتصال؟';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'سيؤدي هذا إلى تعطيل جميع اتصالات الشبكة تمامًا. سيتم إيقاف الميزات التالية:';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'ستتم مزامنة إحصائياتك تلقائيًا عند إيقاف تشغيل هذا.';
+
+  @override
+  String get enableOfflineModeBtn => 'تمكين وضع عدم الاتصال';
+
+  @override
+  String get onlineModeRestored =>
+      'تم استعادة الوضع عبر الإنترنت. جاري مزامنة الإحصائيات...';
+
+  @override
+  String get disableServicesTitle => 'تعطيل الخدمات';
+
+  @override
+  String get manageIndividualFeatures => 'إدارة ميزات الإنترنت الفردية';
+
+  @override
+  String get featureCloudSync => 'مزامنة إحصائيات السحابة';
+
+  @override
+  String get featureCloudSyncDesc => 'يتم حفظ إحصائيات الاستماع محليًا فقط';
+
+  @override
+  String get featureCloudSyncLongDesc => 'مزامنة مقاييس الاستماع مع PocketBase';
+
+  @override
+  String get featureLeaderboard => 'قائمة المتصدرين العالمية';
+
+  @override
+  String get featureLeaderboardDesc => 'توقفت تحديثات الترتيب';
+
+  @override
+  String get featureLeaderboardLongDesc => 'إظهار وتحديث ترتيبك علنًا';
+
+  @override
+  String get featureOnlineLyrics => 'البحث عن كلمات الأغاني عبر الإنترنت';
+
+  @override
+  String get featureOnlineLyricsDesc => 'ملفات .lrc/.ttml المحلية فقط';
+
+  @override
+  String get featureOnlineLyricsLongDesc =>
+      'جلب كلمات الأغاني من LRCLIB/Spotify';
+
+  @override
+  String get featureAiLyrics => 'مولد كلمات الأغاني بالذكاء الاصطناعي';
+
+  @override
+  String get featureAiLyricsDesc => 'تم تعطيل كلمات الأغاني المتزامنة تلقائيًا';
+
+  @override
+  String get featureAiLyricsLongDesc =>
+      'إنشاء كلمات أغاني متزامنة عبر الذاء الاصطناعي';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'تم تعطيل مقاطع الفيديو في الخلفية';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'مقاطع فيديو الخلفية للمسارات';
+
+  @override
+  String get featureOnlineSearch => 'البحث عبر الإنترنت';
+
+  @override
+  String get featureOnlineSearchDesc => 'تم تعطيل بحث Spotify/YouTube';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'بحث Spotify و YouTube عن بعد';
+
+  @override
+  String get featureConnectDevice => 'الاتصال بجهاز';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'تم تعطيل التحكم عن بعد وحفلات الاستماع';
+
+  @override
+  String get featureConnectDeviceLongDesc => 'التحكم عن بعد وحفلات الاستماع';
+
+  @override
+  String get lyricsEditorTitle => 'محرر الكلمات';
+
+  @override
+  String get clearAllQuestion => 'مسح الكل؟';
+
+  @override
+  String get clearAllDesc =>
+      'سيؤدي هذا إلى مسح حالة المحرر الحالية. لن يتم حذف ملفاتك المحلية إلا إذا قمت بالحفظ لاحقاً.';
+
+  @override
+  String get clearBtn => 'مسح';
+
+  @override
+  String get lyricsApplied => 'تم تطبيق الكلمات على اللوحة!';
+
+  @override
+  String get chooseFormat => 'اختر التنسيق المفضل لديك:';
+
+  @override
+  String get lrcFormat => 'LRC (مزامنة قياسية)';
+
+  @override
+  String get lrcFormatDesc => 'تنسيق عالمي، يعمل في كل مكان.';
+
+  @override
+  String get ttmlFormat => 'TTML (دقة عالية)';
+
+  @override
+  String get ttmlFormatDesc =>
+      'أفضل لإنشاء الذكاء الاصطناعي والمزامنة التفصيلية.';
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'تم الحفظ في ملف $extension بنجاح!';
+  }
+
+  @override
+  String get failedToSave => 'فشل في حفظ ملف الكلمات.';
+
+  @override
+  String get generationFailed => 'فشل الإنشاء';
+
+  @override
+  String get aiLyricsGenerationTitle => 'إنشاء الكلمات بالذكاء الاصطناعي';
+
+  @override
+  String get syncedMode => 'متزامن';
+
+  @override
+  String get plainMode => 'نص عادي';
+
+  @override
+  String get addLineToTop => 'إضافة إلى الأعلى';
+
+  @override
+  String get addLineToEnd => 'إضافة إلى النهاية';
+
+  @override
+  String get lyricTextHint => 'نص الكلمات...';
+
+  @override
+  String get insertAfter => 'إدراج بعد';
+
+  @override
+  String get removeLine => 'إزالة السطر';
+
+  @override
+  String get romajiHint => 'روماجي / ترجمة صوتية (اختياري)...';
+
+  @override
+  String get startLabel => 'البداية: ';
+
+  @override
+  String get setStartTooltip => 'تعيين البداية عند الموضع الحالي';
+
+  @override
+  String get endLabel => 'النهاية: ';
+
+  @override
+  String get setEndTooltip => 'تعيين النهاية عند الموضع الحالي';
+
+  @override
+  String get playFromLine => 'تشغيل من هذا السطر';
+
+  @override
+  String get pasteLyricsHint => 'الصق كلماتك هنا...';
+
+  @override
+  String get applyBtn => 'تطبيق';
+
+  @override
+  String get saveLocallyBtn => 'حفظ محلياً';
+
+  @override
+  String get editLyricsTooltip => 'تعديل الكلمات';
+
+  @override
+  String get saveLyricsTitle => 'حفظ الكلمات';
+
+  @override
+  String get aiGenerate => 'إنشاء بالذكاء الاصطناعي';
+
+  @override
+  String get aiLyricsInitializing => 'جاري التهيئة...';
+
+  @override
+  String get aiLyricsUploading => 'جاري رفع الأغنية إلى الخادم...';
+
+  @override
+  String get aiLyricsUploadFailed => 'خطأ: فشل الرفع.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'اكتمل الرفع!';
+
+  @override
+  String get aiLyricsVerifying => 'جاري التحقق من حالة الخادم...';
+
+  @override
+  String get aiLyricsStatusOk => 'رمز الحالة 200 OK!';
+
+  @override
+  String get aiLyricsPolling => 'جاري الحصول على الكلمات... يرجى الصبر!';
+
+  @override
+  String get aiLyricsReceiving => 'تم استلام الكلمات';
+
+  @override
+  String get aiLyricsParsing => 'جاري تحليل الكلمات...';
+
+  @override
+  String get aiLyricsSuccess => 'تم إنشاء الكلمات بنجاح!';
+
+  @override
+  String get aiLyricsLocalFileMissing => 'خطأ: ملف الصوت المحلي غير موجود.';
+
+  @override
+  String get aiLyricsComplete => 'اكتمل!';
 }

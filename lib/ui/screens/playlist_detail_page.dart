@@ -308,6 +308,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
           onlineArtUrl: entry.artUrl,
           sourceUrl: entry.sourceUrl,
           isrc: entry.isrc,
+          spotifyId: entry.spotifyId,
         );
         rowData.add(_PlaylistRowData(song, entry.dateAdded));
         if (headerImagePaths.length < 4) {
@@ -598,9 +599,31 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                         playlistName: playlist.name,
                       ),
                     );
+                  } else if (value == 'export_m3u') {
+                    ref.read(playlistProvider.notifier).exportM3uPlaylist(
+                      widget.playlistId,
+                      onStatus: (statusKey, {args}) {
+                        if (statusKey == 'exportedM3u') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(AppLocalizations.of(context)!.exportToM3u), backgroundColor: Colors.green),
+                          );
+                        }
+                      }
+                    );
                   }
                 },
                 itemBuilder: (context) => [
+                  PopupMenuItem(
+                      value: 'export_m3u',
+                      child: Row(
+                        children: [
+                          Icon(Icons.file_download_outlined,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(width: 8),
+                          Text(AppLocalizations.of(context)!.exportToM3u),
+                        ],
+                      )),
                   PopupMenuItem(
                       value: 'share',
                       child: Row(

@@ -6,11 +6,9 @@ import '../components/user_profile_overlay.dart';
 import '../../utils/stats_utils.dart';
 import '../components/widgets/supreme_title_badge.dart';
 import '../../services/spotify_service.dart';
-import '../../services/deezer_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/search_bridge_provider.dart';
 import 'dart:async';
-import '../../services/vps_scraper_service.dart';
 
 class LeaderboardPage extends ConsumerStatefulWidget {
   const LeaderboardPage({super.key});
@@ -75,7 +73,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
       _artistImageFutures.clear();
     });
 
-    String sortBy = 'play_count';
+    String sortBy = _isArtistView ? 'play_count' : 'total_minutes';
     String? filter;
 
     if (!_isArtistView) {
@@ -164,25 +162,75 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
           filter: filter,
         );
         
+        // 🚀 RANK INJECTION: Fetch Top 3 All-Time if viewing Daily/Weekly to show correct badges
+        List<Map<String, dynamic>> top3AllTime = [];
+        if (_selectedTab != 2) {
+          top3AllTime = await PocketBaseService().fetchLeaderboard(
+            sortBy: 'total_minutes',
+            limit: 3,
+            filter: 'nickname != ""',
+          );
+        }
+        
         // Deduplicate locally and filter
-        final seenUsers = <String>{};
+        // Dedup by BOTH user_id AND nickname to catch multi-device duplicates
+        final seenUserIds = <String>{};
+        final seenNicknames = <String, int>{}; // nickname -> index in filtered list
+        final seenHighScores = <String>{}; // 🚀 Detect clones by identical high scores (minutes + plays)
         final filtered = <Map<String, dynamic>>[];
         for (final r in records) {
+           // 🚀 Inject rank if they are in Top 3 All-Time
+           if (_selectedTab != 2) {
+             for (int i = 0; i < top3AllTime.length; i++) {
+               final isMatch = (r['user_id'] != null && top3AllTime[i]['user_id'] == r['user_id']) ||
+                               (r['nickname'] != null && top3AllTime[i]['nickname'] == r['nickname']);
+               if (isMatch) {
+                 r['leaderboard_rank'] = i + 1;
+                 break;
+               }
+             }
+           }
+
            final count = r[sortBy] ?? 0;
            if (count <= 0) continue; 
            
            final rawNick = r['nickname'] as String?;
            if (rawNick == null || rawNick.trim().isEmpty) continue;
            
+           // Skip if we've already seen this user_id
            final uId = r['user_id'] as String?;
-           if (uId != null && uId.isNotEmpty) {
-              if (!seenUsers.contains(uId)) {
-                 seenUsers.add(uId);
-                 filtered.add(r);
-              }
-           } else {
-              filtered.add(r);
+           if (uId != null && uId.isNotEmpty && seenUserIds.contains(uId)) continue;
+
+           // 🚀 BULLETPROOF CLONE GUARD
+           // If an account has exactly the same total_minutes AND play_count as an account we've already processed, 
+           // it is mathematically guaranteed to be a cloned duplicate (exploiting the unlink bug).
+           final totalMins = (r['total_minutes'] as num?)?.toInt() ?? 0;
+           final totalPlays = (r['play_count'] as num?)?.toInt() ?? 0;
+           final cloneKey = "${totalMins}_$totalPlays";
+           
+           if (totalMins > 100 && seenHighScores.contains(cloneKey)) {
+             continue; // Skip clone
            }
+           
+           // Dedup by nickname (case-insensitive): keep the one with higher score
+           final nickKey = rawNick.trim().toLowerCase();
+           if (seenNicknames.containsKey(nickKey)) {
+              final existingIdx = seenNicknames[nickKey]!;
+              final existingCount = filtered[existingIdx][sortBy] ?? 0;
+              if (count > existingCount) {
+                 // Replace the weaker duplicate with this stronger one
+                 filtered[existingIdx] = r;
+                 if (totalMins > 100) seenHighScores.add(cloneKey);
+              }
+              // Either way, track this user_id as seen
+              if (uId != null && uId.isNotEmpty) seenUserIds.add(uId);
+              continue;
+           }
+           
+           if (uId != null && uId.isNotEmpty) seenUserIds.add(uId);
+           if (totalMins > 100) seenHighScores.add(cloneKey);
+           seenNicknames[nickKey] = filtered.length;
+           filtered.add(r);
         }
 
         if (mounted) {
@@ -361,11 +409,11 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                   (context, index) {
                     final row = _leaderboardData[index];
                     
-                    String sortBy = 'play_count';
+                    String sortBy = _isArtistView ? 'play_count' : 'total_minutes';
                     if (_selectedTab == 0) sortBy = 'daily_play_count';
                     if (_selectedTab == 1) sortBy = 'weekly_play_count';
                     
-                    final playCount = row[sortBy] ?? 0;
+                    final scoreValue = row[sortBy] ?? 0;
 
                     Color? rankColor;
                     if (index == 0) rankColor = const Color(0xFFFFD700);
@@ -382,7 +430,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                         artistName: artistName,
                         index: index,
                         isHero: isHero,
-                        playCount: playCount,
+                        playCount: scoreValue,
                         itemWidth: itemWidth,
                         rankColor: rankColor,
                         imageFuture: _artistImageFutures[artistName]!,
@@ -450,7 +498,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                                         final titleDef = StatsUtils.resolveTitleDefinition(
                                           row['selected_title'],
                                           row['total_minutes'] ?? 0,
-                                          userRank: index + 1,
+                                          userRank: _selectedTab == 2 ? index + 1 : (row['leaderboard_rank'] as int? ?? 0),
                                         );
                                         final hasWings = titleDef.rarityTier >= 3;
 
@@ -474,7 +522,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                                             SizedBox(width: hasWings ? 22 : 8),
                                             SupremeTitleBadge.fromDefinition(
                                               titleDef,
-                                              displayName: row['selected_title'],
+                                              displayName: StatsUtils.resolveDisplayName(titleDef, row['selected_title'] as String?),
                                               width: screenWidth < 500 ? 100 : (screenWidth < 1200 ? 120 : 140),
                                               height: 20,
                                             ),
@@ -512,10 +560,18 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.play_arrow_rounded, size: 16, color: accentColor),
+                                      Icon(
+                                        (_selectedTab == 2 && !_isArtistView) 
+                                          ? Icons.access_time_rounded 
+                                          : Icons.play_arrow_rounded, 
+                                        size: 16, 
+                                        color: accentColor
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        playCount.toString(),
+                                        _selectedTab == 2 
+                                          ? StatsUtils.formatMinutes(scoreValue, AppLocalizations.of(context)!) 
+                                          : scoreValue.toString(),
                                         style: TextStyle(fontWeight: FontWeight.bold, color: accentColor),
                                       ),
                                     ],
