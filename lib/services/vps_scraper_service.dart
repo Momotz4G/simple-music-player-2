@@ -1,17 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../env/env.dart';
 
 class VpsScraperService {
-  static String get _baseUrl {
-    try {
-      return dotenv.env['VPS_SCRAPER_URL'] ?? '';
-    } catch (_) {
-      return '';
-    }
-  }
+  static String get _baseUrl => Env.vpsScraperUrl;
 
   static String get _bannerUrl => Env.spotifyBannerUrl;
 

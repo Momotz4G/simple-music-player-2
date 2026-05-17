@@ -47,7 +47,6 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     with SingleTickerProviderStateMixin {
   VideoPlayerController? _videoController;
   bool _isLoadingCanvas = false;
-  String? _canvasStatus;
   double _dragOffset = 0.0; // 🚀 Track drag distance
   bool _showTranslation = false;
   bool _translationLoading = false;
@@ -63,9 +62,10 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     _horizontalDragAnimationController?.dispose();
     _horizontalDragAnimationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 250));
-    final animation = Tween<double>(begin: _horizontalDragOffset, end: target).animate(
-        CurvedAnimation(
-            parent: _horizontalDragAnimationController!, curve: Curves.easeOutQuad));
+    final animation = Tween<double>(begin: _horizontalDragOffset, end: target)
+        .animate(CurvedAnimation(
+            parent: _horizontalDragAnimationController!,
+            curve: Curves.easeOutQuad));
 
     animation.addListener(() {
       if (mounted) {
@@ -81,12 +81,22 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
         _horizontalDragAnimationController?.dispose();
         _horizontalDragAnimationController = null;
         if (target != 0 && mounted) {
-           setState(() => _horizontalDragOffset = 0.0);
+          setState(() => _horizontalDragOffset = 0.0);
         }
       }
     });
 
     _horizontalDragAnimationController!.forward();
+  }
+
+  /// 🚀 Responsive art size: caps at 40% of screen height on small screens
+  /// to prevent overlap with controls on 4.7" devices
+  double _getResponsiveArtSize(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final widthBased = screenWidth - 80;
+    final heightBased = screenHeight * 0.38; // Max 38% of screen height
+    return widthBased < heightBased ? widthBased : heightBased;
   }
 
   Widget _buildArtPlaceholder(SongModel song) {
@@ -109,7 +119,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
           child: SmartArt(
             path: song.filePath,
             onlineArtUrl: song.onlineArtUrl,
-            size: MediaQuery.of(context).size.width - 80,
+            size: _getResponsiveArtSize(context),
             borderRadius: 12,
           ),
         ),
@@ -195,7 +205,6 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
           _videoController?.dispose();
           _videoController = null;
           _isLoadingCanvas = false;
-          _canvasStatus = "";
         });
       }
       return;
@@ -206,70 +215,75 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       setState(() {
         _videoController = null;
         _isLoadingCanvas = true;
-        _canvasStatus = AppLocalizations.of(context)!.searchingSpotify;
       });
     }
     if (oldController != null) await oldController.dispose();
 
-    // 🚀 TIER 1: Check Video URL Cache (FASTEST)
     try {
-      final String videoCacheKey = "canvas_video:$artist-$title";
-      final cachedVideoUrl = await DBService().getArtCache(videoCacheKey);
-      if (cachedVideoUrl != null && cachedVideoUrl.isNotEmpty) {
-        debugPrint("💾 [DB CACHE] Canvas Video Found: $artist - $title");
-        if (mounted) {
-          setState(() => _canvasStatus = "[Cached] ${AppLocalizations.of(context)!.fetchingCanvas}");
+      // 🚀 TIER 1: Check Video URL Cache (FASTEST)
+      try {
+        final String videoCacheKey = "canvas_video:$artist-$title";
+        final cachedVideoUrl = await DBService().getArtCache(videoCacheKey);
+        if (cachedVideoUrl != null && cachedVideoUrl.isNotEmpty) {
+          debugPrint("💾 [DB CACHE] Canvas Video Found: $artist - $title");
+          await _loadCanvasFromUrl(cachedVideoUrl, isDirectVideoUrl: true);
+          if (_videoController != null) return; // Success!
         }
-        await _loadCanvasFromUrl(cachedVideoUrl, isDirectVideoUrl: true);
-        if (_videoController != null) return; // Success!
+      } catch (e) {
+        debugPrint("⚠️ Canvas Cache Read Error (Video): $e");
       }
-    } catch (e) {
-       debugPrint("⚠️ Canvas Cache Read Error (Video): $e");
-    }
 
-    // 🚀 TIER 2: Check Spotify Link Cache (Saves API Quota)
-    String? spotifyUrl;
-    bool isLinkFromCache = false;
-    final String linkCacheKey = "spotify_link:$artist-$title";
-    try {
-      spotifyUrl = await DBService().getArtCache(linkCacheKey);
-      if (spotifyUrl != null && spotifyUrl.isNotEmpty) {
-        debugPrint("💾 [DB CACHE] Spotify Link Found: $artist - $title");
-        isLinkFromCache = true;
+      // 🚀 TIER 2: Check Spotify Link Cache (Saves API Quota)
+      String? spotifyUrl;
+      final String linkCacheKey = "spotify_link:$artist-$title";
+      try {
+        spotifyUrl = await DBService().getArtCache(linkCacheKey);
+        if (spotifyUrl != null && spotifyUrl.isNotEmpty) {
+          debugPrint("💾 [DB CACHE] Spotify Link Found: $artist - $title");
+        }
+      } catch (e) {
+        debugPrint("⚠️ Canvas Cache Read Error (Link): $e");
       }
-    } catch (e) {
-      debugPrint("⚠️ Canvas Cache Read Error (Link): $e");
-    }
 
-    // 🚀 TIER 3: Fetch from Official Spotify API
-    if (spotifyUrl == null || spotifyUrl.isEmpty) {
-      debugPrint("🌐 [NETWORK] Searching Spotify for: $artist - $title");
-      spotifyUrl = await SpotifyService.getTrackLink(title, artist);
+      // 🚀 TIER 3: Fetch from Official Spotify API (with 10s timeout)
+      if (spotifyUrl == null || spotifyUrl.isEmpty) {
+        debugPrint("🌐 [NETWORK] Searching Spotify for: $artist - $title");
+        spotifyUrl = await SpotifyService.getTrackLink(title, artist)
+            .timeout(const Duration(seconds: 10), onTimeout: () => null);
+        if (spotifyUrl != null) {
+          DBService().saveArtCache(linkCacheKey, spotifyUrl);
+        }
+      }
+
       if (spotifyUrl != null) {
-        DBService().saveArtCache(linkCacheKey, spotifyUrl);
+        if (!mounted) return;
+        await _loadCanvasFromUrl(spotifyUrl)
+            .timeout(const Duration(seconds: 15), onTimeout: () {
+          debugPrint("⚠️ Canvas fetch timed out for: $artist - $title");
+        });
       }
-    }
-
-    if (spotifyUrl != null) {
-      if (!mounted) return;
-      setState(() {
-        final prefix = isLinkFromCache ? "[Cached] " : "";
-        _canvasStatus = "$prefix${AppLocalizations.of(context)!.fetchingCanvas}";
-      });
-      await _loadCanvasFromUrl(spotifyUrl);
-    } else {
-      if (mounted) {
+    } catch (e) {
+      debugPrint("⚠️ Canvas loading error: $e");
+    } finally {
+      // 🚀 GUARANTEE: Always stop loading state regardless of outcome
+      if (mounted && _isLoadingCanvas) {
         setState(() {
           _isLoadingCanvas = false;
-          _canvasStatus = "";
         });
+      }
+      // Log result to debug console
+      if (_videoController != null) {
+        debugPrint("✅ Canvas loaded for: $artist - $title");
+      } else {
+        debugPrint("ℹ️ No canvas available for: $artist - $title");
       }
     }
   }
 
-  Future<void> _loadCanvasFromUrl(String url, {bool isDirectVideoUrl = false}) async {
+  Future<void> _loadCanvasFromUrl(String url,
+      {bool isDirectVideoUrl = false}) async {
     String? videoUrl;
-    
+
     if (isDirectVideoUrl) {
       videoUrl = url;
     } else {
@@ -278,16 +292,17 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
         // Save to Video Cache for next time
         final song = ref.read(playerProvider).currentSong;
         if (song != null) {
-          DBService().saveArtCache("canvas_video:${song.artist}-${song.title}", videoUrl);
+          DBService().saveArtCache(
+              "canvas_video:${song.artist}-${song.title}", videoUrl);
           // Also save the Spotify Link if we were using an override or found it
-          DBService().saveArtCache("spotify_link:${song.artist}-${song.title}", url);
+          DBService()
+              .saveArtCache("spotify_link:${song.artist}-${song.title}", url);
         }
       }
     }
 
     if (videoUrl != null) {
       if (!mounted) return;
-      setState(() => _canvasStatus = AppLocalizations.of(context)!.fetchingCanvas);
 
       final cachedFile = await CanvasService.downloadCanvasToCache(videoUrl);
 
@@ -330,7 +345,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       _audioInfo = null;
     });
 
-    final info = await AudioInfoService().getAudioInfoForSong(song, isPriority: true);
+    final info =
+        await AudioInfoService().getAudioInfoForSong(song, isPriority: true);
 
     if (mounted) {
       setState(() {
@@ -388,7 +404,6 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
           _videoController?.dispose();
           _videoController = null;
           _isLoadingCanvas = false;
-          _canvasStatus = "";
         });
       } else if (!next.disableCanvas &&
           prev?.disableCanvas == true &&
@@ -451,18 +466,24 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                 onPressed: () => Navigator.pop(context),
               ),
               centerTitle: true,
-              title: (notifier.isRemoteSessionActive && !notifier.isMaster && playerState.activeDeviceName != null)
+              title: (notifier.isRemoteSessionActive &&
+                      !notifier.isMaster &&
+                      playerState.activeDeviceName != null)
                   ? Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.blue.withValues(alpha: 0.4), width: 1),
+                        border: Border.all(
+                            color: Colors.blue.withValues(alpha: 0.4),
+                            width: 1),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.cast_connected, size: 14, color: Colors.blue),
+                          const Icon(Icons.cast_connected,
+                              size: 14, color: Colors.blue),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -480,32 +501,6 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                     )
                   : null,
               actions: [
-                // Canvas loading indicator
-                if (_isLoadingCanvas)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Center(
-                      child: Text(
-                        _canvasStatus ??
-                            AppLocalizations.of(context)!.loadingCanvas,
-                        style: const TextStyle(
-                            fontSize: 10, color: Colors.white54),
-                      ),
-                    ),
-                  ),
-                if (_isLoadingCanvas)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white54,
-                      ),
-                    ),
-                  ),
-
                 // 3-dots menu
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, color: Colors.white54),
@@ -520,10 +515,12 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                         child: Row(
                           children: [
                             Icon(
-                              (ref.read(timerProvider).isActive || ref.read(playerProvider).isSleepPending)
+                              (ref.read(timerProvider).isActive ||
+                                      ref.read(playerProvider).isSleepPending)
                                   ? Icons.timer_rounded
                                   : Icons.timer_outlined,
-                              color: (ref.read(timerProvider).isActive || ref.read(playerProvider).isSleepPending)
+                              color: (ref.read(timerProvider).isActive ||
+                                      ref.read(playerProvider).isSleepPending)
                                   ? settings.accentColor
                                   : Colors.white,
                               size: 20,
@@ -544,7 +541,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                               size: 20,
                             ),
                             const SizedBox(width: 12),
-                            Text('${l10n.equalizer} (${eq.isEnabled ? "On" : "Off"})',
+                            Text(
+                                '${l10n.equalizer} (${eq.isEnabled ? "On" : "Off"})',
                                 style: const TextStyle(color: Colors.white)),
                           ],
                         ),
@@ -799,21 +797,37 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                           behavior: HitTestBehavior.opaque,
                                           onHorizontalDragUpdate: (details) {
                                             setState(() {
-                                              _horizontalDragOffset += details.delta.dx;
+                                              _horizontalDragOffset +=
+                                                  details.delta.dx;
                                             });
                                           },
                                           onHorizontalDragEnd: (details) {
-                                            final screenWidth = MediaQuery.of(context).size.width;
+                                            final screenWidth =
+                                                MediaQuery.of(context)
+                                                    .size
+                                                    .width;
                                             final threshold = screenWidth * 0.3;
-                                            if (_horizontalDragOffset < -threshold || (details.primaryVelocity ?? 0) < -300) {
+                                            if (_horizontalDragOffset <
+                                                    -threshold ||
+                                                (details.primaryVelocity ?? 0) <
+                                                    -300) {
                                               // Swipe Left -> Next Track
-                                              _runHorizontalDragAnimation(-screenWidth, () => notifier.playNext());
-                                            } else if (_horizontalDragOffset > threshold || (details.primaryVelocity ?? 0) > 300) {
+                                              _runHorizontalDragAnimation(
+                                                  -screenWidth,
+                                                  () => notifier.playNext());
+                                            } else if (_horizontalDragOffset >
+                                                    threshold ||
+                                                (details.primaryVelocity ?? 0) >
+                                                    300) {
                                               // Swipe Right -> Previous Track
-                                              _runHorizontalDragAnimation(screenWidth, () => notifier.playPrevious());
+                                              _runHorizontalDragAnimation(
+                                                  screenWidth,
+                                                  () =>
+                                                      notifier.playPrevious());
                                             } else {
                                               // Cancel
-                                              _runHorizontalDragAnimation(0.0, null);
+                                              _runHorizontalDragAnimation(
+                                                  0.0, null);
                                             }
                                           },
                                           child: Stack(
@@ -821,65 +835,114 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                             clipBehavior: Clip.none,
                                             children: [
                                               // Previous Song Placeholder (Left)
-                                              if (playerState.previousSong != null && _horizontalDragOffset > 0)
+                                              if (playerState.previousSong !=
+                                                      null &&
+                                                  _horizontalDragOffset > 0)
                                                 Transform.translate(
-                                                  offset: Offset(_horizontalDragOffset - MediaQuery.of(context).size.width, 0),
+                                                  offset: Offset(
+                                                      _horizontalDragOffset -
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .width,
+                                                      0),
                                                   child: Opacity(
-                                                    opacity: (_horizontalDragOffset / MediaQuery.of(context).size.width).clamp(0.0, 1.0),
-                                                    child: _buildArtPlaceholder(playerState.previousSong!),
+                                                    opacity:
+                                                        (_horizontalDragOffset /
+                                                                MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width)
+                                                            .clamp(0.0, 1.0),
+                                                    child: _buildArtPlaceholder(
+                                                        playerState
+                                                            .previousSong!),
                                                   ),
                                                 ),
                                               // Next Song Placeholder (Right)
-                                              if (playerState.nextSong != null && _horizontalDragOffset < 0)
+                                              if (playerState.nextSong !=
+                                                      null &&
+                                                  _horizontalDragOffset < 0)
                                                 Transform.translate(
-                                                  offset: Offset(_horizontalDragOffset + MediaQuery.of(context).size.width, 0),
+                                                  offset: Offset(
+                                                      _horizontalDragOffset +
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .width,
+                                                      0),
                                                   child: Opacity(
-                                                    opacity: (-_horizontalDragOffset / MediaQuery.of(context).size.width).clamp(0.0, 1.0),
-                                                    child: _buildArtPlaceholder(playerState.nextSong!),
+                                                    opacity:
+                                                        (-_horizontalDragOffset /
+                                                                MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width)
+                                                            .clamp(0.0, 1.0),
+                                                    child: _buildArtPlaceholder(
+                                                        playerState.nextSong!),
                                                   ),
                                                 ),
                                               // Current Song
                                               Transform.translate(
-                                                offset: Offset(_horizontalDragOffset, 0),
+                                                offset: Offset(
+                                                    _horizontalDragOffset, 0),
                                                 child: Opacity(
-                                                  opacity: (1.0 - (_horizontalDragOffset.abs() / MediaQuery.of(context).size.width)).clamp(0.0, 1.0),
+                                                  opacity: (1.0 -
+                                                          (_horizontalDragOffset
+                                                                  .abs() /
+                                                              MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .width))
+                                                      .clamp(0.0, 1.0),
                                                   child: Container(
                                                     width: double.infinity,
                                                     alignment: Alignment.center,
                                                     child: !hasVideo
                                                         ? Hero(
-                                                            tag: 'mobile_player_art',
+                                                            tag:
+                                                                'mobile_player_art',
                                                             child: Container(
-                                                              decoration: BoxDecoration(
+                                                              decoration:
+                                                                  BoxDecoration(
                                                                 borderRadius:
-                                                                    BorderRadius.circular(12),
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            12),
                                                                 boxShadow: [
                                                                   BoxShadow(
-                                                                    color: Colors.black
-                                                                        .withValues(alpha: 0.5),
-                                                                    blurRadius: 30,
-                                                                    spreadRadius: 5,
+                                                                    color: Colors
+                                                                        .black
+                                                                        .withValues(
+                                                                            alpha:
+                                                                                0.5),
+                                                                    blurRadius:
+                                                                        30,
+                                                                    spreadRadius:
+                                                                        5,
                                                                   ),
                                                                 ],
                                                               ),
                                                               child: ClipRRect(
                                                                 borderRadius:
-                                                                    BorderRadius.circular(12),
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            12),
                                                                 child: SmartArt(
-                                                                  path: song.filePath,
+                                                                  path: song
+                                                                      .filePath,
                                                                   onlineArtUrl:
                                                                       song.onlineArtUrl,
-                                                                  size: MediaQuery.of(context)
-                                                                          .size
-                                                                          .width -
-                                                                      80,
-                                                                  borderRadius: 12,
+                                                                  size: _getResponsiveArtSize(
+                                                                      context),
+                                                                  borderRadius:
+                                                                      12,
                                                                 ),
                                                               ),
                                                             ),
                                                           )
                                                         : SizedBox(
-                                                            height: MediaQuery.of(context)
+                                                            height: MediaQuery.of(
+                                                                        context)
                                                                     .size
                                                                     .width -
                                                                 80,
@@ -1086,8 +1149,10 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                         // Controls row
                                         // 🚀 NEAT 5-COLUMN CONTROLS GRID (Fixed Height Slots for Alignment)
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             // Col 1: Shuffle & Volume
                                             Column(
@@ -1096,10 +1161,14 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                 SizedBox(
                                                   height: 72,
                                                   child: IconButton(
-                                                    icon: const Icon(Icons.shuffle_rounded),
+                                                    icon: const Icon(
+                                                        Icons.shuffle_rounded),
                                                     iconSize: 28,
-                                                    color: playerState.isShuffle ? settings.accentColor : Colors.white54,
-                                                    onPressed: notifier.toggleShuffle,
+                                                    color: playerState.isShuffle
+                                                        ? settings.accentColor
+                                                        : Colors.white54,
+                                                    onPressed:
+                                                        notifier.toggleShuffle,
                                                   ),
                                                 ),
                                                 SizedBox(
@@ -1107,14 +1176,23 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                   child: IconButton(
                                                     icon: Icon(
                                                       playerState.volume == 0
-                                                          ? Icons.volume_off_rounded
-                                                          : playerState.volume < 0.5
-                                                              ? Icons.volume_down_rounded
-                                                              : Icons.volume_up_rounded,
+                                                          ? Icons
+                                                              .volume_off_rounded
+                                                          : playerState.volume <
+                                                                  0.5
+                                                              ? Icons
+                                                                  .volume_down_rounded
+                                                              : Icons
+                                                                  .volume_up_rounded,
                                                     ),
                                                     iconSize: 24,
                                                     color: Colors.white70,
-                                                    onPressed: () => _showVolumeSliderSheet(context, ref, notifier, playerState),
+                                                    onPressed: () =>
+                                                        _showVolumeSliderSheet(
+                                                            context,
+                                                            ref,
+                                                            notifier,
+                                                            playerState),
                                                   ),
                                                 ),
                                               ],
@@ -1127,13 +1205,17 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                 SizedBox(
                                                   height: 72,
                                                   child: IconButton(
-                                                    icon: const Icon(Icons.skip_previous_rounded),
+                                                    icon: const Icon(Icons
+                                                        .skip_previous_rounded),
                                                     iconSize: 40,
                                                     color: Colors.white,
-                                                    onPressed: notifier.playPrevious,
+                                                    onPressed:
+                                                        notifier.playPrevious,
                                                   ),
                                                 ),
-                                                const SizedBox(height: 48), // Empty slot for alignment
+                                                const SizedBox(
+                                                    height:
+                                                        48), // Empty slot for alignment
                                               ],
                                             ),
 
@@ -1146,25 +1228,38 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                   child: Container(
                                                     width: 72,
                                                     height: 72,
-                                                    decoration: const BoxDecoration(
+                                                    decoration:
+                                                        const BoxDecoration(
                                                       color: Colors.white,
                                                       shape: BoxShape.circle,
                                                     ),
                                                     child: IconButton(
                                                       icon: AnimatedSwitcher(
-                                                        duration: const Duration(milliseconds: 200),
+                                                        duration:
+                                                            const Duration(
+                                                                milliseconds:
+                                                                    200),
                                                         child: Icon(
-                                                          playerState.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                                                          key: ValueKey(playerState.isPlaying),
+                                                          playerState.isPlaying
+                                                              ? Icons
+                                                                  .pause_rounded
+                                                              : Icons
+                                                                  .play_arrow_rounded,
+                                                          key: ValueKey(
+                                                              playerState
+                                                                  .isPlaying),
                                                           color: Colors.black,
                                                           size: 40,
                                                         ),
                                                       ),
-                                                      onPressed: notifier.togglePlay,
+                                                      onPressed:
+                                                          notifier.togglePlay,
                                                     ),
                                                   ),
                                                 ),
-                                                const SizedBox(height: 48), // Empty slot for alignment
+                                                const SizedBox(
+                                                    height:
+                                                        48), // Empty slot for alignment
                                               ],
                                             ),
 
@@ -1175,10 +1270,12 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                 SizedBox(
                                                   height: 72,
                                                   child: IconButton(
-                                                    icon: const Icon(Icons.skip_next_rounded),
+                                                    icon: const Icon(Icons
+                                                        .skip_next_rounded),
                                                     iconSize: 40,
                                                     color: Colors.white,
-                                                    onPressed: notifier.playNext,
+                                                    onPressed:
+                                                        notifier.playNext,
                                                   ),
                                                 ),
                                                 SizedBox(
@@ -1186,15 +1283,22 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                   child: IconButton(
                                                     icon: Icon(
                                                       Icons.devices_rounded,
-                                                      color: notifier.isRemoteSessionActive && !notifier.isMaster ? settings.accentColor : Colors.white54,
+                                                      color: notifier
+                                                                  .isRemoteSessionActive &&
+                                                              !notifier.isMaster
+                                                          ? settings.accentColor
+                                                          : Colors.white54,
                                                     ),
                                                     iconSize: 24,
                                                     onPressed: () {
                                                       showModalBottomSheet(
                                                         context: context,
-                                                        backgroundColor: Colors.transparent,
-                                                        isScrollControlled: true,
-                                                        builder: (context) => const DeviceSelectorDialog(),
+                                                        backgroundColor:
+                                                            Colors.transparent,
+                                                        isScrollControlled:
+                                                            true,
+                                                        builder: (context) =>
+                                                            const DeviceSelectorDialog(),
                                                       );
                                                     },
                                                   ),
@@ -1210,27 +1314,39 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                   height: 72,
                                                   child: IconButton(
                                                     icon: Icon(
-                                                      playerState.loopMode == ja.LoopMode.one
-                                                          ? Icons.repeat_one_rounded
-                                                          : Icons.repeat_rounded,
+                                                      playerState.loopMode ==
+                                                              ja.LoopMode.one
+                                                          ? Icons
+                                                              .repeat_one_rounded
+                                                          : Icons
+                                                              .repeat_rounded,
                                                     ),
                                                     iconSize: 28,
-                                                    color: playerState.loopMode == ja.LoopMode.off ? Colors.white54 : settings.accentColor,
-                                                    onPressed: notifier.cycleLoopMode,
+                                                    color: playerState
+                                                                .loopMode ==
+                                                            ja.LoopMode.off
+                                                        ? Colors.white54
+                                                        : settings.accentColor,
+                                                    onPressed:
+                                                        notifier.cycleLoopMode,
                                                   ),
                                                 ),
                                                 SizedBox(
                                                   height: 48,
                                                   child: IconButton(
-                                                    icon: const Icon(Icons.queue_music_rounded),
+                                                    icon: const Icon(Icons
+                                                        .queue_music_rounded),
                                                     iconSize: 24,
                                                     color: Colors.white70,
                                                     onPressed: () {
                                                       showModalBottomSheet(
                                                         context: context,
-                                                        backgroundColor: Colors.transparent,
-                                                        isScrollControlled: true,
-                                                        builder: (context) => const QueueSheet(),
+                                                        backgroundColor:
+                                                            Colors.transparent,
+                                                        isScrollControlled:
+                                                            true,
+                                                        builder: (context) =>
+                                                            const QueueSheet(),
                                                       );
                                                     },
                                                   ),
@@ -1287,7 +1403,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     );
   }
 
-  void _showVolumeSliderSheet(BuildContext context, WidgetRef ref, PlayerNotifier notifier, PlayerState playerState) {
+  void _showVolumeSliderSheet(BuildContext context, WidgetRef ref,
+      PlayerNotifier notifier, PlayerState playerState) {
     final settings = ref.read(settingsProvider);
     showModalBottomSheet(
       context: context,
@@ -1306,71 +1423,72 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
               ),
             ),
             child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Volume",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final currentVol = ref.watch(playerProvider).volume;
-                      return IconButton(
-                        icon: Icon(
-                          currentVol == 0
-                              ? Icons.volume_off_rounded
-                              : currentVol < 0.5
-                                  ? Icons.volume_down_rounded
-                                  : Icons.volume_up_rounded,
-                          color: settings.accentColor,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Volume",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final currentVol = ref.watch(playerProvider).volume;
+                        return IconButton(
+                          icon: Icon(
+                            currentVol == 0
+                                ? Icons.volume_off_rounded
+                                : currentVol < 0.5
+                                    ? Icons.volume_down_rounded
+                                    : Icons.volume_up_rounded,
+                            color: settings.accentColor,
+                          ),
+                          onPressed: notifier.toggleMute,
+                        );
+                      },
+                    ),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: settings.accentColor,
+                          inactiveTrackColor:
+                              settings.accentColor.withValues(alpha: 0.3),
+                          thumbColor: settings.accentColor,
+                          trackHeight: 4,
                         ),
-                        onPressed: notifier.toggleMute,
-                      );
-                    },
-                  ),
-                  Expanded(
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: settings.accentColor,
-                        inactiveTrackColor: settings.accentColor.withValues(alpha: 0.3),
-                        thumbColor: settings.accentColor,
-                        trackHeight: 4,
-                      ),
-                      child: Consumer(
-                        builder: (context, ref, child) {
-                          final currentVol = ref.watch(playerProvider).volume;
-                          return Slider(
-                            value: currentVol,
-                            min: 0.0,
-                            max: 1.0,
-                            onChanged: (val) => notifier.setVolume(val),
-                          );
-                        },
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final currentVol = ref.watch(playerProvider).volume;
+                            return Slider(
+                              value: currentVol,
+                              min: 0.0,
+                              max: 1.0,
+                              onChanged: (val) => notifier.setVolume(val),
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final currentVol = ref.watch(playerProvider).volume;
-                      return SizedBox(
-                        width: 45,
-                        child: Text(
-                          "${(currentVol * 100).toInt()}%",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final currentVol = ref.watch(playerProvider).volume;
+                        return SizedBox(
+                          width: 45,
+                          child: Text(
+                            "${(currentVol * 100).toInt()}%",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
-        ),
         );
       },
     );
@@ -1820,7 +1938,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
               },
             ),
             const Divider(color: Colors.white24),
-            if (ref.watch(timerProvider).isActive || ref.watch(playerProvider).isSleepPending)
+            if (ref.watch(timerProvider).isActive ||
+                ref.watch(playerProvider).isSleepPending)
               ListTile(
                 leading: const Icon(
                   Icons.timer_off_rounded,

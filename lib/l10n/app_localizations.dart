@@ -512,6 +512,18 @@ abstract class AppLocalizations {
   /// **'Be the first to claim the top spot!'**
   String get beFirstToClaim;
 
+  /// No description provided for @backgroundCacheFlacStreams.
+  ///
+  /// In en, this message translates to:
+  /// **'Background Cache FLAC Streams'**
+  String get backgroundCacheFlacStreams;
+
+  /// No description provided for @backgroundCacheFlacStreamsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Silently downloads streamed lossless tracks to your local disk so replay is instantaneous and uses zero data.'**
+  String get backgroundCacheFlacStreamsSubtitle;
+
   /// No description provided for @behavioralHeader.
   ///
   /// In en, this message translates to:
@@ -4963,6 +4975,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete!'**
   String get aiLyricsComplete;
+
+  /// No description provided for @externalLinkDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'External Link Detected'**
+  String get externalLinkDetected;
+
+  /// No description provided for @gofileDownloadFailedPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic download failed due to strict network or server restrictions.\\n\\nWould you like to open the Gofile download page in your system browser, or copy the link to download manually?'**
+  String get gofileDownloadFailedPrompt;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Link'**
+  String get copyLink;
+
+  /// No description provided for @openBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Browser'**
+  String get openBrowser;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied to clipboard!'**
+  String get linkCopied;
+
+  /// No description provided for @waitingForServerResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for server response...'**
+  String get waitingForServerResponse;
+
+  /// No description provided for @queuePositionPleaseWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue {position}... please wait'**
+  String queuePositionPleaseWait(int position);
+
+  /// No description provided for @processingOnServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing on server...'**
+  String get processingOnServer;
 }
 
 class _AppLocalizationsDelegate

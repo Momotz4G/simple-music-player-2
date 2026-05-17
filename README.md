@@ -33,17 +33,20 @@
 - **Themes**: Beautiful dark mode and accent color customization
 - **Smart Art**: Dynamic album art that adapts to your music, with automatic online fetching from Spotify
 - **Spotify Canvas**: Dynamic video backgrounds while in full-screen mode, automatically fetched from Spotify
+- **Artist Profile Banners**: Stunning, dynamic artist banners fetched automatically via Spotify Web API to elevate the visual aesthetic of artist profile pages
 
 ### 🎧 **Advanced Audio Experience**
-- **Powerful Equalizer**: Fine-tune your audio with a built-in multi-band equalizer
+- **Powerful Equalizer**: Fine-tune your audio with a built-in multi-band equalizer (Android supported)
 - **Audio Visualizer**: Watch your music come to life with real-time audio waveform visualization
 - **Sleep Timer**: Fall asleep to your favorite tunes with a customizable timer (hours, minutes, or songs)
 - **Playback Queue**: Persistent queue that remembers your playlist between sessions
 - **Remove Song in Queue**: Swipe left from a song in queue to remove it
 - **Multiple Audio Versions**: Choose between different versions of a song (original, acoustic, live, etc.)
-- **Wide Format Support**: Plays MP3, FLAC, WAV, AAC, M4A, OGG, and **Opus** files
+- **Wide Format Support**: Plays MP3, FLAC, WAV, AAC, M4A, OGG, **Opus**, **AIFF**, and **ALAC** files
 - **Native DSD Support**: High-fidelity playback for **DSF** and **DFF** files with detailed metadata extraction
 - **Gapless & Crossfade**: Smooth transitions between tracks with customizable crossfade duration
+- **CUE Sheet Parser**: Automatic split and parse standard CUE sheets index references, letting you play and browse individual tracks from single-file album rips
+- **Stream Auto-Recommendations**: Advanced YouTube Music recommendation engine that automatically streams and queues the next perfect track based on your current playback
 
 ### 🎤 **Lyrics & Metadata**
 - **Synced Lyrics**: Sing along with time-synced lyrics (LRC) fetched automatically from LRCLIB.net
@@ -52,11 +55,15 @@
 - **Lyrics Translation**: Translate lyrics in real-time to 14 languages — English, Indonesian, Korean, Japanese, Chinese, Spanish, French, German, Portuguese, Thai, Vietnamese, Arabic, Russian, and Hindi
 - **Import SRT**: Import subtitle files (SRT) as synced lyrics for any song
 - **Save Lyrics to SRT**: Export currently loaded lyrics to SRT subtitle format
+- **TTML Synced Lyrics**: Full support for parsing and loading time-synchronized lyrics in TTML format (used by Apple Music) for pinpoint lyric tracking
+- **AI Lyrics Generator**: Built-in integration with a local/remote AI Lyrics API to generate or auto-transcribe highly accurate lyrics in real-time
 - **Metadata Editor**: Edit song tags, album art, and details directly within the app
 - **Smart Recognition**: Search and fetch missing metadata and album art using Spotify's database
 - **Wikipedia Integration**: Artist information and biographies fetched from Wikipedia
 
-### 🌟 **Smart Downloader**
+### 🌟 **Smart Downloader & Streaming**
+- **YouTube Search & Play**: Full-fledged search engine to stream high-quality audio directly from YouTube in real-time
+- **Apple Music Integration**: Search and stream lossless Apple Music audio streams (ALAC/AAC) or download them locally with full metadata and high-fidelity tags
 - **YouTube Support**: Download tracks directly with high-quality audio extraction
 - **Bulk Downloads**: Queue multiple songs for download at once
 - **Resilient Downloading**: Robust error handling prevents crashes even if network issues occur
@@ -65,18 +72,22 @@
 - **Import YouTube Music Playlist**: Support for importing entire YouTube playlists via link
 - **FLAC Streaming and Download**: You can stream or download all songs with lossless quality if available. (Just adjust your settings preferences)
 
-### 📊 **Statistics & History**
+### 📊 **Statistics, Profiles & Leaderboards**
+- **Custom Profile & Titles System**: Personalize your profile with custom nicknames, listening titles, and global rankings
+- **Google OAuth Integration**: Securely log in using your Gmail account to synchronize listening statistics, play history, and customized profiles seamlessly across multiple devices
+- **Global Leaderboard**: Join global listening charts to compete and share milestones with other listeners in the community
 - **Play Statistics**: Track your listening habits with detailed stats
 - **Listening History**: See your recently played songs
 - **Top Artists & Albums**: Discover your most-played music
 - **Shareable Stats**: Generate beautiful stat cards to share on social media
-- **Cloud Sync**: Play counts synced across sessions via PocketBase
+- **Cloud Sync**: Play counts, history, and listening stats fully synchronized across all devices in real-time via PocketBase
 
 ### 📚 **Library Management**
 - **Smart Library**: Browse by Songs, Albums, Artists, or Playlists
 - **Local Music Player**: Full support for reading and managing your local song library with fast indexing
 - **Custom Playlists**: Create and manage your own playlists
 - **Shareable Playlists**: Share your curated playlists with friends via unique 6-digit codes
+- **M3U Playlist Import/Export**: Seamlessly import or export custom playlists in standard M3U format for cross-player compatibility
 - **Search**: Powerful search across your entire library
 - **Folder Import**: Import music from any folder on your computer
 - **Album/Artist Pages**: Detailed pages with all tracks, info, and actions
@@ -246,6 +257,15 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+## :scales: Legal Disclaimer & Liability Waiver
+
+This project is an open-source, experimental media player client developed for personal customization, data interoperability, and local playback research.
+
+- **Non-Affiliation:** This project is independent and is NOT affiliated, associated, authorized, endorsed by, or in any way officially connected with Tidal, Spotify, or any of their subsidiaries or affiliates. All product and company names are trademarks™ or registered® trademarks of their respective holders.
+- **Content Delivery & Third-Party APIs:** This application functions strictly as a neutral frontend user interface. It does not host, store, index, or redistribute any copyrighted media files or audio streams. Any integration with external services is purely client-driven or restricted for demonstration purposes.
+- **Resource Respect:** To prevent accidental network congestion and respect external web resources, the application ecosystem enforces a strict daily rate-limit (maximum 50 requests per day per user) to maintain standard web citizenship.
+- **No Warranty & Limitation of Liability:** This software is provided "AS IS", without warranty of any kind, express or implied (as defined by the MIT License). The developer assumes absolutely no liability for how users interact with the software, nor for any potential violation of third-party Terms of Service. Users are solely responsible for compliance with local laws and platform regulations.
 
 ---
 

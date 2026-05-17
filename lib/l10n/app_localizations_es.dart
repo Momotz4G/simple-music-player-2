@@ -220,6 +220,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get beFirstToClaim => '¡Sé el primero en reclamar el primer puesto!';
 
   @override
+  String get backgroundCacheFlacStreams =>
+      'Caché de streams FLAC en segundo plano';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      'Descarga silenciosamente pistas sin pérdida en streaming a tu disco local para que la reproducción sea instantánea y no consuma datos.';
+
+  @override
   String get behavioralHeader => 'LOGROS DE COMPORTAMIENTO';
 
   @override
@@ -2706,4 +2714,31 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => '¡Completado!';
+
+  @override
+  String get externalLinkDetected => 'Enlace Externo Detectado';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      'La descarga automática falló debido a restricciones estrictas de red o del servidor.\\n\\n¿Le gustaría abrir la página de descarga de Gofile en su navegador del sistema, o copiar el enlace para descargarlo manualmente?';
+
+  @override
+  String get copyLink => 'Copiar Enlace';
+
+  @override
+  String get openBrowser => 'Abrir Navegador';
+
+  @override
+  String get linkCopied => '¡Enlace copiado al portapapeles!';
+
+  @override
+  String get waitingForServerResponse => 'Esperando respuesta del servidor...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'Cola $position... por favor espere';
+  }
+
+  @override
+  String get processingOnServer => 'Procesando en el servidor...';
 }

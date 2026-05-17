@@ -4,11 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_music_player_2/services/android_audio_service.dart';
 import 'package:simple_music_player_2/services/pocketbase_service.dart'; // 🔒 OFFLINE MODE
+import 'package:simple_music_player_2/services/sync_engine.dart'; // 🔄 Cloud Stats Sync
 
 // NEW ENUMS
 enum VisualizerStyle { spectrum, wave, pulse }
 
-enum SearchEngine { spotify, youtube }
+enum SearchEngine { spotify, youtube, appleMusic }
 
 enum AtmosphereTheme {
   none,
@@ -65,13 +66,16 @@ class SettingsState {
   final bool enableSnowEffect; // DEPRECATED: use atmosphereTheme
   final AtmosphereTheme atmosphereTheme; // Active seasonal atmosphere theme
   final String appLocale; // NEW: Application UI language (e.g., 'en', 'id')
-  final String autoClearCache; // 'disabled', 'on_close', 'after_24h', 'after_7d'
+  final String
+      autoClearCache; // 'disabled', 'on_close', 'after_24h', 'after_7d'
   final bool gaplessPlayback; // Enable gapless transitions
   final double crossfadeDuration; // Crossfade duration in seconds (0.0-12.0)
-  final bool enableAlphabetIndexer; // NEW: Enable side Alphabet scroll indexer on mobile
+  final bool
+      enableAlphabetIndexer; // NEW: Enable side Alphabet scroll indexer on mobile
   final bool minimizeToTrayOnClose;
   final SearchEngine searchEngine; // NEW: Spotify vs YouTube
   final bool isOfflineMode; // 🔒 Offline Mode: Disables all network services
+  final bool cacheStreamedSongs; // NEW: Cache streamed FLACs in background
 
   // Granular Service Controls
   final bool enableCloudSync;
@@ -113,6 +117,7 @@ class SettingsState {
     this.minimizeToTrayOnClose = true,
     this.searchEngine = SearchEngine.spotify, // Default: Spotify
     this.isOfflineMode = false, // Default: Online
+    this.cacheStreamedSongs = false, // Default: Off
     this.enableCloudSync = true,
     this.enableLeaderboard = true,
     this.enableOnlineLyrics = true,
@@ -153,6 +158,7 @@ class SettingsState {
     bool? minimizeToTrayOnClose,
     SearchEngine? searchEngine,
     bool? isOfflineMode,
+    bool? cacheStreamedSongs,
     bool? enableCloudSync,
     bool? enableLeaderboard,
     bool? enableOnlineLyrics,
@@ -192,9 +198,11 @@ class SettingsState {
       crossfadeDuration: crossfadeDuration ?? this.crossfadeDuration,
       enableAlphabetIndexer:
           enableAlphabetIndexer ?? this.enableAlphabetIndexer,
-      minimizeToTrayOnClose: minimizeToTrayOnClose ?? this.minimizeToTrayOnClose,
+      minimizeToTrayOnClose:
+          minimizeToTrayOnClose ?? this.minimizeToTrayOnClose,
       searchEngine: searchEngine ?? this.searchEngine,
       isOfflineMode: isOfflineMode ?? this.isOfflineMode,
+      cacheStreamedSongs: cacheStreamedSongs ?? this.cacheStreamedSongs,
       enableCloudSync: enableCloudSync ?? this.enableCloudSync,
       enableLeaderboard: enableLeaderboard ?? this.enableLeaderboard,
       enableOnlineLyrics: enableOnlineLyrics ?? this.enableOnlineLyrics,
@@ -246,11 +254,16 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final autoClearCache = _prefs.getString('autoClearCache') ?? 'disabled';
     final gaplessPlayback = _prefs.getBool('gaplessPlayback') ?? true;
     final crossfadeDuration = _prefs.getDouble('crossfadeDuration') ?? 0.0;
-    final enableAlphabetIndexer = _prefs.getBool('enableAlphabetIndexer') ?? false;
-    final minimizeToTrayOnClose = _prefs.getBool('minimizeToTrayOnClose') ?? true;
-    final searchEngineIndex = _prefs.getInt('searchEngine') ?? SearchEngine.spotify.index;
+    final enableAlphabetIndexer =
+        _prefs.getBool('enableAlphabetIndexer') ?? false;
+    final minimizeToTrayOnClose =
+        _prefs.getBool('minimizeToTrayOnClose') ?? true;
+    final searchEngineIndex =
+        _prefs.getInt('searchEngine') ?? SearchEngine.spotify.index;
     final searchEngine = SearchEngine.values[searchEngineIndex];
     final isOfflineMode = _prefs.getBool('isOfflineMode') ?? false;
+    final cacheStreamedSongs =
+        _prefs.getBool('cacheStreamedSongs') ?? false; // NEW
     final enableCloudSync = _prefs.getBool('enableCloudSync') ?? true;
     final enableLeaderboard = _prefs.getBool('enableLeaderboard') ?? true;
     final enableOnlineLyrics = _prefs.getBool('enableOnlineLyrics') ?? true;
@@ -260,8 +273,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final enableCanvas = _prefs.getBool('enableCanvas') ?? true;
 
     // Load Theme Enum
-    final themeIndex = _prefs.getInt('atmosphereTheme') ??
-        AtmosphereTheme.none.index;
+    final themeIndex =
+        _prefs.getInt('atmosphereTheme') ?? AtmosphereTheme.none.index;
     final theme = AtmosphereTheme.values[themeIndex];
 
     // Sync static PocketBase flags
@@ -305,6 +318,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       minimizeToTrayOnClose: minimizeToTrayOnClose,
       searchEngine: searchEngine,
       isOfflineMode: isOfflineMode,
+      cacheStreamedSongs: cacheStreamedSongs,
       enableCloudSync: enableCloudSync,
       enableLeaderboard: enableLeaderboard,
       enableOnlineLyrics: enableOnlineLyrics,
@@ -487,11 +501,16 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(searchEngine: engine);
   }
 
+  Future<void> toggleCacheStreamedSongs(bool enabled) async {
+    await _prefs.setBool('cacheStreamedSongs', enabled);
+    state = state.copyWith(cacheStreamedSongs: enabled);
+  }
+
   /// 🔒 Toggle Offline Mode (Network Lockdown)
   Future<void> toggleOfflineMode(bool enabled) async {
     await _prefs.setBool('isOfflineMode', enabled);
     PocketBaseService.isOffline = enabled; // Sync static flag
-    
+
     if (enabled) {
       // Explicitly turn off all services
       await toggleCloudSync(false);
@@ -510,19 +529,26 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       await toggleOnlineSearch(true);
       await toggleRemoteControl(true);
       await toggleCanvas(true);
-      
+
       // Clean up the unused state variable just in case
       await _prefs.remove('disabledServicesBeforeOffline');
     }
 
+    // 🔄 Notify SyncEngine of Offline Mode change (Requirement 4.6, 4.7)
+    SyncEngine().onOfflineModeChanged(enabled);
+
     state = state.copyWith(isOfflineMode: enabled);
-    debugPrint("🔒 [Settings] Offline Mode: ${enabled ? 'ENABLED' : 'DISABLED'}");
+    debugPrint(
+        "🔒 [Settings] Offline Mode: ${enabled ? 'ENABLED' : 'DISABLED'}");
   }
 
   Future<void> toggleCloudSync(bool enabled) async {
     await _prefs.setBool('enableCloudSync', enabled);
     PocketBaseService.enableCloudSync = enabled;
     state = state.copyWith(enableCloudSync: enabled);
+
+    // 🔄 Notify SyncEngine of Cloud Stats Sync toggle change (Requirement 9.5, 9.6)
+    SyncEngine().onSyncToggleChanged(enabled);
   }
 
   Future<void> toggleLeaderboard(bool enabled) async {

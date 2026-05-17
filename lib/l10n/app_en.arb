@@ -577,6 +577,8 @@
   "autumn": "Autumn",
   "avatarPickerDesc": "Select a template or import your own photo",
   "beFirstToClaim": "Be the first to claim the top spot!",
+  "backgroundCacheFlacStreams": "Background Cache FLAC Streams",
+  "backgroundCacheFlacStreamsSubtitle": "Silently downloads streamed lossless tracks to your local disk so replay is instantaneous and uses zero data.",
   "behavioralHeader": "BEHAVIORAL ACHIEVEMENTS",
   "behavioralTitles": "BEHAVIORAL",
   "binariesUpdateRequired": "Binaries Update Required",
@@ -1229,8 +1231,7 @@
   "yourPlaylists": "Your Playlists",
   "yourTopMix": "Your Top Mix",
   "youtube": "YouTube",
-  "ytDlpUpdateAvailable": "A new version of yt-dlp is available."
-,
+  "ytDlpUpdateAvailable": "A new version of yt-dlp is available.",
   "importFromM3u": "Import from M3U",
   "importFromM3uSubtitle": "Import an M3U playlist file",
   "exportToM3u": "Export to M3U",
@@ -1333,5 +1334,20 @@
   "aiLyricsParsing": "Parsing Lyrics...",
   "aiLyricsSuccess": "Lyrics generated successful!",
   "aiLyricsLocalFileMissing": "Error: Local audio file not found.",
-  "aiLyricsComplete": "Complete!"
+  "aiLyricsComplete": "Complete!",
+  "externalLinkDetected": "External Link Detected",
+  "gofileDownloadFailedPrompt": "Automatic download failed due to strict network or server restrictions.\\n\\nWould you like to open the Gofile download page in your system browser, or copy the link to download manually?",
+  "copyLink": "Copy Link",
+  "openBrowser": "Open Browser",
+  "linkCopied": "Link copied to clipboard!",
+  "waitingForServerResponse": "Waiting for server response...",
+  "queuePositionPleaseWait": "Queue {position}... please wait",
+  "processingOnServer": "Processing on server...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

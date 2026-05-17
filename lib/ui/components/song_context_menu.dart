@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/song_model.dart';
 import '../../providers/metadata_provider.dart';
@@ -15,6 +17,7 @@ import '../../services/smart_download_service.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../services/spotify_service.dart';
 import '../../services/deezer_service.dart';
+import '../../services/apple_music_backend_service.dart';
 import '../../models/download_progress.dart';
 import '../../services/notification_service.dart';
 import 'music_notification.dart';
@@ -288,6 +291,7 @@ class SongContextMenuRegion extends ConsumerWidget {
         final ytService = YoutubeDownloaderService();
         final settings = ref.read(settingsProvider);
         final isYtSource = song.sourceUrl != null && song.sourceUrl!.contains('youtube.com');
+        final isAppleMusicSource = song.sourceUrl != null && song.sourceUrl!.contains('music.apple.com');
         
         // 🚀 FEATURE GATE: YouTube sources only support HQ (not Lossless)
         String preferredFormat = settings.audioFormat; // mp3, m4a, flac
@@ -304,6 +308,86 @@ class SongContextMenuRegion extends ConsumerWidget {
         final notifId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
         try {
+          // 🍎 APPLE MUSIC FAST-PATH
+          if (isAppleMusicSource) {
+            if (!context.mounted) return;
+            showCenterNotification(context,
+                label: l10n.downloadStarted,
+                title: song.title,
+                subtitle: "Fetching ALAC Lossless from Apple Music...",
+                artPath: song.onlineArtUrl,
+                onlineArtUrl: song.onlineArtUrl);
+
+            notif.showProgress(id: notifId, progress: 0, max: 100, title: "Apple Music Download", body: song.title);
+            
+            SmartDownloadService.progressNotifier.value = DownloadProgress(
+              receivedMB: 0, totalMB: 0, progress: 0.0,
+              status: "${l10n.downloading}: ${song.title}",
+              details: l10n.waitingForServerResponse,
+            );
+
+            // 1. Ask VPS to download from Telegram (with Queue feedback)
+            final remoteAudioUrl = await AppleMusicBackendService.requestDownload(
+              song.sourceUrl!,
+              title: song.title,
+              artist: song.artist,
+              onQueueUpdate: (pos) {
+                String queueText = pos > 0 
+                  ? l10n.queuePositionPleaseWait(pos)
+                  : l10n.processingOnServer;
+                
+                SmartDownloadService.progressNotifier.value = DownloadProgress(
+                  receivedMB: 0, totalMB: 0, progress: 0.0,
+                  status: "${l10n.downloading}: ${song.title}",
+                  details: queueText,
+                );
+              }
+            );
+            if (remoteAudioUrl == null) {
+              throw Exception("VPS Bot failed to fetch the song from Telegram.");
+            }
+
+            // 2. Get local save path
+            final meta = SongMetadata(
+              title: song.title,
+              artist: song.artist,
+              album: song.album,
+              albumArtUrl: song.onlineArtUrl ?? '',
+              durationSeconds: song.duration.toInt(),
+            );
+            final finalTitle = await smartService.generateFilename(meta);
+            final outputPath = await ytService.getDownloadPath(finalTitle, ext: 'm4a');
+            if (outputPath == null) throw Exception("Storage permission denied or path error");
+
+            // 3. Download from VPS to Phone
+            final success = await AppleMusicBackendService.downloadFile(remoteAudioUrl, outputPath, onProgress: (p) {
+              SmartDownloadService.progressNotifier.value = DownloadProgress(
+                receivedMB: p * 35, totalMB: 35, progress: p, // ALACs are ~35MB
+                status: "${l10n.downloading}: ${song.title}",
+                details: "${(p * 100).toInt()}% - ALAC",
+              );
+              notif.showProgress(id: notifId, progress: (p * 100).toInt(), max: 100, title: "Downloading ALAC", body: song.title);
+            });
+
+            if (success) {
+              SmartDownloadService.progressNotifier.value = null;
+              try { await smartService.tagFile(filePath: outputPath, metadata: meta); } catch (e) {}
+              
+              if (!context.mounted) return;
+              showCenterNotification(context,
+                  label: l10n.downloadComplete,
+                  title: song.title,
+                  subtitle: "Saved as ALAC (Lossless)",
+                  artPath: outputPath,
+                  onlineArtUrl: song.onlineArtUrl,
+                  backgroundColor: Colors.green.withValues(alpha: 0.85));
+              notif.showComplete(id: notifId, title: l10n.downloadCompleteNotification, body: "${song.title} (ALAC)");
+            } else {
+              throw Exception("Failed to stream ALAC from VPS to local storage.");
+            }
+            return; // EXIT DOWNLOAD EARLY
+          }
+
           // 🔍 STEP 0: Preserve existing IDs from SongModel (from search results)
           String? spotifyArtUrl = song.onlineArtUrl;
           String? spotifyId = song.spotifyId;
@@ -657,6 +741,65 @@ class SongContextMenuRegion extends ConsumerWidget {
         } catch (e) {
           debugPrint("❌ Download Error: $e");
           SmartDownloadService.progressNotifier.value = null;
+
+          final errorStr = e.toString();
+          if (errorStr.contains('GOFILE_FALLBACK_URL:')) {
+            final gofileUrl = errorStr.split('GOFILE_FALLBACK_URL:').last.trim();
+            notif.cancel(notifId);
+
+            if (!context.mounted) return;
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: Theme.of(context).cardColor,
+                title: Row(
+                  children: [
+                    const Icon(Icons.open_in_new_rounded, color: Colors.blueAccent),
+                    const SizedBox(width: 12),
+                    Text(l10n.externalLinkDetected),
+                  ],
+                ),
+                content: Text(
+                  l10n.gofileDownloadFailedPrompt,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(l10n.close),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await Clipboard.setData(ClipboardData(text: gofileUrl));
+                      Navigator.pop(context);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n.linkCopied),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    child: Text(l10n.copyLink),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      try {
+                        await launchUrl(Uri.parse(gofileUrl), mode: LaunchMode.externalApplication);
+                      } catch (_) {}
+                    },
+                    child: Text(l10n.openBrowser),
+                  ),
+                ],
+              ),
+            );
+            return;
+          }
 
           if (!context.mounted) return;
           showCenterNotification(context,

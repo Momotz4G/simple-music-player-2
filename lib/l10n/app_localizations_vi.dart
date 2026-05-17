@@ -220,6 +220,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy là người đầu tiên giành lấy vị trí dẫn đầu!';
 
   @override
+  String get backgroundCacheFlacStreams => 'Lưu cache luồng FLAC nền';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      'Tải xuống âm thanh lossless được phát trực tuyến vào đĩa cục bộ một cách im lặng để phát lại tức thì và không tốn dữ liệu.';
+
+  @override
   String get behavioralHeader => 'THÀNH TÍCH HÀNH VI';
 
   @override
@@ -2690,4 +2697,31 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => 'Hoàn tất!';
+
+  @override
+  String get externalLinkDetected => 'Phát Hiện Liên Kết Ngoài';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      'Tải xuống tự động không thành công do hạn chế mạng hoặc máy chủ nghiêm ngặt.\\n\\nBạn có muốn mở trang tải xuống Gofile trong trình duyệt hệ thống của mình, hay sao chép liên kết để tải xuống thủ công?';
+
+  @override
+  String get copyLink => 'Sao Chép Liên Kết';
+
+  @override
+  String get openBrowser => 'Mở Trình Duyệt';
+
+  @override
+  String get linkCopied => 'Liên kết đã được sao chép vào bộ nhớ tạm!';
+
+  @override
+  String get waitingForServerResponse => 'Đang chờ phản hồi từ máy chủ...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'Hàng đợi $position... vui lòng chờ';
+  }
+
+  @override
+  String get processingOnServer => 'Đang xử lý trên máy chủ...';
 }

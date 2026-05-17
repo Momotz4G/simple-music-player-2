@@ -159,133 +159,178 @@ class FlacDownloaderService {
     return platformData?['url'] as String?;
   }
 
-  /// 🚀 NEW: Direct Tidal Search Fallback on API Server
-  Future<String?> getTidalTrackIdBySearch(String title, String artist, {int retries = 1}) async {
+  /// 🚀 Direct Tidal Track Lookup: ISRC-first, text search fallback
+  /// ISRC is a unique recording identifier — far more accurate than text search.
+  Future<String?> getTidalTrackIdBySearch(String title, String artist, {String? isrc, int retries = 1}) async {
     final logger = DebugLogService();
     final servers = await _getTidalApiServers();
-    final query = "$title $artist";
     
-    logger.info('🔍 Direct Tidal Search: $query');
-    
-    // 🚀 NEW: CHECK SEARCH CACHE FIRST
-    final cacheKey = query.toLowerCase().trim();
-    if (_tidalSearchCache.containsKey(cacheKey)) {
-      logger.info('🚀 [Tidal Search] Discovery matched in cache: ${_tidalSearchCache[cacheKey]}');
-      return _tidalSearchCache[cacheKey];
+    // Cache check
+    final compositeCacheKey = '${title.toLowerCase().trim()}::${artist.toLowerCase().trim()}';
+    if (_tidalSearchCache.containsKey(compositeCacheKey)) {
+      return _tidalSearchCache[compositeCacheKey];
     }
-    
-    // 🚀 STAGE 1: Parallel probe of the most reliable primary servers
-    final primaryServers = servers.take(3).toList();
-    
-    for (int attempt = 0; attempt <= retries; attempt++) {
-      if (attempt > 0) {
-        logger.warning('⏳ Tidal Search retry attempt $attempt after connection drop...');
-        await Future.delayed(const Duration(seconds: 1));
+
+    // ============================================================
+    // 🚀 STAGE 0: ISRC Lookup (PRIMARY — most accurate)
+    // ============================================================
+    if (isrc != null && isrc.isNotEmpty) {
+      logger.info('🔍 [Tidal] ISRC Lookup: $isrc');
+      
+      // Try VPS ISRC endpoint first
+      final vpsHost = Uri.parse(Env.tidalApiUrl).host;
+      for (final server in servers) {
+        try {
+          final isVps = server.contains(vpsHost);
+          final uri = Uri.parse('$server/isrc?code=${Uri.encodeComponent(isrc)}${isVps ? '&key=${Env.tidalApiKey}' : ''}');
+          final response = await _client.get(uri, headers: isVps ? {} : {
+            'x-api-key': Env.tidalApiKey,
+          }).timeout(const Duration(seconds: 5));
+          
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            if (data['found'] == true && data['track']?['id'] != null) {
+              final foundId = data['track']['id'].toString();
+              final matchedTitle = data['track']['title'] ?? '?';
+              final matchedArtist = data['track']['artist']?['name'] ?? '?';
+              logger.success('✅ [Tidal] ISRC match: "$matchedTitle" by "$matchedArtist" (ID: $foundId)');
+              _tidalSearchCache[compositeCacheKey] = foundId;
+              return foundId;
+            }
+          }
+        } catch (e) {
+          // Try next server
+        }
       }
       
-      try {
-        // 🚀 FAST PATH: Try the VPS (Index 0) exclusively first if available
-        if (servers.isNotEmpty && servers[0].contains(Uri.parse(Env.tidalApiUrl).host)) {
-          try {
-            final vps = servers[0];
-            final uri = Uri.parse('$vps/search?q=${Uri.encodeComponent(query)}&key=${Env.tidalApiKey}');
-            final response = await _client.get(uri).timeout(const Duration(seconds: 3));
-            if (response.statusCode == 200) {
-              final data = json.decode(response.body);
-              // Handle both VPS (List) and public (Object with data['tracks']['items']) formats
-              final List? items = data is List ? data : (data['tracks']?['items'] ?? data['items']);
-              
-              if (items != null && items.isNotEmpty) {
-                final bestMatch = items.firstWhere(
-                  (i) => i['audioQuality'] == 'HI_RES_LOSSLESS' || i['audioQuality'] == 'HI_RES',
-                  orElse: () => items.first
-                );
-                final foundId = bestMatch['id']?.toString();
-                if (foundId != null) {
-                  logger.success('🚀 [Tidal Search] VPS FAST-PATH match: $foundId');
-                  _tidalSearchCache[cacheKey] = foundId; // UPDATE CACHE
-                  return foundId;
-                }
+      // ISRC fallback: search Tidal with ISRC as query text
+      for (final server in servers.take(3)) {
+        try {
+          final isVps = server.contains(vpsHost);
+          String searchUrl = '$server/search?q=${Uri.encodeComponent(isrc)}&limit=5';
+          if (isVps) searchUrl += '&key=${Env.tidalApiKey}';
+          
+          final response = await _client.get(Uri.parse(searchUrl), headers: isVps ? {} : {
+            'x-api-key': Env.tidalApiKey,
+          }).timeout(const Duration(seconds: 5));
+          
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            final List? items = data is List ? data : (data['tracks']?['items'] ?? data['items']);
+            if (items != null && items.isNotEmpty) {
+              // ISRC search results are highly reliable — take the first result
+              final foundId = items[0]['id']?.toString();
+              if (foundId != null) {
+                final matchedTitle = items[0]['title'] ?? '?';
+                logger.success('✅ [Tidal] ISRC search match: "$matchedTitle" (ID: $foundId)');
+                _tidalSearchCache[compositeCacheKey] = foundId;
+                return foundId;
               }
             }
-          } catch (e) {
-            logger.warning('⚠️ VPS Search Fast-path failed: $e');
+          }
+        } catch (_) {}
+      }
+      
+      logger.info('⚠️ [Tidal] ISRC lookup found nothing, falling back to text search...');
+    }
+
+    // ============================================================
+    // 🚀 STAGE 1: Text Search Fallback
+    // ============================================================
+    final queries = ["$title $artist", title];
+
+    // Helper: strict artist + title matching
+    String? extractBestId(List items) {
+      if (items.isEmpty) return null;
+      
+      final targetArtist = artist.toLowerCase().trim();
+      final targetTitle = title.toLowerCase().trim();
+      
+      final filteredItems = items.where((i) {
+        // Artist check (all artists)
+        final List<String> tidalArtistNames = [];
+        if (i['artist']?['name'] != null) {
+          tidalArtistNames.add(i['artist']['name'].toString().toLowerCase().trim());
+        }
+        if (i['artists'] != null && i['artists'] is List) {
+          for (final a in i['artists']) {
+            if (a['name'] != null) tidalArtistNames.add(a['name'].toString().toLowerCase().trim());
           }
         }
+        if (tidalArtistNames.isEmpty) return false;
+        
+        final bool artistMatch = tidalArtistNames.any((n) =>
+            n == targetArtist ||
+            (n.length >= 3 && targetArtist.contains(n)) ||
+            (targetArtist.length >= 3 && n.contains(targetArtist)));
+        if (!artistMatch) return false;
+        
+        // Title check
+        final tidalTitle = (i['title'] ?? '').toString().toLowerCase().trim();
+        final cleanTidal = tidalTitle.replaceAll(RegExp(r'\(.*?\)|\[.*?\]'), '').trim();
+        final cleanTarget = targetTitle.replaceAll(RegExp(r'\(.*?\)|\[.*?\]'), '').trim();
+        
+        return tidalTitle == targetTitle ||
+            cleanTidal == cleanTarget ||
+            tidalTitle.startsWith(targetTitle) ||
+            targetTitle.startsWith(tidalTitle);
+      }).toList();
+      
+      if (filteredItems.isEmpty) return null;
+      
+      final bestMatch = filteredItems.firstWhere(
+        (i) => i['audioQuality'] == 'HI_RES_LOSSLESS' || i['audioQuality'] == 'HI_RES',
+        orElse: () => filteredItems.first
+      );
+      return bestMatch['id']?.toString();
+    }
 
-        // 🚀 STAGE 1: Parallel probe of the most reliable primary servers
-        final results = await Future.wait(primaryServers.map((server) async {
-          try {
-            // VPS needs the key, public servers don't
-            String searchUrl = '$server/search?q=${Uri.encodeComponent(query)}&limit=5&countryCode=US';
-            if (server.contains(Uri.parse(Env.tidalApiUrl).host)) {
-              searchUrl += '&key=${Env.tidalApiKey}';
+    final vpsHost = Uri.parse(Env.tidalApiUrl).host;
+
+    for (final query in queries) {
+      // VPS fast path
+      if (servers.isNotEmpty && servers[0].contains(vpsHost)) {
+        try {
+          final uri = Uri.parse('${servers[0]}/search?q=${Uri.encodeComponent(query)}&limit=25&key=${Env.tidalApiKey}');
+          final response = await _client.get(uri).timeout(const Duration(seconds: 3));
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            final List? items = data is List ? data : (data['tracks']?['items'] ?? data['items']);
+            if (items != null && items.isNotEmpty) {
+              final foundId = extractBestId(items);
+              if (foundId != null) {
+                _tidalSearchCache[compositeCacheKey] = foundId;
+                return foundId;
+              }
             }
+          }
+        } catch (_) {}
+      }
 
+      // Parallel probe of primary servers
+      try {
+        final results = await Future.wait(servers.take(3).map((server) async {
+          try {
+            String searchUrl = '$server/search?q=${Uri.encodeComponent(query)}&limit=25';
+            if (server.contains(vpsHost)) searchUrl += '&key=${Env.tidalApiKey}';
             final response = await _client.get(Uri.parse(searchUrl)).timeout(const Duration(seconds: 5));
             if (response.statusCode == 200) {
               final data = json.decode(response.body);
-              // Handle both VPS (List) and public (Object with data['tracks']['items']) formats
               final List? items = data is List ? data : (data['tracks']?['items'] ?? data['items']);
-              
-              if (items != null && items.isNotEmpty) {
-                final bestMatch = items.firstWhere(
-                  (i) => i['audioQuality'] == 'HI_RES_LOSSLESS' || i['audioQuality'] == 'HI_RES',
-                  orElse: () => items.first
-                );
-                return bestMatch['id']?.toString();
-              }
+              if (items != null && items.isNotEmpty) return extractBestId(items);
             }
-          } catch (e) {
-            // Silently catch exceptions during parallel probe
-          }
+          } catch (_) {}
           return null;
         }));
         
         final foundId = results.firstWhere((id) => id != null, orElse: () => null);
         if (foundId != null) {
-          logger.success('✅ [Tidal Search] Found Match via Primary Parallel Probe: $foundId');
-          _tidalSearchCache[cacheKey] = foundId; // UPDATE CACHE
+          _tidalSearchCache[compositeCacheKey] = foundId;
           return foundId;
         }
-      } catch (e) {
-        logger.warning('⚠️ Primary parallel probe failed: $e');
-      }
+      } catch (_) {}
     }
-
-    // 🚀 STAGE 2: Sequential fallback for remaining servers
-    for (int i = 3; i < servers.length; i++) {
-      final server = servers[i];
-      try {
-        final uri = Uri.parse('$server/search?q=${Uri.encodeComponent(query)}&limit=5&countryCode=US');
-        final Map<String, String> headers = {
-          'Accept': 'application/json',
-          'x-api-key': Env.tidalApiKey
-        };
-        final response = await _client.get(uri, headers: headers).timeout(const Duration(seconds: 8));
-        
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          // Handle both VPS (List) and public (Object) formats
-          final List? items = data is List ? data : (data['tracks']?['items'] ?? data['items']);
-          
-          if (items != null && items.isNotEmpty) {
-            final bestMatch = items.firstWhere(
-              (i) => i['audioQuality'] == 'HI_RES_LOSSLESS' || i['audioQuality'] == 'HI_RES',
-              orElse: () => items.first
-            );
-            final foundId = bestMatch['id']?.toString();
-            if (foundId != null) {
-              logger.success('✅ [Tidal Search] Found Match on fallback server $server: $foundId');
-              _tidalSearchCache[cacheKey] = foundId; // UPDATE CACHE
-              return foundId;
-            }
-          }
-        }
-      } catch (e) {
-        logger.warning('⚠️ Tidal search failed on $server: $e');
-      }
-    }
+    
     return null;
   }
 
@@ -490,6 +535,21 @@ class FlacDownloaderService {
         'TIDAL: Using ${fallbackServers.length} servers (Primary + Public Fallbacks)');
 
     return fallbackServers;
+  }
+
+  /// 🚀 FAST-PATH STREAMING: Returns direct VPS stream URL for instant playback
+  Future<String?> getTidalStreamUrl(String tidalId, {String quality = 'HI_RES_LOSSLESS'}) async {
+    final servers = await _getTidalApiServers();
+    if (servers.isEmpty) return null;
+    
+    // We ONLY use the VPS for direct streaming, as it has the FFmpeg pipe endpoint
+    final vpsHost = Uri.parse(Env.tidalApiUrl).host;
+    for (final server in servers) {
+      if (server.contains(vpsHost)) {
+        return '$server/stream?id=$tidalId&quality=$quality&key=${Env.tidalApiKey}';
+      }
+    }
+    return null;
   }
 
   /// Download FLAC from Tidal using external API

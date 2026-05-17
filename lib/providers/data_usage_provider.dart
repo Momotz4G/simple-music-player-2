@@ -4,6 +4,7 @@ import 'settings_provider.dart';
 import '../services/flac_downloader_service.dart'; // Added
 import '../services/youtube_downloader_service.dart'; // Added
 import '../services/canvas_service.dart'; // Added
+import '../services/apple_music_backend_service.dart'; // Added
 
 import 'dart:convert'; // Added for JSON encoding
 
@@ -120,6 +121,7 @@ final dataUsageProvider = StateNotifierProvider<DataUsageNotifier, DataUsageStat
   FlacDownloaderService.globalRef = ref;
   YoutubeDownloaderService.globalRef = ref;
   CanvasService.globalRef = ref; // Added
+  AppleMusicBackendService.globalRef = ref; // Added
 
   return DataUsageNotifier(prefs);
 });

@@ -219,6 +219,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get beFirstToClaim => 'Станьте первым, кто займет первое место!';
 
   @override
+  String get backgroundCacheFlacStreams => 'Кэширование FLAC-потоков в фоне';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      'Тихо загружает потоковые треки без потерь на локальный диск, чтобы воспроизведение было мгновенным и не использовало данные.';
+
+  @override
   String get behavioralHeader => 'ПОВЕДЕНЧЕСКИЕ ДОСТИЖЕНИЯ';
 
   @override
@@ -2700,4 +2707,31 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => 'Завершено!';
+
+  @override
+  String get externalLinkDetected => 'Обнаружена внешняя ссылка';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      'Автоматическое скачивание не удалось из-за строгих ограничений сети или сервера.\\n\\nХотите открыть страницу загрузки Gofile в системном браузере или скопировать ссылку для скачивания вручную?';
+
+  @override
+  String get copyLink => 'Копировать ссылку';
+
+  @override
+  String get openBrowser => 'Открыть браузер';
+
+  @override
+  String get linkCopied => 'Ссылка скопирована в буфер обмена!';
+
+  @override
+  String get waitingForServerResponse => 'Ожидание ответа сервера...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'Очередь $position... пожалуйста, подождите';
+  }
+
+  @override
+  String get processingOnServer => 'Обработка на сервере...';
 }

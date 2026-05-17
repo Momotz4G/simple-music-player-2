@@ -5,7 +5,6 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_linux
   file_selector_linux
-  flutter_media_metadata
   isar_flutter_libs
   media_kit_libs_linux
   screen_retriever
@@ -16,6 +15,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
   flutter_discord_rpc
+  jni
   metadata_god
 )
 

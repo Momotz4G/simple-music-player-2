@@ -35,6 +35,9 @@ class DiscordService {
   Duration _lastTotal = Duration.zero;
   String? _lastImageUrl;
 
+  Timer? _pauseTimer;
+  bool _isClearedDueToPause = false;
+
   bool _isEnabled = true;
 
   /// Entry point: Called once when app starts
@@ -59,10 +62,13 @@ class DiscordService {
   void setEnabled(bool enabled) {
     _isEnabled = enabled;
     if (!enabled) {
-      clearPresence();
+      clearPresence(clearCache: false);
     } else {
-      // Try to re-sync immediately if we have data
-      if (_lastSong != null && _isConnected) {
+      // Try to re-sync immediately
+      if (!_isConnected) {
+        _stabilityCount = _requiredStability; // bypass monitor delay
+        _tryConnect(fast: true);
+      } else if (_lastSong != null) {
         _performUpdate();
       }
     }
@@ -110,7 +116,7 @@ class DiscordService {
     });
   }
 
-  Future<void> _tryConnect() async {
+  Future<void> _tryConnect({bool fast = false}) async {
     if (_isConnecting) return;
     _isConnecting = true;
 
@@ -120,8 +126,10 @@ class DiscordService {
         await _initializeLibrary();
       }
 
-      // Final Buffer: Wait 10 more seconds after stability achieved
-      await Future.delayed(const Duration(seconds: 10));
+      if (!fast) {
+        // Final Buffer: Wait 10 more seconds after stability achieved
+        await Future.delayed(const Duration(seconds: 10));
+      }
 
       // Connect 
       try {
@@ -133,9 +141,11 @@ class DiscordService {
         _isConnected = false;
       }
       
-      // 🚀 RESTORED SAFETY: Do NOT sync immediately.
-      // Let the regular updatePresence() calls from the player handle it.
-      DebugLogService().info("[Discord] Handshake successful. Waiting for next player pulse.");
+      if (fast && _isConnected && _lastSong != null) {
+        _performUpdate();
+      } else {
+        DebugLogService().info("[Discord] Handshake successful. Waiting for next player pulse.");
+      }
     } catch (e) {
       _isConnected = false;
       DebugLogService().error("[Discord] ⚠️ Global Handshake Error: $e");
@@ -168,8 +178,27 @@ class DiscordService {
     _lastTotal = total;
     _lastImageUrl = imageUrl;
 
-    // Only send if connected and enabled
-    if (_isConnected && _isEnabled) {
+    if (isPlaying) {
+      _pauseTimer?.cancel();
+      _pauseTimer = null;
+      _isClearedDueToPause = false;
+    } else {
+      if (_pauseTimer == null && !_isClearedDueToPause) {
+        _pauseTimer = Timer(const Duration(seconds: 30), () {
+          _isClearedDueToPause = true;
+          if (_isConnected) {
+            try {
+              rpc.FlutterDiscordRPC.instance.clearActivity();
+            } catch (e) {
+              _isConnected = false;
+            }
+          }
+        });
+      }
+    }
+
+    // Only send if connected and enabled, and NOT cleared due to prolonged pause
+    if (_isConnected && _isEnabled && !_isClearedDueToPause) {
       _performUpdate();
     }
   }
@@ -223,8 +252,11 @@ class DiscordService {
     }
   }
 
-  void clearPresence() {
-    _lastSong = null;
+  void clearPresence({bool clearCache = true}) {
+    if (clearCache) _lastSong = null;
+    _pauseTimer?.cancel();
+    _pauseTimer = null;
+    _isClearedDueToPause = false;
     if (!_isConnected) return;
     try {
       rpc.FlutterDiscordRPC.instance.clearActivity();

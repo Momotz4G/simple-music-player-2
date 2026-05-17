@@ -17,6 +17,16 @@ class HistoryPage extends ConsumerStatefulWidget {
 }
 
 class _HistoryPageState extends ConsumerState<HistoryPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Refresh from cloud when history page opens so remote plays appear
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(historyProvider.notifier).refreshFromCloud();
+      }
+    });
+  }
 
   // 🚀 SMART PLAY FUNCTION
   // Handles playing local files OR restoring deleted cached files
@@ -123,70 +133,69 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                                       borderRadius: BorderRadius.circular(4)),
                                   child: const Icon(Icons.music_note,
                                       color: Colors.white24))),
-
-                  title: Text(
-                    entry.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: textColor),
-                  ),
-                  subtitle: Row(
-                    children: [
-                      // 🚀 VISUAL STATUS BADGES
-                      if (!fileExists)
-                        Container(
-                            margin: const EdgeInsets.only(right: 6),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4)),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.cloud_download,
-                                    size: 10, color: Colors.orange),
-                                const SizedBox(width: 4),
-                                Text(AppLocalizations.of(context)!.cloud,
-                                    style: const TextStyle(
-                                        fontSize: 9,
-                                        color: Colors.orange,
-                                        fontWeight: FontWeight.bold))
-                              ],
-                            ))
-                      else if (entry.isStream)
-                        Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                              color: accentColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4)),
-                          child: Text(AppLocalizations.of(context)!.cached,
-                              style: TextStyle(
-                                  fontSize: 9,
-                                  color: accentColor,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-
-                      Expanded(
-                        child: Text(
-                          entry.artist,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: subTextColor),
-                        ),
+                      title: Text(
+                        entry.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: textColor),
                       ),
-                    ],
-                  ),
-                  trailing: Icon(Icons.play_circle_outline,
-                      size: 24, color: accentColor.withValues(alpha: 0.7)),
-                    onTap: () => _handleSongTap(entry),
-                  );
-                },
-              );
-            }, childCount: historyEntries.length),
-          ),
+                      subtitle: Row(
+                        children: [
+                          // 🚀 VISUAL STATUS BADGES
+                          if (!fileExists)
+                            Container(
+                                margin: const EdgeInsets.only(right: 6),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                    color: Colors.orange.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(4)),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.cloud_download,
+                                        size: 10, color: Colors.orange),
+                                    const SizedBox(width: 4),
+                                    Text(AppLocalizations.of(context)!.cloud,
+                                        style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.orange,
+                                            fontWeight: FontWeight.bold))
+                                  ],
+                                ))
+                          else if (entry.isStream)
+                            Container(
+                              margin: const EdgeInsets.only(right: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                  color: accentColor.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(4)),
+                              child: Text(AppLocalizations.of(context)!.cached,
+                                  style: TextStyle(
+                                      fontSize: 9,
+                                      color: accentColor,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+
+                          Expanded(
+                            child: Text(
+                              entry.artist,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: subTextColor),
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Icon(Icons.play_circle_outline,
+                          size: 24, color: accentColor.withValues(alpha: 0.7)),
+                      onTap: () => _handleSongTap(entry),
+                    );
+                  },
+                );
+              }, childCount: historyEntries.length),
+            ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],

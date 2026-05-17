@@ -213,6 +213,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get beFirstToClaim => '抢占第一名吧！';
 
   @override
+  String get backgroundCacheFlacStreams => '后台缓存FLAC流';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      '静默下载流式无损音轨到本地磁盘，使重播即时且不消耗流量。';
+
+  @override
   String get behavioralHeader => '行为成就';
 
   @override
@@ -2598,4 +2605,31 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => '完成！';
+
+  @override
+  String get externalLinkDetected => '检测到外部链接';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      '由于严格的网络或服务器限制，自动下载失败。\\n\\n您想在系统浏览器中打开 Gofile 下载页面，还是复制链接以进行手动下载？';
+
+  @override
+  String get copyLink => '复制链接';
+
+  @override
+  String get openBrowser => '打开浏览器';
+
+  @override
+  String get linkCopied => '链接已复制到剪贴板！';
+
+  @override
+  String get waitingForServerResponse => '正在等待服务器响应...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return '队列 $position... 请稍候';
+  }
+
+  @override
+  String get processingOnServer => '正在服务器上处理...';
 }

@@ -48,9 +48,11 @@ class DBService {
           DeletedMailboxMessageSchema,
           OnlineArtCacheSchema,
           OnlineDataCacheSchema,
+          // SyncQueueEntrySchema, // TODO: Re-enable after build_runner regenerates schemas.g.dart
         ], // Register schemas here
         directory: dir.path,
-        inspector: true, // Allows you to debug DB content while app runs!
+        inspector: true,
+        maxSizeMiB: 512,
       );
       return _db!;
     }
@@ -221,16 +223,23 @@ class DBService {
   // --- MAILBOX OPERATIONS ---
 
   /// Adds a new message to the mailbox with deduplication and blacklist check
-  Future<void> addMailboxMessage(String message, {String? remoteId, DateTime? timestamp}) async {
+  Future<void> addMailboxMessage(String message,
+      {String? remoteId, DateTime? timestamp}) async {
     final isar = await db;
     await isar.writeTxn(() async {
       // 1. Deduplication: If remoteId exists in mailbox, don't add again
       if (remoteId != null) {
-        final existing = await isar.mailboxMessages.filter().remoteIdEqualTo(remoteId).findFirst();
+        final existing = await isar.mailboxMessages
+            .filter()
+            .remoteIdEqualTo(remoteId)
+            .findFirst();
         if (existing != null) return;
 
         // 2. Blacklist: If remoteId was previously deleted, don't add again
-        final deleted = await isar.deletedMailboxMessages.filter().remoteIdEqualTo(remoteId).findFirst();
+        final deleted = await isar.deletedMailboxMessages
+            .filter()
+            .remoteIdEqualTo(remoteId)
+            .findFirst();
         if (deleted != null) return;
       }
 
@@ -240,11 +249,15 @@ class DBService {
         ..timestamp = timestamp ?? DateTime.now()
         ..isRead = false;
       await isar.mailboxMessages.put(newMessage);
-      
+
       // Keep only last 100 messages to prevent DB bloat
       final count = await isar.mailboxMessages.count();
       if (count > 100) {
-        final oldest = await isar.mailboxMessages.where().sortByTimestamp().limit(count - 100).findAll();
+        final oldest = await isar.mailboxMessages
+            .where()
+            .sortByTimestamp()
+            .limit(count - 100)
+            .findAll();
         await isar.mailboxMessages.deleteAll(oldest.map((e) => e.id).toList());
       }
     });
@@ -291,11 +304,11 @@ class DBService {
           .where((m) => m.remoteId != null)
           .map((m) => DeletedMailboxMessage()..remoteId = m.remoteId!)
           .toList();
-      
+
       if (deletedEntries.isNotEmpty) {
         await isar.deletedMailboxMessages.putAll(deletedEntries);
       }
-      
+
       await isar.mailboxMessages.clear();
     });
   }
@@ -304,7 +317,8 @@ class DBService {
 
   Future<String?> getArtCache(String key) async {
     final isar = await db;
-    final cached = await isar.onlineArtCaches.filter().keyEqualTo(key).findFirst();
+    final cached =
+        await isar.onlineArtCaches.filter().keyEqualTo(key).findFirst();
     return cached?.url;
   }
 
@@ -323,7 +337,8 @@ class DBService {
 
   Future<String?> getDataCache(String key) async {
     final isar = await db;
-    final cached = await isar.onlineDataCaches.filter().keyEqualTo(key).findFirst();
+    final cached =
+        await isar.onlineDataCaches.filter().keyEqualTo(key).findFirst();
     return cached?.json;
   }
 
@@ -368,7 +383,8 @@ class DBService {
       for (var folder in folders) {
         final dir = Directory('${tempDir.path}/$folder');
         if (await dir.exists()) {
-          await for (var file in dir.list(recursive: true, followLinks: false)) {
+          await for (var file
+              in dir.list(recursive: true, followLinks: false)) {
             if (file is File) {
               totalBytes += await file.length();
             }
@@ -386,7 +402,7 @@ class DBService {
 
   Future<void> clearMetadataCache() async {
     final isar = await db;
-    
+
     // 1. Clear Isar Collections
     await isar.writeTxn(() async {
       await isar.onlineArtCaches.clear();

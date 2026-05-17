@@ -78,17 +78,17 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
             p.copyWith(entries: [
               ...p.entries,
               PlaylistEntry(
-                  path: song.filePath,
-                  dateAdded: DateTime.now(),
-                  title: song.title,
-                  artist: song.artist,
-                  album: song.album,
-                  artUrl: song.onlineArtUrl,
-                  sourceUrl: song.sourceUrl, // SAVE SOURCE URL
-                  isrc: song.isrc, // SAVE ISRC
-                  duration: song.duration.toInt(), // SAVE DURATION
-                  spotifyId: song.spotifyId, // 🚀 SAVE SPOTIFY ID
-                )
+                path: song.filePath,
+                dateAdded: DateTime.now(),
+                title: song.title,
+                artist: song.artist,
+                album: song.album,
+                artUrl: song.onlineArtUrl,
+                sourceUrl: song.sourceUrl, // SAVE SOURCE URL
+                isrc: song.isrc, // SAVE ISRC
+                duration: song.duration.toInt(), // SAVE DURATION
+                spotifyId: song.spotifyId, // 🚀 SAVE SPOTIFY ID
+              )
             ])
           else
             p
@@ -195,7 +195,8 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
         return null;
       }
 
-      onStatus?.call("creatingPlaylistWithTracks", args: {'count': tracks.length});
+      onStatus
+          ?.call("creatingPlaylistWithTracks", args: {'count': tracks.length});
 
       // 4. Convert to SongModels with predicted paths
       final smartService = SmartDownloadService();
@@ -264,11 +265,12 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
 
       onStatus?.call("fetchingPlaylistInfo");
 
-      // 2. Fetch playlist data from Vercel API
-      final apiUrl = Uri.parse('$_ytMusicApiBase/api/playlist?id=$playlistId');
+      // 2. Fetch playlist data from Vercel API (limit=5000 to get all tracks)
+      final apiUrl =
+          Uri.parse('$_ytMusicApiBase/api/playlist?id=$playlistId&limit=5000');
       final response = await http.get(apiUrl).timeout(
-        const Duration(seconds: 30),
-      );
+            const Duration(seconds: 60),
+          );
 
       if (response.statusCode != 200) {
         onStatus?.call("failedFetchPlaylistInfo");
@@ -298,7 +300,8 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
       }
 
       onStatus?.call("fetchingTracksFrom", args: {'name': playlistName});
-      onStatus?.call("creatingPlaylistWithTracks", args: {'count': tracks.length});
+      onStatus
+          ?.call("creatingPlaylistWithTracks", args: {'count': tracks.length});
 
       // 3. Build playlist entries from API response
       final smartService = SmartDownloadService();
@@ -306,20 +309,20 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
 
       for (var track in tracks) {
         final title = track['title'] as String? ?? 'Unknown';
-        
+
         // Artists is a list of {name, id}
         final artists = track['artists'] as List<dynamic>? ?? [];
-        final artist = artists.isNotEmpty 
+        final artist = artists.isNotEmpty
             ? artists.map((a) => a['name'] as String? ?? '').join(', ')
             : 'Unknown Artist';
-        
+
         // Album
         final albumData = track['album'] as Map<String, dynamic>?;
         final album = albumData?['name'] as String? ?? playlistName;
-        
+
         // Duration
         final durationSeconds = track['duration_seconds'] as int? ?? 0;
-        
+
         // Thumbnail - pick highest resolution
         final trackThumbnails = track['thumbnails'] as List<dynamic>? ?? [];
         String? artUrl;
@@ -330,9 +333,8 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
 
         // Video ID for source URL
         final videoId = track['videoId'] as String?;
-        final sourceUrl = videoId != null 
-            ? 'https://www.youtube.com/watch?v=$videoId' 
-            : null;
+        final sourceUrl =
+            videoId != null ? 'https://www.youtube.com/watch?v=$videoId' : null;
 
         // Generate predicted cache path for file matching
         final trackMetadata = SongMetadata(
@@ -342,8 +344,9 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
           durationSeconds: durationSeconds,
           albumArtUrl: artUrl ?? '',
         );
-        
-        final predictedPath = await smartService.getPredictedCachePath(trackMetadata);
+
+        final predictedPath =
+            await smartService.getPredictedCachePath(trackMetadata);
 
         entries.add(PlaylistEntry(
           path: predictedPath,
@@ -380,35 +383,38 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
   }
 
   // 🚀 M3U PLAYLIST EXPORT/IMPORT
-  
-  Future<void> exportM3uPlaylist(String playlistId, {Function(String statusKey, {Map<String, dynamic>? args})? onStatus}) async {
+
+  Future<void> exportM3uPlaylist(String playlistId,
+      {Function(String statusKey, {Map<String, dynamic>? args})?
+          onStatus}) async {
     try {
       final playlist = state.firstWhere((p) => p.id == playlistId);
       final buffer = StringBuffer();
       buffer.writeln("#EXTM3U");
-      
+
       for (final entry in playlist.entries) {
-        final durationStr = entry.duration != null ? entry.duration.toString() : "-1";
+        final durationStr =
+            entry.duration != null ? entry.duration.toString() : "-1";
         final artistStr = entry.artist ?? "Unknown Artist";
         final titleStr = entry.title ?? "Unknown Title";
-        
+
         buffer.writeln("#EXTINF:$durationStr,$artistStr - $titleStr");
-        
+
         if (entry.album != null && entry.album!.isNotEmpty) {
           buffer.writeln("#EXTALB:${entry.album}");
         }
         if (entry.artUrl != null && entry.artUrl!.isNotEmpty) {
           buffer.writeln("#EXTART:${entry.artUrl}");
         }
-        
+
         if (entry.spotifyId != null && entry.spotifyId!.isNotEmpty) {
           buffer.writeln("spotify-track://${entry.spotifyId}");
         } else if (entry.sourceUrl != null && entry.sourceUrl!.isNotEmpty) {
           buffer.writeln(entry.sourceUrl);
         } else {
           // Prevent exporting local temp/cache paths which break cross-device portability
-          if (entry.path.contains('SimpleMusicCache') || 
-              entry.path.contains('Temp') || 
+          if (entry.path.contains('SimpleMusicCache') ||
+              entry.path.contains('Temp') ||
               entry.path.contains('/cache/') ||
               entry.path == 'cloud_stream') {
             final query = Uri.encodeComponent('$artistStr $titleStr');
@@ -418,7 +424,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
           }
         }
       }
-      
+
       String? outputFile = await FilePicker.platform.saveFile(
         dialogTitle: 'Save Playlist As',
         fileName: '${playlist.name}.m3u',
@@ -433,7 +439,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
 
       final file = File(outputFile);
       await file.writeAsString(buffer.toString());
-      
+
       onStatus?.call("exportedM3u");
     } catch (e) {
       print("Export M3U Error: $e");
@@ -441,7 +447,9 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
     }
   }
 
-  Future<String?> importM3uPlaylist({Function(String statusKey, {Map<String, dynamic>? args})? onStatus}) async {
+  Future<String?> importM3uPlaylist(
+      {Function(String statusKey, {Map<String, dynamic>? args})?
+          onStatus}) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -451,15 +459,16 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final lines = await file.readAsLines();
-        
+
         if (lines.isEmpty || !lines[0].startsWith("#EXTM3U")) {
           onStatus?.call("invalidM3uFile");
           return null;
         }
 
-        final playlistName = result.files.single.name.replaceAll(RegExp(r'\.m3u8?$'), '');
+        final playlistName =
+            result.files.single.name.replaceAll(RegExp(r'\.m3u8?$'), '');
         final entries = <PlaylistEntry>[];
-        
+
         String? currentTitle;
         String? currentArtist;
         int? currentDuration;
@@ -502,7 +511,8 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
               spotifyId = line.replaceFirst("spotify-track://", "");
             } else if (line.startsWith("yt-search://")) {
               path = "cloud_stream";
-            } else if (line.startsWith("http://") || line.startsWith("https://")) {
+            } else if (line.startsWith("http://") ||
+                line.startsWith("https://")) {
               sourceUrl = line;
             } else {
               path = line;
@@ -606,7 +616,8 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
       state = [...state, localPlaylist];
       await _save();
 
-      onStatus?.call("importedPlaylistName", args: {'name': localPlaylist.name});
+      onStatus
+          ?.call("importedPlaylistName", args: {'name': localPlaylist.name});
       return newId;
     } catch (e) {
       print("Import Shared Error: $e");

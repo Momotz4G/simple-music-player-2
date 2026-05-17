@@ -54,7 +54,8 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
 
   Future<String?> _getArtistImageWithFallback(String artist) async {
     // 🚀 NEW: Use the unified service which handles Cache, Spotify, and VPS correctly with logs!
-    return await SpotifyService.getArtistImage(artistName: artist, highQuality: true);
+    return await SpotifyService.getArtistImage(
+        artistName: artist, highQuality: true);
   }
 
   Future<void> _syncThenFetch() async {
@@ -82,57 +83,68 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
 
     if (_selectedTab == 0) {
       sortBy = 'daily_play_count';
-      filter = filter != null 
+      filter = filter != null
           ? '$filter && last_play_date >= "${StatsUtils.getStartOfTodayGMT7()}"'
           : 'last_play_date >= "${StatsUtils.getStartOfTodayGMT7()}"';
     } else if (_selectedTab == 1) {
       sortBy = 'weekly_play_count';
-      filter = filter != null 
+      filter = filter != null
           ? '$filter && last_play_date >= "${StatsUtils.getStartOfWeekGMT7()}"'
           : 'last_play_date >= "${StatsUtils.getStartOfWeekGMT7()}"';
+    } else if (_selectedTab == 2 && !_isArtistView) {
+      // 🚀 FIX: For All-Time, filter to only users with total_minutes > 0
+      // This ensures we don't waste the fetch limit on inactive/empty records
+      filter = '$filter && total_minutes > 0';
     }
 
     try {
       List<Map<String, dynamic>> records;
-      
+
       if (_isArtistView) {
         // Fetch a bit extra so we capture duplicated variations
-        final int fetchLimit = _selectedTab == 2 ? 30 : 50; 
+        final int fetchLimit = _selectedTab == 2 ? 30 : 50;
         records = await PocketBaseService().fetchArtistLeaderboard(
           sortBy: sortBy,
           limit: fetchLimit,
           filter: filter,
         );
-        
+
         final mergedRecords = <String, Map<String, dynamic>>{};
-        
+
         for (final r in records) {
           final count = r[sortBy] ?? 0;
           if (count > 0 && r['name'] != null) {
             String rawName = r['name'] as String;
-            
+
             // 1. Remove parentheses/brackets e.g. "IVE (아이브)" -> "IVE "
             String cleanName = rawName.replaceAll(RegExp(r'\(.*?\)'), '');
             cleanName = cleanName.replaceAll(RegExp(r'\[.*?\]'), '');
-            
+
             // 2. Extract primary artist roughly
             if (cleanName.contains(',')) cleanName = cleanName.split(',').first;
             if (cleanName.contains('&')) cleanName = cleanName.split('&').first;
             if (cleanName.contains('/')) cleanName = cleanName.split('/').first;
-            
+
             cleanName = cleanName.trim();
             if (cleanName.isEmpty) cleanName = "Unknown Artist";
-            
+
             final matchKey = cleanName.toLowerCase();
-            
+
             if (mergedRecords.containsKey(matchKey)) {
               // Merge play counts
               final existing = mergedRecords[matchKey]!;
               existing[sortBy] = (existing[sortBy] ?? 0) + count;
-              
-              if (r['daily_play_count'] != null) existing['daily_play_count'] = (existing['daily_play_count'] ?? 0) + r['daily_play_count'];
-              if (r['weekly_play_count'] != null) existing['weekly_play_count'] = (existing['weekly_play_count'] ?? 0) + r['weekly_play_count'];
-              if (r['play_count'] != null) existing['play_count'] = (existing['play_count'] ?? 0) + r['play_count'];
+
+              if (r['daily_play_count'] != null)
+                existing['daily_play_count'] =
+                    (existing['daily_play_count'] ?? 0) + r['daily_play_count'];
+              if (r['weekly_play_count'] != null)
+                existing['weekly_play_count'] =
+                    (existing['weekly_play_count'] ?? 0) +
+                        r['weekly_play_count'];
+              if (r['play_count'] != null)
+                existing['play_count'] =
+                    (existing['play_count'] ?? 0) + r['play_count'];
             } else {
               // New record
               final newRecord = Map<String, dynamic>.from(r);
@@ -141,14 +153,15 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
             }
           }
         }
-        
+
         // Convert to list, sort by the requested metric, and apply strict UI limit
         var filteredList = mergedRecords.values.toList();
         filteredList.sort((a, b) => (b[sortBy] ?? 0).compareTo(a[sortBy] ?? 0));
-        
-        final int finalUiLimit = (_selectedTab == 0 || _selectedTab == 1) ? 25 : 10;
+
+        final int finalUiLimit =
+            (_selectedTab == 0 || _selectedTab == 1) ? 25 : 10;
         final filtered = filteredList.take(finalUiLimit).toList();
-        
+
         if (mounted) {
           setState(() {
             _leaderboardData = filtered;
@@ -158,10 +171,12 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
       } else {
         records = await PocketBaseService().fetchLeaderboard(
           sortBy: sortBy,
-          limit: 100,
+          limit: _selectedTab == 2
+              ? 200
+              : 100, // 🚀 FIX: Fetch more for All-Time to ensure 50 unique users after dedup
           filter: filter,
         );
-        
+
         // 🚀 RANK INJECTION: Fetch Top 3 All-Time if viewing Daily/Weekly to show correct badges
         List<Map<String, dynamic>> top3AllTime = [];
         if (_selectedTab != 2) {
@@ -171,71 +186,86 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
             filter: 'nickname != ""',
           );
         }
-        
+
         // Deduplicate locally and filter
         // Dedup by BOTH user_id AND nickname to catch multi-device duplicates
         final seenUserIds = <String>{};
-        final seenNicknames = <String, int>{}; // nickname -> index in filtered list
-        final seenHighScores = <String>{}; // 🚀 Detect clones by identical high scores (minutes + plays)
+        final seenNicknames =
+            <String, int>{}; // nickname -> index in filtered list
+        final seenHighScores =
+            <String>{}; // 🚀 Detect clones by identical high scores (minutes + plays)
         final filtered = <Map<String, dynamic>>[];
         for (final r in records) {
-           // 🚀 Inject rank if they are in Top 3 All-Time
-           if (_selectedTab != 2) {
-             for (int i = 0; i < top3AllTime.length; i++) {
-               final isMatch = (r['user_id'] != null && top3AllTime[i]['user_id'] == r['user_id']) ||
-                               (r['nickname'] != null && top3AllTime[i]['nickname'] == r['nickname']);
-               if (isMatch) {
-                 r['leaderboard_rank'] = i + 1;
-                 break;
-               }
-             }
-           }
-
-           final count = r[sortBy] ?? 0;
-           if (count <= 0) continue; 
-           
-           final rawNick = r['nickname'] as String?;
-           if (rawNick == null || rawNick.trim().isEmpty) continue;
-           
-           // Skip if we've already seen this user_id
-           final uId = r['user_id'] as String?;
-           if (uId != null && uId.isNotEmpty && seenUserIds.contains(uId)) continue;
-
-           // 🚀 BULLETPROOF CLONE GUARD
-           // If an account has exactly the same total_minutes AND play_count as an account we've already processed, 
-           // it is mathematically guaranteed to be a cloned duplicate (exploiting the unlink bug).
-           final totalMins = (r['total_minutes'] as num?)?.toInt() ?? 0;
-           final totalPlays = (r['play_count'] as num?)?.toInt() ?? 0;
-           final cloneKey = "${totalMins}_$totalPlays";
-           
-           if (totalMins > 100 && seenHighScores.contains(cloneKey)) {
-             continue; // Skip clone
-           }
-           
-           // Dedup by nickname (case-insensitive): keep the one with higher score
-           final nickKey = rawNick.trim().toLowerCase();
-           if (seenNicknames.containsKey(nickKey)) {
-              final existingIdx = seenNicknames[nickKey]!;
-              final existingCount = filtered[existingIdx][sortBy] ?? 0;
-              if (count > existingCount) {
-                 // Replace the weaker duplicate with this stronger one
-                 filtered[existingIdx] = r;
-                 if (totalMins > 100) seenHighScores.add(cloneKey);
+          // 🚀 Inject rank if they are in Top 3 All-Time
+          if (_selectedTab != 2) {
+            for (int i = 0; i < top3AllTime.length; i++) {
+              final isMatch = (r['user_id'] != null &&
+                      top3AllTime[i]['user_id'] == r['user_id']) ||
+                  (r['nickname'] != null &&
+                      top3AllTime[i]['nickname'] == r['nickname']);
+              if (isMatch) {
+                r['leaderboard_rank'] = i + 1;
+                break;
               }
-              // Either way, track this user_id as seen
-              if (uId != null && uId.isNotEmpty) seenUserIds.add(uId);
-              continue;
-           }
-           
-           if (uId != null && uId.isNotEmpty) seenUserIds.add(uId);
-           if (totalMins > 100) seenHighScores.add(cloneKey);
-           seenNicknames[nickKey] = filtered.length;
-           filtered.add(r);
+            }
+          }
+
+          final count = r[sortBy] ?? 0;
+          if (count <= 0) continue;
+
+          final rawNick = r['nickname'] as String?;
+          if (rawNick == null || rawNick.trim().isEmpty) continue;
+
+          // Skip if we've already seen this user_id
+          final uId = r['user_id'] as String?;
+          if (uId != null && uId.isNotEmpty && seenUserIds.contains(uId))
+            continue;
+
+          // 🚀 BULLETPROOF CLONE GUARD
+          // If an account has exactly the same total_minutes AND play_count as an account we've already processed,
+          // it is mathematically guaranteed to be a cloned duplicate (exploiting the unlink bug).
+          // 🚀 FIX: Only apply clone guard for Daily/Weekly where duplicates are more likely exploits.
+          // For All-Time, the nickname + user_id dedup is sufficient.
+          final totalMins = (r['total_minutes'] as num?)?.toInt() ?? 0;
+          final totalPlays = (r['play_count'] as num?)?.toInt() ?? 0;
+          final cloneKey = "${totalMins}_$totalPlays";
+
+          if (_selectedTab != 2 &&
+              totalMins > 100 &&
+              seenHighScores.contains(cloneKey)) {
+            continue; // Skip clone (only for Daily/Weekly)
+          }
+
+          // Dedup by nickname (case-insensitive): keep the one with higher score
+          final nickKey = rawNick.trim().toLowerCase();
+          if (seenNicknames.containsKey(nickKey)) {
+            final existingIdx = seenNicknames[nickKey]!;
+            final existingCount = filtered[existingIdx][sortBy] ?? 0;
+            if (count > existingCount) {
+              // Replace the weaker duplicate with this stronger one
+              filtered[existingIdx] = r;
+              if (totalMins > 100) seenHighScores.add(cloneKey);
+            }
+            // Either way, track this user_id as seen
+            if (uId != null && uId.isNotEmpty) seenUserIds.add(uId);
+            continue;
+          }
+
+          if (uId != null && uId.isNotEmpty) seenUserIds.add(uId);
+          if (totalMins > 100) seenHighScores.add(cloneKey);
+          seenNicknames[nickKey] = filtered.length;
+          filtered.add(r);
         }
+
+        // 🚀 FIX: Cap All-Time at 50 users, Daily/Weekly at 25
+        final int maxDisplay = _selectedTab == 2 ? 50 : 25;
+        final cappedList = filtered.length > maxDisplay
+            ? filtered.sublist(0, maxDisplay)
+            : filtered;
 
         if (mounted) {
           setState(() {
-            _leaderboardData = filtered;
+            _leaderboardData = cappedList;
             _isLoading = false;
           });
         }
@@ -273,13 +303,12 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
     if (userData['leaderboard_rank'] == null) {
       try {
         final top3 = await PocketBaseService().fetchLeaderboard(
-          sortBy: 'total_minutes', 
-          limit: 3, 
-          filter: 'nickname != ""'
-        );
+            sortBy: 'total_minutes', limit: 3, filter: 'nickname != ""');
         for (int i = 0; i < top3.length; i++) {
-          final isMatch = (userData['user_id'] != null && top3[i]['user_id'] == userData['user_id']) ||
-                          (userData['nickname'] != null && top3[i]['nickname'] == userData['nickname']);
+          final isMatch = (userData['user_id'] != null &&
+                  top3[i]['user_id'] == userData['user_id']) ||
+              (userData['nickname'] != null &&
+                  top3[i]['nickname'] == userData['nickname']);
           if (isMatch) {
             userData['leaderboard_rank'] = i + 1;
             break;
@@ -304,12 +333,15 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accentColor = Theme.of(context).colorScheme.primary;
-    
+
     final screenWidth = MediaQuery.of(context).size.width;
     // 🚀 Let it "fullfill" the screen by using small fixed padding on PC
     final double horizPadding = screenWidth > 900 ? 40.0 : 20.0;
-    final double itemWidth = screenWidth > 900 
-        ? (screenWidth - 250 - (horizPadding * 2)) // Accurate available width after sidebar (250px)
+    final double itemWidth = screenWidth > 900
+        ? (screenWidth -
+            250 -
+            (horizPadding *
+                2)) // Accurate available width after sidebar (250px)
         : (screenWidth - (horizPadding * 2));
 
     return Scaffold(
@@ -321,10 +353,13 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
           SliverAppBar(
             expandedHeight: 80,
             pinned: true,
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95),
+            backgroundColor: Theme.of(context)
+                .scaffoldBackgroundColor
+                .withValues(alpha: 0.95),
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: EdgeInsets.only(left: screenWidth > 800 ? horizPadding : 64.0, bottom: 16),
+              titlePadding: EdgeInsets.only(
+                  left: screenWidth > 800 ? horizPadding : 64.0, bottom: 16),
               title: Text(
                 AppLocalizations.of(context)!.globalLeaderboard,
                 style: TextStyle(
@@ -352,7 +387,8 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
           // Tabs
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: horizPadding, vertical: 16),
+              padding:
+                  EdgeInsets.symmetric(horizontal: horizPadding, vertical: 16),
               child: Column(
                 children: [
                   _buildMasterToggle(accentColor, isDark),
@@ -364,7 +400,10 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.timer_outlined, size: 14, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          Icon(Icons.timer_outlined,
+                              size: 14,
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600]),
                           const SizedBox(width: 6),
                           Text(
                             "${AppLocalizations.of(context)!.resetsIn} : ",
@@ -372,7 +411,8 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.2,
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
                             ),
                           ),
                           Text(
@@ -408,11 +448,12 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final row = _leaderboardData[index];
-                    
-                    String sortBy = _isArtistView ? 'play_count' : 'total_minutes';
+
+                    String sortBy =
+                        _isArtistView ? 'play_count' : 'total_minutes';
                     if (_selectedTab == 0) sortBy = 'daily_play_count';
                     if (_selectedTab == 1) sortBy = 'weekly_play_count';
-                    
+
                     final scoreValue = row[sortBy] ?? 0;
 
                     Color? rankColor;
@@ -423,8 +464,9 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                     if (_isArtistView) {
                       final artistName = row['name'] ?? 'Unknown Artist';
                       final isHero = index == 0;
-                      
-                      _artistImageFutures[artistName] ??= _getArtistImageWithFallback(artistName);
+
+                      _artistImageFutures[artistName] ??=
+                          _getArtistImageWithFallback(artistName);
 
                       return ArtistLeaderboardItem(
                         artistName: artistName,
@@ -436,9 +478,10 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                         imageFuture: _artistImageFutures[artistName]!,
                       );
                     } else {
-                      final name = row['nickname'] ?? row['hostname'] ?? 'Unknown User';
+                      final name =
+                          row['nickname'] ?? row['hostname'] ?? 'Unknown User';
                       final topArtist = row['top_artist'] as String?;
-                      
+
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Material(
@@ -455,10 +498,16 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                             child: Ink(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03),
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.03)
+                                    : Colors.black.withValues(alpha: 0.03),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: rankColor?.withValues(alpha: 0.3) ?? (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+                                  color: rankColor?.withValues(alpha: 0.3) ??
+                                      (isDark
+                                          ? Colors.white.withValues(alpha: 0.05)
+                                          : Colors.black
+                                              .withValues(alpha: 0.05)),
                                 ),
                               ),
                               child: Row(
@@ -469,123 +518,173 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                                     alignment: Alignment.center,
                                     child: Text(
                                       "#${index + 1}",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: rankColor ?? (isDark ? Colors.grey[400] : Colors.grey[600]),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: rankColor ??
+                                            (isDark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600]),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Avatar
-                                CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: accentColor.withValues(alpha: 0.1),
-                                  backgroundImage: PocketBaseService().getAvatarUrl(row) != null
-                                      ? NetworkImage(PocketBaseService().getAvatarUrl(row)!)
-                                      : null,
-                                  child: PocketBaseService().getAvatarUrl(row) == null
-                                      ? Text(_getInitials(name), style: TextStyle(color: accentColor, fontWeight: FontWeight.bold))
-                                      : null,
-                                ),
-                                const SizedBox(width: 16),
-                                // Info
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      () {
-                                        final titleDef = StatsUtils.resolveTitleDefinition(
-                                          row['selected_title'],
-                                          row['total_minutes'] ?? 0,
-                                          userRank: _selectedTab == 2 ? index + 1 : (row['leaderboard_rank'] as int? ?? 0),
-                                        );
-                                        final hasWings = titleDef.rarityTier >= 3;
+                                  const SizedBox(width: 12),
+                                  // Avatar
+                                  CircleAvatar(
+                                    radius: 24,
+                                    backgroundColor:
+                                        accentColor.withValues(alpha: 0.1),
+                                    backgroundImage:
+                                        PocketBaseService().getAvatarUrl(row) !=
+                                                null
+                                            ? NetworkImage(PocketBaseService()
+                                                .getAvatarUrl(row)!)
+                                            : null,
+                                    child: PocketBaseService()
+                                                .getAvatarUrl(row) ==
+                                            null
+                                        ? Text(_getInitials(name),
+                                            style: TextStyle(
+                                                color: accentColor,
+                                                fontWeight: FontWeight.bold))
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  // Info
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        () {
+                                          final titleDef =
+                                              StatsUtils.resolveTitleDefinition(
+                                            row['selected_title'],
+                                            row['total_minutes'] ?? 0,
+                                            userRank: _selectedTab == 2
+                                                ? index + 1
+                                                : (row['leaderboard_rank']
+                                                        as int? ??
+                                                    0),
+                                          );
+                                          final hasWings =
+                                              titleDef.rarityTier >= 3;
 
-                                        return Row(
-                                          children: [
-                                            Flexible(
+                                          return Row(
+                                            children: [
+                                              Flexible(
+                                                child: Text(
+                                                  name,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16),
+                                                ),
+                                              ),
+                                              if (row['role'] ==
+                                                  'developer') ...[
+                                                const SizedBox(width: 4),
+                                                Icon(Icons.verified_rounded,
+                                                    size: 14,
+                                                    color: accentColor),
+                                              ],
+                                              // 🚀 Add extra spacing for titles with wings
+                                              SizedBox(
+                                                  width: hasWings ? 22 : 8),
+                                              SupremeTitleBadge.fromDefinition(
+                                                titleDef,
+                                                displayName: StatsUtils
+                                                    .resolveDisplayName(
+                                                        titleDef,
+                                                        row['selected_title']
+                                                            as String?),
+                                                width: screenWidth < 500
+                                                    ? 100
+                                                    : (screenWidth < 1200
+                                                        ? 120
+                                                        : 140),
+                                                height: 20,
+                                              ),
+                                            ],
+                                          );
+                                        }(),
+                                        if (topArtist != null &&
+                                            topArtist.isNotEmpty)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 2),
+                                            child: InkWell(
+                                              onTap: () {
+                                                ref
+                                                    .read(
+                                                        navigationStackProvider
+                                                            .notifier)
+                                                    .push(
+                                                      NavigationItem(
+                                                        type: NavigationType
+                                                            .artist,
+                                                        data: ArtistSelection(
+                                                            artistName:
+                                                                topArtist),
+                                                      ),
+                                                    );
+                                              },
                                               child: Text(
-                                                name,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16),
+                                                "${AppLocalizations.of(context)!.topArtist}: $topArtist",
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: isDark
+                                                        ? Colors.grey[500]
+                                                        : Colors.grey[600]),
                                               ),
                                             ),
-                                            if (row['role'] == 'developer') ...[
-                                              const SizedBox(width: 4),
-                                              Icon(Icons.verified_rounded,
-                                                  size: 14, color: accentColor),
-                                            ],
-                                            // 🚀 Add extra spacing for titles with wings
-                                            SizedBox(width: hasWings ? 22 : 8),
-                                            SupremeTitleBadge.fromDefinition(
-                                              titleDef,
-                                              displayName: StatsUtils.resolveDisplayName(titleDef, row['selected_title'] as String?),
-                                              width: screenWidth < 500 ? 100 : (screenWidth < 1200 ? 120 : 140),
-                                              height: 20,
-                                            ),
-                                          ],
-                                        );
-                                      }(),
-                                      if (topArtist != null && topArtist.isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 2),
-                                          child: InkWell(
-                                            onTap: () {
-                                              ref.read(navigationStackProvider.notifier).push(
-                                                NavigationItem(
-                                                  type: NavigationType.artist,
-                                                  data: ArtistSelection(artistName: topArtist),
-                                                ),
-                                              );
-                                            },
-                                            child: Text(
-                                              "${AppLocalizations.of(context)!.topArtist}: $topArtist",
-                                              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[600]),
-                                            ),
                                           ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Score
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: accentColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                            (_selectedTab == 2 &&
+                                                    !_isArtistView)
+                                                ? Icons.access_time_rounded
+                                                : Icons.play_arrow_rounded,
+                                            size: 16,
+                                            color: accentColor),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _selectedTab == 2
+                                              ? StatsUtils.formatMinutes(
+                                                  scoreValue,
+                                                  AppLocalizations.of(context)!)
+                                              : scoreValue.toString(),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: accentColor),
                                         ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                // Score
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: accentColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        (_selectedTab == 2 && !_isArtistView) 
-                                          ? Icons.access_time_rounded 
-                                          : Icons.play_arrow_rounded, 
-                                        size: 16, 
-                                        color: accentColor
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        _selectedTab == 2 
-                                          ? StatsUtils.formatMinutes(scoreValue, AppLocalizations.of(context)!) 
-                                          : scoreValue.toString(),
-                                        style: TextStyle(fontWeight: FontWeight.bold, color: accentColor),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  }
-                },
-                childCount: _leaderboardData.length,
+                      );
+                    }
+                  },
+                  childCount: _leaderboardData.length,
                 ),
               ),
             ),
@@ -598,21 +697,31 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
   Widget _buildMasterToggle(Color accentColor, bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(30),
       ),
       padding: const EdgeInsets.all(4),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildToggleOption(AppLocalizations.of(context)!.topListeners, Icons.people_rounded, !_isArtistView, accentColor, isDark, false),
-          _buildToggleOption(AppLocalizations.of(context)!.topArtists, Icons.mic_external_on_rounded, _isArtistView, accentColor, isDark, true),
+          _buildToggleOption(AppLocalizations.of(context)!.topListeners,
+              Icons.people_rounded, !_isArtistView, accentColor, isDark, false),
+          _buildToggleOption(
+              AppLocalizations.of(context)!.topArtists,
+              Icons.mic_external_on_rounded,
+              _isArtistView,
+              accentColor,
+              isDark,
+              true),
         ],
       ),
     );
   }
 
-  Widget _buildToggleOption(String title, IconData icon, bool isSelected, Color accentColor, bool isDark, bool targetState) {
+  Widget _buildToggleOption(String title, IconData icon, bool isSelected,
+      Color accentColor, bool isDark, bool targetState) {
     return GestureDetector(
       onTap: () {
         if (targetState != _isArtistView) {
@@ -629,7 +738,12 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
           color: isSelected ? accentColor : Colors.transparent,
           borderRadius: BorderRadius.circular(26),
           boxShadow: isSelected
-              ? [BoxShadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))]
+              ? [
+                  BoxShadow(
+                      color: accentColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ]
               : [],
         ),
         child: Row(
@@ -638,7 +752,9 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? Colors.grey[400] : Colors.grey[600]),
             ),
             const SizedBox(width: 8),
             Text(
@@ -646,7 +762,9 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.grey[400] : Colors.grey[600]),
               ),
             ),
           ],
@@ -656,8 +774,10 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
   }
 
   Widget _buildUnifiedTabs(Color accentColor, bool isDark) {
-    final borderColor = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05);
-    
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.05);
+
     Widget buildTab(int index, String label) {
       final isSelected = _selectedTab == index;
       return Expanded(
@@ -668,7 +788,9 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? accentColor.withValues(alpha: 0.1) : Colors.transparent,
+              color: isSelected
+                  ? accentColor.withValues(alpha: 0.1)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -676,7 +798,9 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? accentColor : (isDark ? Colors.grey[500] : Colors.grey[600]),
+                color: isSelected
+                    ? accentColor
+                    : (isDark ? Colors.grey[500] : Colors.grey[600]),
               ),
             ),
           ),
@@ -686,7 +810,9 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor),
       ),
@@ -701,7 +827,8 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, Color accentColor, bool isDark) {
+  Widget _buildErrorState(
+      BuildContext context, Color accentColor, bool isDark) {
     return SliverFillRemaining(
       hasScrollBody: false,
       child: Center(
@@ -750,8 +877,10 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: accentColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
                   elevation: 8,
                   shadowColor: accentColor.withValues(alpha: 0.5),
                 ),
@@ -776,7 +905,9 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
               Icon(
                 Icons.leaderboard_rounded,
                 size: 80,
-                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
               ),
               const SizedBox(height: 24),
               Text(
@@ -835,7 +966,8 @@ class ArtistLeaderboardItem extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ArtistLeaderboardItem> createState() => _ArtistLeaderboardItemState();
+  ConsumerState<ArtistLeaderboardItem> createState() =>
+      _ArtistLeaderboardItemState();
 }
 
 class _ArtistLeaderboardItemState extends ConsumerState<ArtistLeaderboardItem> {
@@ -854,11 +986,11 @@ class _ArtistLeaderboardItemState extends ConsumerState<ArtistLeaderboardItem> {
         child: InkWell(
           onTap: () {
             ref.read(navigationStackProvider.notifier).push(
-              NavigationItem(
-                type: NavigationType.artist,
-                data: ArtistSelection(artistName: widget.artistName),
-              ),
-            );
+                  NavigationItem(
+                    type: NavigationType.artist,
+                    data: ArtistSelection(artistName: widget.artistName),
+                  ),
+                );
           },
           child: FutureBuilder<String?>(
             future: widget.imageFuture,
@@ -895,7 +1027,9 @@ class _ArtistLeaderboardItemState extends ConsumerState<ArtistLeaderboardItem> {
                           right: 0,
                           top: 0,
                           bottom: 0,
-                          width: _isHovered ? widget.itemWidth : widget.itemWidth * 0.75,
+                          width: _isHovered
+                              ? widget.itemWidth
+                              : widget.itemWidth * 0.75,
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 500),
                             curve: Curves.easeOutCubic,
@@ -904,7 +1038,8 @@ class _ArtistLeaderboardItemState extends ConsumerState<ArtistLeaderboardItem> {
                               snapshot.data!,
                               fit: BoxFit.cover,
                               alignment: const Alignment(0.0, -0.2),
-                              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                              errorBuilder: (_, __, ___) =>
+                                  const SizedBox.shrink(),
                             ),
                           ),
                         ),
@@ -965,7 +1100,8 @@ class _ArtistLeaderboardItemState extends ConsumerState<ArtistLeaderboardItem> {
                                 style: TextStyle(
                                   fontSize: widget.isHero ? 44 : 28,
                                   fontWeight: FontWeight.w900,
-                                  color: widget.rankColor ?? Colors.white.withValues(alpha: 0.15),
+                                  color: widget.rankColor ??
+                                      Colors.white.withValues(alpha: 0.15),
                                   height: 1.0,
                                   shadows: _isHovered
                                       ? [
@@ -1011,7 +1147,9 @@ class _ArtistLeaderboardItemState extends ConsumerState<ArtistLeaderboardItem> {
                                     style: TextStyle(
                                       fontSize: widget.isHero ? 12 : 10,
                                       fontWeight: FontWeight.w500,
-                                      color: widget.rankColor?.withValues(alpha: 0.8) ?? Colors.white.withValues(alpha: 0.4),
+                                      color: widget.rankColor
+                                              ?.withValues(alpha: 0.8) ??
+                                          Colors.white.withValues(alpha: 0.4),
                                       shadows: _isHovered
                                           ? [
                                               const Shadow(
@@ -1039,4 +1177,3 @@ class _ArtistLeaderboardItemState extends ConsumerState<ArtistLeaderboardItem> {
     );
   }
 }
-

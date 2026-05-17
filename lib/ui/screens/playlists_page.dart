@@ -7,6 +7,7 @@ import '../components/playlist_collage.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../utils/layout_engine.dart';
 import '../components/playlist_sharing_dialogs.dart';
 
 class PlaylistsPage extends ConsumerWidget {
@@ -266,11 +267,11 @@ class PlaylistsPage extends ConsumerWidget {
             const Divider(),
             // Option 3: Import from YouTube Music
             ListTile(
-              leading: const Icon(Icons.music_video_outlined,
-                  color: Colors.red),
+              leading:
+                  const Icon(Icons.music_video_outlined, color: Colors.red),
               title: Text(AppLocalizations.of(context)!.importFromYoutubeMusic),
-              subtitle:
-                  Text(AppLocalizations.of(context)!.importFromYoutubeMusicSubtitle),
+              subtitle: Text(
+                  AppLocalizations.of(context)!.importFromYoutubeMusicSubtitle),
               onTap: () {
                 Navigator.pop(context);
                 _showYoutubeMusicImportDialog(context, notifier);
@@ -279,23 +280,22 @@ class PlaylistsPage extends ConsumerWidget {
             const Divider(),
             // Option 4: Import from M3U
             ListTile(
-              leading: const Icon(Icons.file_upload_outlined,
-                  color: Colors.blue),
+              leading:
+                  const Icon(Icons.file_upload_outlined, color: Colors.blue),
               title: Text(AppLocalizations.of(context)!.importFromM3u),
-              subtitle: Text(AppLocalizations.of(context)!.importFromM3uSubtitle),
+              subtitle:
+                  Text(AppLocalizations.of(context)!.importFromM3uSubtitle),
               onTap: () async {
                 final l10n = AppLocalizations.of(context)!;
                 final messenger = ScaffoldMessenger.of(context);
                 Navigator.pop(context);
-                
-                await notifier.importM3uPlaylist(
-                  onStatus: (statusKey, {args}) {
-                    final msg = _getLocalizedStatus(l10n, statusKey, args);
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(msg)),
-                    );
-                  }
-                );
+
+                await notifier.importM3uPlaylist(onStatus: (statusKey, {args}) {
+                  final msg = _getLocalizedStatus(l10n, statusKey, args);
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(msg)),
+                  );
+                });
               },
             ),
             const Divider(),
@@ -304,7 +304,8 @@ class PlaylistsPage extends ConsumerWidget {
               leading: Icon(Icons.share_outlined,
                   color: Theme.of(context).colorScheme.primary),
               title: Text(AppLocalizations.of(context)!.importViaCode),
-              subtitle: Text(AppLocalizations.of(context)!.importViaCodeSubtitle),
+              subtitle:
+                  Text(AppLocalizations.of(context)!.importViaCodeSubtitle),
               onTap: () {
                 Navigator.pop(context);
                 showDialog(
@@ -453,7 +454,8 @@ class PlaylistsPage extends ConsumerWidget {
                                   await notifier.importSpotifyPlaylist(
                                 controller.text,
                                 onStatus: (key, {args}) {
-                                  statusNotifier.value = _getLocalizedStatus(l10n, key, args);
+                                  statusNotifier.value =
+                                      _getLocalizedStatus(l10n, key, args);
                                 },
                               );
 
@@ -573,7 +575,8 @@ class PlaylistsPage extends ConsumerWidget {
                                   await notifier.importYoutubeMusicPlaylist(
                                 controller.text,
                                 onStatus: (key, {args}) {
-                                  statusNotifier.value = _getLocalizedStatus(l10n, key, args);
+                                  statusNotifier.value =
+                                      _getLocalizedStatus(l10n, key, args);
                                 },
                               );
 
@@ -598,19 +601,31 @@ class PlaylistsPage extends ConsumerWidget {
     );
   }
 
-  String _getLocalizedStatus(AppLocalizations l10n, String key, Map<String, dynamic>? args) {
+  String _getLocalizedStatus(
+      AppLocalizations l10n, String key, Map<String, dynamic>? args) {
     switch (key) {
-      case "invalidSpotifyUrl": return "❌ ${l10n.invalidSpotifyUrl}";
-      case "invalidYoutubeMusicUrl": return "❌ ${l10n.invalidYoutubeMusicUrl}";
-      case "invalidM3uFile": return "❌ Invalid M3U File";
-      case "fetchingPlaylistInfo": return "📋 ${l10n.fetchingPlaylistInfo}";
-      case "failedFetchPlaylistInfo": return "❌ ${l10n.failedFetchPlaylistInfo}";
-      case "fetchingTracksFrom": return "🎵 ${l10n.fetchingTracksFrom(args?['name'] ?? '')}";
-      case "noTracksFound": return "❌ ${l10n.noTracksFound}";
-      case "creatingPlaylistWithTracks": return "📝 ${l10n.creatingPlaylistWithTracks(args?['count'] ?? 0)}";
-      case "importedTracks": return "✅ ${l10n.importedTracks(args?['count'] ?? 0)}";
-      case "importFailed": return "❌ ${l10n.importFailed(args?['error'] ?? '')}";
-      default: return key;
+      case "invalidSpotifyUrl":
+        return "❌ ${l10n.invalidSpotifyUrl}";
+      case "invalidYoutubeMusicUrl":
+        return "❌ ${l10n.invalidYoutubeMusicUrl}";
+      case "invalidM3uFile":
+        return "❌ Invalid M3U File";
+      case "fetchingPlaylistInfo":
+        return "📋 ${l10n.fetchingPlaylistInfo}";
+      case "failedFetchPlaylistInfo":
+        return "❌ ${l10n.failedFetchPlaylistInfo}";
+      case "fetchingTracksFrom":
+        return "🎵 ${l10n.fetchingTracksFrom(args?['name'] ?? '')}";
+      case "noTracksFound":
+        return "❌ ${l10n.noTracksFound}";
+      case "creatingPlaylistWithTracks":
+        return "📝 ${l10n.creatingPlaylistWithTracks(args?['count'] ?? 0)}";
+      case "importedTracks":
+        return "✅ ${l10n.importedTracks(args?['count'] ?? 0)}";
+      case "importFailed":
+        return "❌ ${l10n.importFailed(args?['error'] ?? '')}";
+      default:
+        return key;
     }
   }
 

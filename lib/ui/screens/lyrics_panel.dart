@@ -15,6 +15,10 @@ import '../../utils/chinese_romanizer.dart';
 import '../../utils/japanese_romanizer.dart';
 import '../../utils/korean_romanizer.dart';
 import '../../utils/translation_service.dart';
+import '../../services/apple_music_backend_service.dart';
+import '../../services/itunes_api_service.dart';
+import '../../models/song_metadata.dart';
+import 'package:http/http.dart' as http;
 import 'lyrics_editor.dart';
 import '../components/smart_art.dart';
 import '../../l10n/app_localizations.dart';
@@ -363,7 +367,11 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                                               : Colors.white,
                                           onSelected: (value) {
                                             if (value == 'import') {
-                                              _pickAndImportLyrics(ref);
+                                              if (playerState.currentSong != null) {
+                                                _showImportOptions(context, ref, playerState.currentSong!);
+                                              } else {
+                                                _pickAndImportLyrics(ref);
+                                              }
                                             } else if (value == 'save') {
                                               _saveLyricsToFile(
                                                 ref,
@@ -530,7 +538,13 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                                       message: l10n.importLyricsTooltip,
                                       child: _buildMiniButton(
                                         Icons.file_open_outlined,
-                                        () => _pickAndImportLyrics(ref),
+                                        () {
+                                          if (playerState.currentSong != null) {
+                                            _showImportOptions(context, ref, playerState.currentSong!);
+                                          } else {
+                                            _pickAndImportLyrics(ref);
+                                          }
+                                        },
                                         isDark,
                                       ),
                                     ),
@@ -1003,6 +1017,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                           inactiveColor: inactiveColor,
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
+                          words: line.words,
                         ),
                   // Romanization
                   if (romanized != null) ...[
@@ -1078,6 +1093,56 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
 
   Widget _buildRawLyrics(String text, bool isDark, String? artPath,
       String? onlineArtUrl, bool isPlaying, AppLocalizations l10n) {
+    
+    // Determine if we should show the text or the fallback graphic
+    final isErrorOrEmpty = text.trim().isEmpty || 
+        text.contains("Error") || 
+        text.contains("No local lyrics") || 
+        text.contains("No lyrics found") || 
+        text.contains("Offline Mode");
+
+    if (!isErrorOrEmpty && !text.startsWith('<tt')) {
+      return Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                  height: 1.8,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _isEditing = true;
+                });
+              },
+              icon: const Icon(Icons.edit_note),
+              label: Text(l10n.lyricsEditorTitle),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1122,5 +1187,183 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
         ],
       ),
     );
+  }
+
+  void _showImportOptions(BuildContext context, WidgetRef ref, dynamic currentSong) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.file_open_outlined, color: isDark ? Colors.white : Colors.black),
+                title: Text(l10n.importLyricsFile, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndImportLyrics(ref);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.apple, color: isDark ? Colors.white : Colors.black),
+                title: Text("Search from Apple Music", style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                subtitle: const Text("Downloads LRC/TTML automatically", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _searchAppleMusicLyrics(context, ref, currentSong);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _searchAppleMusicLyrics(BuildContext context, WidgetRef ref, dynamic currentSong) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final query = "${currentSong.title} ${currentSong.artist}";
+
+    // 1. Show Loading Search Dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        title: Text("Searching Apple Music...", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 16)),
+        content: const Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Expanded(child: Text("Finding matches...", style: TextStyle(color: Colors.grey))),
+          ],
+        ),
+      ),
+    );
+
+    // 2. Perform Search
+    final results = await ITunesApiService.searchSongs(query, limit: 10);
+    
+    if (!context.mounted) return;
+    Navigator.pop(context); // Close loading dialog
+
+    if (results.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No results found on Apple Music.")),
+      );
+      return;
+    }
+
+    // 3. Show Results Selection Dialog
+    SongMetadata? selectedSong = await showDialog<SongMetadata>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        title: Text("Select Song", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: results.length,
+            separatorBuilder: (c, i) => Divider(color: isDark ? Colors.white10 : Colors.black12),
+            itemBuilder: (ctx, index) {
+              final song = results[index];
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: song.albumArtUrl.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.network(song.albumArtUrl, width: 40, height: 40, fit: BoxFit.cover),
+                      )
+                    : const Icon(Icons.music_note, size: 40),
+                title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                subtitle: Text(song.artist, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.grey)),
+                onTap: () => Navigator.pop(ctx, song),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: Text(l10n.cancel)),
+        ],
+      ),
+    );
+
+    if (selectedSong == null || selectedSong.youtubeUrl == null || selectedSong.youtubeUrl!.isEmpty) {
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    // 4. Download Lyrics via VPS
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        title: Text("Downloading Lyrics...", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 16)),
+        content: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 20),
+            Expanded(child: Text("Fetching TTML/LRC from server...", style: TextStyle(color: isDark ? Colors.white70 : Colors.black54))),
+          ],
+        ),
+      ),
+    );
+
+    final lyricsUrl = await AppleMusicBackendService.requestLyricsDownload(
+      selectedSong.youtubeUrl!, // The iTunes service maps trackViewUrl to youtubeUrl
+      title: selectedSong.title,
+      artist: selectedSong.artist,
+    );
+
+    if (!context.mounted) return;
+    Navigator.pop(context); // Close loading dialog
+
+    if (lyricsUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to download lyrics. They might not exist on Apple Music.")),
+      );
+      return;
+    }
+
+    // 5. Fetch raw text and import
+    try {
+      final response = await http.get(Uri.parse(lyricsUrl)).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        final rawText = response.body;
+        if (rawText.trim().isNotEmpty) {
+          ref.read(lyricsProvider.notifier).loadLyricsFromContent(rawText);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Lyrics imported successfully! Press Save to keep them."),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Received empty lyrics from server.")),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to fetch lyrics text. HTTP ${response.statusCode}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching lyrics: $e")),
+      );
+    }
   }
 }

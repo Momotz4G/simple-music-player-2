@@ -577,6 +577,8 @@
   "autumn": "가을",
   "avatarPickerDesc": "템플릿을 선택하거나 본인의 사진을 불러오세요",
   "beFirstToClaim": "1위를 먼저 차지해 보세요!",
+  "backgroundCacheFlacStreams": "백그라운드 FLAC 스트림 캐시",
+  "backgroundCacheFlacStreamsSubtitle": "스트리밍된 무손실 트랙을 로컬 디스크에 자동으로 다운로드하여 재생이 즉각적이고 데이터를 사용하지 않습니다.",
   "behavioralHeader": "행동 업적",
   "behavioralTitles": "행동 기반",
   "binariesUpdateRequired": "바이너리 업데이트 필요",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "가사 분석 중...",
   "aiLyricsSuccess": "가사 생성 성공!",
   "aiLyricsLocalFileMissing": "오류: 로컬 오디오 파일을 찾을 수 없습니다.",
-  "aiLyricsComplete": "완료!"
+  "aiLyricsComplete": "완료!",
+  "externalLinkDetected": "외부 링크 감지됨",
+  "gofileDownloadFailedPrompt": "엄격한 네트워크 또는 서버 제한으로 인해 자동 다운로드에 실패했습니다.\\n\\n시스템 브라우저에서 Gofile 다운로드 페이지를 여시겠습니까, 아니면 링크를 복사하여 수동으로 다운로드하시겠습니까?",
+  "copyLink": "링크 복사",
+  "openBrowser": "브라우저 열기",
+  "linkCopied": "링크가 클보드에 복사되었습니다!",
+  "waitingForServerResponse": "서버 응답 대기 중...",
+  "queuePositionPleaseWait": "대기열 {position}... 잠시 기다려주세요",
+  "processingOnServer": "서버에서 처리 중...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

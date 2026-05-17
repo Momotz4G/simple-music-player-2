@@ -19,6 +19,7 @@ import '../components/song_card_overlay.dart';
 import '../components/song_context_menu.dart';
 import '../components/smart_art.dart';
 import '../components/album_card.dart';
+import '../../utils/layout_engine.dart';
 import '../../l10n/app_localizations.dart';
 
 String _formatDuration(double seconds) {
@@ -122,7 +123,8 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        Icon(Icons.search, color: titleColor.withValues(alpha: 0.5), size: 22),
+                        Icon(Icons.search,
+                            color: titleColor.withValues(alpha: 0.5), size: 22),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
@@ -131,7 +133,8 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                               hintText:
                                   AppLocalizations.of(context)!.searchSongs,
                               hintStyle: TextStyle(
-                                  color: titleColor.withValues(alpha: 0.3), fontSize: 15),
+                                  color: titleColor.withValues(alpha: 0.3),
+                                  fontSize: 15),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.only(bottom: 4),
                             ),
@@ -139,7 +142,8 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                             cursorColor: Theme.of(context).primaryColor,
                             onChanged: (value) {
                               _searchDebounce?.cancel();
-                              _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+                              _searchDebounce =
+                                  Timer(const Duration(milliseconds: 300), () {
                                 library.search(value);
                               });
                             },
@@ -261,7 +265,8 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                     onSelected: (filter) => ref
                         .read(libraryPresentationProvider.notifier)
                         .setFilter(filter),
-                    itemBuilder: (context) => LibraryFilter.values.map((filter) {
+                    itemBuilder: (context) =>
+                        LibraryFilter.values.map((filter) {
                       String label = _getFilterLabel(context, filter);
                       IconData iconData;
                       switch (filter) {
@@ -290,12 +295,15 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                             const SizedBox(width: 12),
                             Text(label,
                                 style: TextStyle(
-                                    color: presentationState.currentFilter == filter
+                                    color: presentationState.currentFilter ==
+                                            filter
                                         ? settings.accentColor
                                         : titleColor,
-                                    fontWeight: presentationState.currentFilter == filter
-                                        ? FontWeight.bold
-                                        : FontWeight.normal)),
+                                    fontWeight:
+                                        presentationState.currentFilter ==
+                                                filter
+                                            ? FontWeight.bold
+                                            : FontWeight.normal)),
                           ],
                         ),
                       );
@@ -330,7 +338,9 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              _getSortLabel(context, presentationState.sortBy,
+                              _getSortLabel(
+                                  context,
+                                  presentationState.sortBy,
                                   presentationState.currentFilter,
                                   presentationState.isSortDescending),
                               style: TextStyle(
@@ -358,16 +368,19 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                         .read(libraryPresentationProvider.notifier)
                         .setSortBy(sort),
                     itemBuilder: (context) {
-                      final isCategoryView =
-                          presentationState.currentFilter == LibraryFilter.artists ||
-                          presentationState.currentFilter == LibraryFilter.albums;
-                      
-                      final options = isCategoryView 
-                          ? [LibrarySort.title] 
+                      final isCategoryView = presentationState.currentFilter ==
+                              LibraryFilter.artists ||
+                          presentationState.currentFilter ==
+                              LibraryFilter.albums;
+
+                      final options = isCategoryView
+                          ? [LibrarySort.title]
                           : LibrarySort.values;
                       return options.map((sort) {
                         final isSelected = presentationState.sortBy == sort;
-                        String label = _getSortLabel(context, sort,
+                        String label = _getSortLabel(
+                            context,
+                            sort,
                             presentationState.currentFilter,
                             presentationState.isSortDescending);
                         return PopupMenuItem(
@@ -379,13 +392,19 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                                       ? Icons.check_circle_rounded
                                       : Icons.circle_outlined,
                                   size: 18,
-                                  color: isSelected ? settings.accentColor : iconColor),
+                                  color: isSelected
+                                      ? settings.accentColor
+                                      : iconColor),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(label,
                                     style: TextStyle(
-                                        color: isSelected ? settings.accentColor : titleColor,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                                        color: isSelected
+                                            ? settings.accentColor
+                                            : titleColor,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal)),
                               ),
                               if (isSelected)
                                 Icon(
@@ -430,8 +449,8 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
     }
   }
 
-  String _getSortLabel(
-      BuildContext context, LibrarySort sort, LibraryFilter currentFilter, bool isDescending) {
+  String _getSortLabel(BuildContext context, LibrarySort sort,
+      LibraryFilter currentFilter, bool isDescending) {
     if (sort == LibrarySort.title &&
         (currentFilter == LibraryFilter.artists ||
             currentFilter == LibraryFilter.albums)) {
@@ -631,8 +650,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                             if (matchStr.isEmpty) return false;
                             final firstChar = matchStr[0].toUpperCase();
                             if (letter == '#') {
-                              return RegExp(r'[^a-zA-Z]')
-                                  .hasMatch(firstChar);
+                              return RegExp(r'[^a-zA-Z]').hasMatch(firstChar);
                             }
                             return firstChar == letter;
                           });
@@ -673,7 +691,10 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                       children: [
                         // 🚀 ICON THEMING: Use accent color for thematic pop
                         Icon(Icons.music_off_rounded,
-                            size: 80, color: Theme.of(context).primaryColor.withValues(alpha: 0.9)),
+                            size: 80,
+                            color: Theme.of(context)
+                                .primaryColor
+                                .withValues(alpha: 0.9)),
                         const SizedBox(height: 24),
                         Text(
                           presentationState.selectedFolderPath != null
@@ -694,7 +715,10 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                         if (presentationState.selectedFolderPath != null)
                           OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.5)),
+                              side: BorderSide(
+                                  color: Theme.of(context)
+                                      .primaryColor
+                                      .withValues(alpha: 0.5)),
                               foregroundColor: titleColor,
                             ),
                             onPressed: () => ref
@@ -705,7 +729,10 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                         else
                           OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.5)),
+                              side: BorderSide(
+                                  color: Theme.of(context)
+                                      .primaryColor
+                                      .withValues(alpha: 0.5)),
                               foregroundColor: titleColor,
                             ),
                             onPressed: () async {
@@ -1063,7 +1090,8 @@ class SongListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 🚀 SELECTIVE WATCH: Only rebuild when the current song changes, not on every position tick
-    final currentFilePath = ref.watch(playerProvider.select((s) => s.currentSong?.filePath));
+    final currentFilePath =
+        ref.watch(playerProvider.select((s) => s.currentSong?.filePath));
     final notifier = ref.read(playerProvider.notifier);
     final isPlaying = currentFilePath == song.filePath;
     final activeColor = Theme.of(context).primaryColor;
@@ -1071,6 +1099,11 @@ class SongListTile extends ConsumerWidget {
     final titleColor = isDark ? Colors.white : Colors.black;
     final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
     final metaColor = isDark ? Colors.grey[600] : Colors.grey[500];
+
+    // Determine if we should show additional metadata columns (tablet/desktop)
+    final layoutType = LayoutEngine.getLayoutType(context);
+    final showMetadataColumns =
+        layoutType == LayoutType.tablet || layoutType == LayoutType.desktop;
 
     return SongContextMenuRegion(
       song: song,
@@ -1088,90 +1121,129 @@ class SongListTile extends ConsumerWidget {
             height: 72,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 30,
-                  child: Text("${index + 1}",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: isPlaying ? activeColor : metaColor,
-                          fontWeight: FontWeight.bold)),
-                ),
-                const SizedBox(width: 8),
-                SongCardOverlay(
-                    song: song, size: 56, radius: 6, playQueue: allSongs),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Text(song.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color:
-                                        isPlaying ? activeColor : titleColor)),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: Text(song.album,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.end,
-                                style:
-                                    TextStyle(fontSize: 13, color: metaColor)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(song.artist,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 13, color: subtitleColor)),
-                    ],
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 30,
+                    child: Text("${index + 1}",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: isPlaying ? activeColor : metaColor,
+                            fontWeight: FontWeight.bold)),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Text(_formatDuration(song.duration),
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: metaColor,
-                        fontFeatures: const [FontFeature.tabularFigures()])),
-                const SizedBox(width: 16),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {}, // Absorb tap tapping so parent InkWell doesn't capture on desktop
-                  onTapDown: (details) {
-                    SongContextMenuRegion.showSongMenu(
-                      context,
-                      details.globalPosition,
-                      ref,
-                      song,
-                      allowMetadataEdit: true,
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                    child: Icon(Icons.more_vert_rounded, color: metaColor, size: 20),
+                  const SizedBox(width: 8),
+                  SongCardOverlay(
+                      song: song, size: 56, radius: 6, playQueue: allSongs),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: showMetadataColumns
+                        ? _buildTabletLayout(isPlaying, activeColor, titleColor,
+                            subtitleColor, metaColor)
+                        : _buildPhoneLayout(
+                            isPlaying, activeColor, titleColor, subtitleColor),
                   ),
-                ),
-              ],
+                  if (showMetadataColumns) ...[
+                    const SizedBox(width: 16),
+                    Text(_formatDuration(song.duration),
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: metaColor,
+                            fontFeatures: const [
+                              FontFeature.tabularFigures()
+                            ])),
+                  ],
+                  const SizedBox(width: 16),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap:
+                        () {}, // Absorb tap tapping so parent InkWell doesn't capture on desktop
+                    onTapDown: (details) {
+                      SongContextMenuRegion.showSongMenu(
+                        context,
+                        details.globalPosition,
+                        ref,
+                        song,
+                        allowMetadataEdit: true,
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 4.0),
+                      child: Icon(Icons.more_vert_rounded,
+                          color: metaColor, size: 20),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
+
+  /// Tablet/Desktop layout: Title + Album name in a row, artist below.
+  /// Duration is shown as a separate column in the parent Row.
+  Widget _buildTabletLayout(bool isPlaying, Color activeColor, Color titleColor,
+      Color? subtitleColor, Color? metaColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text(song.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: isPlaying ? activeColor : titleColor)),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 1,
+              child: Text(song.album,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: TextStyle(fontSize: 13, color: metaColor)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(song.artist,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 13, color: subtitleColor)),
+      ],
+    );
+  }
+
+  /// Phone layout: Title and artist only (no album/duration columns to save space).
+  Widget _buildPhoneLayout(bool isPlaying, Color activeColor, Color titleColor,
+      Color? subtitleColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(song.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: isPlaying ? activeColor : titleColor)),
+        const SizedBox(height: 4),
+        Text(song.artist,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 13, color: subtitleColor)),
+      ],
+    );
   }
 }
 
@@ -1189,7 +1261,8 @@ class SongGridTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 🚀 SELECTIVE WATCH: Only rebuild when the current song changes, not on every position tick
-    final currentFilePath = ref.watch(playerProvider.select((s) => s.currentSong?.filePath));
+    final currentFilePath =
+        ref.watch(playerProvider.select((s) => s.currentSong?.filePath));
     final notifier = ref.read(playerProvider.notifier);
     final isPlaying = currentFilePath == song.filePath;
     final activeColor = Theme.of(context).primaryColor;
@@ -1275,14 +1348,16 @@ class SongGridTile extends ConsumerWidget {
                           Text(song.artist,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 12, color: artistColor)),
+                              style:
+                                  TextStyle(fontSize: 12, color: artistColor)),
                         ],
                       ),
                     ),
                     if (Platform.isAndroid || Platform.isIOS)
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: () {}, // Absorb tap tapping so parent InkWell doesn't capture on desktop/hover context overlays
+                        onTap:
+                            () {}, // Absorb tap tapping so parent InkWell doesn't capture on desktop/hover context overlays
                         onTapDown: (details) {
                           SongContextMenuRegion.showSongMenu(
                             context,
@@ -1445,17 +1520,17 @@ class _AlphabetIndexerState extends State<_AlphabetIndexer> {
     for (final s in widget.songs) {
       final str = _getSongSortString(s).trim();
       if (str.isEmpty) continue;
-      
+
       final firstChar = str[0].toUpperCase();
       final codeUnit = firstChar.codeUnitAt(0);
-      
+
       // A-Z is 65-90
       if (codeUnit >= 65 && codeUnit <= 90) {
         letters.add(firstChar);
       } else {
         letters.add('#');
       }
-      
+
       if (letters.length == 27) break; // Optimization: all found
     }
     setState(() {
@@ -1537,4 +1612,3 @@ class _AlphabetIndexerState extends State<_AlphabetIndexer> {
     );
   }
 }
-

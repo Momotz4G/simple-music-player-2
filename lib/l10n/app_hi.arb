@@ -577,6 +577,8 @@
   "autumn": "पतझड़",
   "avatarPickerDesc": "एक टेम्पलेट चुनें या अपनी फोटो आयात करें",
   "beFirstToClaim": "शीर्ष स्थान पाने वाले पहले व्यक्ति बनें!",
+  "backgroundCacheFlacStreams": "बैकग्राउंड में FLAC स्ट्रीम कैश करें",
+  "backgroundCacheFlacStreamsSubtitle": "स्ट्रीम किए गए लॉसलेस ट्रैक को चुपचाप आपकी लोकल डिस्क पर डाउनलोड करता है ताकि रिप्ले तुरंत हो और कोई डेटा उपयोग न हो।",
   "behavioralHeader": "व्यवहार संबंधी उपलब्धियां",
   "behavioralTitles": "व्यवहार संबंधी",
   "binariesUpdateRequired": "बाइनरी अपडेट आवश्यक है",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "लिरिक्स का विश्लेषण किया जा रहा है...",
   "aiLyricsSuccess": "लिरिक्स सफलतापूर्वक जनरेट हुए!",
   "aiLyricsLocalFileMissing": "त्रुटि: स्थानीय ऑडियो फ़ाइल नहीं मिली।",
-  "aiLyricsComplete": "पूरा हुआ!"
+  "aiLyricsComplete": "पूरा हुआ!",
+  "externalLinkDetected": "बाहरी लिंक का पता चला",
+  "gofileDownloadFailedPrompt": "सख्त नेटवर्क या सर्वर प्रतिबंधों के कारण स्वचालित डाउनलोड विफल रहा।\\n\\nक्या आप अपने सिस्टम ब्राउज़र में Gofile डाउनलोड पेज खोलना चाहेंगे, या मैन्युअल रूप से डाउनलोड करने के लिए लिंक कॉपी करना चाहेंगे?",
+  "copyLink": "लिंक कॉपी करें",
+  "openBrowser": "ब्राउज़र खोलें",
+  "linkCopied": "लिंक क्लिपबोर्ड पर कॉपी किया गया!",
+  "waitingForServerResponse": "सर्वर की प्रतिक्रिया की प्रतीक्षा में...",
+  "queuePositionPleaseWait": "कतार {position}... कृपया प्रतीक्षा करें",
+  "processingOnServer": "सर्वर पर प्रोसेसिंग हो रही है...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

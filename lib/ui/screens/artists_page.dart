@@ -7,6 +7,7 @@ import '../../services/spotify_service.dart';
 import '../../services/deezer_service.dart';
 import '../../services/db_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../../utils/layout_engine.dart';
 
 class ArtistsPage extends ConsumerWidget {
   const ArtistsPage({super.key});
@@ -65,8 +66,7 @@ class ArtistsPage extends ConsumerWidget {
           final artistName = artists[index];
           final artistSongs = groupedArtists[artistName]!;
           final songCount = artistSongs.length;
-          final anchorSong =
-              artistSongs.isNotEmpty ? artistSongs.first : null;
+          final anchorSong = artistSongs.isNotEmpty ? artistSongs.first : null;
 
           return InkWell(
             onTap: () {
@@ -140,7 +140,8 @@ class _ArtistAvatarState extends ConsumerState<ArtistAvatar> {
 
   Future<void> _loadCache() async {
     try {
-      final cached = await DBService().getArtCache("profile:${widget.artistName}");
+      final cached =
+          await DBService().getArtCache("profile:${widget.artistName}");
       if (cached != null && cached.isNotEmpty && mounted) {
         setState(() => _cachedArtUrl = cached);
       }

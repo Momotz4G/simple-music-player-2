@@ -1,13 +1,22 @@
 import '../providers/stats_provider.dart';
 import '../l10n/app_localizations.dart';
 
-enum TitleCategory { time, behavior, competitive, hallOfFame, exclusive, superfan }
+enum TitleCategory {
+  time,
+  behavior,
+  competitive,
+  hallOfFame,
+  exclusive,
+  superfan
+}
 
 class TitleDefinition {
   final String name;
-  final int requiredMinutes; // Used as the threshold variable (e.g. 50 repeats for Repeat Offender)
+  final int
+      requiredMinutes; // Used as the threshold variable (e.g. 50 repeats for Repeat Offender)
   final String icon;
-  final int rarityTier; // 0: Common, 1: Uncommon, 2: Rare, 3: Supreme, 4-6: Mythic
+  final int
+      rarityTier; // 0: Common, 1: Uncommon, 2: Rare, 3: Supreme, 4-6: Mythic
   final int primaryColor;
   final int secondaryColor;
   final TitleCategory category;
@@ -34,8 +43,8 @@ class CalculatedStats {
   final MapEntry<String, int>? topTrack;
   final int totalMinutes;
   final int totalPlays;
-  final int dailyPlays;      // 🚀 NEW
-  final int weeklyPlays;     // 🚀 NEW
+  final int dailyPlays; // 🚀 NEW
+  final int weeklyPlays; // 🚀 NEW
 
   final List<MapEntry<String, int>> sortedArtists;
   final Map<String, int> artistMinutes;
@@ -45,8 +54,8 @@ class CalculatedStats {
     this.topTrack,
     required this.totalMinutes,
     required this.totalPlays,
-    this.dailyPlays = 0,     // 🚀 NEW
-    this.weeklyPlays = 0,    // 🚀 NEW
+    this.dailyPlays = 0, // 🚀 NEW
+    this.weeklyPlays = 0, // 🚀 NEW
     this.sortedArtists = const [],
     this.artistMinutes = const {},
   });
@@ -56,23 +65,25 @@ class StatsUtils {
   static String cleanArtistName(String raw) {
     if (raw.isEmpty) return "Unknown Artist";
     // 1. Remove common feature/collaboration prefixes
-    String cleaned = raw.split(RegExp(r'\s+(?:feat|ft|with|&|,)\s+', caseSensitive: false)).first;
+    String cleaned = raw
+        .split(RegExp(r'\s+(?:feat|ft|with|&|,)\s+', caseSensitive: false))
+        .first;
     // 2. Remove parenthetical features like " (feat. ...)"
     cleaned = cleaned.split(RegExp(r'\s*\(')).first;
     // 3. Remove comma/ampersand splits if they weren't caught by the first regex
     cleaned = cleaned.split(RegExp(r'[,&]')).first;
-    
+
     return cleaned.trim();
   }
 
-  static CalculatedStats calculate(StatsState stats, {int? dailyPlaysOverride, int? weeklyPlaysOverride}) {
+  static CalculatedStats calculate(StatsState stats,
+      {int? dailyPlaysOverride, int? weeklyPlaysOverride}) {
     if (stats.entries.isEmpty) {
       return CalculatedStats(
-        totalMinutes: 0, 
-        totalPlays: 0, 
-        dailyPlays: dailyPlaysOverride ?? 0, 
-        weeklyPlays: weeklyPlaysOverride ?? 0
-      );
+          totalMinutes: 0,
+          totalPlays: 0,
+          dailyPlays: dailyPlaysOverride ?? 0,
+          weeklyPlays: weeklyPlaysOverride ?? 0);
     }
 
     int totalPlays = 0;
@@ -90,14 +101,16 @@ class StatsUtils {
       } else {
         totalSeconds += entry.totalSeconds;
       }
-      
+
       totalPlays += entry.playCount;
 
       if (entry.playCount > 0) {
         final artist = entry.artist.isEmpty ? "Unknown" : entry.artist;
         artistCounts[artist] = (artistCounts[artist] ?? 0) + entry.playCount;
-        artistSeconds[artist] =
-            (artistSeconds[artist] ?? 0) + (entry.totalSeconds == 0 ? (entry.playCount * 210) : entry.totalSeconds);
+        artistSeconds[artist] = (artistSeconds[artist] ?? 0) +
+            (entry.totalSeconds == 0
+                ? (entry.playCount * 210)
+                : entry.totalSeconds);
 
         final trackId = entry.id;
         trackCounts[trackId] = (trackCounts[trackId] ?? 0) + entry.playCount;
@@ -105,32 +118,45 @@ class StatsUtils {
       }
     }
 
-    // Top Artist
+    // Top Artist (with alphabetical tiebreaker for determinism across devices)
     MapEntry<String, int>? topArtist;
     if (artistCounts.isNotEmpty) {
       final sortedArtists = artistCounts.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
+        ..sort((a, b) {
+          final countDiff = b.value.compareTo(a.value);
+          if (countDiff != 0) return countDiff;
+          return a.key.compareTo(b.key); // Alphabetical tiebreaker
+        });
       topArtist = sortedArtists.first;
     }
 
-    // Top Track
+    // Top Track (with alphabetical tiebreaker for determinism across devices)
     MapEntry<String, int>? topTrack;
     if (trackCounts.isNotEmpty) {
       final sortedTracks = trackCounts.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
+        ..sort((a, b) {
+          final countDiff = b.value.compareTo(a.value);
+          if (countDiff != 0) return countDiff;
+          // Tiebreaker: sort by track title alphabetically
+          final titleA = trackTitles[a.key] ?? '';
+          final titleB = trackTitles[b.key] ?? '';
+          return titleA.compareTo(titleB);
+        });
       final topTrackEntry = sortedTracks.first;
       topTrack = MapEntry(
           trackTitles[topTrackEntry.key] ?? "Unknown", topTrackEntry.value);
     }
 
-    // Sorted artists (for UI)
+    // Sorted artists (for UI) - with alphabetical tiebreaker for determinism
     final sortedArtistList = artistCounts.entries.toList()
       ..sort((a, b) {
         final secA = artistSeconds[a.key] ?? 0;
         final secB = artistSeconds[b.key] ?? 0;
         final timeDiff = secB.compareTo(secA);
         if (timeDiff != 0) return timeDiff;
-        return b.value.compareTo(a.value);
+        final countDiff = b.value.compareTo(a.value);
+        if (countDiff != 0) return countDiff;
+        return a.key.compareTo(b.key); // Alphabetical tiebreaker
       });
 
     // Artist minutes map
@@ -156,8 +182,8 @@ class StatsUtils {
   static const List<TitleDefinition> musicTitles = [
     // TIME OVERLORDS
     TitleDefinition(
-      name: "Rookie Listener", 
-      requiredMinutes: 0, 
+      name: "Rookie Listener",
+      requiredMinutes: 0,
       icon: "",
       rarityTier: 0,
       primaryColor: 0xFF9E9E9E, // Gray
@@ -166,8 +192,8 @@ class StatsUtils {
       ruleDescription: "Default Title - Listen for 0 minutes.",
     ),
     TitleDefinition(
-      name: "Growing Listener", 
-      requiredMinutes: 100, 
+      name: "Growing Listener",
+      requiredMinutes: 100,
       icon: "",
       rarityTier: 0,
       primaryColor: 0xFF4CAF50, // Green
@@ -176,8 +202,8 @@ class StatsUtils {
       ruleDescription: "Listen to music for 100 total minutes.",
     ),
     TitleDefinition(
-      name: "Active Listener", 
-      requiredMinutes: 1000, 
+      name: "Active Listener",
+      requiredMinutes: 1000,
       icon: "",
       rarityTier: 1,
       primaryColor: 0xFF2196F3, // Blue
@@ -186,8 +212,8 @@ class StatsUtils {
       ruleDescription: "Listen to music for 1,000 total minutes.",
     ),
     TitleDefinition(
-      name: "Music Enthusiast", 
-      requiredMinutes: 5000, 
+      name: "Music Enthusiast",
+      requiredMinutes: 5000,
       icon: "",
       rarityTier: 1,
       primaryColor: 0xFF9C27B0, // Purple
@@ -196,8 +222,8 @@ class StatsUtils {
       ruleDescription: "Listen to music for 5,000 total minutes.",
     ),
     TitleDefinition(
-      name: "Dedicated Listener", 
-      requiredMinutes: 10000, 
+      name: "Dedicated Listener",
+      requiredMinutes: 10000,
       icon: "",
       rarityTier: 2,
       primaryColor: 0xFFE91E63, // Pink
@@ -206,8 +232,8 @@ class StatsUtils {
       ruleDescription: "Listen to music for 10,000 total minutes.",
     ),
     TitleDefinition(
-      name: "Audio Addict", 
-      requiredMinutes: 20000, 
+      name: "Audio Addict",
+      requiredMinutes: 20000,
       icon: "",
       rarityTier: 2,
       primaryColor: 0xFFFF9800, // Orange
@@ -216,8 +242,8 @@ class StatsUtils {
       ruleDescription: "Listen to music for 20,000 total minutes.",
     ),
     TitleDefinition(
-      name: "Music Virtuoso", 
-      requiredMinutes: 50000, 
+      name: "Music Virtuoso",
+      requiredMinutes: 50000,
       icon: "",
       rarityTier: 3,
       primaryColor: 0xFF00BCD4, // Cyan
@@ -226,8 +252,8 @@ class StatsUtils {
       ruleDescription: "Listen to music for 50,000 total minutes.",
     ),
     TitleDefinition(
-      name: "Legendary Listener", 
-      requiredMinutes: 100000, 
+      name: "Legendary Listener",
+      requiredMinutes: 100000,
       icon: "",
       rarityTier: 3,
       primaryColor: 0xFFFFD700, // Gold
@@ -236,8 +262,8 @@ class StatsUtils {
       ruleDescription: "Listen to music for 100,000 total minutes.",
     ),
     TitleDefinition(
-      name: "Resonant Soul", 
-      requiredMinutes: 250000, 
+      name: "Resonant Soul",
+      requiredMinutes: 250000,
       icon: "",
       rarityTier: 4,
       primaryColor: 0xFFD500F9, // Deep Purple
@@ -246,8 +272,8 @@ class StatsUtils {
       ruleDescription: "Listen to music for 250,000 total minutes.",
     ),
     TitleDefinition(
-      name: "Eternal Echo", 
-      requiredMinutes: 500000, 
+      name: "Eternal Echo",
+      requiredMinutes: 500000,
       icon: "",
       rarityTier: 5,
       primaryColor: 0xFFF5F5F5, // White Quartz
@@ -256,8 +282,8 @@ class StatsUtils {
       ruleDescription: "Listen to music for 500,000 total minutes.",
     ),
     TitleDefinition(
-      name: "Melody Archon", 
-      requiredMinutes: 1000000, 
+      name: "Melody Archon",
+      requiredMinutes: 1000000,
       icon: "",
       rarityTier: 6,
       primaryColor: 0xFFFFEA00, // Pure Gold
@@ -267,24 +293,26 @@ class StatsUtils {
     ),
     // BEHAVIORAL ACHIEVEMENTS
     TitleDefinition(
-      name: "Repeat Offender", 
-      requiredMinutes: 50, // Serves as the required streak count 
+      name: "Repeat Offender",
+      requiredMinutes: 50, // Serves as the required streak count
       icon: "",
-      rarityTier: 4, 
+      rarityTier: 4,
       primaryColor: 0xFFFF1744, // Neon Red
       secondaryColor: 0xFF1A237E, // Deep Blue
       category: TitleCategory.behavior,
-      ruleDescription: "Listen to the exact same song 50 times consecutively. Max gap between loops: 30 minutes.",
+      ruleDescription:
+          "Listen to the exact same song 50 times consecutively. Max gap between loops: 30 minutes.",
     ),
     TitleDefinition(
-      name: "Obsessive Repeater", 
-      requiredMinutes: 100, 
+      name: "Obsessive Repeater",
+      requiredMinutes: 100,
       icon: "",
-      rarityTier: 5, 
+      rarityTier: 5,
       primaryColor: 0xFFD500F9, // Neon Purple
       secondaryColor: 0xFF00E5FF, // Neon Cyan
       category: TitleCategory.behavior,
-      ruleDescription: "Listen to the exact same song 100 times consecutively. Max gap between loops: 30 minutes.",
+      ruleDescription:
+          "Listen to the exact same song 100 times consecutively. Max gap between loops: 30 minutes.",
     ),
     TitleDefinition(
       name: "Binge Listener",
@@ -327,34 +355,37 @@ class StatsUtils {
       ruleDescription: "Reach 3,000 plays in a single week.",
     ),
     TitleDefinition(
-      name: "Top 1 Global", 
+      name: "Top 1 Global",
       requiredMinutes: 1, // Logic: Rank 1
       icon: "🥇",
       rarityTier: 6, // Mythic+
       primaryColor: 0xFFFFD700, // Gold
       secondaryColor: 0xFF000000, // Void Black
       category: TitleCategory.competitive,
-      ruleDescription: "Be the #1 most active listener on the Global Leaderboard (All-Time). You will lose this title if you are overtaken.",
+      ruleDescription:
+          "Be the #1 most active listener on the Global Leaderboard (All-Time). You will lose this title if you are overtaken.",
     ),
     TitleDefinition(
-      name: "Top 2 Global", 
+      name: "Top 2 Global",
       requiredMinutes: 2, // Logic: Rank 2
       icon: "🥈",
       rarityTier: 6,
       primaryColor: 0xFFE0E0E0, // Platinum
-      secondaryColor: 0xFF212121, 
+      secondaryColor: 0xFF212121,
       category: TitleCategory.competitive,
-      ruleDescription: "Be the #2 most active listener on the Global Leaderboard (All-Time). You will lose this title if you are overtaken.",
+      ruleDescription:
+          "Be the #2 most active listener on the Global Leaderboard (All-Time). You will lose this title if you are overtaken.",
     ),
     TitleDefinition(
-      name: "Top 3 Global", 
+      name: "Top 3 Global",
       requiredMinutes: 3, // Logic: Rank 3
       icon: "🥉",
       rarityTier: 5,
       primaryColor: 0xFFCD7F32, // Bronze
       secondaryColor: 0xFF3E2723,
       category: TitleCategory.competitive,
-      ruleDescription: "Be the #3 most active listener on the Global Leaderboard (All-Time). You will lose this title if you are overtaken.",
+      ruleDescription:
+          "Be the #3 most active listener on the Global Leaderboard (All-Time). You will lose this title if you are overtaken.",
     ),
     // SUPERFAN CATEGORY (Dynamic)
     TitleDefinition(
@@ -365,7 +396,8 @@ class StatsUtils {
       primaryColor: 0xFF9C27B0, // Purple
       secondaryColor: 0xFF4A148C,
       category: TitleCategory.superfan,
-      ruleDescription: "Reach 500 minutes with any specific artist to unlock this dynamic title.",
+      ruleDescription:
+          "Reach 500 minutes with any specific artist to unlock this dynamic title.",
       isDynamic: true,
     ),
     TitleDefinition(
@@ -376,7 +408,8 @@ class StatsUtils {
       primaryColor: 0xFF00BCD4, // Cyan
       secondaryColor: 0xFF006064,
       category: TitleCategory.superfan,
-      ruleDescription: "Reach 1,000 minutes with any specific artist to unlock this dynamic title.",
+      ruleDescription:
+          "Reach 1,000 minutes with any specific artist to unlock this dynamic title.",
       isDynamic: true,
     ),
     TitleDefinition(
@@ -387,7 +420,8 @@ class StatsUtils {
       primaryColor: 0xFFE91E63, // Pink
       secondaryColor: 0xFF880E4F,
       category: TitleCategory.superfan,
-      ruleDescription: "Reach 2,000 minutes with any specific artist to unlock this dynamic title.",
+      ruleDescription:
+          "Reach 2,000 minutes with any specific artist to unlock this dynamic title.",
       isDynamic: true,
     ),
     TitleDefinition(
@@ -398,7 +432,8 @@ class StatsUtils {
       primaryColor: 0xFF6200EA, // Deep Purple
       secondaryColor: 0xFF311B92,
       category: TitleCategory.superfan,
-      ruleDescription: "Reach 5,000 minutes with any specific artist to unlock this dynamic title.",
+      ruleDescription:
+          "Reach 5,000 minutes with any specific artist to unlock this dynamic title.",
       isDynamic: true,
     ),
     TitleDefinition(
@@ -409,7 +444,8 @@ class StatsUtils {
       primaryColor: 0xFFFFB300, // Amber/Gold
       secondaryColor: 0xFFFF6F00,
       category: TitleCategory.superfan,
-      ruleDescription: "Reach 10,000 minutes with any specific artist to unlock this legendary dynamic title.",
+      ruleDescription:
+          "Reach 10,000 minutes with any specific artist to unlock this legendary dynamic title.",
       isDynamic: true,
     ),
     TitleDefinition(
@@ -420,39 +456,43 @@ class StatsUtils {
       primaryColor: 0xFF000000, // Black
       secondaryColor: 0xFF00E5FF, // Cyan Shimmer
       category: TitleCategory.superfan,
-      ruleDescription: "Reach 25,000 minutes with any specific artist to unlock the ultimate dynamic title.",
+      ruleDescription:
+          "Reach 25,000 minutes with any specific artist to unlock the ultimate dynamic title.",
       isDynamic: true,
     ),
     // HALL OF FAME (WEEKLY & ACCUMULATED)
     TitleDefinition(
-      name: "Weekly Veteran", 
-      requiredMinutes: 1, 
+      name: "Weekly Veteran",
+      requiredMinutes: 1,
       icon: "🏅",
-      rarityTier: 4, 
-      primaryColor: 0xFFB0BEC5, 
-      secondaryColor: 0xFF263238, 
+      rarityTier: 4,
+      primaryColor: 0xFFB0BEC5,
+      secondaryColor: 0xFF263238,
       category: TitleCategory.hallOfFame,
-      ruleDescription: "Finish a weekly leaderboard in the Top 3 positions. This title is permanent once earned.",
+      ruleDescription:
+          "Finish a weekly leaderboard in the Top 3 positions. This title is permanent once earned.",
     ),
     TitleDefinition(
-      name: "Consistent Elite", 
-      requiredMinutes: 5, 
+      name: "Consistent Elite",
+      requiredMinutes: 5,
       icon: "🎖️",
-      rarityTier: 5, 
-      primaryColor: 0xFFCFD8DC, 
-      secondaryColor: 0xFF455A64, 
+      rarityTier: 5,
+      primaryColor: 0xFFCFD8DC,
+      secondaryColor: 0xFF455A64,
       category: TitleCategory.hallOfFame,
-      ruleDescription: "Finish a weekly leaderboard in the Top 3 for 5 different weeks.",
+      ruleDescription:
+          "Finish a weekly leaderboard in the Top 3 for 5 different weeks.",
     ),
     TitleDefinition(
-      name: "Five-Star Champion", 
-      requiredMinutes: 5, 
+      name: "Five-Star Champion",
+      requiredMinutes: 5,
       icon: "⭐️⭐️⭐️⭐️⭐️",
-      rarityTier: 6, 
-      primaryColor: 0xFFFFEA00, 
-      secondaryColor: 0xFFE65100, 
+      rarityTier: 6,
+      primaryColor: 0xFFFFEA00,
+      secondaryColor: 0xFFE65100,
       category: TitleCategory.hallOfFame,
-      ruleDescription: "Reach the Top 1 Global position for a total of 5 weeks. A true legend of the community.",
+      ruleDescription:
+          "Reach the Top 1 Global position for a total of 5 weeks. A true legend of the community.",
     ),
     // EXCLUSIVE ROLE-BASED TITLES
     TitleDefinition(
@@ -464,7 +504,8 @@ class StatsUtils {
       secondaryColor: 0xFF1A0033, // Void Purple
       category: TitleCategory.exclusive,
       requiredRole: "developer",
-      ruleDescription: "An exclusive title reserved for the developers of this application.",
+      ruleDescription:
+          "An exclusive title reserved for the developers of this application.",
     ),
     TitleDefinition(
       name: "Contributor",
@@ -475,7 +516,8 @@ class StatsUtils {
       secondaryColor: 0xFFE0E0E0, // Silver
       category: TitleCategory.exclusive,
       requiredRole: "contributor",
-      ruleDescription: "An exclusive title for contributors who supported this application.",
+      ruleDescription:
+          "An exclusive title for contributors who supported this application.",
     ),
   ];
 
@@ -487,16 +529,18 @@ class StatsUtils {
 
     // 🚀 Priority 2: TIME-based titles
     for (final title in musicTitles.reversed) {
-      if (title.category == TitleCategory.time && minutes >= title.requiredMinutes) {
+      if (title.category == TitleCategory.time &&
+          minutes >= title.requiredMinutes) {
         return title.name;
       }
     }
     return musicTitles.first.name;
   }
 
-  static TitleDefinition resolveTitleDefinition(String? titleName, int minutes, {int userRank = 0}) {
-    if (titleName != null && 
-        titleName != "N/A" && 
+  static TitleDefinition resolveTitleDefinition(String? titleName, int minutes,
+      {int userRank = 0}) {
+    if (titleName != null &&
+        titleName != "N/A" &&
         titleName.trim().isNotEmpty) {
       for (final t in musicTitles) {
         if (t.isDynamic) {
@@ -517,15 +561,19 @@ class StatsUtils {
         }
       }
     }
-    
+
     // 🏆 Fallback to competitive first
-    if (userRank == 1) return musicTitles.firstWhere((t) => t.name == "Top 1 Global");
-    if (userRank == 2) return musicTitles.firstWhere((t) => t.name == "Top 2 Global");
-    if (userRank == 3) return musicTitles.firstWhere((t) => t.name == "Top 3 Global");
+    if (userRank == 1)
+      return musicTitles.firstWhere((t) => t.name == "Top 1 Global");
+    if (userRank == 2)
+      return musicTitles.firstWhere((t) => t.name == "Top 2 Global");
+    if (userRank == 3)
+      return musicTitles.firstWhere((t) => t.name == "Top 3 Global");
 
     // 🚀 Fallback to automatic (Time-based)
     for (final t in musicTitles.reversed) {
-      if (t.category == TitleCategory.time && minutes >= t.requiredMinutes) return t;
+      if (t.category == TitleCategory.time && minutes >= t.requiredMinutes)
+        return t;
     }
     return musicTitles.first;
   }
@@ -540,19 +588,27 @@ class StatsUtils {
     return def.name;
   }
 
-  static bool isTitleUnlocked(TitleDefinition t, int totalMinutes, int maxStreak,
-      {int userRank = 0, int weeklyWins = 0, int weeklyPodiums = 0, String? userRole, 
-       int dailyPlays = 0, int weeklyPlays = 0, Map<String, int>? artistMinutes}) {
+  static bool isTitleUnlocked(
+      TitleDefinition t, int totalMinutes, int maxStreak,
+      {int userRank = 0,
+      int weeklyWins = 0,
+      int weeklyPodiums = 0,
+      String? userRole,
+      int dailyPlays = 0,
+      int weeklyPlays = 0,
+      Map<String, int>? artistMinutes}) {
     if (t.category == TitleCategory.time) {
       return totalMinutes >= t.requiredMinutes;
     }
     if (t.category == TitleCategory.behavior) {
       // Intensity checks
       if (t.name == "Binge Listener") return dailyPlays >= t.requiredMinutes;
-      if (t.name == "Music Marathoner" || t.name == "Unstoppable Pulse" || t.name == "Atomic Rhythm") {
+      if (t.name == "Music Marathoner" ||
+          t.name == "Unstoppable Pulse" ||
+          t.name == "Atomic Rhythm") {
         return weeklyPlays >= t.requiredMinutes;
       }
-      
+
       // Default behavior: Consecutive loops (Repeat Offender, etc.)
       return maxStreak >= t.requiredMinutes;
     }
@@ -625,7 +681,8 @@ class StatsUtils {
       // Weekly Reset (Monday Midnight GMT+7)
       int daysUntilMonday = (8 - nowGMT7.weekday) % 7;
       if (daysUntilMonday <= 0) daysUntilMonday = 7;
-      targetGMT7 = DateTime.utc(nowGMT7.year, nowGMT7.month, nowGMT7.day + daysUntilMonday);
+      targetGMT7 = DateTime.utc(
+          nowGMT7.year, nowGMT7.month, nowGMT7.day + daysUntilMonday);
     }
 
     final diff = targetGMT7.difference(nowGMT7);
@@ -650,25 +707,36 @@ class StatsUtils {
     // Midnight GMT+7 baseline
     final startGMT7 = DateTime.utc(nowGMT7.year, nowGMT7.month, nowGMT7.day);
     // Subtract 7h to get the actual UTC stored in PocketBase
-    return startGMT7.subtract(const Duration(hours: 7)).toIso8601String().replaceFirst('T', ' ');
+    return startGMT7
+        .subtract(const Duration(hours: 7))
+        .toIso8601String()
+        .replaceFirst('T', ' ');
   }
 
   static String getStartOfWeekGMT7() {
     final nowGMT7 = getGMT7Now();
     // Monday of this week GMT+7 baseline
     int daysToSubtract = nowGMT7.weekday - 1;
-    final mondayGMT7 = DateTime.utc(nowGMT7.year, nowGMT7.month, nowGMT7.day - daysToSubtract);
+    final mondayGMT7 =
+        DateTime.utc(nowGMT7.year, nowGMT7.month, nowGMT7.day - daysToSubtract);
     // Subtract 7h to get the actual UTC stored in PocketBase
-    return mondayGMT7.subtract(const Duration(hours: 7)).toIso8601String().replaceFirst('T', ' ');
+    return mondayGMT7
+        .subtract(const Duration(hours: 7))
+        .toIso8601String()
+        .replaceFirst('T', ' ');
   }
 
   static String getStartOfLastWeekGMT7() {
     final nowGMT7 = getGMT7Now();
     // Monday of last week GMT+7 baseline
     int daysToSubtract = (nowGMT7.weekday - 1) + 7;
-    final lastMondayGMT7 = DateTime.utc(nowGMT7.year, nowGMT7.month, nowGMT7.day - daysToSubtract);
+    final lastMondayGMT7 =
+        DateTime.utc(nowGMT7.year, nowGMT7.month, nowGMT7.day - daysToSubtract);
     // Subtract 7h
-    return lastMondayGMT7.subtract(const Duration(hours: 7)).toIso8601String().replaceFirst('T', ' ');
+    return lastMondayGMT7
+        .subtract(const Duration(hours: 7))
+        .toIso8601String()
+        .replaceFirst('T', ' ');
   }
 
   static String formatMinutes(int minutes, AppLocalizations l10n) {

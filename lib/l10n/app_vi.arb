@@ -577,6 +577,8 @@
   "autumn": "Mùa thu",
   "avatarPickerDesc": "Chọn một bản mẫu hoặc nhập ảnh của riêng bạn",
   "beFirstToClaim": "Hãy là người đầu tiên giành lấy vị trí dẫn đầu!",
+  "backgroundCacheFlacStreams": "Lưu cache luồng FLAC nền",
+  "backgroundCacheFlacStreamsSubtitle": "Tải xuống âm thanh lossless được phát trực tuyến vào đĩa cục bộ một cách im lặng để phát lại tức thì và không tốn dữ liệu.",
   "behavioralHeader": "THÀNH TÍCH HÀNH VI",
   "behavioralTitles": "HÀNH VI",
   "binariesUpdateRequired": "Yêu cầu cập nhật các tệp nhị phân",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "Đang phân tích lời bài hát...",
   "aiLyricsSuccess": "Tạo lời bài hát thành công!",
   "aiLyricsLocalFileMissing": "Lỗi: Không tìm thấy tệp âm thanh cục bộ.",
-  "aiLyricsComplete": "Hoàn tất!"
+  "aiLyricsComplete": "Hoàn tất!",
+  "externalLinkDetected": "Phát Hiện Liên Kết Ngoài",
+  "gofileDownloadFailedPrompt": "Tải xuống tự động không thành công do hạn chế mạng hoặc máy chủ nghiêm ngặt.\\n\\nBạn có muốn mở trang tải xuống Gofile trong trình duyệt hệ thống của mình, hay sao chép liên kết để tải xuống thủ công?",
+  "copyLink": "Sao Chép Liên Kết",
+  "openBrowser": "Mở Trình Duyệt",
+  "linkCopied": "Liên kết đã được sao chép vào bộ nhớ tạm!",
+  "waitingForServerResponse": "Đang chờ phản hồi từ máy chủ...",
+  "queuePositionPleaseWait": "Hàng đợi {position}... vui lòng chờ",
+  "processingOnServer": "Đang xử lý trên máy chủ...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -6,7 +6,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_windows
   file_selector_windows
   flutter_inappwebview_windows
-  flutter_media_metadata
   isar_flutter_libs
   just_audio_windows
   media_kit_libs_windows_video
@@ -22,6 +21,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
   flutter_discord_rpc
+  jni
   metadata_god
   smtc_windows
 )

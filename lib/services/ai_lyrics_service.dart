@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../env/env.dart';
 import 'package:http/http.dart' as http;
 
 class AiLyricsService {
@@ -11,7 +11,7 @@ class AiLyricsService {
   factory AiLyricsService() => _instance;
   AiLyricsService._internal();
 
-  static String get _apiUrl => dotenv.get('AI_LYRICS_API_URL', fallback: 'http://localhost:3007/api/generate');
+  static String get _apiUrl => Env.aiLyricsApiUrl;
 
   /// Generates TTML lyrics for the given audio file by streaming from the VPS API.
   Future<String?> generateLyrics(String filePath, {

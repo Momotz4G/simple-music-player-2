@@ -51,7 +51,8 @@ class SmartDownloadService {
 
   // --- Search Logic ---
   Future<DebugMatchResult?> searchYouTubeForMatch(SongMetadata metadata) async {
-    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch) return null; // 🔒 OFFLINE or Online Search Disabled
+    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch)
+      return null; // 🔒 OFFLINE or Online Search Disabled
     final yt = YoutubeExplode();
     List<YoutubeSearchResult> youtubeMatches = [];
 
@@ -143,7 +144,8 @@ class SmartDownloadService {
     required Function(double) onProgress,
     String streamingQuality = 'high',
   }) async {
-    final fileName = FilenameHelper.sanitize("${metadata.artist} - ${metadata.title}");
+    final fileName =
+        FilenameHelper.sanitize("${metadata.artist} - ${metadata.title}");
 
     // 🎵 LOSSLESS PATH: Try FLAC from Deezer/Tidal first
     if (streamingQuality == 'lossless') {
@@ -206,8 +208,9 @@ class SmartDownloadService {
     // Optimization: If file exists in cache, play immediately!
     if (await file.exists()) {
       final size = await file.length();
-      bool isValid = size > 1024; // Ensure file isn't 0-byte or tiny corrupt junk
-      
+      bool isValid =
+          size > 1024; // Ensure file isn't 0-byte or tiny corrupt junk
+
       if (isValid && p.extension(file.path).toLowerCase() == '.flac') {
         isValid = await FlacDownloaderService.isFlacFileValid(file.path);
       }
@@ -216,7 +219,8 @@ class SmartDownloadService {
         print("Stream: File found in cache & valid, playing directly.");
         return _createSongModel(file, metadata, video.url);
       } else {
-        print("Stream: Cached file is invalid/corrupted. Deleting and retrying...");
+        print(
+            "Stream: Cached file is invalid/corrupted. Deleting and retrying...");
         await file.delete();
       }
     }
@@ -336,9 +340,12 @@ class SmartDownloadService {
       if (filePath.toLowerCase().endsWith('.flac')) {
         final isValid = await FlacDownloaderService.isFlacFileValid(filePath);
         if (!isValid) {
-          logger.error("❌ TAGGING CORRUPTION DETECTED: $filePath is no longer a valid FLAC after tagging!");
+          logger.error(
+              "❌ TAGGING CORRUPTION DETECTED: $filePath is no longer a valid FLAC after tagging!");
           // Try to delete corrupted file so it doesn't break playback
-          try { await File(filePath).delete(); } catch (_) {}
+          try {
+            await File(filePath).delete();
+          } catch (_) {}
           throw Exception("Tagging corrupted the FLAC bitstream");
         }
       }
@@ -396,7 +403,8 @@ class SmartDownloadService {
 
   // PREDICT CACHE PATH (For Queue Building)
   Future<String> getPredictedCachePath(SongMetadata metadata) async {
-    final fileName = FilenameHelper.sanitize("${metadata.artist} - ${metadata.title}");
+    final fileName =
+        FilenameHelper.sanitize("${metadata.artist} - ${metadata.title}");
 
     // Check streaming quality - if lossless, check FLAC cache first
     final prefs = await SharedPreferences.getInstance();
@@ -419,13 +427,15 @@ class SmartDownloadService {
 
   // BACKGROUND CACHE (PRELOAD) FUNCTION
   // Now respects streaming quality for FLAC support
-  Future<void> cacheSong(SongMetadata metadata, {String? youtubeUrl, String? streamUrl}) async {
+  Future<void> cacheSong(SongMetadata metadata,
+      {String? youtubeUrl, String? streamUrl}) async {
     // 🔒 OFFLINE MODE: Skip all background preloading
     if (PocketBaseService.isOffline) return;
 
     DebugLogService()
         .info("📥 SmartDownload: cacheSong called for ${metadata.title}");
-    final fileName = FilenameHelper.sanitize("${metadata.artist} - ${metadata.title}");
+    final fileName =
+        FilenameHelper.sanitize("${metadata.artist} - ${metadata.title}");
 
     // Read streaming quality from settings
     final prefs = await SharedPreferences.getInstance();
@@ -434,6 +444,41 @@ class SmartDownloadService {
     // 🎵 LOSSLESS PATH: Try FLAC first if quality is 'lossless'
     if (streamingQuality == 'lossless') {
       print("🎧 Preload: Lossless mode - trying FLAC for ${metadata.title}");
+
+      // 🚀 FAST-PATH: If we have a streamUrl (e.g. currently playing), download it directly
+      if (streamUrl != null) {
+        final flacPath = await _flacService.getFlacCachePath(fileName);
+        final file = File(flacPath);
+        
+        bool alreadyExists = false;
+        if (await file.exists()) {
+          if (await FlacDownloaderService.isFlacFileValid(flacPath)) {
+            alreadyExists = true;
+          } else {
+            await file.delete();
+          }
+        }
+
+        if (alreadyExists) {
+          print("✓ Preload: FLAC already exists for ${metadata.title}");
+          return;
+        }
+
+        print("🎧 Preload: Downloading FLAC directly from stream URL...");
+        final success = await _downloadFromStreamUrl(streamUrl, flacPath);
+        if (success) {
+          try {
+            await tagFile(filePath: flacPath, metadata: metadata);
+          } catch (e) {
+            print("⚠️ Preload: FLAC tagging failed: $e");
+          }
+          print("✓ Preload: FLAC cached via direct stream for ${metadata.title}");
+          return;
+        } else {
+          print("⚠️ Preload: Direct FLAC stream download failed, falling back...");
+        }
+      }
+
 
       // If spotifyId is missing, try to find it via Spotify search
       SongMetadata flacMeta = metadata;
@@ -516,7 +561,7 @@ class SmartDownloadService {
     if (await file.exists()) {
       final size = await file.length();
       bool isValid = size > 1024;
-      
+
       if (isValid && p.extension(file.path).toLowerCase() == '.flac') {
         isValid = await FlacDownloaderService.isFlacFileValid(file.path);
       }
@@ -532,11 +577,13 @@ class SmartDownloadService {
 
     // 📺 STREAM URL PATH: Download directly from VPS stream for HIGH/STANDARD consistency
     if (streamingQuality != 'lossless' && streamUrl != null) {
-      print("🎧 Preload: Downloading directly from Stream URL instead of YouTube...");
+      print(
+          "🎧 Preload: Downloading directly from Stream URL instead of YouTube...");
       final success = await _downloadFromStreamUrl(streamUrl, cachePath);
       if (success) {
-        print("✓ Preload: Stream downloaded successfully for ${metadata.title}");
-        return; 
+        print(
+            "✓ Preload: Stream downloaded successfully for ${metadata.title}");
+        return;
       } else {
         print("⚠️ Preload: Stream download failed, falling back to YouTube...");
       }
@@ -581,7 +628,8 @@ class SmartDownloadService {
       onProgress: (_) {}, // No UI progress for background preload
       onComplete: (success) => completer.complete(success),
       audioFormat: audioFormat,
-      isQuiet: true, // 🚀 Crucial: Prevents Win32 IPC buffer overflow crashing TaskRunner
+      isQuiet:
+          true, // 🚀 Crucial: Prevents Win32 IPC buffer overflow crashing TaskRunner
     );
 
     final success = await completer.future;
@@ -661,7 +709,8 @@ class SmartDownloadService {
 
     // 🚀 RESOLVE SPOTIFY ID FOR DEEZER TRACKS (cascade backup)
     if (!initialHasSpotifyId) {
-      debugPrint("🔍 downloadFlac: Searching Spotify for track ID for fallback...");
+      debugPrint(
+          "🔍 downloadFlac: Searching Spotify for track ID for fallback...");
       try {
         final spotifyResults = await SpotifyService.searchMetadata(
             '${metadata.artist} ${metadata.title}');
@@ -685,7 +734,8 @@ class SmartDownloadService {
 
     // 🚀 RESOLVE ISRC FROM DEEZER IF MISSING
     if (hasDeezerId && (flacMeta.isrc == null || flacMeta.isrc!.isEmpty)) {
-      debugPrint("🔍 downloadFlac: Fetching detailed Deezer metadata for ISRC...");
+      debugPrint(
+          "🔍 downloadFlac: Fetching detailed Deezer metadata for ISRC...");
       try {
         final detailedTrack = await DeezerService.getTrack(metadata.deezerId!);
         if (detailedTrack != null && detailedTrack.isrc != null) {
@@ -697,7 +747,8 @@ class SmartDownloadService {
       }
     }
 
-    final hasSpotifyId = flacMeta.spotifyId != null && flacMeta.spotifyId!.isNotEmpty;
+    final hasSpotifyId =
+        flacMeta.spotifyId != null && flacMeta.spotifyId!.isNotEmpty;
 
     if (!hasSpotifyId && !hasDeezerId) {
       debugPrint(
@@ -732,31 +783,33 @@ class SmartDownloadService {
     // 🚀 STAGE 1: Direct Tidal Search (fastest path - no song.link required)
     debugPrint("🚀 Stage 1: Searching Tidal directly for lossless match...");
     try {
-      final tidalId = await _flacService.getTidalTrackIdBySearch(metadata.title, metadata.artist);
+      final tidalId = await _flacService.getTidalTrackIdBySearch(
+          metadata.title, metadata.artist);
       if (tidalId != null) {
-         debugPrint("✅ Found Direct Tidal Match: $tidalId");
-         var file = await _flacService.downloadFromTidalWithQuality(
+        debugPrint("✅ Found Direct Tidal Match: $tidalId");
+        var file = await _flacService.downloadFromTidalWithQuality(
+          tidalUrl: "https://tidal.com/track/$tidalId",
+          outputPath: outputPath,
+          quality: 'HI_RES_LOSSLESS',
+          onProgress: onProgress,
+          timeoutSeconds: 60,
+        );
+
+        if (file == null) {
+          debugPrint(
+              "⚠️ Tidal Hi-Res failed. Trying Standard LOSSLESS CD quality...");
+          file = await _flacService.downloadFromTidalWithQuality(
             tidalUrl: "https://tidal.com/track/$tidalId",
             outputPath: outputPath,
-            quality: 'HI_RES_LOSSLESS',
+            quality: 'LOSSLESS',
             onProgress: onProgress,
             timeoutSeconds: 60,
-         );
-         
-         if (file == null) {
-            debugPrint("⚠️ Tidal Hi-Res failed. Trying Standard LOSSLESS CD quality...");
-            file = await _flacService.downloadFromTidalWithQuality(
-               tidalUrl: "https://tidal.com/track/$tidalId",
-               outputPath: outputPath,
-               quality: 'LOSSLESS',
-               onProgress: onProgress,
-               timeoutSeconds: 60,
-            );
-         }
+          );
+        }
 
-         if (file != null) {
-            result = FlacDownloadResult.success(file, "tidal_direct_search");
-         }
+        if (file != null) {
+          result = FlacDownloadResult.success(file, "tidal_direct_search");
+        }
       }
     } catch (e) {
       debugPrint("❌ Tidal Direct Search error: $e");
@@ -765,7 +818,8 @@ class SmartDownloadService {
     // 🚀 STAGE 2: Try Direct IDs (Deezer direct / Spotify-based song.link)
     // Only attempt song.link path with a timeout when streaming to avoid stalling
     if (!result.success && (hasSpotifyId || hasDeezerId)) {
-      debugPrint("🚀 Stage 2: Attempting platform download via existing IDs...");
+      debugPrint(
+          "🚀 Stage 2: Attempting platform download via existing IDs...");
       try {
         final directResultFuture = _flacService.downloadFlac(
           spotifyTrackId: flacMeta.spotifyId ?? '',
@@ -783,7 +837,7 @@ class SmartDownloadService {
             ? await directResultFuture.timeout(const Duration(seconds: 15),
                 onTimeout: () => FlacDownloadResult.failed("song.link timeout"))
             : await directResultFuture;
-      
+
         if (directResult.success && directResult.file != null) {
           result = directResult;
         } else {
@@ -796,61 +850,67 @@ class SmartDownloadService {
       }
     }
 
-      // 🔄 FALLBACK: If Spotify-based download failed, try finding formatting Deezer ID manually
-      if (!result.success && !hasDeezerId) {
-        debugPrint(
-            "⚠️ FLAC (Spotify Path) Failed. Attempting fallback via Deezer Search...");
-        DebugLogService().warning(
-            "⚠️ FLAC (Spotify Path) Failed. Triggering Deezer Search Fallback...");
-        try {
-          // Search Deezer for this exact track
-          // 🚀 CLEAN QUERY: Remove "Official Video", "(Lyrics)", etc. to improve match rate
-          String cleanTitle = metadata.title
-              .replaceAll(RegExp(r'\(.*?\)|\[.*?\]'), '') // Remove brackets/parentheses
-              .replaceAll(RegExp(r'(?i)official\s+(music\s+)?video|lyrics?|audio|hd|4k|mv'), '') // Remove tags
-              .split(' - ').last // Often "Artist - Title", take Title
-              .trim();
-          
-          String cleanArtist = metadata.artist
-              .replaceAll(RegExp(r'(?i)vevo|topic|records'), '') // Remove channel fluff
-              .trim();
+    // 🔄 FALLBACK: If Spotify-based download failed, try finding formatting Deezer ID manually
+    if (!result.success && !hasDeezerId) {
+      debugPrint(
+          "⚠️ FLAC (Spotify Path) Failed. Attempting fallback via Deezer Search...");
+      DebugLogService().warning(
+          "⚠️ FLAC (Spotify Path) Failed. Triggering Deezer Search Fallback...");
+      try {
+        // Search Deezer for this exact track
+        // 🚀 CLEAN QUERY: Remove "Official Video", "(Lyrics)", etc. to improve match rate
+        String cleanTitle = metadata.title
+            .replaceAll(
+                RegExp(r'\(.*?\)|\[.*?\]'), '') // Remove brackets/parentheses
+            .replaceAll(
+                RegExp(
+                    r'(?i)official\s+(music\s+)?video|lyrics?|audio|hd|4k|mv'),
+                '') // Remove tags
+            .split(' - ')
+            .last // Often "Artist - Title", take Title
+            .trim();
 
-          final searchQuery = "$cleanTitle $cleanArtist";
-          DebugLogService().info(
-              "🔍 Deezer Fallback: Searching '$searchQuery' (Original: ${metadata.title})");
-          
-          final deezerSongs = await DeezerService.searchSongs(searchQuery, limit: 5);
+        String cleanArtist = metadata.artist
+            .replaceAll(
+                RegExp(r'(?i)vevo|topic|records'), '') // Remove channel fluff
+            .trim();
 
-          if (deezerSongs.isNotEmpty) {
-            // Find best match (simple check for now)
-            final bestMatch = deezerSongs.first; // Grab top result
-            // Verify somewhat close match (optional, but safe)
-            if (bestMatch.title.toLowerCase() == metadata.title.toLowerCase() ||
-                bestMatch.deezerId != null) {
-              debugPrint(
-                  "✅ Found Fallback Deezer Match: ID=${bestMatch.deezerId}");
-              DebugLogService().success(
-                  "✅ Deezer Fallback Match Found: ${bestMatch.title} (ID: ${bestMatch.deezerId})");
+        final searchQuery = "$cleanTitle $cleanArtist";
+        DebugLogService().info(
+            "🔍 Deezer Fallback: Searching '$searchQuery' (Original: ${metadata.title})");
 
-              // RECURSIVE CALL (mostly safe as hasDeezerId is now effectively true for next logic)
-              // But to avoid recursion depth issues, let's just trigger direct download logic here
-              // actually, constructing a new metadata with deezerId is cleaner:
-              final newMeta = metadata.copyWith(deezerId: bestMatch.deezerId);
-              return downloadFlac(
-                  metadata: newMeta,
-                  onProgress: onProgress,
-                  isStreaming: isStreaming);
-            }
-          } else {
-            DebugLogService().warning(
-                "⚠️ Deezer Fallback: No matches found for '${metadata.title}'");
+        final deezerSongs =
+            await DeezerService.searchSongs(searchQuery, limit: 5);
+
+        if (deezerSongs.isNotEmpty) {
+          // Find best match (simple check for now)
+          final bestMatch = deezerSongs.first; // Grab top result
+          // Verify somewhat close match (optional, but safe)
+          if (bestMatch.title.toLowerCase() == metadata.title.toLowerCase() ||
+              bestMatch.deezerId != null) {
+            debugPrint(
+                "✅ Found Fallback Deezer Match: ID=${bestMatch.deezerId}");
+            DebugLogService().success(
+                "✅ Deezer Fallback Match Found: ${bestMatch.title} (ID: ${bestMatch.deezerId})");
+
+            // RECURSIVE CALL (mostly safe as hasDeezerId is now effectively true for next logic)
+            // But to avoid recursion depth issues, let's just trigger direct download logic here
+            // actually, constructing a new metadata with deezerId is cleaner:
+            final newMeta = metadata.copyWith(deezerId: bestMatch.deezerId);
+            return downloadFlac(
+                metadata: newMeta,
+                onProgress: onProgress,
+                isStreaming: isStreaming);
           }
-        } catch (e) {
-          debugPrint("❌ Deezer Fallback Search Error: $e");
-          DebugLogService().error("❌ Deezer Fallback Error: $e");
+        } else {
+          DebugLogService().warning(
+              "⚠️ Deezer Fallback: No matches found for '${metadata.title}'");
         }
+      } catch (e) {
+        debugPrint("❌ Deezer Fallback Search Error: $e");
+        DebugLogService().error("❌ Deezer Fallback Error: $e");
       }
-
+    }
 
     logger.info(
         "SMA: Download result success=${result.success} error=${result.error}");
@@ -876,8 +936,9 @@ class SmartDownloadService {
     try {
       final client = http.Client();
       final request = http.Request('GET', Uri.parse(url));
-      final response = await client.send(request).timeout(const Duration(seconds: 15));
-      
+      final response =
+          await client.send(request).timeout(const Duration(seconds: 15));
+
       if (response.statusCode == 200) {
         final file = File(cachePath);
         final sink = file.openWrite();

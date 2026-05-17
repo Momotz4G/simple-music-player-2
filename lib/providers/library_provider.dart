@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import '../utils/folder_picker.dart';
 import 'package:path/path.dart' as p;
 import '../services/metadata_service.dart';
+import '../services/art_cache_service.dart';
 import '../services/cue_parser_service.dart';
+import '../ui/components/smart_art.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar/isar.dart';
@@ -38,9 +40,12 @@ class LibraryProvider extends ChangeNotifier {
   int _scanProgress = 0; // 🚀 Live counter for songs found during scan
 
   List<SongModel> get songs => _searchQuery.isEmpty ? _songs : _filteredSongs;
-  List<SongModel> get allSongs => _songs; // 🚀 Unfiltered — for grouped providers
-  String get searchQuery => _searchQuery; // 🚀 Public getter for efficient presentation filtering
-  bool get hasSearchQuery => _searchQuery.isNotEmpty; // 🚀 UI can distinguish empty search vs empty library
+  List<SongModel> get allSongs =>
+      _songs; // 🚀 Unfiltered — for grouped providers
+  String get searchQuery =>
+      _searchQuery; // 🚀 Public getter for efficient presentation filtering
+  bool get hasSearchQuery => _searchQuery
+      .isNotEmpty; // 🚀 UI can distinguish empty search vs empty library
   int get totalSongCount => _songs.length; // 🚀 Total before filtering
   bool get isLoading => _isLoading;
   int get scanProgress => _scanProgress; // 🚀 Live scan progress for loading UI
@@ -60,6 +65,7 @@ class LibraryProvider extends ChangeNotifier {
     '.dsf',
     '.dff',
     '.aif',
+    '.aiff',
     '.alac'
   ];
 
@@ -119,7 +125,8 @@ class LibraryProvider extends ChangeNotifier {
     // 🚀 Capture dependencies at ENTRY
     final dbService = ref.read(dbServiceProvider);
     final settings = ref.read(settingsProvider);
-    final myToken = _scanToken; // 🚀 Track token to detect setFolder() cancellation
+    final myToken =
+        _scanToken; // 🚀 Track token to detect setFolder() cancellation
 
     final prefs = await SharedPreferences.getInstance();
     if (_disposed) return;
@@ -127,7 +134,8 @@ class LibraryProvider extends ChangeNotifier {
 
     // 1. First, load whatever is already in the DB (Instant Load)
     await _fetchFromDatabase(dbService, settings);
-    if (_disposed || _scanToken != myToken) return; // 🚀 Abort if setFolder() was called
+    if (_disposed || _scanToken != myToken)
+      return; // 🚀 Abort if setFolder() was called
 
     // 2. Then, if we have a main path, verify it and scan for changes
     if (savedPath != null) {
@@ -135,7 +143,8 @@ class LibraryProvider extends ChangeNotifier {
       _selectedFolder = canonicalPath;
       _safeNotify();
       await _scanFolder(canonicalPath, dbService, settings);
-      if (_disposed || _scanToken != myToken) return; // 🚀 Abort if setFolder() was called
+      if (_disposed || _scanToken != myToken)
+        return; // 🚀 Abort if setFolder() was called
     }
 
     // 3. Also scan additional folders from settings
@@ -201,8 +210,9 @@ class LibraryProvider extends ChangeNotifier {
     } else {
       _filteredSongs = List.from(_songs);
     }
-    
-    debugPrint("📂 [_fetchFromDatabase] Finished! allSongs: ${allSongs.length}, filteredToFolder: ${_songs.length}");
+
+    debugPrint(
+        "📂 [_fetchFromDatabase] Finished! allSongs: ${allSongs.length}, filteredToFolder: ${_songs.length}");
     // 🚀 Only notify if search() didn't already do it — prevents double notification per batch
     if (_searchQuery.isEmpty) {
       _safeNotify();
@@ -252,17 +262,17 @@ class LibraryProvider extends ChangeNotifier {
       await prefs.setString('saved_music_folder', canonicalPath);
       _error = null;
       _isPermissionDenied = false;
-      
+
       // 🚀 Cancel any in-progress scan
       _scanToken++;
-      
+
       // 🚀 IMMEDIATE UI REFRESH — don't block
       _songs = [];
       _filteredSongs = [];
       _isLoading = true;
       _safeNotify();
       debugPrint("📂 [setFolder] UI state cleared. Firing background work...");
-      
+
       // 🚀 NON-BLOCKING: Fire DB fetch and scan in background
       // This prevents the UI hang when changing folders.
       _fetchFromDatabase(dbService, settings).then((_) {
@@ -279,7 +289,7 @@ class LibraryProvider extends ChangeNotifier {
         _error = "Scan failed: $e";
         _safeNotify();
       });
-      
+
       debugPrint("📂 [setFolder] Method completed — UI thread released.");
     } catch (e, stack) {
       debugPrint("❌ [setFolder] ERROR: $e");
@@ -289,17 +299,16 @@ class LibraryProvider extends ChangeNotifier {
     }
   }
 
-
   Future<void> _scanFolder(
       String path, DBService dbService, SettingsState settings) async {
     if (_isLoading && _selectedFolder == path) {
-       // Allow if triggered from setFolder (isLoading already true)
-       // but guard against duplicate concurrent scans on same path
+      // Allow if triggered from setFolder (isLoading already true)
+      // but guard against duplicate concurrent scans on same path
     }
-    
+
     // 🚀 Capture token at start for cancellation
     final myToken = _scanToken;
-    
+
     _isLoading = true;
     _error = null;
     _isPermissionDenied = false;
@@ -311,27 +320,29 @@ class LibraryProvider extends ChangeNotifier {
       final dir = Directory(path);
       if (await dir.exists()) {
         if (_disposed || _scanToken != myToken) return;
-        
-        debugPrint("🔍 [_scanFolder] Directory exists. Starting directory walk...");
+
+        debugPrint(
+            "🔍 [_scanFolder] Directory exists. Starting directory walk...");
         final existingSongs = await dbService.getAllSongs();
-        debugPrint("🔍 [_scanFolder] Fetched ${existingSongs.length} existing songs from DB.");
-        final existingPaths = existingSongs.map((s) => p.canonicalize(s.path)).toSet();
-        
+        debugPrint(
+            "🔍 [_scanFolder] Fetched ${existingSongs.length} existing songs from DB.");
+        final existingPaths =
+            existingSongs.map((s) => p.canonicalize(s.path)).toSet();
+
         // Use `await for` instead of `.toList()` to prevent ANR via massive memory buffer block
         final List<String> pathsToProcess = [];
         final List<String> cueFilesToProcess = []; // 🚀 CUE SUPPORT
-        
+
         // Listen to the directory stream and yield frequently to avoid freezing the UI Isolate
         int filesScanned = 0;
-        debugPrint("🔍 [_scanFolder] Starting directory walk (recursive: ${!_ignoreSubfolders})...");
+        debugPrint(
+            "🔍 [_scanFolder] Starting directory walk (recursive: ${!_ignoreSubfolders})...");
         try {
-          await for (final FileSystemEntity entity in dir.list(
-            recursive: !_ignoreSubfolders, 
-            followLinks: false
-          )) {
+          await for (final FileSystemEntity entity
+              in dir.list(recursive: !_ignoreSubfolders, followLinks: false)) {
             if (_disposed || _scanToken != myToken) return;
             filesScanned++;
-            
+
             try {
               if (entity is File) {
                 String extension = p.extension(entity.path).toLowerCase();
@@ -348,55 +359,72 @@ class LibraryProvider extends ChangeNotifier {
               }
             } catch (fileErr) {
               // 🚀 Skip individual files that fail (e.g. Unicode path issues)
-              debugPrint("⚠️ [_scanFolder] Skipping file: ${entity.path} — $fileErr");
+              debugPrint(
+                  "⚠️ [_scanFolder] Skipping file: ${entity.path} — $fileErr");
             }
             // Yield to the event loop so the UI doesn't hang
             if (filesScanned % 100 == 0) {
-              debugPrint("🔍 [_scanFolder] Walk progress: $filesScanned files scanned...");
+              debugPrint(
+                  "🔍 [_scanFolder] Walk progress: $filesScanned files scanned...");
               await Future.delayed(Duration.zero);
             }
           }
         } catch (walkErr) {
           // 🚀 Catch dir.list() stream errors (permissions, broken symlinks, etc.)
-          debugPrint("⚠️ [_scanFolder] Directory walk error after $filesScanned files: $walkErr");
+          debugPrint(
+              "⚠️ [_scanFolder] Directory walk error after $filesScanned files: $walkErr");
         }
-        debugPrint("🔍 [_scanFolder] Walk complete: $filesScanned total files scanned.");
-        
-        debugPrint("🔍 [_scanFolder] Found ${pathsToProcess.length} NEW track paths, ${cueFilesToProcess.length} CUE sheets out of total recursive file scope.");
+        debugPrint(
+            "🔍 [_scanFolder] Walk complete: $filesScanned total files scanned.");
+
+        debugPrint(
+            "🔍 [_scanFolder] Found ${pathsToProcess.length} NEW track paths, ${cueFilesToProcess.length} CUE sheets out of total recursive file scope.");
 
         if (pathsToProcess.isEmpty && cueFilesToProcess.isEmpty) {
-           _isLoading = false;
-           _safeNotify();
-           return;
+          _isLoading = false;
+          _safeNotify();
+          return;
         }
 
         // 🚀 Processing in chunks of 20 (reduced from 50 to limit ffprobe pressure)
         for (int i = 0; i < pathsToProcess.length; i += 20) {
           if (_disposed || _scanToken != myToken) return;
-          
-          final end = (i + 20 < pathsToProcess.length) ? i + 20 : pathsToProcess.length;
+
+          final end =
+              (i + 20 < pathsToProcess.length) ? i + 20 : pathsToProcess.length;
           final chunk = pathsToProcess.sublist(i, end);
-          
-          final metadataBatch = await MetadataService().readMetadataBatch(chunk);
-          
+
+          final metadataBatch =
+              await MetadataService().readMetadataBatch(chunk);
+
           List<Song> batchToAdd = [];
           for (int j = 0; j < chunk.length; j++) {
             final filePath = chunk[j];
             final metadata = metadataBatch[j];
             final ext = p.extension(filePath).toLowerCase();
-            
+
             final Song song = _mapMetadataToSong(filePath, metadata, ext);
-            
+
+            // 🚀 Cache extracted album art during scan (especially for AIFF/WAV/OGG via ffmpeg)
+            if (metadata?.picture?.data != null &&
+                metadata!.picture!.data.isNotEmpty) {
+              final canonPath = p.canonicalize(filePath);
+              ArtCacheService().saveArt(canonPath, metadata.picture!.data);
+              SmartArt.invalidateCache(
+                  canonPath); // Clear in-memory negative cache
+            }
+
             // 🚀 DSD tags are already handled by MetadataService._readMetadataViaFFprobe()
             // via the combined getTagsAndInfo() call — no extra ffprobe needed here.
-            
+
             batchToAdd.add(song);
           }
 
           if (batchToAdd.isNotEmpty) {
             await dbService.saveSongs(batchToAdd);
             _scanProgress += batchToAdd.length;
-            debugPrint("🔍 [_scanFolder] Saved chunk $i to DB (${batchToAdd.length} songs, progress: $_scanProgress)");
+            debugPrint(
+                "🔍 [_scanFolder] Saved chunk $i to DB (${batchToAdd.length} songs, progress: $_scanProgress)");
             _safeNotify(); // 🚀 Only updates scanProgress counter — NO full DB reload
           }
           await Future.delayed(Duration.zero);
@@ -406,7 +434,8 @@ class LibraryProvider extends ChangeNotifier {
         // 🚀 CUE SHEET PROCESSING: Parse .cue files and create virtual tracks
         // =====================================================================
         if (cueFilesToProcess.isNotEmpty) {
-          debugPrint("🎵 [_scanFolder] Processing ${cueFilesToProcess.length} CUE sheets...");
+          debugPrint(
+              "🎵 [_scanFolder] Processing ${cueFilesToProcess.length} CUE sheets...");
           final cueParser = CueParserService();
 
           for (final cuePath in cueFilesToProcess) {
@@ -415,7 +444,8 @@ class LibraryProvider extends ChangeNotifier {
             final tracks = await cueParser.parseCueFile(cuePath);
             if (tracks.isEmpty) continue;
 
-            debugPrint("🎵 [_scanFolder] CUE: ${p.basename(cuePath)} → ${tracks.length} tracks");
+            debugPrint(
+                "🎵 [_scanFolder] CUE: ${p.basename(cuePath)} → ${tracks.length} tracks");
 
             List<Song> cueBatch = [];
             for (final track in tracks) {
@@ -447,14 +477,16 @@ class LibraryProvider extends ChangeNotifier {
             if (cueBatch.isNotEmpty) {
               await dbService.saveSongs(cueBatch);
               _scanProgress += cueBatch.length;
-              debugPrint("🎵 [_scanFolder] Saved ${cueBatch.length} CUE tracks from ${p.basename(cuePath)}, progress: $_scanProgress");
+              debugPrint(
+                  "🎵 [_scanFolder] Saved ${cueBatch.length} CUE tracks from ${p.basename(cuePath)}, progress: $_scanProgress");
               _safeNotify(); // 🚀 Only updates scanProgress counter — NO full DB reload
             }
             await Future.delayed(Duration.zero);
           }
         }
-        
-        debugPrint("✅ [_scanFolder] Fully completed batching ${pathsToProcess.length} tracks + ${cueFilesToProcess.length} CUE sheets.");
+
+        debugPrint(
+            "✅ [_scanFolder] Fully completed batching ${pathsToProcess.length} tracks + ${cueFilesToProcess.length} CUE sheets.");
       } else {
         _error = "Directory does not exist or access denied.";
       }
@@ -463,7 +495,8 @@ class LibraryProvider extends ChangeNotifier {
       _error = "Scan failed: $e";
     } finally {
       if (_scanToken == myToken) {
-        await _fetchFromDatabase(dbService, settings); // 🚀 Single authoritative reload
+        await _fetchFromDatabase(
+            dbService, settings); // 🚀 Single authoritative reload
         _scanProgress = 0;
         _isLoading = false;
         _safeNotify();
@@ -499,7 +532,6 @@ class LibraryProvider extends ChangeNotifier {
     }
     return song;
   }
-
 
   Future<void> refreshLibrary() async {
     final dbService = ref.read(dbServiceProvider);
@@ -567,14 +599,11 @@ class LibraryProvider extends ChangeNotifier {
     final Map<String, List<Object>> tokenCache = {};
     for (final song in _songs) {
       final name = p.basename(song.filePath).toLowerCase();
-      tokenCache[song.filePath] = _splitPattern
-          .allMatches(name)
-          .map((m) {
-            final s = m.group(0)!;
-            final n = int.tryParse(s);
-            return (n as Object?) ?? s; // int or String
-          })
-          .toList();
+      tokenCache[song.filePath] = _splitPattern.allMatches(name).map((m) {
+        final s = m.group(0)!;
+        final n = int.tryParse(s);
+        return (n as Object?) ?? s; // int or String
+      }).toList();
     }
 
     // 2. Sort using cached tokens — O(1) lookup per comparison

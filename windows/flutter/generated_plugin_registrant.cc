@@ -9,7 +9,6 @@
 #include <bitsdojo_window_windows/bitsdojo_window_plugin.h>
 #include <file_selector_windows/file_selector_windows.h>
 #include <flutter_inappwebview_windows/flutter_inappwebview_windows_plugin_c_api.h>
-#include <flutter_media_metadata/flutter_media_metadata_plugin.h>
 #include <isar_flutter_libs/isar_flutter_libs_plugin.h>
 #include <just_audio_windows/just_audio_windows_plugin.h>
 #include <media_kit_libs_windows_video/media_kit_libs_windows_video_plugin_c_api.h>
@@ -29,8 +28,6 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("FileSelectorWindows"));
   FlutterInappwebviewWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterInappwebviewWindowsPluginCApi"));
-  FlutterMediaMetadataPluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("FlutterMediaMetadataPlugin"));
   IsarFlutterLibsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("IsarFlutterLibsPlugin"));
   JustAudioWindowsPluginRegisterWithRegistrar(

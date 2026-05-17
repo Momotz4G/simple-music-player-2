@@ -577,6 +577,8 @@
   "autumn": "Automne",
   "avatarPickerDesc": "Sélectionnez un modèle ou importez votre propre photo",
   "beFirstToClaim": "Soyez le premier à revendiquer la première place !",
+  "backgroundCacheFlacStreams": "Mise en cache des flux FLAC en arrière-plan",
+  "backgroundCacheFlacStreamsSubtitle": "Télécharge silencieusement les pistes sans perte en streaming sur votre disque local pour une lecture instantanée sans consommation de données.",
   "behavioralHeader": "SUCCÈS COMPORTEMENTAUX",
   "behavioralTitles": "COMPORTEMENTAL",
   "binariesUpdateRequired": "Mise à jour des binaires requise",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "Analyse des paroles...",
   "aiLyricsSuccess": "Paroles générées avec succès !",
   "aiLyricsLocalFileMissing": "Erreur : Fichier audio local non trouvé.",
-  "aiLyricsComplete": "Terminé !"
+  "aiLyricsComplete": "Terminé !",
+  "externalLinkDetected": "Lien Externe Détecté",
+  "gofileDownloadFailedPrompt": "Le téléchargement automatique a échoué en raison de restrictions réseau ou de serveur strictes.\\n\\nSouhaitez-vous ouvrir la page de téléchargement Gofile dans votre navigateur système, ou copier le lien pour le télécharger manuellement ?",
+  "copyLink": "Copier le Lien",
+  "openBrowser": "Ouvrir le Navigateur",
+  "linkCopied": "Lien copié dans le presse-papiers !",
+  "waitingForServerResponse": "En attente de la réponse du serveur...",
+  "queuePositionPleaseWait": "File d'attente {position}... veuillez patienter",
+  "processingOnServer": "Traitement sur le serveur...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

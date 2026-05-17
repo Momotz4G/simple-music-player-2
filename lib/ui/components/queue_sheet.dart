@@ -1,12 +1,17 @@
 import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 
 import '../../providers/player_provider.dart';
+import '../../providers/playlist_provider.dart';
+import '../../providers/library_provider.dart';
+import '../../providers/search_bridge_provider.dart';
 import '../../models/song_model.dart';
 import '../../l10n/app_localizations.dart';
 import 'smart_art.dart';
+import 'music_notification.dart';
 
 class QueueSheet extends ConsumerWidget {
   const QueueSheet({super.key});
@@ -253,25 +258,100 @@ class QueueSheet extends ConsumerWidget {
                               context),
                         ),
                       ),
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final song = playerState.recommendationQueue[index];
-                            return _buildQueueTile(
-                              context,
-                              song,
-                              key: ValueKey(
-                                  'rec_${song.spotifyId ?? song.title}_$index'),
-                              number: index + 1,
-                              textColor: textColor,
-                              subTextColor: subTextColor,
-                              accentColor: Colors.purple[300]!,
-                              onTap: () =>
-                                  notifier.playRecommendationSong(index),
-                              isDraggable: false,
-                            );
-                          },
-                          childCount: playerState.recommendationQueue.length,
+                      SliverReorderableList(
+                        itemCount: playerState.recommendationQueue.length,
+                        onReorder: notifier.reorderRecommendationQueue,
+                        itemBuilder: (context, index) {
+                          final song = playerState.recommendationQueue[index];
+                          final uniqueKey = ValueKey(
+                              'rec_${song.spotifyId ?? song.title}_$index');
+
+                          return Dismissible(
+                            key: uniqueKey,
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              color: Colors.redAccent,
+                              padding: const EdgeInsets.only(right: 20),
+                              child: const Icon(Icons.delete_outline,
+                                  color: Colors.white, size: 28),
+                            ),
+                            onDismissed: (_) =>
+                                notifier.removeRecommendationQueueItem(index),
+                            child: GestureDetector(
+                              onSecondaryTapUp: (details) => _showRecContextMenu(
+                                  context, details.globalPosition, song, notifier, ref, index: index),
+                              onLongPressStart: (details) => _showRecContextMenu(
+                                  context, details.globalPosition, song, notifier, ref, index: index),
+                              child: _buildQueueTile(
+                                context,
+                                song,
+                                number: index + 1,
+                                textColor: textColor,
+                                subTextColor: subTextColor,
+                                accentColor: Colors.purple[300]!,
+                                onTap: () =>
+                                    notifier.playRecommendationSong(index),
+                                isDraggable: true,
+                                indexForDrag: index,
+                                trailingWidget: (Platform.isAndroid || Platform.isIOS)
+                                    ? Builder(
+                                        builder: (btnContext) => IconButton(
+                                          icon: Icon(Icons.more_vert,
+                                              size: 18, color: subTextColor),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(
+                                              minWidth: 32, minHeight: 32),
+                                          onPressed: () {
+                                            final RenderBox box = btnContext
+                                                .findRenderObject() as RenderBox;
+                                            final position =
+                                                box.localToGlobal(Offset.zero);
+                                            _showRecContextMenu(
+                                                context,
+                                                Offset(position.dx,
+                                                    position.dy + box.size.height),
+                                                song,
+                                                notifier,
+                                                ref,
+                                                index: index);
+                                          },
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+
+                    // 🚀 Loading indicator while fetching recommendations
+                    if (playerState.isLoadingRecommendations &&
+                        playerState.recommendationQueue.isEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.purple[300],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Loading recommendations...',
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -327,6 +407,7 @@ class QueueSheet extends ConsumerWidget {
     VoidCallback? onTap,
     bool isDraggable = false,
     int? indexForDrag,
+    Widget? trailingWidget,
   }) {
     final tileContent = Container(
       height: 56,
@@ -413,6 +494,10 @@ class QueueSheet extends ConsumerWidget {
               ],
             ),
           ),
+          if (trailingWidget != null) ...[
+            const SizedBox(width: 8),
+            trailingWidget,
+          ],
         ],
       ),
     );
@@ -423,6 +508,191 @@ class QueueSheet extends ConsumerWidget {
       child: InkWell(
         onTap: onTap,
         child: tileContent,
+      ),
+    );
+  }
+
+  /// 🚀 Context menu for recommendation songs (right-click, long-press, or 3-dot button)
+  void _showRecContextMenu(BuildContext context, Offset position,
+      SongModel song, PlayerNotifier notifier, WidgetRef ref, {int? index}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final textColor = isDark ? Colors.white : Colors.black;
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+          position.dx, position.dy, position.dx, position.dy),
+      color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+      items: [
+        PopupMenuItem(
+          value: 'play_next',
+          child: Row(
+            children: [
+              Icon(Icons.playlist_play, size: 20, color: textColor),
+              const SizedBox(width: 12),
+              Text(l10n.playNext, style: TextStyle(color: textColor)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'add_to_queue',
+          child: Row(
+            children: [
+              Icon(Icons.queue_music, size: 20, color: textColor),
+              const SizedBox(width: 12),
+              Text(l10n.addToQueue, style: TextStyle(color: textColor)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'add_to_playlist',
+          child: Row(
+            children: [
+              Icon(Icons.playlist_add, size: 20, color: textColor),
+              const SizedBox(width: 12),
+              Text(l10n.addToPlaylist, style: TextStyle(color: textColor)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'add_to_favorite',
+          child: Row(
+            children: [
+              Icon(Icons.favorite_border, size: 20, color: textColor),
+              const SizedBox(width: 12),
+              Text(l10n.addToFavorite, style: TextStyle(color: textColor)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'go_to_artist',
+          child: Row(
+            children: [
+              Icon(Icons.person_search, size: 20, color: textColor),
+              const SizedBox(width: 12),
+              Text(l10n.goToArtist, style: TextStyle(color: textColor)),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          value: 'remove_from_rec',
+          child: Row(
+            children: [
+              const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+              const SizedBox(width: 12),
+              const Text('Remove from recommendations', style: TextStyle(color: Colors.redAccent)),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'play_next') {
+        notifier.insertSongNext(song);
+        if (context.mounted) {
+          showCenterNotification(context,
+              label: l10n.playingNext,
+              title: l10n.playingNext,
+              subtitle: song.title,
+              artPath: song.onlineArtUrl,
+              onlineArtUrl: song.onlineArtUrl);
+        }
+      } else if (value == 'add_to_queue') {
+        notifier.addToQueue(song);
+        if (context.mounted) {
+          showCenterNotification(context,
+              label: l10n.addedToQueue,
+              title: l10n.addedToQueue,
+              subtitle: song.title,
+              artPath: song.onlineArtUrl,
+              onlineArtUrl: song.onlineArtUrl);
+        }
+      } else if (value == 'add_to_playlist') {
+        if (context.mounted) {
+          _showAddToPlaylistDialog(context, song, ref);
+        }
+      } else if (value == 'add_to_favorite') {
+        final playlistNotifier = ref.read(playlistProvider.notifier);
+        playlistNotifier.addToLikedSongs(song);
+        if (context.mounted) {
+          showCenterNotification(context,
+              label: l10n.addToFavorite,
+              title: l10n.addToFavorite,
+              subtitle: song.title,
+              artPath: song.onlineArtUrl,
+              onlineArtUrl: song.onlineArtUrl);
+        }
+      } else if (value == 'go_to_artist') {
+        final librarySongs = ref.read(libraryProvider).songs;
+        final artistSongs =
+            librarySongs.where((s) => s.artist == song.artist).toList();
+        ref.read(navigationStackProvider.notifier).push(
+              NavigationItem(
+                type: NavigationType.artist,
+                data: ArtistSelection(
+                  artistName: song.artist,
+                  songs: artistSongs,
+                ),
+              ),
+            );
+      } else if (value == 'remove_from_rec' && index != null) {
+        notifier.removeRecommendationQueueItem(index);
+      }
+    });
+  }
+
+  /// 🚀 Add to Playlist dialog (same as library context menu)
+  void _showAddToPlaylistDialog(
+      BuildContext context, SongModel song, WidgetRef ref) {
+    final playlists = ref.read(playlistProvider);
+    final playlistNotifier = ref.read(playlistProvider.notifier);
+    final l10n = AppLocalizations.of(context)!;
+
+    if (playlists.isEmpty) {
+      showCenterNotification(context,
+          label: l10n.error,
+          title: l10n.noPlaylistsFound,
+          backgroundColor: Colors.orangeAccent.withValues(alpha: 0.9));
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.addToPlaylist),
+        backgroundColor: Theme.of(ctx).cardColor,
+        children: playlists
+            .map((p) => SimpleDialogOption(
+                  onPressed: () {
+                    final exists = p.entries.any((e) =>
+                        e.title?.toLowerCase() == song.title.toLowerCase() &&
+                        e.artist?.toLowerCase() == song.artist.toLowerCase());
+
+                    if (exists) {
+                      Navigator.pop(ctx);
+                      showCenterNotification(context,
+                          label: l10n.error,
+                          title: l10n.songAlreadyInPlaylist,
+                          subtitle: p.name,
+                          onlineArtUrl: song.onlineArtUrl,
+                          backgroundColor:
+                              Colors.redAccent.withValues(alpha: 0.85));
+                    } else {
+                      playlistNotifier.addSongToPlaylist(p.id, song);
+                      Navigator.pop(ctx);
+                      showCenterNotification(context,
+                          label: l10n.addedToPlaylistSuccess,
+                          title: p.name,
+                          subtitle: song.title,
+                          onlineArtUrl: song.onlineArtUrl);
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(p.name),
+                  ),
+                ))
+            .toList(),
       ),
     );
   }

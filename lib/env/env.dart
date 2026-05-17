@@ -91,4 +91,20 @@ abstract class Env {
 
   @EnviedField(varName: 'SPOTIFY_BANNER_URL', obfuscate: true, defaultValue: '')
   static final String spotifyBannerUrl = _Env.spotifyBannerUrl;
+
+  // 🍎 Apple Music API Config
+  @EnviedField(varName: 'APPLE_MUSIC_API_URL', obfuscate: true)
+  static final String appleMusicApiUrl = _Env.appleMusicApiUrl;
+
+  // 🚀 AI Lyrics Config
+  @EnviedField(varName: 'AI_LYRICS_API_URL', obfuscate: true, defaultValue: 'http://localhost:3007/api/generate')
+  static final String aiLyricsApiUrl = _Env.aiLyricsApiUrl;
+
+  // 🚀 AcoustID Config
+  @EnviedField(varName: 'ACOUSTID_API_KEY', obfuscate: true, defaultValue: '')
+  static final String acoustidApiKey = _Env.acoustidApiKey;
+
+  // 🚀 VPS Scraper Config
+  @EnviedField(varName: 'VPS_SCRAPER_URL', obfuscate: true, defaultValue: '')
+  static final String vpsScraperUrl = _Env.vpsScraperUrl;
 }

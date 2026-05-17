@@ -1,7 +1,7 @@
 name: simple_music_player_2
 description: "A new modern Flutter music player."
 publish_to: 'none'
-version: 2.6.6+1
+version: 2.6.9+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -15,12 +15,11 @@ dependencies:
   
   # Audio
   just_audio: ^0.9.36
-  audio_service: ^0.18.12  # Android notification media controls
+  audio_service: ^0.18.12
   just_audio_windows:
 
   # Metadata
   metadata_god: 1.1.0
-  flutter_media_metadata: 1.0.0+1
   
   # Discord
   flutter_discord_rpc: ^1.0.0
@@ -42,7 +41,6 @@ dependencies:
   glassmorphism: ^3.0.0
   google_fonts: ^6.1.0
   provider: ^6.1.5+1
-  flutter_dotenv: ^6.0.0
   envied: ^0.5.4+1
   video_player_win: ^3.2.2
   scrollable_positioned_list:
@@ -67,7 +65,7 @@ dependencies:
   # Youtube Parser
   permission_handler: ^11.0.0
   youtube_explode_dart: ^2.5.0
-  flutter_local_notifications: ^17.0.0 # 🚀 Notifications
+  flutter_local_notifications: ^17.0.0
   # flutter_ffmpeg: ^0.4.2 # 🚀 FFmpeg (Incompatible with AGP 8.x - missing namespace)
 
   # Utilities
@@ -108,12 +106,16 @@ dev_dependencies:
   flutter_lints: ^3.0.0
 
   # Isar Database
-  build_runner: ^2.4.8        # Runs the code generator
+  build_runner: ^2.4.13       # Runs the code generator
   isar_generator: ^3.1.0+1    # Generates the database code
   envied_generator: ^0.5.4+1
   
   # Icon Generator
   flutter_launcher_icons: ^0.13.1
+
+dependency_overrides:
+  # Pin flutter_rust_bridge to 2.11.1 to match smtc_windows and flutter_discord_rpc codegen
+  flutter_rust_bridge: 2.11.1
 
 flutter_launcher_icons:
   android: true
@@ -135,4 +137,3 @@ flutter:
     - assets/
     - assets/binaries/
     - assets/avatars/
-    - .env

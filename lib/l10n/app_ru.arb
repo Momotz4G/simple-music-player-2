@@ -577,6 +577,8 @@
   "autumn": "Осень",
   "avatarPickerDesc": "Выберите шаблон или импортируйте свое фото",
   "beFirstToClaim": "Станьте первым, кто займет первое место!",
+  "backgroundCacheFlacStreams": "Кэширование FLAC-потоков в фоне",
+  "backgroundCacheFlacStreamsSubtitle": "Тихо загружает потоковые треки без потерь на локальный диск, чтобы воспроизведение было мгновенным и не использовало данные.",
   "behavioralHeader": "ПОВЕДЕНЧЕСКИЕ ДОСТИЖЕНИЯ",
   "behavioralTitles": "ПОВЕДЕНЧЕСКИЙ",
   "binariesUpdateRequired": "Требуется обновление бинарных файлов",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "Анализ текста песни...",
   "aiLyricsSuccess": "Текст песни успешно сгенерирован!",
   "aiLyricsLocalFileMissing": "Ошибка: Локальный аудиофайл не найден.",
-  "aiLyricsComplete": "Завершено!"
+  "aiLyricsComplete": "Завершено!",
+  "externalLinkDetected": "Обнаружена внешняя ссылка",
+  "gofileDownloadFailedPrompt": "Автоматическое скачивание не удалось из-за строгих ограничений сети или сервера.\\n\\nХотите открыть страницу загрузки Gofile в системном браузере или скопировать ссылку для скачивания вручную?",
+  "copyLink": "Копировать ссылку",
+  "openBrowser": "Открыть браузер",
+  "linkCopied": "Ссылка скопирована в буфер обмена!",
+  "waitingForServerResponse": "Ожидание ответа сервера...",
+  "queuePositionPleaseWait": "Очередь {position}... пожалуйста, подождите",
+  "processingOnServer": "Обработка на сервере...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

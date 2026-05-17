@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import '../../providers/lyrics_provider.dart';
 
 class SmoothHighlightText extends StatefulWidget {
   final String text;
@@ -14,6 +15,7 @@ class SmoothHighlightText extends StatefulWidget {
   final FontWeight fontWeight;
   final bool isItalic;
   final double spacing;
+  final List<LyricWord>? words;
 
   const SmoothHighlightText({
     super.key,
@@ -29,6 +31,7 @@ class SmoothHighlightText extends StatefulWidget {
     this.fontWeight = FontWeight.w900,
     this.isItalic = false,
     this.spacing = 8.0,
+    this.words,
   });
 
   @override
@@ -87,27 +90,38 @@ class _SmoothHighlightTextState extends State<SmoothHighlightText> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    final words = widget.text.split(' ');
-    if (words.isEmpty) return const SizedBox.shrink();
-    
-    final lineDuration = widget.endTime - widget.startTime;
-    final wordDuration = lineDuration / words.length;
+    if (widget.text.isEmpty && (widget.words == null || widget.words!.isEmpty)) return const SizedBox.shrink();
     
     // Smooth position calculation
     final effectivePos = _currentSmoothPos - widget.syncOffset + 0.5;
+
+    // Word configuration
+    final int wordCount = widget.words?.length ?? widget.text.split(' ').length;
+    final List<String> wordTexts = widget.words?.map((w) => w.text).toList() ?? widget.text.split(' ');
+    
+    final lineDuration = widget.endTime - widget.startTime;
+    final fallbackWordDuration = lineDuration / (wordCount > 0 ? wordCount : 1);
 
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: widget.spacing,
       runSpacing: widget.spacing / 2,
-      children: List.generate(words.length, (index) {
-        final wordStart = widget.startTime + index * wordDuration;
-        final wordEnd = wordStart + wordDuration;
+      children: List.generate(wordCount, (index) {
+        // Use explicit word timings if available, else fallback
+        final wordStart = widget.words != null 
+            ? widget.words![index].startTime 
+            : widget.startTime + index * fallbackWordDuration;
+            
+        final wordEnd = widget.words != null 
+            ? widget.words![index].endTime 
+            : wordStart + fallbackWordDuration;
+            
+        final wordDuration = wordEnd - wordStart;
 
         double progress = 0.0;
         if (effectivePos >= wordEnd) {
           progress = 1.0;
-        } else if (effectivePos >= wordStart) {
+        } else if (effectivePos >= wordStart && wordDuration > 0) {
           progress = ((effectivePos - wordStart) / wordDuration).clamp(0.0, 1.0);
         }
 
@@ -127,7 +141,7 @@ class _SmoothHighlightTextState extends State<SmoothHighlightText> with SingleTi
             ).createShader(bounds);
           },
           child: Text(
-            words[index],
+            wordTexts[index],
             style: TextStyle(
               fontSize: widget.fontSize,
               fontWeight: widget.fontWeight,

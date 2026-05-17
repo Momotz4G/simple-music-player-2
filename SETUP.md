@@ -266,46 +266,74 @@ If using Firebase, create these Firestore collections:
 
 ### Create Required Collections
 
-In PocketBase Admin UI, create these collections with the following fields:
+In your PocketBase Admin UI (`/_/`), you need to create **6 custom collections** with the following fields and API Rules:
 
-#### Collection: `metrics`
-| Field | Type |
-|-------|------|
-| user_id | Text |
-| hostname | Text |
-| os | Text |
-| os_version | Text |
-| client_version | Text |
-| play_count | Number |
-| daily_play_count | Number |
-| download_count | Number |
-| daily_download_count | Number |
-| local_total_plays | Number |
-| last_active | DateTime |
-| last_play_date | DateTime |
-| last_download_date | DateTime |
-| is_banned | Boolean |
+#### 1. Collection: `metrics` (Tracks user listening statistics)
+| Field | Type | Description |
+|-------|------|-------------|
+| `user_id` | Text | Unique hardware identifier |
+| `nickname` | Text | Custom user profile nickname |
+| `avatar` | File | User profile picture (Single image limit) |
+| `hostname` | Text | User's active device name / computer name |
+| `os` | Text | Operating system (windows, android, etc.) |
+| `os_version` | Text | OS build / version string |
+| `client_version` | Text | Version of SMP client (e.g. 2.6.9) |
+| `play_count` | Number | Lifetime play count across all devices |
+| `daily_play_count` | Number | Active daily play count (resets daily) |
+| `weekly_play_count` | Number | Active weekly play count (resets weekly) |
+| `download_count` | Number | Lifetime download count |
+| `daily_download_count` | Number | Active daily download count (resets daily) |
+| `local_total_plays` | Number | Total plays cached locally on device |
+| `total_minutes` | Number | Lifetime minutes played across all tracks |
+| `top_artist` | Text | Name of the user's top streamed artist |
+| `top_track` | Text | Name of the user's top streamed track |
+| `selected_title` | Text | User's equipped profile title |
+| `max_repeat_streak` | Number | Maximum times user listened to the same track sequentially |
+| `weekly_wins_count` | Number | Number of times user ranked #1 on weekly leaderboard |
+| `weekly_podiums_count` | Number | Number of times user finished top 3 on weekly leaderboard |
+| `artist_minutes` | JSON | Key-value dictionary of `Artist -> played_minutes` |
+| `last_active` | DateTime | Timestamp of user's last activity heartbeat |
+| `last_play_date` | DateTime | Timestamp of user's last played song |
+| `last_download_date` | DateTime | Timestamp of user's last downloaded track |
+| `is_banned` | Boolean | Administrative ban status |
 
 **API Rules for `metrics`:**
 | Rule | Setting |
 |------|---------|
-| List | 🔒 Admins only |
+| List | 🔒 Admins only (`@request.auth.id != ""`) or completely restricted |
 | View | Empty (open) |
 | Create | Empty (open) |
 | Update | Empty (open) |
 | Delete | 🔒 Admins only |
 
-#### Collection: `sessions`
-| Field | Type |
-|-------|------|
-| user_id | Text |
-| device_name | Text |
-| current_title | Text |
-| current_artist | Text |
-| album_art_url | URL |
-| is_playing | Boolean |
-| volume | Number |
-| last_command | Text |
+---
+
+#### 2. Collection: `sessions` (Handles real-time Remote Control state)
+| Field | Type | Description |
+|-------|------|-------------|
+| `user_id` | Text | Unique user identifier |
+| `current_title` | Text | Title of active track |
+| `current_artist` | Text | Artist of active track |
+| `current_album` | Text | Album name of active track |
+| `is_playing` | Boolean | Playback state (playing or paused) |
+| `volume` | Number | Player volume setting |
+| `is_shuffle` | Boolean | Shuffle playback mode status |
+| `loop_mode` | Number | Active loop mode index |
+| `position_seconds` | Number | Current playback progress in seconds (High precision double) |
+| `duration_seconds` | Number | Total track duration in seconds (High precision double) |
+| `album_art_url` | Text | Live HTTP URL to active album artwork |
+| `source_url` | Text | Source stream/audio URL |
+| `spotify_id` | Text | Active Spotify track identifier |
+| `queue` | JSON | Current playlist play queue (list of songs) |
+| `active_album_details` | JSON | Details of currently playing album |
+| `active_device_id` | Text | Unique identifier of active player device |
+| `active_device_name` | Text | Name of the active player device |
+| `last_active` | DateTime | Active polling heartbeat |
+| `last_command` | Text | Packed command string (`action|payload|timestamp`) |
+| `cmd_payload` | Text | Additional arguments for the last command |
+| `available_devices` | JSON | List of all registered online remote devices |
+| `search_results` | JSON | Direct results of remote music searches (Party mode) |
+| `last_update` | DateTime | Last changed timestamp |
 
 **API Rules for `sessions`:**
 | Rule | Setting |
@@ -316,11 +344,13 @@ In PocketBase Admin UI, create these collections with the following fields:
 | Update | Empty (open) |
 | Delete | Empty (open) |
 
-#### Collection: `settings`
+---
+
+#### 3. Collection: `settings` (Dashboard credentials & controls)
 | Field | Type | Description |
 |-------|------|-------------|
-| access_code | Text | Admin code - full access (ban, delete, reset all) |
-| viewer_code | Text | Viewer code - can only reset own quota |
+| `access_code` | Text | Admin code - full global system access |
+| `viewer_code` | Text | Viewer code - can only trigger self-service resets |
 
 **API Rules for `settings`:**
 | Rule | Setting |
@@ -331,13 +361,70 @@ In PocketBase Admin UI, create these collections with the following fields:
 | Update | 🔒 Admins only |
 | Delete | 🔒 Admins only |
 
-> **Access Levels:**
+---
+
+#### 4. Collection: `artist_metrics` (Aggregates global artist plays)
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | Text | Name of the artist |
+| `play_count` | Number | Lifetime global plays across all users |
+| `daily_play_count` | Number | Total play count today |
+| `weekly_play_count` | Number | Total play count this week |
+| `last_play_date` | DateTime | Timestamp of the last global play |
+
+**API Rules for `artist_metrics`:**
+*(Since all modifications are performed securely via the admin client)*
+| Rule | Setting |
+|------|---------|
+| List | Empty (open) or 🔒 Admins only |
+| View | Empty (open) |
+| Create | 🔒 Admins only |
+| Update | 🔒 Admins only |
+| Delete | 🔒 Admins only |
+
+---
+
+#### 5. Collection: `shared_playlists` (Cloud playlist sharing engine)
+| Field | Type | Description |
+|-------|------|-------------|
+| `user_id` | Text | Owner's user identifier |
+| `playlist_id` | Text | Local playlist identifier |
+| `data` | Text | Compressed, base64-encoded playlist content |
+| `is_compressed` | Boolean | Compression status flag (GZIP encoded) |
+| `share_code` | Text | Unique shared playlist pin (e.g. alphanumeric code) |
+
+**API Rules for `shared_playlists`:**
+| Rule | Setting |
+|------|---------|
+| List | Empty (open) |
+| View | Empty (open) |
+| Create | Empty (open) |
+| Update | Empty (open) |
+| Delete | Empty (open) |
+
+---
+
+#### 6. Collection: `broadcasts` (Global system alerts & notices)
+| Field | Type | Description |
+|-------|------|-------------|
+| `message` | Text | Broadcast notification alert message |
+
+**API Rules for `broadcasts`:**
+| Rule | Setting |
+|------|---------|
+| List | Empty (open) |
+| View | Empty (open) |
+| Create | 🔒 Admins only |
+| Update | 🔒 Admins only |
+| Delete | 🔒 Admins only |
+
+---
+
+> **Access Levels (Settings configuration):**
 > - **Admin (access_code):** Full control - ban users, delete records, reset any quota
 > - **Viewer (viewer_code):** Read-only + can reset their OWN quota only
-
-> **Setup:** Create one record in `settings` with your codes:
-> - `access_code`: Your private admin password
-> - `viewer_code`: Code to share with users for self-service quota reset
+> 
+> **Setup:** Create exactly one record in the `settings` collection with your preferred codes.
 
 ---
 

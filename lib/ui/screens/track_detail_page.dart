@@ -60,6 +60,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
           genre: widget.songMetadata.genre,
           spotifyId: widget.songMetadata.spotifyId,
           deezerId: widget.songMetadata.deezerId,
+          sourceUrl: widget.songMetadata.youtubeUrl,
         );
       });
     }

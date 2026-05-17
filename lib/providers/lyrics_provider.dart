@@ -14,20 +14,46 @@ import '../models/song_metadata.dart';
 import '../providers/player_provider.dart';
 import '../providers/settings_provider.dart'; // 🔒 OFFLINE MODE
 
+class LyricWord {
+  final String text;
+  final double startTime;
+  final double endTime;
+
+  LyricWord({
+    required this.text,
+    required this.startTime,
+    required this.endTime,
+  });
+}
+
 class LyricLine {
   final String text;
   final String? romanizedText;
   final double time;
   final double? endTime;
+  final List<LyricWord>? words;
 
-  LyricLine({required this.text, this.romanizedText, required this.time, this.endTime});
+  LyricLine({
+    required this.text,
+    this.romanizedText,
+    required this.time,
+    this.endTime,
+    this.words,
+  });
 
-  LyricLine copyWith({String? text, String? romanizedText, double? time, double? endTime}) {
+  LyricLine copyWith({
+    String? text,
+    String? romanizedText,
+    double? time,
+    double? endTime,
+    List<LyricWord>? words,
+  }) {
     return LyricLine(
       text: text ?? this.text,
       romanizedText: romanizedText ?? this.romanizedText,
       time: time ?? this.time,
       endTime: endTime ?? this.endTime,
+      words: words ?? this.words,
     );
   }
 }
@@ -74,8 +100,8 @@ class LyricsState {
       isFromApi: isFromApi ?? this.isFromApi,
       hasLocalLrc: hasLocalLrc ?? this.hasLocalLrc,
       showTranslation: showTranslation ?? this.showTranslation,
-      generationStatus: generationStatus != null 
-          ? (generationStatus == "" ? null : generationStatus) 
+      generationStatus: generationStatus != null
+          ? (generationStatus == "" ? null : generationStatus)
           : this.generationStatus,
       generationLogs: generationLogs ?? this.generationLogs,
     );
@@ -112,13 +138,13 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
     for (final l in lyrics) {
       if (KoreanRomanizer.containsKorean(l.text)) continue;
-      
+
       // Optimization: Only queue if NOT in cache
-      if (JapaneseRomanizer.containsJapanese(l.text) && 
+      if (JapaneseRomanizer.containsJapanese(l.text) &&
           JapaneseRomanizer.getCached(l.text) == null) {
         linesToFetch[l.text] = 'ja';
-      } else if (ChineseRomanizer.containsChinese(l.text) && 
-                 ChineseRomanizer.getCached(l.text) == null) {
+      } else if (ChineseRomanizer.containsChinese(l.text) &&
+          ChineseRomanizer.getCached(l.text) == null) {
         linesToFetch[l.text] = 'zh';
       }
     }
@@ -130,10 +156,11 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
     for (int i = 0; i < entriesList.length; i += chunkSize) {
       final chunk = entriesList.sublist(
-        i, 
-        (i + chunkSize) < entriesList.length ? (i + chunkSize) : entriesList.length
-      );
-      
+          i,
+          (i + chunkSize) < entriesList.length
+              ? (i + chunkSize)
+              : entriesList.length);
+
       final futures = chunk.map((entry) async {
         if (entry.value == 'ja') {
           await JapaneseRomanizer.romanize(entry.key);
@@ -141,7 +168,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
           await ChineseRomanizer.romanize(entry.key);
         }
       });
-      
+
       await Future.wait(futures);
     }
   }
@@ -180,16 +207,22 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
   }
 
   /// Generates AI lyrics using PotatoAI service.
-  Future<void> generateAiLyrics(String filePath, {Map<String, String>? statusMessages}) async {
-    String getMsg(String key, String fallback) => statusMessages?[key] ?? fallback;
+  Future<void> generateAiLyrics(String filePath,
+      {Map<String, String>? statusMessages}) async {
+    String getMsg(String key, String fallback) =>
+        statusMessages?[key] ?? fallback;
 
     // 🔒 OFFLINE MODE: Block AI lyrics generation
     final settings = ref.read(settingsProvider);
     if (settings.isOfflineMode || !settings.enableAiLyrics) {
       state = state.copyWith(
         isLoading: false,
-        rawLyrics: settings.isOfflineMode ? "🔒 Offline Mode active" : "AI Lyrics disabled",
-        generationStatus: settings.isOfflineMode ? "Offline Mode active" : "AI Lyrics disabled",
+        rawLyrics: settings.isOfflineMode
+            ? "🔒 Offline Mode active"
+            : "AI Lyrics disabled",
+        generationStatus: settings.isOfflineMode
+            ? "Offline Mode active"
+            : "AI Lyrics disabled",
       );
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) state = state.copyWith(generationStatus: "");
@@ -200,7 +233,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     if (currentSong != null) {
       _currentSongKey = '${currentSong.filePath}|${currentSong.title}';
     }
-    
+
     try {
       String resolvedPath = filePath;
 
@@ -218,17 +251,22 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
             deezerId: currentSong.deezerId,
             isrc: currentSong.isrc,
           );
-          
-          final predicted = await SmartDownloadService().getPredictedCachePath(meta);
+
+          final predicted =
+              await SmartDownloadService().getPredictedCachePath(meta);
           if (predicted.isNotEmpty && await File(predicted).exists()) {
-            print("📡 AI Lyrics: Resolved streaming path to local cache: $predicted");
+            print(
+                "📡 AI Lyrics: Resolved streaming path to local cache: $predicted");
             resolvedPath = predicted;
           } else {
-            print("⚠️ AI Lyrics: Could not resolve local file for stream. AI may fail.");
+            print(
+                "⚠️ AI Lyrics: Could not resolve local file for stream. AI may fail.");
             state = state.copyWith(
               isLoading: false,
-              rawLyrics: getMsg('localFileMissing', "Local audio file not found."),
-              generationStatus: getMsg('localFileMissing', "Error: Local file missing."),
+              rawLyrics:
+                  getMsg('localFileMissing', "Local audio file not found."),
+              generationStatus:
+                  getMsg('localFileMissing', "Error: Local file missing."),
             );
             return; // Exit point 1
           }
@@ -257,10 +295,10 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
           },
           statusMessages: statusMessages,
         );
-        
+
         if (ttml != null && ttml.isNotEmpty) {
           final parsed = _parseTtml(ttml);
-          
+
           state = state.copyWith(
             isLoading: false,
             rawLyrics: ttml,
@@ -288,7 +326,8 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       // 🚀 GUARANTEE: Always clear status after a delay, no matter how we exited
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
-          state = state.copyWith(generationStatus: ""); // 🚀 Use empty string to signal "CLEAR"
+          state = state.copyWith(
+              generationStatus: ""); // 🚀 Use empty string to signal "CLEAR"
         }
       });
     }
@@ -307,15 +346,24 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
   Future<bool> saveLyrics(String filePath, {bool asTtml = true}) async {
     try {
       final String content;
-      if (asTtml) {
-        content = _convertToTtml(state.parsedLyrics);
+      if (state.parsedLyrics.isNotEmpty) {
+        if (asTtml) {
+          content = _convertToTtml(state.parsedLyrics);
+        } else {
+          content = _convertToLrc(state.parsedLyrics);
+        }
       } else {
-        content = _convertToLrc(state.parsedLyrics);
+        // Plain text mode
+        if (asTtml) {
+          content = _convertPlainToTtml(state.rawLyrics);
+        } else {
+          content = state.rawLyrics;
+        }
       }
-      
+
       final File file = File(filePath);
       await file.writeAsString(content);
-      
+
       // Update state to reflect local file exists
       state = state.copyWith(
         rawLyrics: content,
@@ -337,11 +385,31 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i];
       final begin = _formatTtmlTime(line.time);
-      final end = _formatTtmlTime(line.endTime ?? (i < lines.length - 1 ? lines[i + 1].time : line.time + 5.0));
+      final end = _formatTtmlTime(line.endTime ??
+          (i < lines.length - 1 ? lines[i + 1].time : line.time + 5.0));
       if (line.romanizedText != null && line.romanizedText!.isNotEmpty) {
-        buffer.writeln('      <p begin="$begin" end="$end" data-romanized="${line.romanizedText!.replaceAll('"', '&quot;')}">${line.text}</p>');
+        buffer.writeln(
+            '      <p begin="$begin" end="$end" data-romanized="${line.romanizedText!.replaceAll('"', '&quot;')}">${line.text}</p>');
       } else {
         buffer.writeln('      <p begin="$begin" end="$end">${line.text}</p>');
+      }
+    }
+    buffer.writeln('    </div>');
+    buffer.writeln('  </body>');
+    buffer.writeln('</tt>');
+    return buffer.toString();
+  }
+
+  String _convertPlainToTtml(String text) {
+    final buffer = StringBuffer();
+    buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
+    buffer.writeln('<tt xmlns="http://www.w3.org/ns/ttml" itunes:timing="None">');
+    buffer.writeln('  <body>');
+    buffer.writeln('    <div>');
+    for (final line in text.split('\n')) {
+      final t = line.trim();
+      if (t.isNotEmpty) {
+        buffer.writeln('      <p>${t.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</p>');
       }
     }
     buffer.writeln('    </div>');
@@ -355,7 +423,8 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     for (final line in lines) {
       final minutes = (line.time / 60).floor();
       final seconds = line.time % 60;
-      final timeStr = "${minutes.toString().padLeft(2, '0')}:${seconds.toStringAsFixed(2).padLeft(5, '0')}";
+      final timeStr =
+          "${minutes.toString().padLeft(2, '0')}:${seconds.toStringAsFixed(2).padLeft(5, '0')}";
       buffer.writeln('[$timeStr]${line.text}');
     }
     return buffer.toString();
@@ -369,12 +438,14 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     final ms = (duration.inMilliseconds % 1000).toString().padLeft(3, '0');
     return "$h:$m:$s.$ms";
   }
-  void loadLyricsFromContent(String content) {
+
+  void loadLyricsFromContent(String rawContent) {
+    String content = _fixMojibake(rawContent);
     final currentSong = ref.read(playerProvider).currentSong;
     if (currentSong != null) {
       _currentSongKey = '${currentSong.filePath}|${currentSong.title}';
     }
-    
+
     List<LyricLine> parsed = [];
     if (content.trim().startsWith('<')) {
       parsed = _parseTtml(content);
@@ -383,7 +454,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     } else {
       parsed = _parseLrc(content);
     }
-    
+
     if (parsed.isNotEmpty) {
       // Has synced timestamps
       state = state.copyWith(
@@ -396,15 +467,49 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       );
     } else {
       // Plain text lyrics (no timestamps)
+      String plainText = content;
+      if (content.trim().startsWith('<')) {
+        plainText = _extractPlainTextFromTtml(content);
+      }
+
       state = state.copyWith(
         isLoading: false,
-        rawLyrics: content,
+        rawLyrics: plainText,
         parsedLyrics: [],
         syncOffset: 0.0,
         isFromApi: false,
         hasLocalLrc: false,
       );
     }
+  }
+
+  String _extractPlainTextFromTtml(String ttml) {
+    try {
+      final document = parse(ttml);
+      final pTags = document.getElementsByTagName('p');
+      if (pTags.isEmpty) return ttml;
+
+      final buffer = StringBuffer();
+      for (final p in pTags) {
+        final text = p.text.trim().replaceAll(RegExp(r'\s+'), ' ');
+        if (text.isNotEmpty) {
+          buffer.writeln(text);
+        }
+      }
+      return buffer.toString().trim();
+    } catch (_) {
+      return ttml;
+    }
+  }
+
+  String _fixMojibake(String input) {
+    try {
+      if (input.contains('Ã') || input.contains('ì') || input.contains('ë')) {
+        final bytes = latin1.encode(input);
+        return utf8.decode(bytes);
+      }
+    } catch (_) {}
+    return input;
   }
 
   Future<void> loadLyrics(
@@ -447,9 +552,9 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       final lrcPath = p.setExtension(filePath, '.lrc');
       final ttmlPath = p.setExtension(filePath, '.ttml');
       final srtPath = p.setExtension(filePath, '.srt');
-      
+
       File? foundLocalFile;
-      
+
       for (final path in [lrcPath, ttmlPath, srtPath]) {
         File file = File(path);
         if (!await file.exists()) {
@@ -468,8 +573,9 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
       if (foundLocalFile != null) {
         print("📂 Found local lyrics file: ${foundLocalFile.path}");
-        final content = await foundLocalFile.readAsString();
-        
+        final rawContent = await foundLocalFile.readAsString();
+        final content = _fixMojibake(rawContent);
+
         List<LyricLine> parsed = [];
         if (content.trim().startsWith('<')) {
           parsed = _parseTtml(content);
@@ -478,10 +584,15 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         } else {
           parsed = _parseLrc(content);
         }
-        
+
+        String rawText = content;
+        if (parsed.isEmpty && content.trim().startsWith('<')) {
+          rawText = _extractPlainTextFromTtml(content);
+        }
+
         state = state.copyWith(
           isLoading: false,
-          rawLyrics: content,
+          rawLyrics: rawText,
           parsedLyrics: parsed,
           isFromApi: false, // It's local
           hasLocalLrc: true,
@@ -701,9 +812,35 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
           final endTime = endStr != null ? _parseTtmlTime(endStr) : null;
           final text = p.text.trim().replaceAll(RegExp(r'\s+'), ' ');
           final romanized = p.attributes['data-romanized'];
-          
+
+          List<LyricWord>? words;
+          final spanTags = p.getElementsByTagName('span');
+          if (spanTags.isNotEmpty) {
+            words = [];
+            for (final span in spanTags) {
+              final spanBegin = span.attributes['begin'];
+              final spanEnd = span.attributes['end'];
+              final spanText = span.text.trim();
+              // In some TTML, spaces between spans might be lost if we only take span.text.
+              // But spanText is enough for word-level sync highlighting.
+              if (spanBegin != null && spanEnd != null && spanText.isNotEmpty) {
+                words.add(LyricWord(
+                  text: spanText,
+                  startTime: _parseTtmlTime(spanBegin),
+                  endTime: _parseTtmlTime(spanEnd),
+                ));
+              }
+            }
+            if (words.isEmpty) words = null;
+          }
+
           if (text.isNotEmpty) {
-            lines.add(LyricLine(time: time, endTime: endTime, text: text, romanizedText: romanized));
+            lines.add(LyricLine(
+                time: time,
+                endTime: endTime,
+                text: text,
+                romanizedText: romanized,
+                words: words));
           }
         }
       }
@@ -718,7 +855,9 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       timeStr = timeStr.replaceAll('s', '').trim();
       final parts = timeStr.split(':');
       if (parts.length == 3) {
-        return double.parse(parts[0]) * 3600 + double.parse(parts[1]) * 60 + double.parse(parts[2]);
+        return double.parse(parts[0]) * 3600 +
+            double.parse(parts[1]) * 60 +
+            double.parse(parts[2]);
       } else if (parts.length == 2) {
         return double.parse(parts[0]) * 60 + double.parse(parts[1]);
       } else if (parts.length == 1) {
@@ -734,8 +873,9 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     final List<LyricLine> lines = [];
     // Split by double newline to get blocks
     final List<String> blocks = srt.split(RegExp(r'\r?\n\r?\n'));
-    
-    final RegExp timeRegex = RegExp(r'(\d{2}:\d{2}:\d{2}[.,]\d{3}) --> (\d{2}:\d{2}:\d{2}[.,]\d{3})');
+
+    final RegExp timeRegex = RegExp(
+        r'(\d{2}:\d{2}:\d{2}[.,]\d{3}) --> (\d{2}:\d{2}:\d{2}[.,]\d{3})');
 
     for (var block in blocks) {
       final linesInBlock = block.trim().split(RegExp(r'\r?\n'));
@@ -757,13 +897,14 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       if (timeMatch != null && timeLineIndex != -1) {
         final startTime = _parseSrtTime(timeMatch.group(1)!);
         final endTime = _parseSrtTime(timeMatch.group(2)!);
-        
+
         // Everything after the time line is text
-        final text = linesInBlock.sublist(timeLineIndex + 1)
+        final text = linesInBlock
+            .sublist(timeLineIndex + 1)
             .join(' ')
             .replaceAll(RegExp(r'<[^>]*>'), '') // Strip HTML tags like <i>
             .trim();
-            
+
         if (text.isNotEmpty) {
           lines.add(LyricLine(time: startTime, endTime: endTime, text: text));
         }
@@ -777,11 +918,11 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     try {
       final parts = timeStr.split(':');
       final secondsWithMs = parts[2].replaceAll(',', '.');
-      
+
       final hours = int.parse(parts[0]);
       final minutes = int.parse(parts[1]);
       final seconds = double.parse(secondsWithMs);
-      
+
       return (hours * 3600) + (minutes * 60) + seconds;
     } catch (e) {
       print("SRT Time parsing error: $e");

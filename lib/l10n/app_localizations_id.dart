@@ -219,6 +219,14 @@ class AppLocalizationsId extends AppLocalizations {
   String get beFirstToClaim => 'Jadilah yang pertama mengklaim posisi teratas!';
 
   @override
+  String get backgroundCacheFlacStreams =>
+      'Cache Stream FLAC di Latar Belakang';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      'Mengunduh trek lossless yang di-streaming secara diam-diam ke disk lokal Anda agar pemutaran ulang instan dan tidak menggunakan data.';
+
+  @override
   String get behavioralHeader => 'PENCAPAIAN PERILAKU';
 
   @override
@@ -2674,4 +2682,31 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => 'Selesai!';
+
+  @override
+  String get externalLinkDetected => 'Tautan Eksternal Terdeteksi';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      'Unduhan otomatis gagal karena pembatasan jaringan atau server yang ketat.\\n\\nApakah Anda ingin membuka halaman unduhan Gofile di browser sistem Anda, atau menyalin tautan untuk mengunduh secara manual?';
+
+  @override
+  String get copyLink => 'Salin Tautan';
+
+  @override
+  String get openBrowser => 'Buka Browser';
+
+  @override
+  String get linkCopied => 'Tautan disalin ke papan klip!';
+
+  @override
+  String get waitingForServerResponse => 'Menunggu respons server...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'Antrean $position... mohon tunggu';
+  }
+
+  @override
+  String get processingOnServer => 'Memproses di server...';
 }

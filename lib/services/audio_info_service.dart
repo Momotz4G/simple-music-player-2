@@ -80,7 +80,13 @@ class AudioInfo {
       'pcm_s16le',
       'pcm_s24le',
       'pcm_s32le',
-      'pcm_f32le'
+      'pcm_f32le',
+      'pcm_s16be',
+      'pcm_s24be',
+      'pcm_s32be',
+      'pcm_f32be',
+      'pcm_f64le',
+      'pcm_f64be',
     ];
     if (losslessCodecs.any((c) => lowerCodec.contains(c))) return true;
 
@@ -148,21 +154,26 @@ class AudioInfoService {
   /// Max 2 simultaneous ffprobe.exe processes to avoid overwhelming Windows.
   static const int _maxConcurrentProbes = 4; // 🚀 Increased for faster clearing
   static int _activeProbes = 0;
-  static final List<({Completer<void> completer, bool isPriority})> _probeQueue = [];
+  static final List<({Completer<void> completer, bool isPriority})>
+      _probeQueue = [];
 
   /// Acquire a slot to run ffprobe. Waits if at capacity.
-  static Future<void> _acquireProbeSlot(String filePath, {bool isPriority = false}) async {
+  static Future<void> _acquireProbeSlot(String filePath,
+      {bool isPriority = false}) async {
     final fileName = filePath.split(Platform.pathSeparator).last;
     if (_activeProbes < _maxConcurrentProbes) {
       _activeProbes++;
-      debugPrint("🎟️ AudioInfo Slot: Acquired for '$fileName' (Active: $_activeProbes)${isPriority ? " [PRIORITY]" : ""}");
+      debugPrint(
+          "🎟️ AudioInfo Slot: Acquired for '$fileName' (Active: $_activeProbes)${isPriority ? " [PRIORITY]" : ""}");
       return;
     }
     // Wait for a slot to free up
-    debugPrint("⏳ AudioInfo Slot: Waiting for '$fileName'... (Queue: ${_probeQueue.length + 1})${isPriority ? " [PRIORITY]" : ""}");
+    debugPrint(
+        "⏳ AudioInfo Slot: Waiting for '$fileName'... (Queue: ${_probeQueue.length + 1})${isPriority ? " [PRIORITY]" : ""}");
     final completer = Completer<void>();
     if (isPriority) {
-      _probeQueue.insert(0, (completer: completer, isPriority: true)); // Jump to front
+      _probeQueue
+          .insert(0, (completer: completer, isPriority: true)); // Jump to front
     } else {
       _probeQueue.add((completer: completer, isPriority: false));
     }
@@ -174,7 +185,8 @@ class AudioInfoService {
     if (_probeQueue.isNotEmpty) {
       final next = _probeQueue.removeAt(0);
       next.completer.complete(); // Hand the slot to the next waiter
-      debugPrint("🎟️ AudioInfo Slot: Passed to next (Queue: ${_probeQueue.length})${next.isPriority ? " [WAS PRIORITY]" : ""}");
+      debugPrint(
+          "🎟️ AudioInfo Slot: Passed to next (Queue: ${_probeQueue.length})${next.isPriority ? " [WAS PRIORITY]" : ""}");
     } else {
       _activeProbes--;
       debugPrint("🎟️ AudioInfo Slot: Released (Active: $_activeProbes)");
@@ -204,7 +216,8 @@ class AudioInfoService {
   }
 
   /// Get audio info for a SongModel (Resilient)
-  Future<AudioInfo?> getAudioInfoForSong(SongModel song, {bool isPriority = false}) async {
+  Future<AudioInfo?> getAudioInfoForSong(SongModel song,
+      {bool isPriority = false}) async {
     // 1. Try local file if it exists
     if (!song.filePath.startsWith('http')) {
       final file = File(song.filePath);
@@ -219,7 +232,8 @@ class AudioInfoService {
       // 🚀 NEW: Check if a local cached version exists before probing the URL
       final cachedPath = await _checkCachePath(song);
       if (cachedPath != null) {
-        debugPrint("🔍 AudioInfo: Found cached version for URL, probing: $cachedPath");
+        debugPrint(
+            "🔍 AudioInfo: Found cached version for URL, probing: $cachedPath");
         return await getAudioInfo(cachedPath, isPriority: isPriority);
       }
       debugPrint("🔍 AudioInfo: Probing URL: ${song.filePath}");
@@ -230,7 +244,8 @@ class AudioInfoService {
     if (song.sourceUrl != null && song.sourceUrl!.startsWith('http')) {
       final cachedPath = await _checkCachePath(song);
       if (cachedPath != null) {
-        debugPrint("🔍 AudioInfo: Found cached version for sourceUrl, probing: $cachedPath");
+        debugPrint(
+            "🔍 AudioInfo: Found cached version for sourceUrl, probing: $cachedPath");
         return await getAudioInfo(cachedPath, isPriority: isPriority);
       }
       debugPrint("🔍 AudioInfo: Probing sourceUrl: ${song.sourceUrl}");
@@ -238,7 +253,8 @@ class AudioInfoService {
     }
 
     // 4. Fallback to basic info from song metadata
-    debugPrint("🔍 AudioInfo: Falling back to basic info for: ${song.filePath}");
+    debugPrint(
+        "🔍 AudioInfo: Falling back to basic info for: ${song.filePath}");
     return _getBasicInfo(song.filePath, 0, _getFormatFromPath(song.filePath));
   }
 
@@ -294,11 +310,12 @@ class AudioInfoService {
 
   /// 🚀 COMBINED: Get both tags AND audio info in a single ffprobe invocation.
   /// This halves the number of ffprobe.exe processes during library scan.
-  Future<({Map<String, String> tags, AudioInfo? info})> getTagsAndInfo(String filePath) async {
+  Future<({Map<String, String> tags, AudioInfo? info})> getTagsAndInfo(
+      String filePath) async {
     try {
       final format = _getFormatFromPath(filePath);
       int fileSize = 0;
-      
+
       if (!filePath.startsWith('http')) {
         final file = File(filePath);
         if (await file.exists()) {
@@ -310,7 +327,10 @@ class AudioInfoService {
         final session = await FFprobeKit.getMediaInformation(filePath);
         final mediaInfo = session.getMediaInformation();
         if (mediaInfo == null) {
-          return (tags: <String, String>{}, info: _getBasicInfo(filePath, fileSize, format));
+          return (
+            tags: <String, String>{},
+            info: _getBasicInfo(filePath, fileSize, format)
+          );
         }
         final rawTags = mediaInfo.getTags();
         final tags = rawTags != null
@@ -323,7 +343,10 @@ class AudioInfoService {
       // Desktop: single ffprobe with both -show_format and -show_streams
       if (_ffprobePath == null) await initialize();
       if (_ffprobePath == null) {
-        return (tags: <String, String>{}, info: _getBasicInfo(filePath, fileSize, format));
+        return (
+          tags: <String, String>{},
+          info: _getBasicInfo(filePath, fileSize, format)
+        );
       }
 
       await _acquireProbeSlot(filePath);
@@ -331,8 +354,10 @@ class AudioInfoService {
         final result = await Process.run(
           _ffprobePath!,
           [
-            '-v', 'quiet',
-            '-print_format', 'json',
+            '-v',
+            'quiet',
+            '-print_format',
+            'json',
             '-show_format',
             '-show_streams',
             filePath,
@@ -344,7 +369,10 @@ class AudioInfoService {
         });
 
         if (result.exitCode != 0) {
-          return (tags: <String, String>{}, info: _getBasicInfo(filePath, fileSize, format));
+          return (
+            tags: <String, String>{},
+            info: _getBasicInfo(filePath, fileSize, format)
+          );
         }
 
         final json = jsonDecode(result.stdout as String);
@@ -354,7 +382,8 @@ class AudioInfoService {
         // Extract tags
         final rawTags = formatInfo?['tags'] as Map?;
         final tags = rawTags != null
-            ? rawTags.map((key, value) => MapEntry(key.toString(), value.toString()))
+            ? rawTags
+                .map((key, value) => MapEntry(key.toString(), value.toString()))
             : <String, String>{};
 
         // Extract audio stream info
@@ -373,19 +402,24 @@ class AudioInfoService {
         }
 
         final codec = audioStream['codec_name'] as String? ?? 'unknown';
-        final sampleRate = int.tryParse(audioStream['sample_rate']?.toString() ?? '');
+        final sampleRate =
+            int.tryParse(audioStream['sample_rate']?.toString() ?? '');
         final channels = audioStream['channels'] as int?;
-        int? bitDepth = int.tryParse(audioStream['bits_per_raw_sample']?.toString() ?? '');
+        int? bitDepth =
+            int.tryParse(audioStream['bits_per_raw_sample']?.toString() ?? '');
         if (bitDepth == null || bitDepth == 0) {
-          bitDepth = int.tryParse(audioStream['bits_per_sample']?.toString() ?? '');
+          bitDepth =
+              int.tryParse(audioStream['bits_per_sample']?.toString() ?? '');
         }
         if (bitDepth == 0) bitDepth = null;
 
         int? bitrate;
         if (audioStream['bit_rate'] != null) {
-          bitrate = (int.tryParse(audioStream['bit_rate'].toString()) ?? 0) ~/ 1000;
+          bitrate =
+              (int.tryParse(audioStream['bit_rate'].toString()) ?? 0) ~/ 1000;
         } else if (formatInfo?['bit_rate'] != null) {
-          bitrate = (int.tryParse(formatInfo!['bit_rate'].toString()) ?? 0) ~/ 1000;
+          bitrate =
+              (int.tryParse(formatInfo!['bit_rate'].toString()) ?? 0) ~/ 1000;
         }
 
         Duration? duration;
@@ -418,7 +452,8 @@ class AudioInfoService {
   }
 
   /// Get audio info for a file or URL
-  Future<AudioInfo?> getAudioInfo(String filePath, {bool isPriority = false}) async {
+  Future<AudioInfo?> getAudioInfo(String filePath,
+      {bool isPriority = false}) async {
     try {
       final isUrl = filePath.startsWith('http');
       int fileSize = 0;
@@ -454,8 +489,9 @@ class AudioInfoService {
         }
 
         if (_ffprobePath != null) {
-          final info = await _getDetailedInfo(filePath, fileSize, format, isPriority: isPriority);
-          
+          final info = await _getDetailedInfo(filePath, fileSize, format,
+              isPriority: isPriority);
+
           return info;
         }
       }
@@ -615,9 +651,9 @@ class AudioInfoService {
     }
   }
 
-  /// Get basic info (mobile fallback)
+  /// Get basic info (mobile fallback / fast guestimate)
   AudioInfo _getBasicInfo(String filePath, int fileSize, String format) {
-    final codec = _getCodecFromFormat(format);
+    String codec = _getCodecFromFormat(format);
 
     // Estimate bitrate from file size (very rough)
     // Assume 3-4 minutes average song
@@ -628,20 +664,28 @@ class AudioInfoService {
       estimatedBitrate = ((fileSize * 8) / 210 / 1000).round();
     }
 
+    // 🚀 ENHANCEMENT: Smart guestimate for M4A (ALAC vs AAC)
+    // AAC almost never exceeds 320-512kbps. If we see > 500kbps in an M4A, 
+    // it's highly likely to be ALAC (Lossless).
+    if (format == 'M4A' && estimatedBitrate != null && estimatedBitrate > 500) {
+      codec = 'alac';
+    }
+
     return AudioInfo(
       format: format,
       codec: codec,
       bitrate: estimatedBitrate,
-      sampleRate: format == 'FLAC' ? 44100 : null, // Assume for FLAC
+      sampleRate: (format == 'FLAC' || codec == 'alac') ? 44100 : null,
       channels: 2, // Assume stereo
-      bitDepth: format == 'FLAC' ? 16 : null,
+      bitDepth: (format == 'FLAC' || codec == 'alac') ? 16 : null,
       fileSize: fileSize,
     );
   }
 
   /// Get detailed info using ffprobe
   Future<AudioInfo> _getDetailedInfo(
-      String filePath, int fileSize, String format, {bool isPriority = false}) async {
+      String filePath, int fileSize, String format,
+      {bool isPriority = false}) async {
     try {
       await _acquireProbeSlot(filePath, isPriority: isPriority);
       late final ProcessResult result;
@@ -746,53 +790,86 @@ class AudioInfoService {
     final uri = Uri.parse(url);
     final qualityParam = uri.queryParameters['quality']?.toUpperCase();
 
-    // 🚀 NEW: Snoop VPS headers for exact specs (Fast Path)
     int? headerSampleRate;
     int? headerBitDepth;
-    
-    if (url.contains('${Uri.parse(Env.tidalApiUrl).host}/stream')) {
-      try {
-        final response = await http.head(uri).timeout(const Duration(seconds: 1));
-        final srate = response.headers['x-audio-sample-rate'];
-        final bdepth = response.headers['x-audio-bit-depth'];
-        if (srate != null) headerSampleRate = int.tryParse(srate);
-        if (bdepth != null) headerBitDepth = int.tryParse(bdepth);
-      } catch (e) {
-        // Silent fail, use estimates
+    int? headerBitrate;
+    String? headerCodec;
+
+    try {
+      // 1. Snoop VPS headers for exact specs (Fast Path)
+      final response = await http.head(uri).timeout(const Duration(seconds: 5));
+      
+      // Use lowercase for reliability
+      final srate = response.headers['x-audio-sample-rate'];
+      final bdepth = response.headers['x-audio-bit-depth'];
+      final brate = response.headers['x-audio-bitrate'];
+      final scodec = response.headers['x-audio-codec'];
+
+      if (srate != null) headerSampleRate = int.tryParse(srate);
+      if (bdepth != null) headerBitDepth = int.tryParse(bdepth);
+      if (brate != null) headerBitrate = int.tryParse(brate);
+      headerCodec = scodec?.toLowerCase();
+
+      // 2. 🚀 SMART FALLBACK: Parse specs from filename/URL
+      // The bot often includes tags like [16B-44.1kHz - ALAC] in the path
+      if (headerSampleRate == null || headerBitDepth == null || headerCodec == null) {
+        final decodedUrl = Uri.decodeFull(url);
+        final specRegex = RegExp(r'\[(\d+)B-(\d+\.?\d*)kHz\s*-\s*(\w+)\]');
+        final match = specRegex.firstMatch(decodedUrl);
+
+        if (match != null) {
+          final bitDepthStr = match.group(1);
+          final sampleRateStr = match.group(2);
+          final codecStr = match.group(3)?.toLowerCase();
+
+          headerBitDepth ??= int.tryParse(bitDepthStr ?? '');
+          if (sampleRateStr != null) {
+            headerSampleRate ??= ((double.tryParse(sampleRateStr) ?? 0) * 1000).round();
+            if (headerSampleRate == 0) headerSampleRate = null;
+          }
+          headerCodec ??= codecStr;
+          debugPrint("🔍 AudioInfo: Parsed specs from URL: ${bitDepthStr}bit, ${sampleRateStr}kHz, $codecStr");
+        }
       }
+    } catch (e) {
+      debugPrint("🔍 AudioInfo: Metadata snoop/parse failed ($e)");
     }
 
-    if (qualityParam == null && headerSampleRate == null) return info;
-
+    // 3. Apply overrides and defaults
     int? sampleRate = headerSampleRate ?? info.sampleRate;
     int? bitDepth = headerBitDepth ?? info.bitDepth;
-    int? bitrate = info.bitrate;
+    int? bitrate = headerBitrate;
+    String codec = headerCodec ?? info.codec;
 
     if (qualityParam == 'HI_RES_LOSSLESS') {
       sampleRate ??= 96000;
       bitDepth ??= 24;
-      bitrate ??= (sampleRate > 48000) ? 3000 : 1500; 
     } else if (qualityParam == 'LOSSLESS') {
       sampleRate ??= 44100;
       bitDepth ??= 16;
-      bitrate ??= 850; 
     } else if (qualityParam == 'HIGH') {
       bitrate ??= 320;
     }
 
-    final bool isLossy = (qualityParam == 'HIGH' || qualityParam == 'LOW');
+    // 4. Estimate bitrate if missing
+    if (bitrate == null || bitrate == 0) {
+      if (sampleRate != null && bitDepth != null) {
+        bitrate = (sampleRate * bitDepth * 2 * 0.6 / 1000).round();
+      }
+    }
+
+    // 5. Final assembly
+    final bool isLossy = (qualityParam == 'HIGH' || qualityParam == 'LOW' || codec == 'aac' || codec == 'mp3');
 
     return AudioInfo(
-      format: info.format == 'STREAM' || info.format.contains('/') 
-          ? (isLossy ? 'M4A' : 'FLAC') 
+      format: info.format == 'STREAM' || info.format.contains('/')
+          ? (isLossy ? 'M4A' : 'FLAC')
           : info.format,
-      codec: info.codec == 'stream' || info.codec.contains('/') 
-          ? (isLossy ? 'aac' : 'flac') 
-          : info.codec,
-      bitrate: bitrate,
-      sampleRate: sampleRate,
+      codec: codec,
+      bitrate: bitrate ?? info.bitrate,
+      sampleRate: sampleRate ?? info.sampleRate,
       channels: info.channels ?? 2,
-      bitDepth: bitDepth,
+      bitDepth: bitDepth ?? info.bitDepth,
       fileSize: info.fileSize,
       duration: info.duration,
     );
@@ -803,17 +880,15 @@ class AudioInfoService {
     try {
       final tempDir = await getTemporaryDirectory();
       // Use the same logic as FlacDownloaderService/FilenameHelper
-      final sanitized = song.title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_') + 
-                        " - " + 
-                        song.artist.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
-      
+      final sanitized = '${song.title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')} - ${song.artist.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')}';
+
       final cacheDir = Directory('${tempDir.path}/SimpleMusicCache');
       if (await cacheDir.exists()) {
         final flacFile = File('${cacheDir.path}/$sanitized.flac');
         if (await flacFile.exists() && await flacFile.length() > 1024) {
           return flacFile.path;
         }
-        
+
         final m4aFile = File('${cacheDir.path}/$sanitized.m4a');
         if (await m4aFile.exists() && await m4aFile.length() > 1024) {
           return m4aFile.path;

@@ -45,12 +45,16 @@ class PocketBaseService {
       // _userId is always null on first cold start, which previously caused
       // "Identity Changed" to fire every single startup (false positive).
       final persistedUserId = _userId ?? prefs.getString('pb_user_id');
-      if (userId != null && persistedUserId != null && userId != persistedUserId) {
-        DebugLogService().info("📡 Session: Identity Changed ($persistedUserId → $userId). Clearing stale session token.");
+      if (userId != null &&
+          persistedUserId != null &&
+          userId != persistedUserId) {
+        DebugLogService().info(
+            "📡 Session: Identity Changed ($persistedUserId → $userId). Clearing stale session token.");
         _userId = userId;
         // 🚀 CRITICAL: Force clear local storage so ensureUniqueSession performs a fresh search
         await prefs.remove('pb_session_id');
-        await prefs.remove('pb_metrics_id'); // Clear cached metrics ID for old identity
+        await prefs.remove(
+            'pb_metrics_id'); // Clear cached metrics ID for old identity
       }
 
       if (userId != null) {
@@ -75,7 +79,8 @@ class PocketBaseService {
           final currentPbUserId = prefs.getString('pb_user_id');
           if (currentPbUserId != linkedUserId) {
             await prefs.setString('pb_user_id', linkedUserId);
-            DebugLogService().info("🔗 PB Init: Corrected stale pb_user_id from $currentPbUserId to $linkedUserId");
+            DebugLogService().info(
+                "🔗 PB Init: Corrected stale pb_user_id from $currentPbUserId to $linkedUserId");
           }
         } else {
           _userId = prefs.getString('pb_user_id');
@@ -86,7 +91,8 @@ class PocketBaseService {
         }
       }
 
-      DebugLogService().info("🚀 PocketBaseService: Initialized for User: $_userId");
+      DebugLogService()
+          .info("🚀 PocketBaseService: Initialized for User: $_userId");
       _initialized = true;
     } catch (e) {
       DebugLogService().error("⚠️ PB Init Error: $e");
@@ -97,16 +103,17 @@ class PocketBaseService {
   /// 🚀 Wait for initialization to complete if it hasn't already
   Future<void> _ensureInitialized() async {
     if (_initialized && _userId != null) return;
-    
+
     // If not initialized, try one more quick local init or wait
     int retries = 0;
     while (!_initialized && retries < 10) {
       await Future.delayed(const Duration(milliseconds: 200));
       retries++;
     }
-    
+
     if (!_initialized) {
-      DebugLogService().error("⚠️ PocketBaseService: Failed to initialize after waiting.");
+      DebugLogService()
+          .error("⚠️ PocketBaseService: Failed to initialize after waiting.");
       throw Exception("PocketBase not initialized");
     }
   }
@@ -146,8 +153,10 @@ class PocketBaseService {
   }
 
   // SAVE DATA (Upsert: Create or Update) - No List permission needed
-  Future<void> saveData(Map<String, dynamic> data, {File? avatarFile, bool clearAvatar = false}) async {
-    if (isOffline || !enableCloudSync) return; // 🔒 OFFLINE or Cloud Sync Disabled
+  Future<void> saveData(Map<String, dynamic> data,
+      {File? avatarFile, bool clearAvatar = false}) async {
+    if (isOffline || !enableCloudSync)
+      return; // 🔒 OFFLINE or Cloud Sync Disabled
     if (!_initialized || _userId == null) return;
 
     // 🚀 Inject Real Hostname & Nickname
@@ -155,18 +164,22 @@ class PocketBaseService {
     final prefs = await SharedPreferences.getInstance();
     final customNickname = prefs.getString('custom_nickname');
     final selectedTitle = prefs.getString('selected_title');
-    
+
     // 🚀 COMPETITIVE GUARD: Never auto-inject "Top X Global" from local prefs
     // These titles must be validated against actual rank before writing.
     // Without this, old clients re-push stale competitive titles on every heartbeat.
     final _competitiveTitles = {'Top 1 Global', 'Top 2 Global', 'Top 3 Global'};
-    final isCompetitiveTitle = selectedTitle != null && _competitiveTitles.contains(selectedTitle);
-    
+    final isCompetitiveTitle =
+        selectedTitle != null && _competitiveTitles.contains(selectedTitle);
+
     final dataWithHost = {
-      ...data, 
+      ...data,
       'hostname': hostname,
       'nickname': customNickname ?? '',
-      if (!data.containsKey('selected_title') && selectedTitle != null && selectedTitle.isNotEmpty && !isCompetitiveTitle)
+      if (!data.containsKey('selected_title') &&
+          selectedTitle != null &&
+          selectedTitle.isNotEmpty &&
+          !isCompetitiveTitle)
         'selected_title': selectedTitle,
       if (clearAvatar) 'avatar': null,
     };
@@ -181,10 +194,14 @@ class PocketBaseService {
       try {
         await pb
             .collection('metrics')
-            .update(_cachedMetricsId!, 
+            .update(_cachedMetricsId!,
                 body: dataWithHost,
-                files: avatarFile != null ? [await http.MultipartFile.fromPath('avatar', avatarFile.path)] : []
-            )
+                files: avatarFile != null
+                    ? [
+                        await http.MultipartFile.fromPath(
+                            'avatar', avatarFile.path)
+                      ]
+                    : [])
             .timeout(_networkTimeout);
         return;
       } catch (e) {
@@ -201,10 +218,14 @@ class PocketBaseService {
         try {
           await pb
               .collection('metrics')
-              .update(storedId, 
+              .update(storedId,
                   body: dataWithHost,
-                  files: avatarFile != null ? [await http.MultipartFile.fromPath('avatar', avatarFile.path)] : []
-              )
+                  files: avatarFile != null
+                      ? [
+                          await http.MultipartFile.fromPath(
+                              'avatar', avatarFile.path)
+                        ]
+                      : [])
               .timeout(_networkTimeout);
           _cachedMetricsId = storedId;
           return;
@@ -225,6 +246,7 @@ class PocketBaseService {
             page: 1,
             perPage: 1,
             filter: 'user_id = "$_userId"',
+            query: {'nc': DateTime.now().millisecondsSinceEpoch.toString()},
           )
           .timeout(_networkTimeout);
 
@@ -234,10 +256,14 @@ class PocketBaseService {
         try {
           await pb
               .collection('metrics')
-              .update(existingId, 
+              .update(existingId,
                   body: dataWithHost,
-                  files: avatarFile != null ? [await http.MultipartFile.fromPath('avatar', avatarFile.path)] : []
-              )
+                  files: avatarFile != null
+                      ? [
+                          await http.MultipartFile.fromPath(
+                              'avatar', avatarFile.path)
+                        ]
+                      : [])
               .timeout(_networkTimeout);
           _cachedMetricsId = existingId;
 
@@ -245,7 +271,8 @@ class PocketBaseService {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('pb_metrics_id', existingId);
 
-          debugPrint("📊 Found and updated existing metrics record: $existingId");
+          debugPrint(
+              "📊 Found and updated existing metrics record: $existingId");
           return;
         } catch (e) {
           debugPrint("⚠️ Failed to update metrics record: $e");
@@ -262,20 +289,22 @@ class PocketBaseService {
       // 🚀 CRITICAL FIX: If search fails for ANY reason (403, network, etc.),
       // DO NOT fall through to create a new record — that causes duplicates!
       // Instead, return and retry next time when we might have a valid cache.
-      debugPrint("📊 Search failed. Skipping write to prevent duplicate creation.");
+      debugPrint(
+          "📊 Search failed. Skipping write to prevent duplicate creation.");
       return;
     }
 
     // 4. Create new record (only if no existing record found and search succeeded)
     try {
       final rec = await pb.collection('metrics').create(
-        body: {
-          'user_id': _userId,
-          'os': Platform.operatingSystem,
-          ...dataWithHost,
-        },
-        files: avatarFile != null ? [await http.MultipartFile.fromPath('avatar', avatarFile.path)] : []
-      ).timeout(_networkTimeout);
+          body: {
+            'user_id': _userId,
+            'os': Platform.operatingSystem,
+            ...dataWithHost,
+          },
+          files: avatarFile != null
+              ? [await http.MultipartFile.fromPath('avatar', avatarFile.path)]
+              : []).timeout(_networkTimeout);
       _cachedMetricsId = rec.id;
 
       // Store for future use
@@ -289,20 +318,24 @@ class PocketBaseService {
   }
 
   // GET DATA (Read metrics for a specific user ID - used for restoration)
-  Future<Map<String, dynamic>?> getRemoteMetricsForUser(String targetUserId) async {
+  Future<Map<String, dynamic>?> getRemoteMetricsForUser(
+      String targetUserId) async {
     // 🚀 CRASH GUARD: Use isolated admin instance for this sensitive post-auth read
     final adminPb = PocketBase(Env.pocketbaseUrl);
     try {
       await adminPb.collection('_superusers').authWithPassword(
-        Env.pocketbaseAdminEmail,
-        Env.pocketbaseAdminPassword,
-      );
+            Env.pocketbaseAdminEmail,
+            Env.pocketbaseAdminPassword,
+          );
 
-      final records = await adminPb.collection('metrics').getList(
-        page: 1,
-        perPage: 1,
-        filter: 'user_id = "$targetUserId"',
-      ).timeout(_networkTimeout);
+      final records = await adminPb
+          .collection('metrics')
+          .getList(
+            page: 1,
+            perPage: 1,
+            filter: 'user_id = "$targetUserId"',
+          )
+          .timeout(_networkTimeout);
 
       if (records.items.isNotEmpty) {
         return records.items.first.data;
@@ -315,7 +348,8 @@ class PocketBaseService {
 
   // GET DATA (Read Current Metrics) - No List permission needed
   Future<Map<String, dynamic>?> getUserMetrics() async {
-    if (isOffline || !enableCloudSync) return null; // 🔒 OFFLINE or Cloud Sync Disabled
+    if (isOffline || !enableCloudSync)
+      return null; // 🔒 OFFLINE or Cloud Sync Disabled
     if (!_initialized || _userId == null) return null;
 
     // 1. Try cached ID
@@ -355,15 +389,12 @@ class PocketBaseService {
     // Without this, losing the cached ID means getUserMetrics returns null,
     // which causes _performIncrement to start counters from 0 (losing daily_play_count).
     try {
-      final existingRecords = await pb
-          .collection('metrics')
-          .getList(
-            page: 1,
-            perPage: 1,
-            filter: 'user_id = "$_userId"',
-            query: {'nc': DateTime.now().millisecondsSinceEpoch.toString()},
-          )
-          .timeout(_networkTimeout);
+      final existingRecords = await pb.collection('metrics').getList(
+        page: 1,
+        perPage: 1,
+        filter: 'user_id = "$_userId"',
+        query: {'nc': DateTime.now().millisecondsSinceEpoch.toString()},
+      ).timeout(_networkTimeout);
 
       if (existingRecords.items.isNotEmpty) {
         final record = existingRecords.items.first;
@@ -373,7 +404,8 @@ class PocketBaseService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('pb_metrics_id', record.id);
 
-        debugPrint("📊 getUserMetrics: Recovered record by user_id search: ${record.id}");
+        debugPrint(
+            "📊 getUserMetrics: Recovered record by user_id search: ${record.id}");
         return record.data;
       }
     } catch (e) {
@@ -388,19 +420,23 @@ class PocketBaseService {
   }
 
   // --- RANKING ---
-  
+
   /// Determines the user's global rank by counting how many users have strictly more total minutes.
   /// Rank = (Count of users with > minutes) + 1
   Future<int> calculateUserRank(int minutes) async {
-    if (isOffline || !enableLeaderboard) return 0; // 🔒 OFFLINE or Leaderboard Disabled
+    if (isOffline || !enableLeaderboard)
+      return 0; // 🔒 OFFLINE or Leaderboard Disabled
     if (!_initialized) return 0;
     try {
-      final records = await pb.collection('metrics').getList(
-        page: 1,
-        perPage: 1,
-        filter: 'total_minutes > $minutes',
-      ).timeout(_networkTimeout);
-      
+      final records = await pb
+          .collection('metrics')
+          .getList(
+            page: 1,
+            perPage: 1,
+            filter: 'total_minutes > $minutes',
+          )
+          .timeout(_networkTimeout);
+
       return records.totalItems + 1;
     } catch (e) {
       DebugLogService().error("⚠️ PB Rank Calculation Error: $e");
@@ -412,11 +448,11 @@ class PocketBaseService {
   String? getAvatarUrl(Map<String, dynamic> recordData) {
     final fileName = recordData['avatar'] as String?;
     if (fileName == null || fileName.isEmpty) return null;
-    
+
     // PocketBase file URL format: api/files/COLLECTION_ID_OR_NAME/RECORD_ID/FILENAME
     final recordId = recordData['id'] as String?;
     if (recordId == null) return null;
-    
+
     return "${Env.pocketbaseUrl}/api/files/metrics/$recordId/$fileName";
   }
 
@@ -470,13 +506,15 @@ class PocketBaseService {
   /// 🔗 Migrate anonymous metrics to a linked Google account
   /// Takes the old anonymous user_id's metrics row and reassigns it to the new authenticated user_id.
   /// If the new user_id already has a metrics row (cross-device), merges the data.
-  Future<bool> migrateAnonymousToLinked(String newUserId, {String? fromUserId}) async {
+  Future<bool> migrateAnonymousToLinked(String newUserId,
+      {String? fromUserId}) async {
     if (isOffline) return false; // 🔒 OFFLINE MODE
     if (!_initialized) return false;
-    
+
     // Use explicit fromUserId (crash recovery) or fallback to internal _userId
     final oldUserId = fromUserId ?? _userId;
-    if (oldUserId == null || oldUserId.isEmpty || oldUserId == newUserId) return true; // Already migrated
+    if (oldUserId == null || oldUserId.isEmpty || oldUserId == newUserId)
+      return true; // Already migrated
     DebugLogService().info("🔗 Migration: $oldUserId → $newUserId");
 
     // 🚀 CRASH GUARD (Exit -1 Fix):
@@ -490,9 +528,9 @@ class PocketBaseService {
       // Authenticate the ISOLATED admin instance
       try {
         await adminPb.collection('_superusers').authWithPassword(
-          Env.pocketbaseAdminEmail,
-          Env.pocketbaseAdminPassword,
-        );
+              Env.pocketbaseAdminEmail,
+              Env.pocketbaseAdminPassword,
+            );
       } catch (e) {
         DebugLogService().error("⚠️ Migration: Admin auth failed: $e");
         return false;
@@ -501,10 +539,14 @@ class PocketBaseService {
       // 1. Find the OLD anonymous metrics row
       RecordModel? oldRecord;
       try {
-        final oldRecords = await adminPb.collection('metrics').getList(
-          page: 1, perPage: 1,
-          filter: 'user_id = "$oldUserId"',
-        ).timeout(_networkTimeout);
+        final oldRecords = await adminPb
+            .collection('metrics')
+            .getList(
+              page: 1,
+              perPage: 1,
+              filter: 'user_id = "$oldUserId"',
+            )
+            .timeout(_networkTimeout);
         if (oldRecords.items.isNotEmpty) {
           oldRecord = oldRecords.items.first;
         }
@@ -515,10 +557,14 @@ class PocketBaseService {
       // 2. Check if the new user_id already has a metrics row (from another device)
       RecordModel? existingNewRecord;
       try {
-        final newRecords = await adminPb.collection('metrics').getList(
-          page: 1, perPage: 1,
-          filter: 'user_id = "$newUserId"',
-        ).timeout(_networkTimeout);
+        final newRecords = await adminPb
+            .collection('metrics')
+            .getList(
+              page: 1,
+              perPage: 1,
+              filter: 'user_id = "$newUserId"',
+            )
+            .timeout(_networkTimeout);
         if (newRecords.items.isNotEmpty) {
           existingNewRecord = newRecords.items.first;
         }
@@ -560,34 +606,45 @@ class PocketBaseService {
 
         // Delete the old anonymous record to prevent duplication
         try {
-          await adminPb.collection('metrics').delete(oldRecord.id).timeout(_networkTimeout);
-          DebugLogService().success("🗑 Migration: Deleted old anonymous record ${oldRecord.id}");
+          await adminPb
+              .collection('metrics')
+              .delete(oldRecord.id)
+              .timeout(_networkTimeout);
+          DebugLogService().success(
+              "🗑 Migration: Deleted old anonymous record ${oldRecord.id}");
         } catch (deleteErr) {
-          DebugLogService().error("⚠️ Migration: Failed to delete old record ${oldRecord.id}: $deleteErr");
+          DebugLogService().error(
+              "⚠️ Migration: Failed to delete old record ${oldRecord.id}: $deleteErr");
           // Retry once
           try {
             await Future.delayed(const Duration(seconds: 1));
-            await adminPb.collection('metrics').delete(oldRecord.id).timeout(_networkTimeout);
-            DebugLogService().success("🗑 Migration: Deleted old record on retry");
+            await adminPb
+                .collection('metrics')
+                .delete(oldRecord.id)
+                .timeout(_networkTimeout);
+            DebugLogService()
+                .success("🗑 Migration: Deleted old record on retry");
           } catch (retryErr) {
-            DebugLogService().error("⚠️ Migration: Retry delete also failed: $retryErr");
+            DebugLogService()
+                .error("⚠️ Migration: Retry delete also failed: $retryErr");
           }
         }
 
         _cachedMetricsId = existingNewRecord.id;
-        DebugLogService().success("✅ Migration: Merged old data into existing linked record");
-
+        DebugLogService().success(
+            "✅ Migration: Merged old data into existing linked record");
       } else if (oldRecord != null) {
         // REASSIGN: Just update the user_id on the old record
         await adminPb.collection('metrics').update(oldRecord.id, body: {
           'user_id': newUserId,
         }).timeout(_networkTimeout);
         _cachedMetricsId = oldRecord.id;
-        DebugLogService().success("✅ Migration: Reassigned old record to $newUserId");
-
+        DebugLogService()
+            .success("✅ Migration: Reassigned old record to $newUserId");
       } else {
         // No old record — user is fresh, nothing to migrate
-        DebugLogService().info("🔗 Migration: No old anonymous data found, nothing to migrate");
+        DebugLogService().info(
+            "🔗 Migration: No old anonymous data found, nothing to migrate");
       }
 
       // 3. Update local state
@@ -599,7 +656,8 @@ class PocketBaseService {
       }
 
       // 4. Push local nickname to the linked users table
-      await syncUserAccountProfile(nickname: prefs.getString('custom_nickname'));
+      await syncUserAccountProfile(
+          nickname: prefs.getString('custom_nickname'));
 
       DebugLogService().success("✅ Migration complete: Now using $newUserId");
       return true;
@@ -627,33 +685,37 @@ class PocketBaseService {
     try {
       // Ensure we have admin rights to update the users collection securely
       await adminPb.collection('_superusers').authWithPassword(
-        Env.pocketbaseAdminEmail,
-        Env.pocketbaseAdminPassword,
-      );
+            Env.pocketbaseAdminEmail,
+            Env.pocketbaseAdminPassword,
+          );
 
       final body = <String, dynamic>{};
 
       // 1. Set Name
       if (nickname != null && nickname.isNotEmpty) {
         body['name'] = nickname;
-        
+
         // 2. Generate a valid Username (for the Friends system)
         // PocketBase username rules: only alphanumeric, dot, underscore, hyphen. Length 3-150.
-        String cleanUsername = nickname.replaceAll(RegExp(r'[^a-zA-Z0-9_\.\-]'), '').toLowerCase();
-        if (cleanUsername.isEmpty || !RegExp(r'^[a-zA-Z0-9]').hasMatch(cleanUsername)) {
+        String cleanUsername =
+            nickname.replaceAll(RegExp(r'[^a-zA-Z0-9_\.\-]'), '').toLowerCase();
+        if (cleanUsername.isEmpty ||
+            !RegExp(r'^[a-zA-Z0-9]').hasMatch(cleanUsername)) {
           cleanUsername = 'user_$cleanUsername';
         }
-        if (cleanUsername.length < 3) cleanUsername = cleanUsername.padRight(3, '0');
-        if (cleanUsername.length > 150) cleanUsername = cleanUsername.substring(0, 150);
+        if (cleanUsername.length < 3)
+          cleanUsername = cleanUsername.padRight(3, '0');
+        if (cleanUsername.length > 150)
+          cleanUsername = cleanUsername.substring(0, 150);
 
         // Verify if username is unique before setting it
         try {
           final existing = await adminPb.collection('users').getList(
-             page: 1, perPage: 1, 
-             filter: 'username = "$cleanUsername" && id != "$linkedUserId"'
-          );
+              page: 1,
+              perPage: 1,
+              filter: 'username = "$cleanUsername" && id != "$linkedUserId"');
           if (existing.items.isEmpty) {
-             body['username'] = cleanUsername;
+            body['username'] = cleanUsername;
           }
         } catch (_) {}
       }
@@ -665,13 +727,20 @@ class PocketBaseService {
       // No updates needed if empty and no avatar attached
       if (body.isEmpty && avatarFile == null && !clearAvatar) return;
 
-      await adminPb.collection('users').update(
-        linkedUserId,
-        body: body,
-        files: avatarFile != null ? [await http.MultipartFile.fromPath('avatar', avatarFile.path)] : []
-      ).timeout(_networkTimeout);
-      
-      DebugLogService().success("✅ Synced profile to users collection successfully.");
+      await adminPb
+          .collection('users')
+          .update(linkedUserId,
+              body: body,
+              files: avatarFile != null
+                  ? [
+                      await http.MultipartFile.fromPath(
+                          'avatar', avatarFile.path)
+                    ]
+                  : [])
+          .timeout(_networkTimeout);
+
+      DebugLogService()
+          .success("✅ Synced profile to users collection successfully.");
     } catch (e) {
       DebugLogService().error("⚠️ Failed to sync users profile: $e");
     }
@@ -683,11 +752,11 @@ class PocketBaseService {
     // Generate a new anonymous ID
     _userId = "user_${DateTime.now().millisecondsSinceEpoch}";
     await prefs.setString('pb_user_id', _userId!);
-    
+
     // Clear cached metrics so it searches fresh
     _cachedMetricsId = null;
     await prefs.remove('pb_metrics_id');
-    
+
     DebugLogService().info("🔗 Reverted to anonymous: $_userId");
   }
 
@@ -697,13 +766,13 @@ class PocketBaseService {
   // 🚀 ISOLATED ADMIN CLIENT: Prevents overwriting the user's Google OAuth session
   Future<PocketBase> _getAdminClient() async {
     if (_adminPb != null && _adminPb!.authStore.isValid) return _adminPb!;
-    
+
     _adminPb = PocketBase(Env.pocketbaseUrl);
     try {
       await _adminPb!.collection('_superusers').authWithPassword(
-        Env.pocketbaseAdminEmail,
-        Env.pocketbaseAdminPassword,
-      );
+            Env.pocketbaseAdminEmail,
+            Env.pocketbaseAdminPassword,
+          );
       debugPrint("🔐 Secure Admin client authenticated");
     } catch (e) {
       debugPrint("⚠️ Admin Auth Error: $e");
@@ -762,7 +831,8 @@ class PocketBaseService {
 
       final records = await adminPb.collection('metrics').getList(
             page: 1,
-            perPage: 500, // Must be high enough to capture all active users even with duplicates
+            perPage:
+                500, // Must be high enough to capture all active users even with duplicates
             sort: '-last_active',
           );
       return {
@@ -776,8 +846,10 @@ class PocketBaseService {
   }
 
   // FETCH LEADERBOARD (Available to users)
-  Future<List<Map<String, dynamic>>> fetchLeaderboard({required String sortBy, int limit = 50, String? filter}) async {
-    if (isOffline || !enableLeaderboard) return []; // 🔒 OFFLINE MODE or Leaderboard Disabled
+  Future<List<Map<String, dynamic>>> fetchLeaderboard(
+      {required String sortBy, int limit = 50, String? filter}) async {
+    if (isOffline || !enableLeaderboard)
+      return []; // 🔒 OFFLINE MODE or Leaderboard Disabled
     try {
       // Authenticate as admin since metrics list might be restricted
       final adminPb = await _getAdminClient();
@@ -788,7 +860,7 @@ class PocketBaseService {
             sort: '-$sortBy',
             filter: filter,
           );
-          
+
       return records.items.map((r) => r.data..['id'] = r.id).toList();
     } catch (e) {
       debugPrint("⚠️ Leaderboard Fetch Error: $e");
@@ -797,8 +869,10 @@ class PocketBaseService {
   }
 
   // FETCH ARTIST LEADERBOARD
-  Future<List<Map<String, dynamic>>> fetchArtistLeaderboard({required String sortBy, int limit = 50, String? filter}) async {
-    if (isOffline || !enableLeaderboard) return []; // 🔒 OFFLINE MODE or Leaderboard Disabled
+  Future<List<Map<String, dynamic>>> fetchArtistLeaderboard(
+      {required String sortBy, int limit = 50, String? filter}) async {
+    if (isOffline || !enableLeaderboard)
+      return []; // 🔒 OFFLINE MODE or Leaderboard Disabled
     try {
       final adminPb = await _getAdminClient();
 
@@ -808,7 +882,7 @@ class PocketBaseService {
             sort: '-$sortBy',
             filter: filter,
           );
-          
+
       return records.items.map((r) => r.data..['id'] = r.id).toList();
     } catch (e) {
       debugPrint("⚠️ Artist Leaderboard Fetch Error: $e");
@@ -819,19 +893,22 @@ class PocketBaseService {
   // INCREMENT ARTIST PLAY
   Future<void> incrementArtistPlay(String artistName) async {
     if (isOffline) return; // 🔒 OFFLINE MODE
-    if (artistName.isEmpty || artistName == "Unknown" || artistName == "N/A") return;
-    
+    if (artistName.isEmpty || artistName == "Unknown" || artistName == "N/A")
+      return;
+
     try {
       final adminPb = await _getAdminClient();
 
       // 1. Search for existing artist
-      final existingRecords = await adminPb.collection('artist_metrics').getList(
-        page: 1,
-        perPage: 1,
-        filter: 'name = "${artistName.replaceAll('"', '\\"')}"',
-      );
+      final existingRecords =
+          await adminPb.collection('artist_metrics').getList(
+                page: 1,
+                perPage: 1,
+                filter: 'name = "${artistName.replaceAll('"', '\\"')}"',
+              );
 
-      final nowString = DateTime.now().toUtc().toIso8601String().replaceFirst('T', ' ');
+      final nowString =
+          DateTime.now().toUtc().toIso8601String().replaceFirst('T', ' ');
 
       if (existingRecords.items.isNotEmpty) {
         // Increment
@@ -841,27 +918,34 @@ class PocketBaseService {
         int currentDailyPlayCount = record.data['daily_play_count'] ?? 0;
         int currentWeeklyPlayCount = record.data['weekly_play_count'] ?? 0;
         final lastPlayDateStr = record.data['last_play_date'];
-        
+
         if (lastPlayDateStr != null && lastPlayDateStr.isNotEmpty) {
-           try {
-              // Parse last date 
-              final lastDate = DateTime.parse(lastPlayDateStr).toUtc().add(const Duration(hours: 7));
-              final nowLocal = DateTime.now().toUtc().add(const Duration(hours: 7));
-              
-              // Daily reset
-              if (lastDate.day != nowLocal.day || lastDate.month != nowLocal.month || lastDate.year != nowLocal.year) {
-                 currentDailyPlayCount = 0;
-              }
-              
-              // Weekly reset (Monday baseline)
-              final lastMonday = DateTime.utc(lastDate.year, lastDate.month, lastDate.day - (lastDate.weekday - 1));
-              final nowMonday = DateTime.utc(nowLocal.year, nowLocal.month, nowLocal.day - (nowLocal.weekday - 1));
-              if (lastMonday != nowMonday) {
-                 currentWeeklyPlayCount = 0;
-              }
-           } catch (e) {}
+          try {
+            // Parse last date
+            final lastDate = DateTime.parse(lastPlayDateStr)
+                .toUtc()
+                .add(const Duration(hours: 7));
+            final nowLocal =
+                DateTime.now().toUtc().add(const Duration(hours: 7));
+
+            // Daily reset
+            if (lastDate.day != nowLocal.day ||
+                lastDate.month != nowLocal.month ||
+                lastDate.year != nowLocal.year) {
+              currentDailyPlayCount = 0;
+            }
+
+            // Weekly reset (Monday baseline)
+            final lastMonday = DateTime.utc(lastDate.year, lastDate.month,
+                lastDate.day - (lastDate.weekday - 1));
+            final nowMonday = DateTime.utc(nowLocal.year, nowLocal.month,
+                nowLocal.day - (nowLocal.weekday - 1));
+            if (lastMonday != nowMonday) {
+              currentWeeklyPlayCount = 0;
+            }
+          } catch (e) {}
         }
-        
+
         await adminPb.collection('artist_metrics').update(id, body: {
           'play_count': currentPlayCount + 1,
           'daily_play_count': currentDailyPlayCount + 1,
@@ -883,24 +967,27 @@ class PocketBaseService {
     }
   }
 
-  // CHECK NICKNAME UNIQUENESS
+  // CHECK NICKNAME UNIQUENESS (case-insensitive)
   Future<bool> isNicknameTaken(String nickname) async {
     if (isOffline) return false; // 🔒 OFFLINE MODE
     try {
       final adminPb = await _getAdminClient();
-      
+
+      // 🛡️ Use ~ operator for case-insensitive matching to prevent casing bypasses
+      // e.g. "Rexandt" vs "rexandt" vs "REXANDT"
       final records = await adminPb.collection('metrics').getList(
-        page: 1,
-        perPage: 1,
-        filter: 'nickname = "$nickname" && user_id != "$_userId"',
-      );
-      
+            page: 1,
+            perPage: 1,
+            filter: 'nickname ~ "$nickname" && user_id != "$_userId"',
+          );
+
       return records.items.isNotEmpty;
     } catch (e) {
       debugPrint("⚠️ Nickname Check Error: $e");
-      return false; // Safely allow if servers flutter or offline
+      return true; // 🛡️ BLOCK on error — prevents exploiting network failures to bypass uniqueness
     }
   }
+
 
   // ADMIN: DELETE USER METRICS RECORD
   Future<bool> deleteMetricsRecord(String recordId) async {
@@ -919,7 +1006,7 @@ class PocketBaseService {
   }
 
   // --- GLOBAL BROADCASTS ---
-  
+
   Future<void> sendGlobalBroadcast(String message) async {
     if (isOffline) return; // 🔒 OFFLINE MODE
     try {
@@ -965,7 +1052,7 @@ class PocketBaseService {
 
       // Unsubscribe first to avoid duplicate listeners
       pb.collection('broadcasts').unsubscribe();
-      
+
       pb.collection('broadcasts').subscribe('*', (e) {
         if (e.action == 'create') {
           final msg = e.record?.data['message'] as String?;
@@ -1012,7 +1099,8 @@ class PocketBaseService {
       } catch (e) {
         if (e.toString().contains('403')) {
           _cachedSessionId = null;
-          DebugLogService().error("⚠️ PocketBase: Session cleanup DENIED (403). Check API Rules.");
+          DebugLogService().error(
+              "⚠️ PocketBase: Session cleanup DENIED (403). Check API Rules.");
         } else {
           DebugLogService().error("⚠️ Session cleanup error: $e");
         }
@@ -1028,12 +1116,12 @@ class PocketBaseService {
     // This ensures all devices on the same account converge on the same cloud record.
     try {
       final existingRecords = await pb.collection('sessions').getList(
-            page: 1,
-            perPage: 1,
-            filter: 'user_id = "$_userId"',
-            sort: '-created', // Join the newest one if multiple exist
-            query: {'cache_bust': DateTime.now().millisecondsSinceEpoch.toString()},
-          );
+        page: 1,
+        perPage: 1,
+        filter: 'user_id = "$_userId"',
+        sort: '-created', // Join the newest one if multiple exist
+        query: {'cache_bust': DateTime.now().millisecondsSinceEpoch.toString()},
+      );
 
       if (existingRecords.items.isNotEmpty) {
         final newest = existingRecords.items.first;
@@ -1047,7 +1135,8 @@ class PocketBaseService {
       }
     } catch (e) {
       if (e.toString().contains('403')) {
-        DebugLogService().error("⚠️ PocketBase: Session SEARCH DENIED (403). Discovery will fail.");
+        DebugLogService().error(
+            "⚠️ PocketBase: Session SEARCH DENIED (403). Discovery will fail.");
       } else {
         DebugLogService().error("⚠️ Session Search Error: $e");
       }
@@ -1058,11 +1147,12 @@ class PocketBaseService {
     // 4. Try Local Storage as Fallback
     if (!forceRegenerate) {
       try {
-
         final prefs = await SharedPreferences.getInstance();
         final storedId = prefs.getString('pb_session_id');
         if (storedId != null) {
-          await pb.collection('sessions').getOne(storedId, query: {'cache_bust': DateTime.now().millisecondsSinceEpoch.toString()});
+          await pb.collection('sessions').getOne(storedId, query: {
+            'cache_bust': DateTime.now().millisecondsSinceEpoch.toString()
+          });
           _cachedSessionId = storedId;
           return storedId;
         }
@@ -1088,7 +1178,8 @@ class PocketBaseService {
       return rec.id;
     } catch (e) {
       if (e.toString().contains('403')) {
-        DebugLogService().error("⚠️ PocketBase: Session CREATE DENIED (403). Check API Rules.");
+        DebugLogService().error(
+            "⚠️ PocketBase: Session CREATE DENIED (403). Check API Rules.");
         return null;
       }
       DebugLogService().error("⚠️ Session Create Error: $e");
@@ -1109,21 +1200,24 @@ class PocketBaseService {
         // 🚀 SELF-HEALING: If 400 or 404, the session is stale/corrupted.
         // Force regenerate a fresh session and retry ONCE.
         if (e.statusCode == 400 || e.statusCode == 404) {
-          DebugLogService().warning("⚠️ PB: Session $recordId is stale. Force regenerating...");
+          DebugLogService().warning(
+              "⚠️ PB: Session $recordId is stale. Force regenerating...");
           _cachedSessionId = null;
           final prefs = await SharedPreferences.getInstance();
           await prefs.remove('pb_session_id');
-          
+
           // Force create a brand new session
           try {
             final newId = await _ensureUniqueSession(forceRegenerate: true);
             if (newId != null) {
               await pb.collection('sessions').update(newId, body: data);
-              DebugLogService().success("✅ PB: Session self-healed! New ID: $newId");
+              DebugLogService()
+                  .success("✅ PB: Session self-healed! New ID: $newId");
               return;
             }
           } catch (retryErr) {
-            DebugLogService().error("⚠️ PB: Session self-heal retry also failed: $retryErr");
+            DebugLogService()
+                .error("⚠️ PB: Session self-heal retry also failed: $retryErr");
           }
         }
         DebugLogService().error("⚠️ PB: Update 400 Detail: ${e.response}");
@@ -1139,7 +1233,9 @@ class PocketBaseService {
     if (recordId == null) return null;
 
     try {
-      final record = await pb.collection('sessions').getOne(recordId, query: {'cache_bust': DateTime.now().millisecondsSinceEpoch.toString()});
+      final record = await pb.collection('sessions').getOne(recordId, query: {
+        'cache_bust': DateTime.now().millisecondsSinceEpoch.toString()
+      });
       final data = record.data;
       data['updated'] = record.updated; // Manual inject
       return data;
@@ -1147,9 +1243,11 @@ class PocketBaseService {
       if (e is ClientException) {
         // 🚀 SELF-HEALING: Clear stale session on 400/404
         if (e.statusCode == 400 || e.statusCode == 404) {
-          DebugLogService().warning("⚠️ PB: Polling Session $recordId is stale. Clearing.");
+          DebugLogService()
+              .warning("⚠️ PB: Polling Session $recordId is stale. Clearing.");
           _cachedSessionId = null;
-          SharedPreferences.getInstance().then((p) => p.remove('pb_session_id'));
+          SharedPreferences.getInstance()
+              .then((p) => p.remove('pb_session_id'));
         }
         DebugLogService().error("⚠️ Session Polling 400 Detail: ${e.response}");
       }
@@ -1191,17 +1289,21 @@ class PocketBaseService {
   // --- SHAREABLE PLAYLISTS ---
 
   /// Shares a playlist and returns a 6-digit share code
-  Future<String?> sharePlaylist(String playlistId, Map<String, dynamic> playlistData) async {
+  Future<String?> sharePlaylist(
+      String playlistId, Map<String, dynamic> playlistData) async {
     if (isOffline) return null; // 🔒 OFFLINE MODE
     try {
       await _ensureInitialized();
 
       // 1. Check if already shared
-      final existing = await pb.collection('shared_playlists').getList(
-        page: 1,
-        perPage: 1,
-        filter: 'playlist_id = "$playlistId" && user_id = "$_userId"',
-      ).timeout(_networkTimeout);
+      final existing = await pb
+          .collection('shared_playlists')
+          .getList(
+            page: 1,
+            perPage: 1,
+            filter: 'playlist_id = "$playlistId" && user_id = "$_userId"',
+          )
+          .timeout(_networkTimeout);
 
       // 2. Prepare the data
       final data = Map<String, dynamic>.from(playlistData);
@@ -1232,11 +1334,14 @@ class PocketBaseService {
 
       if (existing.items.isNotEmpty) {
         // Update existing record
-        await pb.collection('shared_playlists').update(
-          existing.items.first.id,
-          body: payload,
-        ).timeout(_networkTimeout);
-        
+        await pb
+            .collection('shared_playlists')
+            .update(
+              existing.items.first.id,
+              body: payload,
+            )
+            .timeout(_networkTimeout);
+
         final code = existing.items.first.data['share_code'];
         DebugLogService().success("✅ Updated shared playlist: $code");
         return code;
@@ -1244,10 +1349,13 @@ class PocketBaseService {
         // Create new record
         final shareCode = _generateShareCode();
         payload['share_code'] = shareCode;
-        
-        await pb.collection('shared_playlists').create(
-          body: payload,
-        ).timeout(_networkTimeout);
+
+        await pb
+            .collection('shared_playlists')
+            .create(
+              body: payload,
+            )
+            .timeout(_networkTimeout);
 
         DebugLogService().success("📦 Playlist shared with code: $shareCode");
         return shareCode;
@@ -1263,16 +1371,22 @@ class PocketBaseService {
     if (isOffline) return false; // 🔒 OFFLINE MODE
     try {
       await _ensureInitialized();
-      
-      final existing = await pb.collection('shared_playlists').getList(
-        page: 1,
-        perPage: 1,
-        filter: 'playlist_id = "$playlistId" && user_id = "$_userId"',
-      ).timeout(_networkTimeout);
+
+      final existing = await pb
+          .collection('shared_playlists')
+          .getList(
+            page: 1,
+            perPage: 1,
+            filter: 'playlist_id = "$playlistId" && user_id = "$_userId"',
+          )
+          .timeout(_networkTimeout);
 
       if (existing.items.isEmpty) return true;
 
-      await pb.collection('shared_playlists').delete(existing.items.first.id).timeout(_networkTimeout);
+      await pb
+          .collection('shared_playlists')
+          .delete(existing.items.first.id)
+          .timeout(_networkTimeout);
       DebugLogService().success("🗑️ Unshared playlist: $playlistId");
       return true;
     } catch (e) {
@@ -1286,12 +1400,15 @@ class PocketBaseService {
     if (isOffline) return null; // 🔒 OFFLINE MODE
     try {
       await _ensureInitialized();
-      
-      final records = await pb.collection('shared_playlists').getList(
-        page: 1,
-        perPage: 1,
-        filter: 'playlist_id = "$playlistId" && user_id = "$_userId"',
-      ).timeout(_networkTimeout);
+
+      final records = await pb
+          .collection('shared_playlists')
+          .getList(
+            page: 1,
+            perPage: 1,
+            filter: 'playlist_id = "$playlistId" && user_id = "$_userId"',
+          )
+          .timeout(_networkTimeout);
 
       if (records.items.isEmpty) return null;
       return records.items.first.data['share_code'];
@@ -1307,11 +1424,14 @@ class PocketBaseService {
     if (!_initialized) return null;
 
     try {
-      final records = await pb.collection('shared_playlists').getList(
+      final records = await pb
+          .collection('shared_playlists')
+          .getList(
             page: 1,
             perPage: 1,
             filter: 'share_code = "$shareCode"',
-          ).timeout(_networkTimeout);
+          )
+          .timeout(_networkTimeout);
 
       if (records.items.isEmpty) {
         debugPrint("⚠️ No shared playlist found for code: $shareCode");
@@ -1326,7 +1446,7 @@ class PocketBaseService {
       if (rawData == null) return null;
 
       String jsonStr;
-      
+
       // 🚀 NORMALIZE DATA (Handles raw JSON, List<int>, or Base64 String)
       final List<int> bytes;
       if (rawData is String) {
@@ -1342,8 +1462,8 @@ class PocketBaseService {
       } else if (rawData is List) {
         bytes = List<int>.from(rawData);
       } else if (rawData is Map) {
-         // Compatibility: if it's already a map
-         return rawData as Map<String, dynamic>;
+        // Compatibility: if it's already a map
+        return rawData as Map<String, dynamic>;
       } else {
         return null;
       }
@@ -1355,7 +1475,8 @@ class PocketBaseService {
         jsonStr = utf8.decode(bytes);
       }
 
-      DebugLogService().success("✅ Fetched and decoded shared playlist: $shareCode");
+      DebugLogService()
+          .success("✅ Fetched and decoded shared playlist: $shareCode");
       return json.decode(jsonStr) as Map<String, dynamic>?;
     } catch (e) {
       DebugLogService().error("⚠️ Fetch Shared Playlist Error: $e");
@@ -1365,12 +1486,446 @@ class PocketBaseService {
   }
 
   String _generateShareCode() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 to avoid confusion
+    const chars =
+        'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 to avoid confusion
     final rnd = DateTime.now().microsecondsSinceEpoch;
     String code = '';
     for (int i = 0; i < 6; i++) {
       code += chars[(rnd >> (i * 5)) % chars.length];
     }
     return code;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SONG STATS COLLECTION CRUD
+  // Auth-guarded, user_id scoped. Collection rules enforce:
+  //   List/View/Create/Update/Delete: @request.auth.id != "" && user_id = @request.auth.id
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Creates a new record in the song_stats collection.
+  /// The [data] map must include user_id and stat_id fields.
+  /// Returns the created record's data (including PocketBase-generated id), or null on failure.
+  Future<Map<String, dynamic>?> createSongStat(
+      Map<String, dynamic> data) async {
+    if (isOffline || !enableCloudSync) return null;
+    if (!_initialized || _userId == null) return null;
+
+    // Enforce user_id scoping — always use the authenticated user's ID
+    final body = Map<String, dynamic>.from(data);
+    body['user_id'] = _userId;
+
+    try {
+      final record = await pb
+          .collection('song_stats')
+          .create(
+            body: body,
+          )
+          .timeout(_networkTimeout);
+      DebugLogService().info(
+          "📊 song_stats: Created record ${record.id} for stat_id=${body['stat_id']}");
+      return record.data..['id'] = record.id;
+    } catch (e) {
+      DebugLogService().error("⚠️ song_stats create error: $e");
+      return null;
+    }
+  }
+
+  /// Updates an existing record in the song_stats collection by its PocketBase record [recordId].
+  /// The [data] map contains the fields to update.
+  /// Returns the updated record's data, or null on failure.
+  Future<Map<String, dynamic>?> updateSongStat(
+      String recordId, Map<String, dynamic> data) async {
+    if (isOffline || !enableCloudSync) return null;
+    if (!_initialized || _userId == null) return null;
+
+    // Enforce user_id scoping — prevent updating records belonging to other users
+    final body = Map<String, dynamic>.from(data);
+    body['user_id'] = _userId;
+
+    try {
+      final record = await pb
+          .collection('song_stats')
+          .update(
+            recordId,
+            body: body,
+          )
+          .timeout(_networkTimeout);
+      DebugLogService().info("📊 song_stats: Updated record $recordId");
+      return record.data..['id'] = record.id;
+    } catch (e) {
+      DebugLogService().error("⚠️ song_stats update error: $e");
+      return null;
+    }
+  }
+
+  /// Lists song_stats records for the current authenticated user.
+  /// Supports optional [filter] for additional filtering beyond user_id.
+  /// Supports [sort] for ordering (default: '-last_played' for most recent first).
+  /// Supports pagination via [page] and [perPage].
+  /// Returns a list of record data maps, or empty list on failure.
+  Future<List<Map<String, dynamic>>> listSongStats({
+    String? filter,
+    String sort = '-last_played',
+    int page = 1,
+    int perPage = 200,
+  }) async {
+    if (isOffline || !enableCloudSync) return [];
+    if (!_initialized || _userId == null) return [];
+
+    // Always scope to current user (collection rules enforce this server-side too)
+    final userFilter = 'user_id = "$_userId"';
+    final combinedFilter = filter != null && filter.isNotEmpty
+        ? '$userFilter && $filter'
+        : userFilter;
+
+    try {
+      final records = await pb
+          .collection('song_stats')
+          .getList(
+            page: page,
+            perPage: perPage,
+            filter: combinedFilter,
+            sort: sort,
+          )
+          .timeout(_networkTimeout);
+
+      return records.items.map((r) => r.data..['id'] = r.id).toList();
+    } catch (e) {
+      DebugLogService().error("⚠️ song_stats list error: $e");
+      return [];
+    }
+  }
+
+  /// Batch upsert for song_stats: creates new records or updates existing ones.
+  /// Each entry in [statEntries] must contain a 'stat_id' field used for matching.
+  /// If a record with the same (user_id, stat_id) exists, it is updated; otherwise created.
+  /// Returns the number of successfully upserted records.
+  Future<int> batchUpsertSongStats(
+      List<Map<String, dynamic>> statEntries) async {
+    if (isOffline || !enableCloudSync) return 0;
+    if (!_initialized || _userId == null) return 0;
+    if (statEntries.isEmpty) return 0;
+
+    int successCount = 0;
+
+    // Fetch existing records for this user to determine create vs update
+    // We fetch all stat_ids for the user to build a lookup map
+    final existingRecords =
+        <String, String>{}; // stat_id -> PocketBase record id
+    try {
+      // Paginate through all existing records to build the lookup
+      int fetchPage = 1;
+      bool hasMore = true;
+      while (hasMore) {
+        final records = await pb
+            .collection('song_stats')
+            .getList(
+              page: fetchPage,
+              perPage: 500,
+              filter: 'user_id = "$_userId"',
+              fields: 'id,stat_id',
+            )
+            .timeout(const Duration(seconds: 15));
+
+        for (final r in records.items) {
+          final statId = r.data['stat_id'] as String?;
+          if (statId != null) {
+            existingRecords[statId] = r.id;
+          }
+        }
+
+        hasMore = records.items.length == 500;
+        fetchPage++;
+      }
+    } catch (e) {
+      DebugLogService()
+          .error("⚠️ song_stats batch: Failed to fetch existing records: $e");
+      // Continue anyway — we'll try creates and handle conflicts
+    }
+
+    // Process each entry: update if exists, create if new
+    for (int i = 0; i < statEntries.length; i++) {
+      final entry = statEntries[i];
+      final statId = entry['stat_id'] as String?;
+      if (statId == null || statId.isEmpty) continue;
+
+      final body = Map<String, dynamic>.from(entry);
+      body['user_id'] = _userId;
+
+      try {
+        final existingId = existingRecords[statId];
+        if (existingId != null) {
+          // Update existing record
+          await pb
+              .collection('song_stats')
+              .update(
+                existingId,
+                body: body,
+              )
+              .timeout(_networkTimeout);
+        } else {
+          // Create new record
+          await pb
+              .collection('song_stats')
+              .create(
+                body: body,
+              )
+              .timeout(_networkTimeout);
+        }
+        successCount++;
+      } catch (e) {
+        DebugLogService()
+            .error("⚠️ song_stats batch upsert error for stat_id=$statId: $e");
+      }
+
+      // Yield to the event loop every 5 records to keep UI responsive
+      if (i % 5 == 0) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+    }
+
+    DebugLogService().info(
+        "📊 song_stats: Batch upserted $successCount/${statEntries.length} records");
+    return successCount;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HISTORY SYNC COLLECTION CRUD
+  // Auth-guarded, user_id scoped. Collection rules enforce:
+  //   List/View/Create/Update/Delete: @request.auth.id != "" && user_id = @request.auth.id
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Deletes all history_sync records for the current authenticated user.
+  /// Used when the user clears their history locally.
+  Future<void> deleteAllHistorySync() async {
+    if (isOffline || !enableCloudSync) return;
+    if (!_initialized || _userId == null) return;
+
+    try {
+      // Paginate through all records and delete each
+      int page = 1;
+      while (true) {
+        final records = await pb
+            .collection('history_sync')
+            .getList(
+              page: page,
+              perPage: 200,
+              filter: 'user_id = "$_userId"',
+              fields: 'id',
+            )
+            .timeout(_networkTimeout);
+
+        if (records.items.isEmpty) break;
+
+        for (final record in records.items) {
+          try {
+            await pb
+                .collection('history_sync')
+                .delete(record.id)
+                .timeout(_networkTimeout);
+          } catch (_) {
+            // Continue on individual failures
+          }
+        }
+
+        if (records.items.length < 200) break;
+        // Don't increment page — we just deleted from page 1, so next loop
+        // iteration should fetch the next 200 starting fresh
+      }
+
+      DebugLogService().info("📜 history_sync: All user records deleted");
+    } catch (e) {
+      if (!e.toString().contains('404')) {
+        DebugLogService().error("⚠️ history_sync deleteAll error: $e");
+      }
+    }
+  }
+
+  /// Upserts a record in history_sync by matching on (user_id, title, artist).
+  ///
+  /// If a record with the same title+artist already exists for this user,
+  /// it is updated. Otherwise a new record is created. This prevents
+  /// duplicate history entries when the same song is played multiple times.
+  /// Extracts the primary artist from a multi-artist string for fuzzy matching.
+  static String _primaryArtist(String artist) {
+    String primary = artist.trim();
+    for (final sep in [',', ' feat.', ' feat ', ' ft.', ' ft ', ' & ', ' x ', ' X ', ' and ']) {
+      final idx = primary.toLowerCase().indexOf(sep.toLowerCase());
+      if (idx > 0) {
+        primary = primary.substring(0, idx).trim();
+        break;
+      }
+    }
+    return primary.toLowerCase();
+  }
+
+  Future<Map<String, dynamic>?> upsertHistorySync(
+      Map<String, dynamic> data) async {
+    if (isOffline || !enableCloudSync) return null;
+    if (!_initialized || _userId == null) return null;
+
+    final title = data['title'] as String?;
+    final artist = data['artist'] as String?;
+    if (title == null || artist == null) return null;
+
+    final body = Map<String, dynamic>.from(data);
+    body['user_id'] = _userId;
+
+    try {
+      // 🚀 FIX: Search by title only, then filter by primary artist in code.
+      // This prevents duplicate cloud entries when the same song has different
+      // artist strings across sources (e.g. "Ziv Zaifman" vs "Ziv Zaifman, Hugh Jackman").
+      final escapedTitle = title.replaceAll("'", "\\'");
+      final candidates = await pb
+          .collection('history_sync')
+          .getList(
+            page: 1,
+            perPage: 50,
+            filter:
+                'user_id = "$_userId" && title ~ "$escapedTitle"',
+          )
+          .timeout(_networkTimeout);
+
+      // Find a match by primary artist
+      final songPrimary = _primaryArtist(artist);
+      String? matchedRecordId;
+      for (final item in candidates.items) {
+        final existingArtist = (item.data['artist'] as String?) ?? '';
+        if (_primaryArtist(existingArtist) == songPrimary) {
+          matchedRecordId = item.id;
+          break;
+        }
+      }
+
+      if (matchedRecordId != null) {
+        // Update existing record
+        final updated = await pb
+            .collection('history_sync')
+            .update(matchedRecordId, body: body)
+            .timeout(_networkTimeout);
+        return updated.data..['id'] = updated.id;
+      } else {
+        // Create new record
+        final created = await pb
+            .collection('history_sync')
+            .create(body: body)
+            .timeout(_networkTimeout);
+        return created.data..['id'] = created.id;
+      }
+    } catch (e) {
+      if (!e.toString().contains('404') &&
+          !e.toString().contains('Missing or invalid collection context')) {
+        DebugLogService().error("⚠️ history_sync upsert error: $e");
+      }
+      return null;
+    }
+  }
+
+  /// Trims history_sync records for the current user to [keep] most recent.
+  /// Any older records beyond [keep] are deleted.
+  Future<void> trimHistorySync({int keep = 50}) async {
+    if (isOffline || !enableCloudSync) return;
+    if (!_initialized || _userId == null) return;
+
+    try {
+      // Fetch all records for this user, sorted by last_played desc
+      final all = await pb
+          .collection('history_sync')
+          .getList(
+            page: 1,
+            perPage: 500,
+            filter: 'user_id = "$_userId"',
+            sort: '-last_played',
+            fields: 'id',
+          )
+          .timeout(_networkTimeout);
+
+      if (all.items.length <= keep) return;
+
+      // Delete records beyond the keep limit (oldest)
+      final toDelete = all.items.sublist(keep);
+      for (final record in toDelete) {
+        try {
+          await pb
+              .collection('history_sync')
+              .delete(record.id)
+              .timeout(_networkTimeout);
+        } catch (_) {
+          // Continue on individual delete failures
+        }
+      }
+      DebugLogService()
+          .info("📜 history_sync: Trimmed ${toDelete.length} old records");
+    } catch (e) {
+      if (!e.toString().contains('404')) {
+        DebugLogService().error("⚠️ history_sync trim error: $e");
+      }
+    }
+  }
+
+  /// Creates a new record in the history_sync collection.
+  /// The [data] map should include title, artist, album, last_played, duration, device_id.
+  /// Returns the created record's data, or null on failure.
+  Future<Map<String, dynamic>?> createHistorySync(
+      Map<String, dynamic> data) async {
+    if (isOffline || !enableCloudSync) return null;
+    if (!_initialized || _userId == null) return null;
+
+    // Enforce user_id scoping
+    final body = Map<String, dynamic>.from(data);
+    body['user_id'] = _userId;
+
+    try {
+      final record = await pb
+          .collection('history_sync')
+          .create(
+            body: body,
+          )
+          .timeout(_networkTimeout);
+      DebugLogService().info("📜 history_sync: Created record ${record.id}");
+      return record.data..['id'] = record.id;
+    } catch (e) {
+      // Suppress 404 errors (collection not set up yet — history sync is optional)
+      if (!e.toString().contains('404') &&
+          !e.toString().contains('Missing or invalid collection context')) {
+        DebugLogService().error("⚠️ history_sync create error: $e");
+      }
+      return null;
+    }
+  }
+
+  /// Lists history_sync records for the current authenticated user.
+  /// Returns at most [limit] records (default 200), sorted by most recent first.
+  /// Supports optional [filter] for additional filtering beyond user_id.
+  /// Returns a list of record data maps, or empty list on failure.
+  Future<List<Map<String, dynamic>>> listHistorySync({
+    String? filter,
+    int limit = 200,
+  }) async {
+    if (isOffline || !enableCloudSync) return [];
+    if (!_initialized || _userId == null) return [];
+
+    // Always scope to current user and enforce the 200-entry cap
+    final userFilter = 'user_id = "$_userId"';
+    final combinedFilter = filter != null && filter.isNotEmpty
+        ? '$userFilter && $filter'
+        : userFilter;
+
+    try {
+      final records = await pb
+          .collection('history_sync')
+          .getList(
+            page: 1,
+            perPage: limit,
+            filter: combinedFilter,
+            sort: '-last_played',
+          )
+          .timeout(_networkTimeout);
+
+      return records.items.map((r) => r.data..['id'] = r.id).toList();
+    } catch (e) {
+      DebugLogService().error("⚠️ history_sync list error: $e");
+      return [];
+    }
   }
 }

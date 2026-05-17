@@ -221,6 +221,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Sei der Erste, der den ersten Platz beansprucht!';
 
   @override
+  String get backgroundCacheFlacStreams => 'FLAC-Streams im Hintergrund cachen';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      'Lädt gestreamte verlustfreie Titel still auf Ihre lokale Festplatte herunter, damit die Wiedergabe sofort erfolgt und keine Daten verbraucht werden.';
+
+  @override
   String get behavioralHeader => 'VERHALTENS-ERFOLGE';
 
   @override
@@ -2692,4 +2699,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => 'Abgeschlossen!';
+
+  @override
+  String get externalLinkDetected => 'Externer Link Erkannt';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      'Der automatische Download ist aufgrund strenger Netzwerk- oder Serverbeschränkungen fehlgeschlagen.\\n\\nMöchten Sie die Gofile-Download-Seite in Ihrem Systembrowser öffnen oder den Link kopieren, um ihn manuell herunterzuladen?';
+
+  @override
+  String get copyLink => 'Link Kopieren';
+
+  @override
+  String get openBrowser => 'Browser Öffnen';
+
+  @override
+  String get linkCopied => 'Link in die Zwischenablage kopiert!';
+
+  @override
+  String get waitingForServerResponse => 'Warten auf Serverantwort...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'Warteschlange $position... bitte warten';
+  }
+
+  @override
+  String get processingOnServer => 'Wird auf dem Server verarbeitet...';
 }

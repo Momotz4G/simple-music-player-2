@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import '../../providers/download_search_provider.dart';
 import '../../providers/search_bridge_provider.dart';
@@ -15,8 +17,10 @@ import '../../providers/tidal_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/youtube_downloader_service.dart';
+import '../../services/itunes_api_service.dart';
 import '../../models/song_model.dart';
 import '../../services/pocketbase_service.dart'; // 🔒 OFFLINE MODE
+import '../../utils/layout_engine.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -42,8 +46,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   Timer? _connectivityTimer;
 
   late AppLocalizations _l10n;
-
-
 
   @override
   void initState() {
@@ -144,22 +146,106 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       setState(() => _isLoadingSuggestions = true);
 
       final settings = ref.read(settingsProvider);
-      final isYoutube = settings.searchEngine == SearchEngine.youtube;
+      final searchEngine = settings.searchEngine;
 
       try {
-        if (isYoutube) {
+        if (searchEngine == SearchEngine.appleMusic) {
+          final results = await ITunesApiService.searchSongs(query, limit: 10);
+          if (mounted && _isSuggesting) {
+            setState(() {
+              _songSuggestions = results;
+              _albumSuggestions = [];
+              _artistSuggestions = [];
+              _isLoadingSuggestions = false;
+            });
+          }
+        } else if (searchEngine == SearchEngine.youtube) {
+          // 🚀 Use YouTube Music API for proper music metadata in suggestions
+          try {
+            final encodedQuery = Uri.encodeComponent(query);
+            final searchUrl = Uri.parse(
+                'https://ytmusic-api-omega.vercel.app/api/search?q=$encodedQuery&limit=10');
+            final response = await http.get(searchUrl).timeout(
+                  const Duration(seconds: 8),
+                );
+
+            if (response.statusCode == 200 && mounted && _isSuggesting) {
+              final body = json.decode(response.body);
+              if (body['success'] == true && body['data'] != null) {
+                final results = body['data'] as List<dynamic>;
+                setState(() {
+                  _songSuggestions = results.map((track) {
+                    final title = track['title'] as String? ?? 'Unknown';
+                    final artists = track['artists'] as List<dynamic>? ?? [];
+                    final artist = artists.isNotEmpty
+                        ? artists
+                            .map((a) => a['name'] as String? ?? '')
+                            .join(', ')
+                        : 'Unknown Artist';
+                    final albumData = track['album'] as Map<String, dynamic>?;
+                    final album = albumData?['name'] as String? ?? '';
+                    final videoId = track['videoId'] as String?;
+
+                    // Duration
+                    int durationSeconds = 0;
+                    if (track['duration_seconds'] != null) {
+                      final ds = track['duration_seconds'];
+                      durationSeconds =
+                          (ds is int) ? ds : int.tryParse(ds.toString()) ?? 0;
+                    } else if (track['duration'] != null &&
+                        track['duration'] is String) {
+                      final parts = (track['duration'] as String).split(':');
+                      if (parts.length == 2) {
+                        durationSeconds = (int.tryParse(parts[0]) ?? 0) * 60 +
+                            (int.tryParse(parts[1]) ?? 0);
+                      }
+                    }
+
+                    // Thumbnail
+                    String artUrl = '';
+                    final thumbnails =
+                        track['thumbnails'] as List<dynamic>? ?? [];
+                    if (thumbnails.isNotEmpty) {
+                      artUrl = thumbnails.last['url'] as String? ?? '';
+                    }
+
+                    return SongMetadata(
+                      title: title,
+                      artist: artist,
+                      album: album,
+                      durationSeconds: durationSeconds,
+                      albumArtUrl: artUrl,
+                      youtubeUrl: videoId != null
+                          ? 'https://www.youtube.com/watch?v=$videoId'
+                          : null,
+                    );
+                  }).toList();
+                  _albumSuggestions = [];
+                  _artistSuggestions = [];
+                  _isLoadingSuggestions = false;
+                });
+                return;
+              }
+            }
+          } catch (e) {
+            debugPrint("⚠️ YT Music suggestion search failed: $e");
+          }
+
+          // Fallback to yt-dlp
           final ytService = YoutubeDownloaderService();
           final results = await ytService.searchVideo(query);
           if (mounted && _isSuggesting) {
             setState(() {
-              _songSuggestions = results.map((yt) => SongMetadata(
-                title: yt.title,
-                artist: yt.artist,
-                album: "YouTube",
-                durationSeconds: _parseDuration(yt.duration),
-                albumArtUrl: yt.thumbnailUrl,
-                youtubeUrl: yt.url,
-              )).toList();
+              _songSuggestions = results
+                  .map((yt) => SongMetadata(
+                        title: _cleanYouTubeTitle(yt.title, yt.artist),
+                        artist: _cleanYouTubeArtist(yt.artist),
+                        album: "",
+                        durationSeconds: _parseDuration(yt.duration),
+                        albumArtUrl: yt.thumbnailUrl,
+                        youtubeUrl: yt.url,
+                      ))
+                  .toList();
               _albumSuggestions = [];
               _artistSuggestions = [];
               _isLoadingSuggestions = false;
@@ -169,9 +255,15 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           final results = await HybridService.searchAll(query, limit: 5);
           if (mounted && _isSuggesting) {
             setState(() {
-              _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? <SongMetadata>[];
-              _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? <AlbumModel>[];
-              _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? <ArtistModel>[];
+              _songSuggestions =
+                  (results['songs'] as List?)?.cast<SongMetadata>() ??
+                      <SongMetadata>[];
+              _albumSuggestions =
+                  (results['albums'] as List?)?.cast<AlbumModel>() ??
+                      <AlbumModel>[];
+              _artistSuggestions =
+                  (results['artists'] as List?)?.cast<ArtistModel>() ??
+                      <ArtistModel>[];
               _isLoadingSuggestions = false;
             });
           }
@@ -188,12 +280,69 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       if (parts.length == 2) {
         return int.parse(parts[0]) * 60 + int.parse(parts[1]);
       } else if (parts.length == 3) {
-        return int.parse(parts[0]) * 3600 + int.parse(parts[1]) * 60 + int.parse(parts[2]);
+        return int.parse(parts[0]) * 3600 +
+            int.parse(parts[1]) * 60 +
+            int.parse(parts[2]);
       }
       return 0;
     } catch (_) {
       return 0;
     }
+  }
+
+  /// 🚀 Clean YouTube video title for better stats tracking
+  /// Removes common junk like "Official MV", "Lyrics", "Audio", etc.
+  String _cleanYouTubeTitle(String title, String artist) {
+    String clean = title;
+    // Remove artist prefix if title starts with "Artist - Title"
+    if (clean.contains(' - ')) {
+      final parts = clean.split(' - ');
+      if (parts.length == 2 &&
+          parts[0]
+              .toLowerCase()
+              .contains(artist.toLowerCase().split(' ').first)) {
+        clean = parts[1];
+      }
+    }
+    // Remove common YouTube junk
+    clean = clean
+        .replaceAll(
+            RegExp(r'\(Official\s*(Music\s*)?Video\)', caseSensitive: false),
+            '')
+        .replaceAll(
+            RegExp(r'\[Official\s*(Music\s*)?Video\]', caseSensitive: false),
+            '')
+        .replaceAll(RegExp(r'\(Official\s*Audio\)', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\[Official\s*Audio\]', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\(Lyrics?\)', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\[Lyrics?\]', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\(MV\)', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\[MV\]', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\(M/V\)', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\[M/V\]', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\(HD\)', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\(4K\)', caseSensitive: false), '')
+        .replaceAll(
+            RegExp(r'Official\s*(Music\s*)?Video', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    // Remove trailing/leading quotes
+    if (clean.startsWith("'") && clean.endsWith("'")) {
+      clean = clean.substring(1, clean.length - 1);
+    }
+    if (clean.startsWith('"') && clean.endsWith('"')) {
+      clean = clean.substring(1, clean.length - 1);
+    }
+    return clean.isEmpty ? title : clean;
+  }
+
+  /// 🚀 Clean YouTube uploader name for better artist metadata
+  String _cleanYouTubeArtist(String artist) {
+    return artist
+        .replaceAll(RegExp(r'\s*-\s*Topic$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'VEVO$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\s*Official$', caseSensitive: false), '')
+        .trim();
   }
 
   void _onSuggestionSelected(dynamic item) {
@@ -254,7 +403,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     // 🚀 Show loading state
     setState(() {
       final settings = ref.read(settingsProvider);
-      final engineName = settings.searchEngine == SearchEngine.youtube ? "YouTube" : "Spotify";
+      final engineName = settings.searchEngine == SearchEngine.appleMusic 
+          ? "Apple Music" 
+          : (settings.searchEngine == SearchEngine.youtube ? "YouTube" : "Spotify");
       _currentStatus = _l10n.searchingEngine(engineName, keyword);
       _isLoadingSuggestions = true;
       _isSuggesting = true; // Keep suggestion list visible
@@ -262,20 +413,118 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
     try {
       final settings = ref.read(settingsProvider);
-      if (settings.searchEngine == SearchEngine.youtube) {
+      if (settings.searchEngine == SearchEngine.appleMusic) {
+        final results = await ITunesApiService.searchSongs(keyword, limit: 20);
+        if (mounted) {
+          setState(() {
+            _songSuggestions = results;
+            _albumSuggestions = [];
+            _artistSuggestions = [];
+            _isLoadingSuggestions = false;
+
+            final songCount = _songSuggestions.length;
+            if (songCount > 0) {
+              _currentStatus = _l10n.foundResults(songCount, 0, 0);
+            } else {
+              _currentStatus = _l10n.noSpotifyResults; // Generic fallback
+            }
+          });
+        }
+      } else if (settings.searchEngine == SearchEngine.youtube) {
+        // 🚀 Use YouTube Music API for proper music metadata (clean title, artist, album, art)
+        try {
+          final query = Uri.encodeComponent(keyword);
+          final searchUrl = Uri.parse(
+              'https://ytmusic-api-omega.vercel.app/api/search?q=$query&limit=10');
+          final response = await http.get(searchUrl).timeout(
+                const Duration(seconds: 10),
+              );
+
+          if (response.statusCode == 200 && mounted) {
+            final body = json.decode(response.body);
+            if (body['success'] == true && body['data'] != null) {
+              final results = body['data'] as List<dynamic>;
+              setState(() {
+                _songSuggestions = results.map((track) {
+                  final title = track['title'] as String? ?? 'Unknown';
+                  final artists = track['artists'] as List<dynamic>? ?? [];
+                  final artist = artists.isNotEmpty
+                      ? artists
+                          .map((a) => a['name'] as String? ?? '')
+                          .join(', ')
+                      : 'Unknown Artist';
+                  final albumData = track['album'] as Map<String, dynamic>?;
+                  final album = albumData?['name'] as String? ?? '';
+                  final videoId = track['videoId'] as String?;
+
+                  // Duration
+                  int durationSeconds = 0;
+                  if (track['duration_seconds'] != null) {
+                    final ds = track['duration_seconds'];
+                    durationSeconds =
+                        (ds is int) ? ds : int.tryParse(ds.toString()) ?? 0;
+                  } else if (track['duration'] != null &&
+                      track['duration'] is String) {
+                    final parts = (track['duration'] as String).split(':');
+                    if (parts.length == 2) {
+                      durationSeconds = (int.tryParse(parts[0]) ?? 0) * 60 +
+                          (int.tryParse(parts[1]) ?? 0);
+                    }
+                  }
+
+                  // Thumbnail
+                  String artUrl = '';
+                  final thumbnails =
+                      track['thumbnails'] as List<dynamic>? ?? [];
+                  if (thumbnails.isNotEmpty) {
+                    artUrl = thumbnails.last['url'] as String? ?? '';
+                  }
+
+                  return SongMetadata(
+                    title: title,
+                    artist: artist,
+                    album: album,
+                    durationSeconds: durationSeconds,
+                    albumArtUrl: artUrl,
+                    youtubeUrl: videoId != null
+                        ? 'https://www.youtube.com/watch?v=$videoId'
+                        : null,
+                  );
+                }).toList();
+                _albumSuggestions = [];
+                _artistSuggestions = [];
+                _isLoadingSuggestions = false;
+
+                final songCount = _songSuggestions.length;
+                if (songCount > 0) {
+                  _currentStatus = _l10n.foundYoutubeResults(songCount);
+                } else {
+                  _currentStatus = _l10n.noYoutubeResults;
+                }
+              });
+              return;
+            }
+          }
+        } catch (e) {
+          debugPrint("⚠️ YT Music search failed: $e, falling back to yt-dlp");
+        }
+
+        // Fallback to yt-dlp if YT Music API fails
         final ytService = YoutubeDownloaderService();
         final results = await ytService.searchVideo(keyword);
 
         if (mounted) {
           setState(() {
-            _songSuggestions = results.map((yt) => SongMetadata(
-              title: yt.title,
-              artist: yt.artist,
-              album: "YouTube",
-              durationSeconds: _parseDuration(yt.duration),
-              albumArtUrl: yt.thumbnailUrl,
-              youtubeUrl: yt.url,
-            )).toList();
+            _songSuggestions = results
+                .map((yt) => SongMetadata(
+                      title: _cleanYouTubeTitle(yt.title, yt.artist),
+                      artist: _cleanYouTubeArtist(yt.artist),
+                      album: "",
+                      durationSeconds: _parseDuration(yt.duration),
+                      albumArtUrl: yt.thumbnailUrl,
+                      youtubeUrl: yt.url,
+                    ))
+                .toList();
             _albumSuggestions = [];
             _artistSuggestions = [];
             _isLoadingSuggestions = false;
@@ -294,9 +543,15 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
         if (mounted) {
           setState(() {
-            _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? <SongMetadata>[];
-            _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? <AlbumModel>[];
-            _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? <ArtistModel>[];
+            _songSuggestions =
+                (results['songs'] as List?)?.cast<SongMetadata>() ??
+                    <SongMetadata>[];
+            _albumSuggestions =
+                (results['albums'] as List?)?.cast<AlbumModel>() ??
+                    <AlbumModel>[];
+            _artistSuggestions =
+                (results['artists'] as List?)?.cast<ArtistModel>() ??
+                    <ArtistModel>[];
             _isLoadingSuggestions = false;
 
             final songCount = _songSuggestions.length;
@@ -340,7 +595,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     _l10n = l10nObj;
 
     // 🚀 Robust Locale Switching: Update status if it's currently a "ready" or "offline" string
-    if (_currentStatus.isEmpty || 
+    if (_currentStatus.isEmpty ||
         _currentStatus == 'Ready. Search for a song.' ||
         _currentStatus == 'Offline') {
       _currentStatus = _l10n.readySearchSong;
@@ -368,6 +623,21 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final textColor = isDark ? Colors.white : Colors.black;
     final accentColor = Theme.of(context).colorScheme.primary;
 
+    // Tablet layout detection
+    final isTablet = LayoutEngine.isTablet(context);
+    final isLandscape = LayoutEngine.isLandscape(context);
+
+    if (isTablet) {
+      return _buildTabletSearchView(
+        context,
+        searchResults: searchResults,
+        textColor: textColor,
+        accentColor: accentColor,
+        isLandscape: isLandscape,
+      );
+    }
+
+    // --- Phone layout (unchanged) ---
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Padding(
@@ -394,9 +664,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               onSubmitted: (_) => _runSearch(),
               decoration: InputDecoration(
                 labelText: _l10n.songTitleKeyword,
-                hintText: ref.watch(settingsProvider).searchEngine == SearchEngine.youtube 
-                  ? _l10n.searchYoutubeHint 
-                  : _l10n.searchSpotifyHint,
+                hintText: ref.watch(settingsProvider).searchEngine ==
+                        SearchEngine.youtube
+                    ? _l10n.searchYoutubeHint
+                    : _l10n.searchSpotifyHint,
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(Icons.search,
@@ -418,12 +689,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       data: (state) {
                         final color = _getTidalColor(state.status);
                         final text = _getTidalStatusText(context, state.status);
-                        
+
                         return Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text("${_l10n.tidalApiStatus}: ", 
-                                style: TextStyle(color: textColor.withValues(alpha: 0.6), fontSize: 11)),
+                            Text("${_l10n.tidalApiStatus}: ",
+                                style: TextStyle(
+                                    color: textColor.withValues(alpha: 0.6),
+                                    fontSize: 11)),
                             Container(
                               width: 6,
                               height: 6,
@@ -433,15 +706,23 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            Text(text, 
-                                style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 11, fontWeight: FontWeight.w500)),
+                            Text(text,
+                                style: TextStyle(
+                                    color: color.withValues(alpha: 0.8),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500)),
                           ],
                         );
                       },
-                      loading: () => Text("${_l10n.tidalApiStatus}: ...", 
-                          style: TextStyle(color: textColor.withValues(alpha: 0.4), fontSize: 11)),
-                      error: (_, __) => Text("${_l10n.tidalApiStatus}: ${_l10n.offlineStatus}", 
-                          style: TextStyle(color: Colors.redAccent.withValues(alpha: 0.6), fontSize: 11)),
+                      loading: () => Text("${_l10n.tidalApiStatus}: ...",
+                          style: TextStyle(
+                              color: textColor.withValues(alpha: 0.4),
+                              fontSize: 11)),
+                      error: (_, __) => Text(
+                          "${_l10n.tidalApiStatus}: ${_l10n.offlineStatus}",
+                          style: TextStyle(
+                              color: Colors.redAccent.withValues(alpha: 0.6),
+                              fontSize: 11)),
                     );
                   },
                 ),
@@ -521,6 +802,572 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           ],
         ),
       ),
+    );
+  }
+
+  // --- Tablet Search Layout ---
+  Widget _buildTabletSearchView(
+    BuildContext context, {
+    required List<SongMetadata> searchResults,
+    required Color textColor,
+    required Color accentColor,
+    required bool isLandscape,
+  }) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 24),
+            // Header
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(_l10n.musicSearch,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold, color: textColor)),
+            ),
+            const SizedBox(height: 20),
+            // Search bar: max 600dp, centered horizontally
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: TextField(
+                  controller: _urlController,
+                  enabled: true,
+                  style: TextStyle(color: textColor),
+                  onChanged: _onSearchQueryChanged,
+                  onSubmitted: (_) => _runSearch(),
+                  decoration: InputDecoration(
+                    labelText: _l10n.songTitleKeyword,
+                    hintText: ref.watch(settingsProvider).searchEngine ==
+                            SearchEngine.youtube
+                        ? _l10n.searchYoutubeHint
+                        : _l10n.searchSpotifyHint,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.search,
+                          color: textColor.withValues(alpha: 0.7)),
+                      onPressed: _runSearch,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Status row
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(_l10n.statusWithText(_currentStatus),
+                          style: TextStyle(
+                              color: textColor.withValues(alpha: 0.6))),
+                    ),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final tidalStatus = ref.watch(tidalStatusProvider);
+                        return tidalStatus.when(
+                          data: (state) {
+                            final color = _getTidalColor(state.status);
+                            final text =
+                                _getTidalStatusText(context, state.status);
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text("${_l10n.tidalApiStatus}: ",
+                                    style: TextStyle(
+                                        color: textColor.withValues(alpha: 0.6),
+                                        fontSize: 11)),
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: color,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(text,
+                                    style: TextStyle(
+                                        color: color.withValues(alpha: 0.8),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500)),
+                              ],
+                            );
+                          },
+                          loading: () => Text("${_l10n.tidalApiStatus}: ...",
+                              style: TextStyle(
+                                  color: textColor.withValues(alpha: 0.4),
+                                  fontSize: 11)),
+                          error: (_, __) => Text(
+                              "${_l10n.tidalApiStatus}: ${_l10n.offlineStatus}",
+                              style: TextStyle(
+                                  color:
+                                      Colors.redAccent.withValues(alpha: 0.6),
+                                  fontSize: 11)),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Results area
+            if (!_isOnline)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.wifi_off_rounded,
+                          size: 64, color: textColor.withValues(alpha: 0.3)),
+                      const SizedBox(height: 16),
+                      Text(_l10n.noInternetConnection,
+                          style: TextStyle(
+                              color: textColor.withValues(alpha: 0.6),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 8),
+                      Text(_l10n.checkNetworkTryAgain,
+                          style: TextStyle(
+                              color: textColor.withValues(alpha: 0.4),
+                              fontSize: 14)),
+                    ],
+                  ),
+                ),
+              )
+            else if (_isSuggesting)
+              Expanded(
+                child: _buildTabletSuggestions(
+                  textColor: textColor,
+                  accentColor: accentColor,
+                  isLandscape: isLandscape,
+                ),
+              )
+            else
+              Expanded(
+                child: _buildTabletResults(
+                  searchResults: searchResults,
+                  textColor: textColor,
+                  accentColor: accentColor,
+                  isLandscape: isLandscape,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Tablet suggestions layout: landscape = 2-column, portrait = single column
+  /// with horizontal scrollable row for albums/artists.
+  Widget _buildTabletSuggestions({
+    required Color textColor,
+    required Color accentColor,
+    required bool isLandscape,
+  }) {
+    if (_isLoadingSuggestions) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_songSuggestions.isEmpty &&
+        _albumSuggestions.isEmpty &&
+        _artistSuggestions.isEmpty) {
+      return Center(
+        child: Text(_l10n.noSuggestionsFound,
+            style: TextStyle(color: textColor.withValues(alpha: 0.5))),
+      );
+    }
+
+    if (isLandscape) {
+      // Landscape: 2-column layout — songs on left, albums/artists grid on right
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left column: Songs list
+          Expanded(
+            child: _buildTabletSongsList(textColor: textColor),
+          ),
+          const SizedBox(width: 16),
+          // Right column: Albums/Artists grid
+          Expanded(
+            child: _buildTabletAlbumsArtistsGrid(
+              textColor: textColor,
+              accentColor: accentColor,
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Portrait: single column with horizontal scrollable row for albums/artists
+      return ListView(
+        children: [
+          if (_songSuggestions.isNotEmpty) ...[
+            _buildHeader(_l10n.songs, textColor),
+            ..._songSuggestions.map((s) => _buildSongTile(s, textColor)),
+          ],
+          if (_albumSuggestions.isNotEmpty) ...[
+            _buildHeader(_l10n.albums, textColor),
+            _buildHorizontalScrollableRow(
+              items: _albumSuggestions,
+              textColor: textColor,
+              isAlbum: true,
+            ),
+          ],
+          if (_artistSuggestions.isNotEmpty) ...[
+            _buildHeader(_l10n.artists, textColor),
+            _buildHorizontalScrollableRow(
+              items: _artistSuggestions,
+              textColor: textColor,
+              isAlbum: false,
+            ),
+          ],
+        ],
+      );
+    }
+  }
+
+  /// Tablet results layout for non-suggestion mode.
+  Widget _buildTabletResults({
+    required List<SongMetadata> searchResults,
+    required Color textColor,
+    required Color accentColor,
+    required bool isLandscape,
+  }) {
+    if (searchResults.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    if (isLandscape) {
+      // Landscape: 2-column — songs list on left, albums/artists grid on right
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left: songs list
+          Expanded(
+            child: ListView.builder(
+              itemCount: searchResults.length,
+              itemBuilder: (context, index) {
+                final result = searchResults[index];
+                final durationDisplay =
+                    '${(result.durationSeconds ~/ 60)}:${(result.durationSeconds % 60).toString().padLeft(2, '0')}';
+                return Card(
+                  color: textColor.withValues(alpha: 0.05),
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  child: ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.network(result.albumArtUrl,
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, o, s) =>
+                              const Icon(Icons.music_note)),
+                    ),
+                    title:
+                        Text(result.title, style: TextStyle(color: textColor)),
+                    subtitle: Text('${result.artist} • $durationDisplay',
+                        style:
+                            TextStyle(color: textColor.withValues(alpha: 0.7))),
+                    trailing: Icon(Icons.chevron_right, color: accentColor),
+                    onTap: () => _viewMatchResults(result),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Right: albums/artists grid (if available from suggestions state)
+          Expanded(
+            child: _buildTabletAlbumsArtistsGrid(
+              textColor: textColor,
+              accentColor: accentColor,
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Portrait: single column with results
+      return ListView.builder(
+        itemCount: searchResults.length,
+        itemBuilder: (context, index) {
+          final result = searchResults[index];
+          final durationDisplay =
+              '${(result.durationSeconds ~/ 60)}:${(result.durationSeconds % 60).toString().padLeft(2, '0')}';
+          return Card(
+            color: textColor.withValues(alpha: 0.05),
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            child: ListTile(
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.network(result.albumArtUrl,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, o, s) => const Icon(Icons.music_note)),
+              ),
+              title: Text(result.title, style: TextStyle(color: textColor)),
+              subtitle: Text('${result.artist} • $durationDisplay',
+                  style: TextStyle(color: textColor.withValues(alpha: 0.7))),
+              trailing: Icon(Icons.chevron_right, color: accentColor),
+              onTap: () => _viewMatchResults(result),
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  /// Builds the songs list column for tablet landscape layout.
+  Widget _buildTabletSongsList({required Color textColor}) {
+    if (_songSuggestions.isEmpty) {
+      return Center(
+        child: Text(_l10n.songs,
+            style: TextStyle(color: textColor.withValues(alpha: 0.4))),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeader(_l10n.songs, textColor),
+        Expanded(
+          child: ListView(
+            children: _songSuggestions
+                .map((s) => _buildSongTile(s, textColor))
+                .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the albums/artists grid for tablet landscape layout.
+  /// Shows grid tiles with minimum 3 per row.
+  Widget _buildTabletAlbumsArtistsGrid({
+    required Color textColor,
+    required Color accentColor,
+  }) {
+    final hasAlbums = _albumSuggestions.isNotEmpty;
+    final hasArtists = _artistSuggestions.isNotEmpty;
+
+    if (!hasAlbums && !hasArtists) {
+      return Center(
+        child: Text('${_l10n.albums} & ${_l10n.artists}',
+            style: TextStyle(color: textColor.withValues(alpha: 0.4))),
+      );
+    }
+
+    return ListView(
+      children: [
+        if (hasAlbums) ...[
+          _buildHeader(_l10n.albums, textColor),
+          _buildGridTiles(
+            items: _albumSuggestions,
+            textColor: textColor,
+            isAlbum: true,
+          ),
+        ],
+        if (hasArtists) ...[
+          _buildHeader(_l10n.artists, textColor),
+          _buildGridTiles(
+            items: _artistSuggestions,
+            textColor: textColor,
+            isAlbum: false,
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Builds grid tiles for albums or artists (minimum 3 per row).
+  Widget _buildGridTiles({
+    required List<dynamic> items,
+    required Color textColor,
+    required bool isAlbum,
+  }) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return _buildGridTile(item, textColor, isAlbum);
+      },
+    );
+  }
+
+  /// Builds a single grid tile for an album or artist.
+  Widget _buildGridTile(dynamic item, Color textColor, bool isAlbum) {
+    final String imageUrl;
+    final String title;
+    final String? subtitle;
+
+    if (isAlbum && item is AlbumModel) {
+      imageUrl = item.imageUrl;
+      title = item.title;
+      subtitle = item.artist;
+    } else if (!isAlbum && item is ArtistModel) {
+      imageUrl = item.imageUrl;
+      title = item.name;
+      subtitle = null;
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    return GestureDetector(
+      onTap: () => _onSuggestionSelected(item),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(isAlbum ? 8 : 100),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, o, e) => Container(
+                    color: textColor.withValues(alpha: 0.1),
+                    child: Icon(
+                      isAlbum ? Icons.album : Icons.person,
+                      color: textColor.withValues(alpha: 0.4),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(title,
+              style: TextStyle(color: textColor, fontSize: 12),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center),
+          if (subtitle != null)
+            Text(subtitle,
+                style: TextStyle(
+                    color: textColor.withValues(alpha: 0.6), fontSize: 10),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a horizontal scrollable row of grid tiles for portrait tablet mode.
+  Widget _buildHorizontalScrollableRow({
+    required List<dynamic> items,
+    required Color textColor,
+    required bool isAlbum,
+  }) {
+    return SizedBox(
+      height: 140,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final String imageUrl;
+          final String title;
+          final String? subtitle;
+
+          if (isAlbum && item is AlbumModel) {
+            imageUrl = item.imageUrl;
+            title = item.title;
+            subtitle = item.artist;
+          } else if (!isAlbum && item is ArtistModel) {
+            imageUrl = item.imageUrl;
+            title = item.name;
+            subtitle = null;
+          } else {
+            return const SizedBox.shrink();
+          }
+
+          return GestureDetector(
+            onTap: () => _onSuggestionSelected(item),
+            child: SizedBox(
+              width: 100,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(isAlbum ? 8 : 50),
+                    child: Image.network(
+                      imageUrl,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, o, e) => Container(
+                        width: 100,
+                        height: 100,
+                        color: textColor.withValues(alpha: 0.1),
+                        child: Icon(
+                          isAlbum ? Icons.album : Icons.person,
+                          color: textColor.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(title,
+                      style: TextStyle(color: textColor, fontSize: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center),
+                  if (subtitle != null)
+                    Text(subtitle,
+                        style: TextStyle(
+                            color: textColor.withValues(alpha: 0.6),
+                            fontSize: 10),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Builds a single song list tile for tablet layout.
+  Widget _buildSongTile(SongMetadata s, Color textColor) {
+    return ListTile(
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: Image.network(s.albumArtUrl,
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+            errorBuilder: (c, o, e) => const Icon(Icons.music_note)),
+      ),
+      title: Text(s.title,
+          style: TextStyle(color: textColor),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis),
+      subtitle: Text(s.artist,
+          style: TextStyle(color: textColor.withValues(alpha: 0.7)),
+          maxLines: 1),
+      onTap: () => _onSuggestionSelected(s),
+      dense: true,
     );
   }
 

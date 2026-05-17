@@ -577,6 +577,8 @@
   "autumn": "秋",
   "avatarPickerDesc": "テンプレートを選択するか、自分の写真をインポートします",
   "beFirstToClaim": "1位を誰よりも早く獲得しましょう！",
+  "backgroundCacheFlacStreams": "バックグラウンドでFLACストリームをキャッシュ",
+  "backgroundCacheFlacStreamsSubtitle": "ストリーミングされたロスレストラックをローカルディスクに静かにダウンロードし、再生を即座にしてデータを使用しません。",
   "behavioralHeader": "行動実績",
   "behavioralTitles": "行動ベース",
   "binariesUpdateRequired": "バイナリの更新が必要です",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "歌詞を解析中...",
   "aiLyricsSuccess": "歌詞の生成に成功しました！",
   "aiLyricsLocalFileMissing": "エラー: ローカルオーディオファイルが見つかりません。",
-  "aiLyricsComplete": "完了！"
+  "aiLyricsComplete": "完了！",
+  "externalLinkDetected": "外部リンクが検出されました",
+  "gofileDownloadFailedPrompt": "厳しいネットワークまたはサーバーの制限により、自動ダウンロードに失敗しました。\\n\\nシステムブラウザでGofileダウンロードページを開きますか？それともリンクをコピーして手動でダウンロードしますか？",
+  "copyLink": "リンクをコピー",
+  "openBrowser": "ブラウザを開く",
+  "linkCopied": "リンクがクリップボードにコピーされました！",
+  "waitingForServerResponse": "サーバーの応答を待っています...",
+  "queuePositionPleaseWait": "キュー {position}... お待ちください",
+  "processingOnServer": "サーバーで処理中...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

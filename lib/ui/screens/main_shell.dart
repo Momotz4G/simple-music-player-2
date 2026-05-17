@@ -97,6 +97,8 @@ import 'home_page.dart';
 import 'tools_page.dart';
 import 'downloads_page.dart';
 import 'search_page.dart';
+import 'tablet_main_shell.dart';
+import '../../utils/layout_engine.dart';
 import 'album_detail_page.dart';
 import 'playlist_detail_page.dart';
 import 'artist_detail_page.dart';
@@ -120,10 +122,12 @@ import '../components/whats_new_dialog.dart';
 import '../../utils/toast_utils.dart';
 import '../../services/pocketbase_service.dart';
 import '../../services/native_music_service.dart';
+import '../../services/sync_engine.dart'; // 🔄 Cloud Stats Sync
 import '../../providers/mailbox_provider.dart'; // 🚀 IMPORT
 import '../components/mailbox_dialog.dart'; // 🚀 IMPORT
 import '../../providers/profile_provider.dart'; // 🚀 IMPORT
 import '../components/profile_dialog.dart'; // 🚀 IMPORT
+
 bool _isExiting = false; // Global flag for exit loop prevention
 
 class MainShell extends ConsumerStatefulWidget {
@@ -133,7 +137,8 @@ class MainShell extends ConsumerStatefulWidget {
   ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserver, WindowListener {
+class _MainShellState extends ConsumerState<MainShell>
+    with WidgetsBindingObserver, WindowListener {
   final UpdateService _updateService = UpdateService();
   // 🚀 GlobalKey for drawer control on mobile
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -153,7 +158,9 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
             duration: const Duration(seconds: 10));
 
         // 🚀 ADD TO LOCAL MAILBOX (Real-time)
-        ref.read(mailboxProvider.notifier).addMessage(message, remoteId: remoteId);
+        ref
+            .read(mailboxProvider.notifier)
+            .addMessage(message, remoteId: remoteId);
       }
     });
 
@@ -163,7 +170,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
     // 🚀 CHECK FOR UPDATES ON STARTUP
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestPermissions(); // 🚀 Request Permissions
-      
+
       // 🚀 CLEANUP OLD UPDATE APKs (Free ~300MB after successful update)
       // Do this BEFORE checking for updates so stale markers don't block the check
       UpdateService.cleanupOldUpdates();
@@ -171,10 +178,10 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
       _checkForUpdates();
       _checkWhatsNew();
       _startConnectivityMonitor(); // 🚀 Start monitoring
-      
+
       // 🚀 Delay reminder slightly to ensure window is visible and stable
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) _checkOfflineModeStatus(); 
+        if (mounted) _checkOfflineModeStatus();
       });
 
       // 🚀 CHECK FOR INTERRUPTED UPDATES (Android)
@@ -266,6 +273,10 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
   // 🚀 CONNECTIVITY MONITOR
   void _startConnectivityMonitor() {
     if (PocketBaseService.isOffline) return; // 🔒 OFFLINE MODE: Skip monitoring
+
+    // 🔄 Initialize SyncEngine after PocketBaseService is ready
+    SyncEngine().init();
+
     _checkConnectivity(); // Initial check
     _connectivityTimer = Timer.periodic(
       const Duration(seconds: 5),
@@ -278,6 +289,9 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
       final result = await InternetAddress.lookup('google.com')
           .timeout(const Duration(seconds: 3));
       final isOnline = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+
+      // 🔄 Notify SyncEngine of connectivity changes
+      SyncEngine().onConnectivityChanged(isOnline);
 
       // 🚀 Show toast when transitioning from offline to online
       if (_wasOffline && isOnline && mounted) {
@@ -302,6 +316,9 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
     } catch (_) {
       // Offline
       _wasOffline = true;
+
+      // 🔄 Notify SyncEngine we're offline
+      SyncEngine().onConnectivityChanged(false);
     }
   }
 
@@ -501,7 +518,10 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
       TrayService().dispose();
     }
     _connectivityTimer?.cancel(); // 🚀 Cancel connectivity monitor
-    PocketBaseService().pb.collection('broadcasts').unsubscribe(); // 🚀 Clean up broadcast listener
+    PocketBaseService()
+        .pb
+        .collection('broadcasts')
+        .unsubscribe(); // 🚀 Clean up broadcast listener
     BulkDownloadService().errorNotifier.removeListener(_onBulkDownloadError);
     YoutubeDownloaderService()
         .binariesUpdateNotifier
@@ -513,7 +533,8 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
   void onWindowClose() async {
     if (_isExiting) return;
     final minimizeToTray = ref.read(settingsProvider).minimizeToTrayOnClose;
-    debugPrint("🪟 [MainShell] Window Close Attempt. minimizeToTrayOnClose: $minimizeToTray");
+    debugPrint(
+        "🪟 [MainShell] Window Close Attempt. minimizeToTrayOnClose: $minimizeToTray");
 
     if (minimizeToTray) {
       TrayService().minimizeToTray();
@@ -532,8 +553,8 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
 
     // 1. Stop all native audio (FFI workers, just_audio, timers)
     try {
-      await NativeMusicService().shutdown()
-          .timeout(const Duration(seconds: 2), onTimeout: () {
+      await NativeMusicService().shutdown().timeout(const Duration(seconds: 2),
+          onTimeout: () {
         debugPrint("⚠️ [MainShell] Audio shutdown timed out, forcing exit.");
       });
     } catch (e) {
@@ -551,7 +572,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
     // 4. Close the window and force process termination
     await windowManager.setPreventClose(false);
     appWindow.close();
-    
+
     // 🚀 HARD EXIT: Ensure all native background threads (MPV, FFI) are killed
     // to release any lingering hardware locks (WASAPI Exclusive).
     exit(0);
@@ -637,7 +658,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 🚀 When returning to app (e.g. from Permission Settings), 
+    // 🚀 When returning to app (e.g. from Permission Settings),
     // check if we have a pending update to resume!
     if (state == AppLifecycleState.resumed && Platform.isAndroid) {
       _checkPendingUpdateAuto();
@@ -970,7 +991,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     // 🚀 SAFETY: If localization is not yet ready, show a placeholder to avoid LateInitializationError
     if (l10n == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -989,7 +1010,8 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
 
     // 🚀 LISTEN FOR SLEEP TIMER TRIGGER
     ref.listen<PlayerState>(playerProvider, (previous, next) {
-      if (next.isSleepPending && (previous == null || !previous.isSleepPending)) {
+      if (next.isSleepPending &&
+          (previous == null || !previous.isSleepPending)) {
         final l10n = AppLocalizations.of(context)!;
         CustomToast.show(
           context,
@@ -1000,6 +1022,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
     });
 
     final isDesktop = MediaQuery.of(context).size.width > 800;
+    final isTablet = LayoutEngine.isTablet(context);
     final screenHeight = MediaQuery.of(context).size.height;
 
     final presentationState = ref.watch(libraryPresentationProvider);
@@ -1074,7 +1097,9 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
 
           // 2. If not on Home, go back to Home
           if (currentView != LibraryView.browse) {
-            ref.read(libraryPresentationProvider.notifier).setView(LibraryView.browse);
+            ref
+                .read(libraryPresentationProvider.notifier)
+                .setView(LibraryView.browse);
             return;
           }
 
@@ -1126,339 +1151,361 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
           },
           child: Scaffold(
             key: _scaffoldKey, // 🚀 Use GlobalKey for drawer access
-          endDrawer: const QueueDrawer(),
-          // 🚀 MOBILE: Navigation Drawer (Hamburger Menu)
-          drawer: !isDesktop
-              ? _buildMobileDrawer(context, currentView, isDark, settings)
-              : null,
-          body: Stack(
-            children: [
-              // 1. AMBIENT BACKGROUND LAYER (Bottom)
-              const Positioned.fill(
-                child: AmbientBackground(),
-              ),
-              // --- BACKGROUND ATMOSPHERE LAYERS ---
-              if (settings.atmosphereTheme == AtmosphereTheme.winter) ...[
-                const Positioned.fill(child: SnowFallWidget()),
-                const Positioned.fill(child: SantaSleighWidget()),
-              ] else if (settings.atmosphereTheme ==
-                  AtmosphereTheme.autumn) ...[
-                const Positioned.fill(child: FallingLeavesWidget()),
-              ] else if (settings.atmosphereTheme ==
-                  AtmosphereTheme.rainyCity) ...[
-                const Positioned.fill(child: LightningWidget()),
-                const Positioned.fill(child: RainFallWidget()),
-              ] else if (settings.atmosphereTheme ==
-                  AtmosphereTheme.sakura) ...[
-                const Positioned.fill(child: SakuraPetalsWidget()),
-              ] else if (settings.atmosphereTheme ==
-                  AtmosphereTheme.lunarNewYear) ...[
-                const Positioned.fill(child: FireworksWidget()),
-                const Positioned.fill(child: FallingHongbaoWidget()),
-              ] else if (settings.atmosphereTheme ==
-                  AtmosphereTheme.cyberpunk) ...[
-                const Positioned.fill(child: RetroSunWidget()),
-                const Positioned.fill(child: NeonSkyscrapersWidget()),
-                const Positioned.fill(child: CyberGridWidget()),
-                const Positioned.fill(child: FlyingVehiclesWidget()),
-              ] else if (settings.atmosphereTheme ==
-                  AtmosphereTheme.underwater) ...[
-                const Positioned.fill(child: OceanRaysWidget()),
-                const Positioned.fill(child: RealisticWhaleWidget()),
-                const Positioned.fill(child: FishSwarmWidget()),
-                const Positioned.fill(child: BubblesWidget()),
-              ] else if (settings.atmosphereTheme ==
-                  AtmosphereTheme.nordicAurora) ...[
-                const Positioned.fill(child: StarrySkyWidget()),
-                const Positioned.fill(child: MilkyWayEffectWidget()),
-                const Positioned.fill(child: AuroraBorealisWidget()),
-                const Positioned.fill(child: BorealLodgeWidget()),
-                const Positioned.fill(child: WinterForestWidget()),
-              ] else if (settings.atmosphereTheme ==
-                  AtmosphereTheme.galactic) ...[
-                const Positioned.fill(child: CosmicStarsWidget()),
-                const Positioned.fill(child: DeepSpaceNebulaWidget()),
-                const Positioned.fill(child: EarthViewWidget()),
-                const Positioned.fill(child: SatelliteWidget()),
-                const Positioned.fill(child: RocketWidget()),
-              ] else if (settings.atmosphereTheme ==
-                  AtmosphereTheme.desertMirage) ...[
-                const Positioned.fill(child: DesertSunWidget()),
-                const Positioned.fill(child: HeatDistortionWidget()),
-                const Positioned.fill(child: RollingDunesWidget()),
-                const Positioned.fill(child: CamelCaravanWidget()),
-              ],
+            endDrawer: const QueueDrawer(),
+            // 🚀 MOBILE: Navigation Drawer (Hamburger Menu)
+            drawer: (!isDesktop && !isTablet)
+                ? _buildMobileDrawer(context, currentView, isDark, settings)
+                : null,
+            body: Stack(
+              children: [
+                // 1. AMBIENT BACKGROUND LAYER (Bottom)
+                const Positioned.fill(
+                  child: AmbientBackground(),
+                ),
+                // --- BACKGROUND ATMOSPHERE LAYERS ---
+                if (settings.atmosphereTheme == AtmosphereTheme.winter) ...[
+                  const Positioned.fill(child: SnowFallWidget()),
+                  const Positioned.fill(child: SantaSleighWidget()),
+                ] else if (settings.atmosphereTheme ==
+                    AtmosphereTheme.autumn) ...[
+                  const Positioned.fill(child: FallingLeavesWidget()),
+                ] else if (settings.atmosphereTheme ==
+                    AtmosphereTheme.rainyCity) ...[
+                  const Positioned.fill(child: LightningWidget()),
+                  const Positioned.fill(child: RainFallWidget()),
+                ] else if (settings.atmosphereTheme ==
+                    AtmosphereTheme.sakura) ...[
+                  const Positioned.fill(child: SakuraPetalsWidget()),
+                ] else if (settings.atmosphereTheme ==
+                    AtmosphereTheme.lunarNewYear) ...[
+                  const Positioned.fill(child: FireworksWidget()),
+                  const Positioned.fill(child: FallingHongbaoWidget()),
+                ] else if (settings.atmosphereTheme ==
+                    AtmosphereTheme.cyberpunk) ...[
+                  const Positioned.fill(child: RetroSunWidget()),
+                  const Positioned.fill(child: NeonSkyscrapersWidget()),
+                  const Positioned.fill(child: CyberGridWidget()),
+                  const Positioned.fill(child: FlyingVehiclesWidget()),
+                ] else if (settings.atmosphereTheme ==
+                    AtmosphereTheme.underwater) ...[
+                  const Positioned.fill(child: OceanRaysWidget()),
+                  const Positioned.fill(child: RealisticWhaleWidget()),
+                  const Positioned.fill(child: FishSwarmWidget()),
+                  const Positioned.fill(child: BubblesWidget()),
+                ] else if (settings.atmosphereTheme ==
+                    AtmosphereTheme.nordicAurora) ...[
+                  const Positioned.fill(child: StarrySkyWidget()),
+                  const Positioned.fill(child: MilkyWayEffectWidget()),
+                  const Positioned.fill(child: AuroraBorealisWidget()),
+                  const Positioned.fill(child: BorealLodgeWidget()),
+                  const Positioned.fill(child: WinterForestWidget()),
+                ] else if (settings.atmosphereTheme ==
+                    AtmosphereTheme.galactic) ...[
+                  const Positioned.fill(child: CosmicStarsWidget()),
+                  const Positioned.fill(child: DeepSpaceNebulaWidget()),
+                  const Positioned.fill(child: EarthViewWidget()),
+                  const Positioned.fill(child: SatelliteWidget()),
+                  const Positioned.fill(child: RocketWidget()),
+                ] else if (settings.atmosphereTheme ==
+                    AtmosphereTheme.desertMirage) ...[
+                  const Positioned.fill(child: DesertSunWidget()),
+                  const Positioned.fill(child: HeatDistortionWidget()),
+                  const Positioned.fill(child: RollingDunesWidget()),
+                  const Positioned.fill(child: CamelCaravanWidget()),
+                ],
 
-              // 2. MAIN CONTENT AREA (Sidebar + Page)
-              Positioned.fill(
-                top:
-                    (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
-                        ? 32
-                        : 0, // Title bar on desktop only
-                child: Row(
-                  children: [
-                    if (isDesktop)
-                      _buildSidebar(context, currentView, isDark, glassBgColor),
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          if (settings.atmosphereTheme ==
-                              AtmosphereTheme.winter)
-                            const Positioned(
-                              bottom: 83, // Just above player bar
-                              left: 0,
-                              right: 0,
-                              height: 40,
-                              child: IgnorePointer(child: SnowPackWidget()),
-                            )
-                          else if (settings.atmosphereTheme ==
-                              AtmosphereTheme.autumn)
-                            const Positioned(
-                              bottom: 83,
-                              left: 0,
-                              right: 0,
-                              height: 40,
-                              child: IgnorePointer(child: PumpkinPackWidget()),
-                            )
-                          else if (settings.atmosphereTheme ==
-                              AtmosphereTheme.rainyCity) ...[
-                            Positioned(
-                              bottom: 83,
-                              left: 0,
-                              right: 0,
-                              height: 300, // 2x taller than sidebar
-                              child: IgnorePointer(
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) =>
-                                      CitySkylineWidget(
-                                    height: 300,
-                                    width: constraints.maxWidth,
+                // 2. MAIN CONTENT AREA (Sidebar + Page)
+                Positioned.fill(
+                  top: (Platform.isWindows ||
+                          Platform.isLinux ||
+                          Platform.isMacOS)
+                      ? 32
+                      : 0, // Title bar on desktop only
+                  child: isTablet
+                      // 🚀 TABLET: NavigationRail + Content via TabletMainShell
+                      ? const Padding(
+                          padding: EdgeInsets.only(bottom: 90),
+                          child: TabletMainShell(),
+                        )
+                      : Row(
+                          children: [
+                            if (isDesktop)
+                              _buildSidebar(
+                                  context, currentView, isDark, glassBgColor),
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  if (settings.atmosphereTheme ==
+                                      AtmosphereTheme.winter)
+                                    const Positioned(
+                                      bottom: 83, // Just above player bar
+                                      left: 0,
+                                      right: 0,
+                                      height: 40,
+                                      child: IgnorePointer(
+                                          child: SnowPackWidget()),
+                                    )
+                                  else if (settings.atmosphereTheme ==
+                                      AtmosphereTheme.autumn)
+                                    const Positioned(
+                                      bottom: 83,
+                                      left: 0,
+                                      right: 0,
+                                      height: 40,
+                                      child: IgnorePointer(
+                                          child: PumpkinPackWidget()),
+                                    )
+                                  else if (settings.atmosphereTheme ==
+                                      AtmosphereTheme.rainyCity) ...[
+                                    Positioned(
+                                      bottom: 83,
+                                      left: 0,
+                                      right: 0,
+                                      height: 300, // 2x taller than sidebar
+                                      child: IgnorePointer(
+                                        child: LayoutBuilder(
+                                          builder: (context, constraints) =>
+                                              CitySkylineWidget(
+                                            height: 300,
+                                            width: constraints.maxWidth,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const Positioned(
+                                      bottom: 83,
+                                      left: 0,
+                                      right: 0,
+                                      height: 40,
+                                      child: IgnorePointer(
+                                          child: WetGroundWidget()),
+                                    ),
+                                  ] else if (settings.atmosphereTheme ==
+                                      AtmosphereTheme.sakura) ...[
+                                    const Positioned(
+                                      bottom: 83,
+                                      left: 0,
+                                      right: 0,
+                                      height: 400, // Grand distant mountain
+                                      child: IgnorePointer(
+                                          child: MountFujiWidget()),
+                                    ),
+                                    const Positioned(
+                                      bottom: 83,
+                                      right: 120, // More center
+                                      height: 350, // Much bigger
+                                      width: 220, // Much bigger
+                                      child: IgnorePointer(
+                                        child: SakuraPagodaWidget(
+                                            height: 350, width: 220),
+                                      ),
+                                    ),
+                                    const Positioned(
+                                      bottom: 83,
+                                      left: 0,
+                                      right: 0,
+                                      height: 40,
+                                      child: IgnorePointer(
+                                          child: PetalPackWidget()),
+                                    ),
+                                  ] else if (settings.atmosphereTheme ==
+                                      AtmosphereTheme.lunarNewYear) ...[
+                                    const Positioned(
+                                      bottom: 83,
+                                      left: 0,
+                                      right: 0,
+                                      height: 300,
+                                      child: IgnorePointer(
+                                          child: LunarGatewayWidget(
+                                              height: 300, width: 400)),
+                                    ),
+                                    const Positioned(
+                                      bottom: 83,
+                                      left: 0,
+                                      right: 0,
+                                      height: 40,
+                                      child: IgnorePointer(
+                                          child: HongbaoPackWidget()),
+                                    ),
+                                  ],
+                                  Stack(
+                                    children: [
+                                      // 🚀 BASE LAYER: IndexedStack for instant tab switching
+                                      // We only show this if the navigation stack is empty
+                                      IgnorePointer(
+                                        ignoring: navigationStack.isNotEmpty,
+                                        child: Opacity(
+                                          opacity: navigationStack.isEmpty
+                                              ? 1.0
+                                              : 0.0,
+                                          child: Container(
+                                            padding: isDesktop
+                                                ? const EdgeInsets.only(
+                                                    bottom: 90)
+                                                : const EdgeInsets.only(
+                                                    bottom: 140),
+                                            child: FadeIndexedStack(
+                                              index: _getViewIndex(currentView),
+                                              children: const [
+                                                HomePage(),
+                                                SearchPage(),
+                                                HistoryPage(),
+                                                StatsPage(),
+                                                PlaylistsPage(),
+                                                ArtistsPage(),
+                                                AlbumsPage(),
+                                                LibraryPage(),
+                                                DownloadsPage(),
+                                                ToolsPage(),
+                                                SettingsPage(),
+                                                LeaderboardPage(),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                      // 🚀 DETAIL LAYER: AnimatedSwitcher for detail pages
+                                      AnimatedSwitcher(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        child: navigationStack.isNotEmpty
+                                            ? Container(
+                                                key: ValueKey(
+                                                    'stack_${navigationStack.length}_${navigationStack.last.type}'),
+                                                padding: isDesktop
+                                                    ? const EdgeInsets.only(
+                                                        bottom: 90)
+                                                    : const EdgeInsets.only(
+                                                        bottom: 140),
+                                                child: _buildMainContent(
+                                                    navigationStack,
+                                                    currentView),
+                                              )
+                                            : const SizedBox.shrink(),
+                                      ),
+                                    ],
                                   ),
-                                ),
+                                ],
                               ),
-                            ),
-                            const Positioned(
-                              bottom: 83,
-                              left: 0,
-                              right: 0,
-                              height: 40,
-                              child: IgnorePointer(child: WetGroundWidget()),
-                            ),
-                          ] else if (settings.atmosphereTheme ==
-                              AtmosphereTheme.sakura) ...[
-                            const Positioned(
-                              bottom: 83,
-                              left: 0,
-                              right: 0,
-                              height: 400, // Grand distant mountain
-                              child: IgnorePointer(child: MountFujiWidget()),
-                            ),
-                            const Positioned(
-                              bottom: 83,
-                              right: 120, // More center
-                              height: 350, // Much bigger
-                              width: 220, // Much bigger
-                              child: IgnorePointer(
-                                child:
-                                    SakuraPagodaWidget(height: 350, width: 220),
-                              ),
-                            ),
-                            const Positioned(
-                              bottom: 83,
-                              left: 0,
-                              right: 0,
-                              height: 40,
-                              child: IgnorePointer(child: PetalPackWidget()),
-                            ),
-                          ] else if (settings.atmosphereTheme ==
-                              AtmosphereTheme.lunarNewYear) ...[
-                            const Positioned(
-                              bottom: 83,
-                              left: 0,
-                              right: 0,
-                              height: 300,
-                              child: IgnorePointer(
-                                  child: LunarGatewayWidget(
-                                      height: 300, width: 400)),
-                            ),
-                            const Positioned(
-                              bottom: 83,
-                              left: 0,
-                              right: 0,
-                              height: 40,
-                              child: IgnorePointer(child: HongbaoPackWidget()),
                             ),
                           ],
-                          Stack(
-                            children: [
-                              // 🚀 BASE LAYER: IndexedStack for instant tab switching
-                              // We only show this if the navigation stack is empty
-                              IgnorePointer(
-                                ignoring: navigationStack.isNotEmpty,
-                                child: Opacity(
-                                  opacity: navigationStack.isEmpty ? 1.0 : 0.0,
-                                  child: Container(
-                                    padding: isDesktop
-                                        ? const EdgeInsets.only(bottom: 90)
-                                        : const EdgeInsets.only(bottom: 140),
-                                    child: FadeIndexedStack(
-                                      index: _getViewIndex(currentView),
-                                      children: const [
-                                        HomePage(),
-                                        SearchPage(),
-                                        HistoryPage(),
-                                        StatsPage(),
-                                        PlaylistsPage(),
-                                        ArtistsPage(),
-                                        AlbumsPage(),
-                                        LibraryPage(),
-                                        DownloadsPage(),
-                                        ToolsPage(),
-                                        SettingsPage(),
-                                        LeaderboardPage(),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // 🚀 DETAIL LAYER: AnimatedSwitcher for detail pages
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 300),
-                                child: navigationStack.isNotEmpty
-                                    ? Container(
-                                        key: ValueKey(
-                                            'stack_${navigationStack.length}_${navigationStack.last.type}'),
-                                        padding: isDesktop
-                                            ? const EdgeInsets.only(bottom: 90)
-                                            : const EdgeInsets.only(
-                                                bottom: 140),
-                                        child: _buildMainContent(
-                                            navigationStack, currentView),
-                                      )
-                                    : const SizedBox.shrink(),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                        ),
                 ),
-              ),
 
-              // 4. CUSTOM TITLE BAR (Top Layer - Desktop Only)
-              if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 40,
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                      child: Container(
-                        color: glassBgColor,
-                        child: WindowTitleBarBox(
-                          child: Row(
-                            children: [
-                              Expanded(child: MoveWindow()),
-                              const TopSearchBar(),
-                              Expanded(child: MoveWindow()),
-                              const WindowButtons(),
-                            ],
+                // 4. CUSTOM TITLE BAR (Top Layer - Desktop Only)
+                if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 40,
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: Container(
+                          color: glassBgColor,
+                          child: WindowTitleBarBox(
+                            child: Row(
+                              children: [
+                                Expanded(child: MoveWindow()),
+                                const TopSearchBar(),
+                                Expanded(child: MoveWindow()),
+                                const WindowButtons(),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
 
-              // 4. LYRICS PANEL OVERLAY
-              // 4. LYRICS PANEL OVERLAY (Desktop Only)
+                // 4. LYRICS PANEL OVERLAY
+                // 4. LYRICS PANEL OVERLAY (Desktop Only)
 
-              // 5. HANGING OVERLAYS (pinned at top, above content)
-              if (settings.atmosphereTheme != AtmosphereTheme.none &&
-                  settings.atmosphereTheme != AtmosphereTheme.underwater &&
-                  settings.atmosphereTheme != AtmosphereTheme.cyberpunk &&
-                  settings.atmosphereTheme != AtmosphereTheme.nordicAurora &&
-                  settings.atmosphereTheme != AtmosphereTheme.galactic &&
-                  settings.atmosphereTheme != AtmosphereTheme.desertMirage)
-                Positioned(
-                  top: (Platform.isWindows ||
-                          Platform.isLinux ||
-                          Platform.isMacOS)
-                      ? 33
-                      : 0,
-                  left: 0,
-                  right: 0,
-                  height: 60,
-                  child: IgnorePointer(
-                    child: settings.atmosphereTheme == AtmosphereTheme.winter
-                        ? const HangingLightsWidget()
-                        : settings.atmosphereTheme == AtmosphereTheme.autumn
-                            ? const AutumnLightsWidget()
-                            : settings.atmosphereTheme == AtmosphereTheme.sakura
-                                ? const SakuraLanternsWidget()
-                                : settings.atmosphereTheme ==
-                                        AtmosphereTheme.lunarNewYear
-                                    ? const LunarLanternsWidget()
-                                    : const NeonSignsWidget(),
+                // 5. HANGING OVERLAYS (pinned at top, above content)
+                if (settings.atmosphereTheme != AtmosphereTheme.none &&
+                    settings.atmosphereTheme != AtmosphereTheme.underwater &&
+                    settings.atmosphereTheme != AtmosphereTheme.cyberpunk &&
+                    settings.atmosphereTheme != AtmosphereTheme.nordicAurora &&
+                    settings.atmosphereTheme != AtmosphereTheme.galactic &&
+                    settings.atmosphereTheme != AtmosphereTheme.desertMirage)
+                  Positioned(
+                    top: (Platform.isWindows ||
+                            Platform.isLinux ||
+                            Platform.isMacOS)
+                        ? 33
+                        : 0,
+                    left: 0,
+                    right: 0,
+                    height: 60,
+                    child: IgnorePointer(
+                      child: settings.atmosphereTheme == AtmosphereTheme.winter
+                          ? const HangingLightsWidget()
+                          : settings.atmosphereTheme == AtmosphereTheme.autumn
+                              ? const AutumnLightsWidget()
+                              : settings.atmosphereTheme ==
+                                      AtmosphereTheme.sakura
+                                  ? const SakuraLanternsWidget()
+                                  : settings.atmosphereTheme ==
+                                          AtmosphereTheme.lunarNewYear
+                                      ? const LunarLanternsWidget()
+                                      : const NeonSignsWidget(),
+                    ),
                   ),
-                ),
-              if (isDesktop)
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeInOutCubic,
-                  left: 0,
-                  right: 0,
-                  top: isLyricsVisible ? 32 : screenHeight,
-                  height: screenHeight - 32,
-                  child: const LyricsPanel(),
-                ),
+                if (isDesktop)
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOutCubic,
+                    left: 0,
+                    right: 0,
+                    top: isLyricsVisible ? 32 : screenHeight,
+                    height: screenHeight - 32,
+                    child: const LyricsPanel(),
+                  ),
 
-              // 5. PLAYER BAR (Fixed Bottom)
-              const Positioned(
-                  left: 0, right: 0, bottom: 0, child: PlayerBar()),
+                // 5. PLAYER BAR (Fixed Bottom)
+                const Positioned(
+                    left: 0, right: 0, bottom: 0, child: PlayerBar()),
 
-              // 6. MOBILE: Hamburger Menu Button (Overlay)
-              // 🚀 Only show on main pages (empty stack), otherwise rely on Back button
-              if (!isDesktop && navigationStack.isEmpty)
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  left: 16,
-                  child: Builder(
-                    // Use Builder to get the Scaffold's context
-                    builder: (scaffoldContext) => Container(
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.black.withValues(alpha: 0.7)
-                            : Colors.white.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.menu_rounded),
-                        iconSize: 28,
-                        color: isDark ? Colors.white : Colors.black,
-                        onPressed: () =>
-                            _scaffoldKey.currentState?.openDrawer(),
+                // 6. MOBILE: Hamburger Menu Button (Overlay)
+                // 🚀 Only show on main pages (empty stack), otherwise rely on Back button
+                if (!isDesktop && !isTablet && navigationStack.isEmpty)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 16,
+                    left: 16,
+                    child: Builder(
+                      // Use Builder to get the Scaffold's context
+                      builder: (scaffoldContext) => Container(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.7)
+                              : Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.menu_rounded),
+                          iconSize: 28,
+                          color: isDark ? Colors.white : Colors.black,
+                          onPressed: () =>
+                              _scaffoldKey.currentState?.openDrawer(),
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-              // 7. DEBUG FLOATING BUTTON (Conditional - All Platforms)
-              if (ref.watch(settingsProvider).showDebugButton)
-                const DebugFloatingButton(child: SizedBox.shrink()),
-            ],
-          ),
+                // 7. DEBUG FLOATING BUTTON (Conditional - All Platforms)
+                if (ref.watch(settingsProvider).showDebugButton)
+                  const DebugFloatingButton(child: SizedBox.shrink()),
+              ],
+            ),
             // 🚀 Removed NavigationBar - replaced with drawer
           ),
         ),
@@ -1799,7 +1846,9 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
     final navigationStack = ref.watch(navigationStackProvider);
     final hasSelection = navigationStack.isNotEmpty;
     final accentColor = Theme.of(context).colorScheme.primary;
-    final defaultColor = isDark ? Colors.grey[400] ?? Colors.grey : Colors.grey[800] ?? Colors.grey;
+    final defaultColor = isDark
+        ? Colors.grey[400] ?? Colors.grey
+        : Colors.grey[800] ?? Colors.grey;
 
     return Drawer(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -1991,8 +2040,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
                   ),
 
                   // 🎄 MOBILE SEASONAL TREE
-                  if (settings.atmosphereTheme ==
-                      AtmosphereTheme.winter) ...[
+                  if (settings.atmosphereTheme == AtmosphereTheme.winter) ...[
                     const SizedBox(height: 20),
                     LayoutBuilder(builder: (context, constraints) {
                       return AnimatedTreeWidget(
@@ -2045,7 +2093,8 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
             // 🚀 UTILITY FOOTER (Pinned to bottom)
             const Divider(height: 1),
             Padding(
-              padding: const EdgeInsets.only(left: 24, right: 24, bottom: 8, top: 4),
+              padding:
+                  const EdgeInsets.only(left: 24, right: 24, bottom: 8, top: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -2217,8 +2266,10 @@ class WindowButtons extends ConsumerWidget {
         CloseWindowButton(
           colors: closeButtonColors,
           onPressed: () async {
-            final minimizeToTray = ref.read(settingsProvider).minimizeToTrayOnClose;
-            debugPrint("🪟 [WindowButtons] Close pressed. minimizeToTray: $minimizeToTray");
+            final minimizeToTray =
+                ref.read(settingsProvider).minimizeToTrayOnClose;
+            debugPrint(
+                "🪟 [WindowButtons] Close pressed. minimizeToTray: $minimizeToTray");
             if (minimizeToTray) {
               TrayService().minimizeToTray();
             } else {
@@ -2239,11 +2290,13 @@ class _MailboxButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unreadCount = ref.watch(mailboxProvider.select((messages) => messages.where((m) => !m.isRead).length));
+    final unreadCount = ref.watch(mailboxProvider
+        .select((messages) => messages.where((m) => !m.isRead).length));
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
-    final Color defaultColor = (isDark ? Colors.grey[400] : Colors.grey[800]) ?? Colors.grey;
+    final Color defaultColor =
+        (isDark ? Colors.grey[400] : Colors.grey[800]) ?? Colors.grey;
     final Color hoverColor = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.1);
@@ -2268,7 +2321,8 @@ class _MailboxButton extends ConsumerWidget {
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    Icon(Icons.all_inbox_rounded, size: 24, color: defaultColor),
+                    Icon(Icons.all_inbox_rounded,
+                        size: 24, color: defaultColor),
                     if (unreadCount > 0)
                       Positioned(
                         top: 0,
@@ -2362,13 +2416,14 @@ class _ProfileButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final Color defaultColor = (isDark ? Colors.grey[400] : Colors.grey[800]) ?? Colors.grey;
+    final Color defaultColor =
+        (isDark ? Colors.grey[400] : Colors.grey[800]) ?? Colors.grey;
     final hoverColor = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.1);
-    
+
     final profileState = ref.watch(profileProvider);
-    
+
     String initials = "?";
     final name = profileState.displayName.trim();
     if (name.isNotEmpty) {
@@ -2400,8 +2455,8 @@ class _ProfileButton extends ConsumerWidget {
                 CircleAvatar(
                   radius: 12,
                   backgroundColor: defaultColor.withValues(alpha: 0.1),
-                  backgroundImage: profileState.avatarUrl != null 
-                      ? NetworkImage(profileState.avatarUrl!) 
+                  backgroundImage: profileState.avatarUrl != null
+                      ? NetworkImage(profileState.avatarUrl!)
                       : null,
                   child: profileState.avatarUrl == null
                       ? Text(
@@ -2449,9 +2504,11 @@ class _ProfileButton extends ConsumerWidget {
             child: Center(
               child: CircleAvatar(
                 radius: 10,
-                backgroundColor: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-                backgroundImage: profileState.avatarUrl != null 
-                    ? NetworkImage(profileState.avatarUrl!) 
+                backgroundColor: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
+                backgroundImage: profileState.avatarUrl != null
+                    ? NetworkImage(profileState.avatarUrl!)
                     : null,
                 child: profileState.avatarUrl == null
                     ? Text(
@@ -2459,7 +2516,9 @@ class _ProfileButton extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white.withValues(alpha: 0.8) : Colors.black.withValues(alpha: 0.8),
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.8)
+                              : Colors.black.withValues(alpha: 0.8),
                         ),
                       )
                     : null,

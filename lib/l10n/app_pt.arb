@@ -577,6 +577,8 @@
   "autumn": "Outono",
   "avatarPickerDesc": "Selecione um modelo ou importe sua própria foto",
   "beFirstToClaim": "Seja o primeiro a reivindicar o primeiro lugar!",
+  "backgroundCacheFlacStreams": "Cache de streams FLAC em segundo plano",
+  "backgroundCacheFlacStreamsSubtitle": "Baixa silenciosamente faixas sem perdas transmitidas para o seu disco local para que a reprodução seja instantânea e não use dados.",
   "behavioralHeader": "CONQUISTAS DE COMPORTAMENTO",
   "behavioralTitles": "COMPORTAMENTAL",
   "binariesUpdateRequired": "Atualização de binários necessária",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "Analisando letras...",
   "aiLyricsSuccess": "Letras geradas com sucesso!",
   "aiLyricsLocalFileMissing": "Erro: Arquivo de áudio local não encontrado.",
-  "aiLyricsComplete": "Concluído!"
+  "aiLyricsComplete": "Concluído!",
+  "externalLinkDetected": "Link Externo Detetado",
+  "gofileDownloadFailedPrompt": "O download automático falhou devido a restrições estritas de rede ou servidor.\\n\\nGostaria de abrir a página de download do Gofile no seu navegador de sistema ou copiar o link para fazer o download manualmente?",
+  "copyLink": "Copiar Link",
+  "openBrowser": "Abrir Navegador",
+  "linkCopied": "Link copiado para a área de transferência!",
+  "waitingForServerResponse": "Aguardando resposta do servidor...",
+  "queuePositionPleaseWait": "Fila {position}... por favor, aguarde",
+  "processingOnServer": "Processando no servidor...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

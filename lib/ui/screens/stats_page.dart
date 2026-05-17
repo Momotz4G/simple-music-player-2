@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path_lib;
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
@@ -23,6 +25,7 @@ import '../components/smart_art.dart';
 import '../components/shareable_stats_card.dart';
 import '../../services/vps_scraper_service.dart';
 import '../../services/db_service.dart';
+import '../../services/sync_engine.dart';
 import 'artists_page.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/profile_provider.dart';
@@ -75,11 +78,13 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     super.initState();
     // Reset tab to Songs whenever stats page is freshly opened
     Future.microtask(() => ref.read(statsTabProvider.notifier).state = 0);
-    
+
     // 🚀 Refresh cloud stats on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(profileProvider.notifier).refreshAvatarFromCloud();
+        // Pull latest per-song stats from cloud so other devices' plays appear
+        SyncEngine().pullAndMerge();
       }
     });
 
@@ -104,7 +109,6 @@ class _StatsPageState extends ConsumerState<StatsPage> {
   }
 
   // ... Helpers ...
-
 
   Future<void> _shareStats(SongModel song, int count,
       {String header = "", ImageProvider? overrideImage}) async {
@@ -225,24 +229,28 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     final statsState = ref.watch(statsProvider);
     final profileState = ref.watch(profileProvider);
     final calculated = StatsUtils.calculate(statsState);
-    
+
     // 🚀 UNIFIED CLOUD COMBINATION
-    final totalMinutes = calculated.totalMinutes > (profileState.cloudTotalMinutes ?? 0)
-        ? calculated.totalMinutes
-        : (profileState.cloudTotalMinutes ?? 0);
-    final totalPlays = calculated.totalPlays > (profileState.cloudTotalPlays ?? 0)
-        ? calculated.totalPlays
-        : (profileState.cloudTotalPlays ?? 0);
-        
+    final totalMinutes =
+        calculated.totalMinutes > (profileState.cloudTotalMinutes ?? 0)
+            ? calculated.totalMinutes
+            : (profileState.cloudTotalMinutes ?? 0);
+    final totalPlays =
+        calculated.totalPlays > (profileState.cloudTotalPlays ?? 0)
+            ? calculated.totalPlays
+            : (profileState.cloudTotalPlays ?? 0);
+
     final cloudTotalPlays = profileState.cloudTotalPlays ?? 0;
-    final topArtistName = profileState.cloudTopArtist != null && profileState.cloudTopArtist!.isNotEmpty 
+    final topArtistName = profileState.cloudTopArtist != null &&
+            profileState.cloudTopArtist!.isNotEmpty
         ? profileState.cloudTopArtist!
         : calculated.topArtist?.key;
-        
-    final topTrackName = profileState.cloudTopTrack != null && profileState.cloudTopTrack!.isNotEmpty 
+
+    final topTrackName = profileState.cloudTopTrack != null &&
+            profileState.cloudTopTrack!.isNotEmpty
         ? profileState.cloudTopTrack!
         : calculated.topTrack?.key;
-    
+
     // Slides Logic
     final List<_SlideData> newSlides = [];
 
@@ -252,21 +260,23 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       final localPlays = statsState.entries.values
           .where((e) => e.artist == artist)
           .fold(0, (sum, e) => sum + e.playCount);
-      
+
       final library = ref.read(libraryProvider);
       final artistFallbackSong = library.songs.firstWhere(
           (s) => s.artist == artist,
           orElse: () => SongModel(
-                  title: "",
-                  artist: artist,
-                  album: "",
-                  filePath: "",
-                  duration: 0,
-                  fileExtension: ""));
+              title: "",
+              artist: artist,
+              album: "",
+              filePath: "",
+              duration: 0,
+              fileExtension: ""));
 
       // 🚀 PRIORITIZE CLOUD: Compare local plays vs cloud top item plays
       final cloudPlays = profileState.cloudTopArtistPlays ?? 0;
-      final finalPlays = (cloudPlays > localPlays) ? cloudPlays : (localPlays > 0 ? localPlays : 0);
+      final finalPlays = (cloudPlays > localPlays)
+          ? cloudPlays
+          : (localPlays > 0 ? localPlays : 0);
 
       newSlides.add(_SlideData(
         label: AppLocalizations.of(context)!.topArtist,
@@ -276,7 +286,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             : "All-Time Favorite",
         artistName: artist,
         count: finalPlays,
-        sourceSong: artistFallbackSong.filePath.isNotEmpty ? artistFallbackSong : null,
+        sourceSong:
+            artistFallbackSong.filePath.isNotEmpty ? artistFallbackSong : null,
       ));
     }
 
@@ -289,18 +300,20 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
       // 🚀 PRIORITIZE CLOUD: Compare local plays vs cloud top item plays
       final cloudCount = profileState.cloudMostListenedPlays ?? 0;
-      final finalCount = (cloudCount > localCount) ? cloudCount : (localCount > 0 ? localCount : 0);
+      final finalCount = (cloudCount > localCount)
+          ? cloudCount
+          : (localCount > 0 ? localCount : 0);
 
       final library = ref.read(libraryProvider);
       final trackFallbackSong = library.songs.firstWhere(
           (s) => s.title == trackName,
           orElse: () => SongModel(
-                  title: trackName,
-                  artist: topArtistName ?? "Unknown",
-                  album: "",
-                  filePath: "",
-                  duration: 0,
-                  fileExtension: ""));
+              title: trackName,
+              artist: topArtistName ?? "Unknown",
+              album: "",
+              filePath: "",
+              duration: 0,
+              fileExtension: ""));
 
       newSlides.add(_SlideData(
         label: AppLocalizations.of(context)!.mostListened,
@@ -310,8 +323,9 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             : "All-Time Favorite",
         artistName: topArtistName ?? "Unknown",
         count: finalCount,
-        sourceSong: (trackFallbackSong.filePath.isNotEmpty || trackFallbackSong.onlineArtUrl != null) 
-            ? trackFallbackSong 
+        sourceSong: (trackFallbackSong.filePath.isNotEmpty ||
+                trackFallbackSong.onlineArtUrl != null)
+            ? trackFallbackSong
             : null,
       ));
     }
@@ -323,25 +337,27 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     if (statsState.entries.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        
+
         // 🚀 Priority 1: Slide metadata (Top Artist / Top Track images)
         final slideSongs = newSlides
             .where((s) => s.sourceSong != null)
             .map((s) => s.sourceSong!)
             .toList();
-        
+
         // 🚀 Priority 2: Fetch Top Artist Image specifically
         if (topArtistName != null) {
-            _fetchArtistImageSafely(topArtistName);
+          _fetchArtistImageSafely(topArtistName);
         }
 
         // Start background backfill
         _backfillMetadata(slideSongs);
 
         // 🚀 NEW: Artist Tab Backfill
-        if (ref.read(statsTabProvider) == 1 && calculated.sortedArtists.isNotEmpty) {
-           final topArtists = calculated.sortedArtists.map((e) => e.key).toList();
-           _backfillArtistMetadata(topArtists);
+        if (ref.read(statsTabProvider) == 1 &&
+            calculated.sortedArtists.isNotEmpty) {
+          final topArtists =
+              calculated.sortedArtists.map((e) => e.key).toList();
+          _backfillArtistMetadata(topArtists);
         }
       });
     }
@@ -378,18 +394,23 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             expandedHeight: 320.0,
             actions: [
               IconButton(
-                icon: const Icon(Icons.emoji_events_rounded, color: Colors.amber),
+                icon:
+                    const Icon(Icons.emoji_events_rounded, color: Colors.amber),
                 tooltip: AppLocalizations.of(context)!.globalLeaderboard,
                 onPressed: () {
                   final profileState = ref.read(profileProvider);
-                  if (profileState.customNickname == null || profileState.customNickname!.trim().isEmpty) {
+                  if (profileState.customNickname == null ||
+                      profileState.customNickname!.trim().isEmpty) {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
                         backgroundColor: Theme.of(context).cardColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        title: Text(AppLocalizations.of(context)!.nicknameRequired),
-                        content: Text(AppLocalizations.of(context)!.nicknameRequiredDesc),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        title: Text(
+                            AppLocalizations.of(context)!.nicknameRequired),
+                        content: Text(
+                            AppLocalizations.of(context)!.nicknameRequiredDesc),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
@@ -400,17 +421,21 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                               Navigator.pop(context);
                               showDialog(
                                 context: context,
-                                barrierColor: Colors.black.withValues(alpha: 0.3),
+                                barrierColor:
+                                    Colors.black.withValues(alpha: 0.3),
                                 builder: (context) => const ProfileDialog(),
                               );
                             },
-                            child: Text(AppLocalizations.of(context)!.openProfile),
+                            child:
+                                Text(AppLocalizations.of(context)!.openProfile),
                           ),
                         ],
                       ),
                     );
                   } else {
-                    ref.read(libraryPresentationProvider.notifier).setView(LibraryView.leaderboard);
+                    ref
+                        .read(libraryPresentationProvider.notifier)
+                        .setView(LibraryView.leaderboard);
                   }
                 },
               ),
@@ -532,14 +557,28 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                                                 color: Colors.white, size: 20),
                                             onPressed: () async {
                                               if (currentSlide == null) return;
-                                              
-                                              final isArtist = currentSlide.label == AppLocalizations.of(context)!.topArtist;
-                                              String? fetchedArtUrl = currentSlide.sourceSong?.onlineArtUrl;
-                                              
+
+                                              final isArtist = currentSlide
+                                                      .label ==
+                                                  AppLocalizations.of(context)!
+                                                      .topArtist;
+                                              String? fetchedArtUrl =
+                                                  currentSlide
+                                                      .sourceSong?.onlineArtUrl;
+
                                               // 🚀 SMART FALLBACK: If art is missing OR the local file was deleted (cache cleared)
-                                              bool needsArt = fetchedArtUrl == null || fetchedArtUrl.isEmpty;
-                                              if (needsArt && !isArtist && currentSlide.sourceSong?.filePath != null && currentSlide.sourceSong!.filePath.isNotEmpty) {
-                                                final file = File(currentSlide.sourceSong!.filePath);
+                                              bool needsArt =
+                                                  fetchedArtUrl == null ||
+                                                      fetchedArtUrl.isEmpty;
+                                              if (needsArt &&
+                                                  !isArtist &&
+                                                  currentSlide.sourceSong
+                                                          ?.filePath !=
+                                                      null &&
+                                                  currentSlide.sourceSong!
+                                                      .filePath.isNotEmpty) {
+                                                final file = File(currentSlide
+                                                    .sourceSong!.filePath);
                                                 if (!await file.exists()) {
                                                   // File is gone (cache cleared), we definitely need to fetch online
                                                   needsArt = true;
@@ -550,30 +589,54 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                                               }
 
                                               if (!isArtist && needsArt) {
-                                                debugPrint("🔍 Share: Art missing or cache cleared, fetching from Spotify...");
-                                                fetchedArtUrl = await SpotifyService.getTrackImage(currentSlide.mainText, currentSlide.artistName, preferPrimary: _preferPrimarySpotify);
+                                                debugPrint(
+                                                    "🔍 Share: Art missing or cache cleared, fetching from Spotify...");
+                                                fetchedArtUrl = await SpotifyService
+                                                    .getTrackImage(
+                                                        currentSlide.mainText,
+                                                        currentSlide.artistName,
+                                                        preferPrimary:
+                                                            _preferPrimarySpotify);
                                               }
 
                                               ImageProvider? shareImage;
                                               if (isArtist) {
                                                 // 🚀 ALWAYS use the square profile image for the share card
-                                                String? profileUrl = await DBService().getArtCache("profile:${currentSlide.artistName}");
-                                                
-                                                if (profileUrl == null || profileUrl.isEmpty) {
+                                                String? profileUrl =
+                                                    await DBService().getArtCache(
+                                                        "profile:${currentSlide.artistName}");
+
+                                                if (profileUrl == null ||
+                                                    profileUrl.isEmpty) {
                                                   // ⚡ Proactively fetch from Spotify as backup if missing from cache
-                                                  profileUrl = await SpotifyService.getArtistImage(artistName: currentSlide.artistName, highQuality: true);
+                                                  profileUrl =
+                                                      await SpotifyService
+                                                          .getArtistImage(
+                                                              artistName:
+                                                                  currentSlide
+                                                                      .artistName,
+                                                              highQuality:
+                                                                  true);
                                                 }
 
-                                                if (profileUrl != null && profileUrl.isNotEmpty) {
-                                                  shareImage = NetworkImage(profileUrl);
+                                                if (profileUrl != null &&
+                                                    profileUrl.isNotEmpty) {
+                                                  shareImage =
+                                                      NetworkImage(profileUrl);
                                                 }
                                               }
-                                              
+
                                               final shareObj = SongModel(
                                                 title: currentSlide.mainText,
-                                                artist: isArtist ? "Most Listened Artist" : currentSlide.artistName,
-                                                album: isArtist ? "All Time" : "Most Listened Track",
-                                                filePath: currentSlide.sourceSong?.filePath ?? "",
+                                                artist: isArtist
+                                                    ? "Most Listened Artist"
+                                                    : currentSlide.artistName,
+                                                album: isArtist
+                                                    ? "All Time"
+                                                    : "Most Listened Track",
+                                                filePath: currentSlide
+                                                        .sourceSong?.filePath ??
+                                                    "",
                                                 onlineArtUrl: fetchedArtUrl,
                                                 duration: 0,
                                                 fileExtension: "",
@@ -582,8 +645,11 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                                               _shareStats(
                                                 shareObj,
                                                 currentSlide.count,
-                                                header: currentSlide.label.toUpperCase(),
-                                                overrideImage: isArtist ? shareImage : null,
+                                                header: currentSlide.label
+                                                    .toUpperCase(),
+                                                overrideImage: isArtist
+                                                    ? shareImage
+                                                    : null,
                                               );
                                             },
                                           ),
@@ -624,41 +690,40 @@ class _StatsPageState extends ConsumerState<StatsPage> {
           // 🚀 CONDITIONAL CONTENT: Songs tab vs Artists tab
           if (ref.watch(statsTabProvider) == 0) ...[
             // --- SONGS TAB ---
-            Builder(
-              builder: (context) {
-                final songsList = statsState.entries.values
-                    .where((e) => e.playCount > 0)
-                    .toList()
-                    ..sort((a, b) {
-                      int cmp = b.playCount.compareTo(a.playCount);
-                      if (cmp != 0) return cmp;
-                      return b.totalSeconds.compareTo(a.totalSeconds);
-                    });
+            Builder(builder: (context) {
+              final songsList = statsState.entries.values
+                  .where((e) => e.playCount > 0)
+                  .toList()
+                ..sort((a, b) {
+                  int cmp = b.playCount.compareTo(a.playCount);
+                  if (cmp != 0) return cmp;
+                  return b.totalSeconds.compareTo(a.totalSeconds);
+                });
 
-                if (songsList.isEmpty) {
-                  return SliverFillRemaining(
-                    child: Center(
-                        child: Text(AppLocalizations.of(context)!.noStatsYet,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold))),
+              if (songsList.isEmpty) {
+                return SliverFillRemaining(
+                  child: Center(
+                      child: Text(AppLocalizations.of(context)!.noStatsYet,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold))),
+                );
+              }
+
+              return SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final entry = songsList[index];
+                  final count = entry.playCount;
+
+                  // Create ephemeral song model for the list
+                  final song = SongModel(
+                    title: entry.title,
+                    artist: entry.artist,
+                    album: entry.album,
+                    filePath: entry.lastKnownPath,
+                    onlineArtUrl: entry.onlineArtUrl,
+                    duration: 0,
+                    fileExtension: "",
                   );
-                }
-
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final entry = songsList[index];
-                    final count = entry.playCount;
-                    
-                    // Create ephemeral song model for the list
-                    final song = SongModel(
-                      title: entry.title,
-                      artist: entry.artist,
-                      album: entry.album,
-                      filePath: entry.lastKnownPath,
-                      onlineArtUrl: entry.onlineArtUrl,
-                      duration: 0,
-                      fileExtension: "",
-                    );
 
                   Color? rankColor;
                   if (index == 0) rankColor = const Color(0xFFFFD700);
@@ -743,7 +808,9 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                     ),
                     onTap: () => _handleSongTap(song),
                   );
-                }, childCount: (songsList.length > 100) ? 100 : songsList.length),
+                },
+                    childCount:
+                        (songsList.length > 100) ? 100 : songsList.length),
               );
             }),
           ] else ...[
@@ -788,9 +855,9 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                           ),
                           const SizedBox(width: 8),
                           SizedBox(
-                              width: 40, height: 40, 
-                              child: ArtistAvatar(artistName: artistName)
-                          ),
+                              width: 40,
+                              height: 40,
+                              child: ArtistAvatar(artistName: artistName)),
                         ],
                       ),
                     ),
@@ -962,9 +1029,39 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
   static DateTime? _rateLimitExpiry;
 
+  /// Fallback art fetcher using YouTube Music API.
+  /// Called when Spotify returns null or errors (5xx).
+  Future<String?> _fetchArtFromYtMusic(String title, String artist) async {
+    try {
+      final query = Uri.encodeComponent('$title $artist');
+      final url = Uri.parse(
+          'https://ytmusic-api-omega.vercel.app/api/search?q=$query&limit=1');
+      final response = await http.get(url).timeout(const Duration(seconds: 6));
+
+      if (response.statusCode != 200) return null;
+      final body = json.decode(response.body);
+      if (body['success'] != true || body['data'] == null) return null;
+
+      final results = body['data'] as List<dynamic>;
+      if (results.isEmpty) return null;
+
+      final thumbnails = results.first['thumbnails'] as List<dynamic>? ?? [];
+      if (thumbnails.isEmpty) return null;
+
+      final artUrl = thumbnails.last['url'] as String?;
+      if (artUrl != null && artUrl.isNotEmpty) {
+        debugPrint("✅ YT Music fallback art for '$title' → $artUrl");
+      }
+      return (artUrl != null && artUrl.isNotEmpty) ? artUrl : null;
+    } catch (e) {
+      debugPrint("⚠️ YT Music art fallback failed: $e");
+      return null;
+    }
+  }
+
   Future<void> _backfillMetadata(List<SongModel> songs) async {
     if (_isBackfilling) return;
-    
+
     // 🚀 Global API Cooldown (5 Minutes Hard Lock)
     if (_rateLimitExpiry != null) {
       if (DateTime.now().isBefore(_rateLimitExpiry!)) {
@@ -982,36 +1079,51 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       // 🚀 PHASE 1: Priority Backfill for slides (Top Artist / Top Track)
       for (final song in songs) {
         if (!mounted || _isRateLimited) break;
-        
+
         final id = StatEntry.generateId(song.title, song.artist, song.album);
-        if (_processedBackfill.contains(id) || _pendingFetches.contains(id)) continue;
-        
+        if (_processedBackfill.contains(id) || _pendingFetches.contains(id))
+          continue;
+
         // Skip if already has art
-        if (song.onlineArtUrl != null && song.onlineArtUrl!.isNotEmpty) continue;
+        if (song.onlineArtUrl != null && song.onlineArtUrl!.isNotEmpty)
+          continue;
 
         _processedBackfill.add(id);
         _pendingFetches.add(id);
-        
+
         try {
           debugPrint("🚀 Priority backfill for top item: ${song.title}");
-          String? artUrl = await SpotifyService.getTrackImage(song.title, song.artist, preferPrimary: _preferPrimarySpotify);
-          String? youtubeUrl = await SpotifyService.getTrackLink(song.title, song.artist, preferPrimary: _preferPrimarySpotify);
+          String? artUrl = await SpotifyService.getTrackImage(
+              song.title, song.artist,
+              preferPrimary: _preferPrimarySpotify);
+          String? youtubeUrl = await SpotifyService.getTrackLink(
+              song.title, song.artist,
+              preferPrimary: _preferPrimarySpotify);
+
+          // Fallback: try YouTube Music if Spotify didn't return art
+          if (artUrl == null || artUrl.isEmpty) {
+            artUrl = await _fetchArtFromYtMusic(song.title, song.artist);
+          }
 
           if (artUrl != null || youtubeUrl != null) {
             if (mounted) {
-              ref.read(statsProvider.notifier).updateMetadata(id, artUrl: artUrl, youtubeUrl: youtubeUrl);
+              ref
+                  .read(statsProvider.notifier)
+                  .updateMetadata(id, artUrl: artUrl, youtubeUrl: youtubeUrl);
             }
           }
         } catch (e) {
           if (e.toString().contains("rate_limit_429")) {
             if (!_preferPrimarySpotify) {
-              debugPrint("⚠️ Secondary API rate limited during priority backfill. Falling back to Primary...");
+              debugPrint(
+                  "⚠️ Secondary API rate limited during priority backfill. Falling back to Primary...");
               _preferPrimarySpotify = true;
               _isRateLimited = false;
               _processedBackfill.remove(id);
               continue;
             } else {
-              debugPrint("⚠️ Primary API also rate limited. Cooling down for 5 mins...");
+              debugPrint(
+                  "⚠️ Primary API also rate limited. Cooling down for 5 mins...");
               _isRateLimited = true;
               _rateLimitExpiry = DateTime.now().add(const Duration(minutes: 5));
               break;
@@ -1020,7 +1132,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         } finally {
           _pendingFetches.remove(id);
         }
-        
+
         await Future.delayed(const Duration(milliseconds: 1000));
       }
 
@@ -1029,13 +1141,15 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       for (final entry in fullList) {
         if (!mounted || _isRateLimited) break;
 
-        final id = StatEntry.generateId(entry.title, entry.artist, entry.album ?? "");
-        if (_processedBackfill.contains(id) || _pendingFetches.contains(id)) continue;
-        
+        final id =
+            StatEntry.generateId(entry.title, entry.artist, entry.album ?? "");
+        if (_processedBackfill.contains(id) || _pendingFetches.contains(id))
+          continue;
+
         // If already fully backfilled, skip
         if (entry.onlineArtUrl != null && entry.youtubeUrl != null) {
-            _processedBackfill.add(id);
-            continue;
+          _processedBackfill.add(id);
+          continue;
         }
 
         _processedBackfill.add(id);
@@ -1044,23 +1158,35 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         try {
           String? artUrl = entry.onlineArtUrl;
           if (artUrl == null || artUrl.isEmpty) {
-            artUrl = await SpotifyService.getTrackImage(entry.title, entry.artist, preferPrimary: _preferPrimarySpotify);
+            artUrl = await SpotifyService.getTrackImage(
+                entry.title, entry.artist,
+                preferPrimary: _preferPrimarySpotify);
+          }
+
+          // Fallback: try YouTube Music if Spotify didn't return art
+          if (artUrl == null || artUrl.isEmpty) {
+            artUrl = await _fetchArtFromYtMusic(entry.title, entry.artist);
           }
 
           String? youtubeUrl = entry.youtubeUrl;
           if (youtubeUrl == null || youtubeUrl.isEmpty) {
-            youtubeUrl = await SpotifyService.getTrackLink(entry.title, entry.artist, preferPrimary: _preferPrimarySpotify);
+            youtubeUrl = await SpotifyService.getTrackLink(
+                entry.title, entry.artist,
+                preferPrimary: _preferPrimarySpotify);
           }
 
           if (artUrl != null || youtubeUrl != null) {
             if (mounted) {
-              ref.read(statsProvider.notifier).updateMetadata(id, artUrl: artUrl, youtubeUrl: youtubeUrl);
+              ref
+                  .read(statsProvider.notifier)
+                  .updateMetadata(id, artUrl: artUrl, youtubeUrl: youtubeUrl);
             }
           }
         } catch (e) {
           if (e.toString().contains("rate_limit_429")) {
             if (!_preferPrimarySpotify) {
-              debugPrint("⚠️ Secondary API rate limited during list backfill. Falling back to Primary...");
+              debugPrint(
+                  "⚠️ Secondary API rate limited during list backfill. Falling back to Primary...");
               _preferPrimarySpotify = true;
               _processedBackfill.remove(id);
               continue;
@@ -1087,16 +1213,17 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     if (_isBackfilling) return;
 
     // Reuse the same rate limit check from the main backfill
-    if (_rateLimitExpiry != null && DateTime.now().isBefore(_rateLimitExpiry!)) return;
+    if (_rateLimitExpiry != null && DateTime.now().isBefore(_rateLimitExpiry!))
+      return;
 
     // 🚀 STEP 1: Identify "Newcomers" (Artists in Top 100 but missing from Cache)
     final List<String> newcomers = [];
     for (final artist in artistNames) {
       if (_processedArtistBackfill.contains(artist)) continue;
-      
+
       final cacheKey = "profile:$artist";
       final cached = await DBService().getArtCache(cacheKey);
-      
+
       if (cached == null || cached.isEmpty) {
         newcomers.add(artist);
       } else {
@@ -1108,20 +1235,20 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
     _isBackfilling = true;
     try {
-      debugPrint("🔍 Stats: Found ${newcomers.length} newcomers in Top Artists list. Starting backfill...");
-      
+      debugPrint(
+          "🔍 Stats: Found ${newcomers.length} newcomers in Top Artists list. Starting backfill...");
+
       for (final artist in newcomers) {
         if (!mounted || _isRateLimited) break;
-        
+
         _processedArtistBackfill.add(artist);
 
         try {
           debugPrint("🚀 Fetching profile for newcomer: $artist");
           final img = await SpotifyService.getArtistImage(
-            artistName: artist, 
-            highQuality: true, 
-            preferPrimary: _preferPrimarySpotify
-          );
+              artistName: artist,
+              highQuality: true,
+              preferPrimary: _preferPrimarySpotify);
 
           if (img != null) {
             // Save to Isar for all pages to use
@@ -1134,7 +1261,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             break;
           }
         }
-        
+
         // Polite delay between API calls
         await Future.delayed(const Duration(milliseconds: 1000));
       }
@@ -1144,65 +1271,76 @@ class _StatsPageState extends ConsumerState<StatsPage> {
   }
 
   // Helper for artist images (Top Artist Slide) - Now uses high-res banners!
-  Future<void> _fetchArtistImageSafely(String artist, {String? trackTitle}) async {
-    final cacheKey = "banner:$artist"; // 🚀 Use the same key as Artist Detail Page
-    if (_isRateLimited || _pendingFetches.contains(cacheKey) || _imageCache.containsKey(artist)) return;
-    
+  Future<void> _fetchArtistImageSafely(String artist,
+      {String? trackTitle}) async {
+    final cacheKey =
+        "banner:$artist"; // 🚀 Use the same key as Artist Detail Page
+    if (_isRateLimited ||
+        _pendingFetches.contains(cacheKey) ||
+        _imageCache.containsKey(artist)) return;
+
     _pendingFetches.add(cacheKey);
     try {
-        // 🚀 STEP 1: Check Local Cache First (Instant)
-        final cached = await DBService().getArtCache(cacheKey);
-        if (cached != null && cached.isNotEmpty) {
-            if (mounted) {
-                setState(() {
-                    _imageCache[artist] = cached;
-                });
-            }
-            // Even if cached, we don't strictly need to re-fetch here to save VPS resources,
-            // unless it's a very old fallback.
-            return;
+      // 🚀 STEP 1: Check Local Cache First (Instant)
+      final cached = await DBService().getArtCache(cacheKey);
+      if (cached != null && cached.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _imageCache[artist] = cached;
+          });
         }
+        // Even if cached, we don't strictly need to re-fetch here to save VPS resources,
+        // unless it's a very old fallback.
+        return;
+      }
 
-        // 🚀 STEP 2: Fetch High-Res Banner from VPS
-        final spotifyId = await SpotifyService.getArtistId(artistName: artist, trackTitle: trackTitle, preferPrimary: _preferPrimarySpotify);
-        if (spotifyId != null) {
-            final bannerData = await VpsScraperService.getArtistBanner(spotifyId);
-            final bannerUrl = bannerData['banner'] ?? bannerData['gallery'] ?? bannerData['profile'];
-            
-            if (bannerUrl != null) {
-                // Save to Isar for all pages to use
-                await DBService().saveArtCache(cacheKey, bannerUrl);
-                
-                if (mounted) {
-                    setState(() {
-                        _imageCache[artist] = bannerUrl;
-                    });
-                }
-                return;
-            }
-        }
+      // 🚀 STEP 2: Fetch High-Res Banner from VPS
+      final spotifyId = await SpotifyService.getArtistId(
+          artistName: artist,
+          trackTitle: trackTitle,
+          preferPrimary: _preferPrimarySpotify);
+      if (spotifyId != null) {
+        final bannerData = await VpsScraperService.getArtistBanner(spotifyId);
+        final bannerUrl = bannerData['banner'] ??
+            bannerData['gallery'] ??
+            bannerData['profile'];
 
-        // 🚀 STEP 3: Fallback to official Spotify API (Profile Pic)
-        final img = await SpotifyService.getArtistImage(artistName: artist, trackTitle: trackTitle, highQuality: true, preferPrimary: _preferPrimarySpotify);
-        if (mounted && img != null) {
+        if (bannerUrl != null) {
+          // Save to Isar for all pages to use
+          await DBService().saveArtCache(cacheKey, bannerUrl);
+
+          if (mounted) {
             setState(() {
-                _imageCache[artist] = img;
+              _imageCache[artist] = bannerUrl;
             });
-            // Save as fallback
-            await DBService().saveArtCache(cacheKey, img);
+          }
+          return;
         }
+      }
+
+      // 🚀 STEP 3: Fallback to official Spotify API (Profile Pic)
+      final img = await SpotifyService.getArtistImage(
+          artistName: artist,
+          trackTitle: trackTitle,
+          highQuality: true,
+          preferPrimary: _preferPrimarySpotify);
+      if (mounted && img != null) {
+        setState(() {
+          _imageCache[artist] = img;
+        });
+        // Save as fallback
+        await DBService().saveArtCache(cacheKey, img);
+      }
     } catch (e) {
-        if (e.toString().contains("rate_limit_429")) {
-            if (!_preferPrimarySpotify) {
-                _preferPrimarySpotify = true;
-            } else {
-                _isRateLimited = true;
-            }
+      if (e.toString().contains("rate_limit_429")) {
+        if (!_preferPrimarySpotify) {
+          _preferPrimarySpotify = true;
+        } else {
+          _isRateLimited = true;
         }
+      }
     } finally {
-        _pendingFetches.remove(cacheKey);
+      _pendingFetches.remove(cacheKey);
     }
   }
 }
-
-

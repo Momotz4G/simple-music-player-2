@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:metadata_god/metadata_god.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:window_manager/window_manager.dart';
@@ -29,6 +29,30 @@ import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🚀 Lock orientation to portrait on phones only (tablets can rotate)
+  if (Platform.isAndroid || Platform.isIOS) {
+    final data = WidgetsBinding.instance.platformDispatcher.views.first;
+    final shortestSide = data.physicalSize.shortestSide / data.devicePixelRatio;
+    final isTablet =
+        shortestSide >= 600; // 600dp = tablet threshold (Android/iOS standard)
+
+    if (isTablet) {
+      // Tablet: explicitly unlock all orientations
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } else {
+      // Phone: lock to portrait only
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    }
+  }
 
   // 0. Load SharedPreferences FIRST
   final prefs = await SharedPreferences.getInstance();
@@ -61,7 +85,8 @@ Future<void> main() async {
             JustAudioMediaKit.audioDeviceId = audioDeviceId;
             debugPrint("🎵 [Main] Audio Device Override: $audioDeviceId");
           } else {
-            debugPrint("⚠️ [Main] Saved audio device '$audioDeviceId' not found. Falling back to default.");
+            debugPrint(
+                "⚠️ [Main] Saved audio device '$audioDeviceId' not found. Falling back to default.");
             await prefs.remove('audioDeviceId');
             JustAudioMediaKit.audioDeviceId = null;
           }
@@ -71,12 +96,17 @@ Future<void> main() async {
       }
     }
 
-    // 🚀 Optimize for DSD/Hi-Res (Desktop only - media_kit backend)
+    // 🚀 Optimize for DSD/Hi-Res streaming (Desktop only - media_kit backend)
+    // Hi-Res FLAC at 192kHz/24-bit = ~1.15MB per second.
+    // Buffer must be large enough to absorb SOCKS5 proxy latency between DASH chunks.
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      JustAudioMediaKit.bufferSize = 512 * 1024; // 0.5MB
-      JustAudioMediaKit.demuxerMaxBackBytes = 512 * 1024;
-      JustAudioMediaKit.demuxerReadaheadSecs = 10.0;
-      JustAudioMediaKit.audioBuffer = 1.0;
+      JustAudioMediaKit.bufferSize =
+          256 * 1024 * 1024; // 🚀 256MB — holds ~3.5 minutes of Hi-Res FLAC
+      JustAudioMediaKit.demuxerMaxBackBytes =
+          8 * 1024 * 1024; // 8MB back buffer
+      JustAudioMediaKit.demuxerReadaheadSecs = 3600.0; // 🚀 Aggressive readahead to combat proxy stalls
+      JustAudioMediaKit.audioBuffer =
+          4.0; // 4s of decoded audio buffer (was 1.0)
       JustAudioMediaKit.audioPitchCorrection = false;
       JustAudioMediaKit.audioResampleMaxOutputSampleRate = 192000;
     }
@@ -89,7 +119,9 @@ Future<void> main() async {
   }
 
   final autoClearCache = prefs.getString('autoClearCache') ?? 'disabled';
-  if (autoClearCache == 'after_24h' || autoClearCache == 'after_7d' || autoClearCache == 'on_close') {
+  if (autoClearCache == 'after_24h' ||
+      autoClearCache == 'after_7d' ||
+      autoClearCache == 'on_close') {
     if (autoClearCache == 'on_close') {
       await YoutubeDownloaderService().clearCache();
     } else {
@@ -99,16 +131,19 @@ Future<void> main() async {
         if (lastClear != null) {
           final now = DateTime.now();
           final hoursDiff = now.difference(lastClear).inHours;
-          final shouldClear = (autoClearCache == 'after_24h' && hoursDiff >= 24) ||
-              (autoClearCache == 'after_7d' && hoursDiff >= 168);
+          final shouldClear =
+              (autoClearCache == 'after_24h' && hoursDiff >= 24) ||
+                  (autoClearCache == 'after_7d' && hoursDiff >= 168);
 
           if (shouldClear) {
             await YoutubeDownloaderService().clearCache();
-            await prefs.setString('lastCacheClearTimestamp', now.toIso8601String());
+            await prefs.setString(
+                'lastCacheClearTimestamp', now.toIso8601String());
           }
         }
       } else {
-        await prefs.setString('lastCacheClearTimestamp', DateTime.now().toIso8601String());
+        await prefs.setString(
+            'lastCacheClearTimestamp', DateTime.now().toIso8601String());
       }
     }
   }
@@ -155,7 +190,9 @@ Future<void> main() async {
   // 2. Initialize Window Manager
   try {
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      await windowManager.ensureInitialized().timeout(const Duration(seconds: 2));
+      await windowManager
+          .ensureInitialized()
+          .timeout(const Duration(seconds: 2));
       const windowOptions = WindowOptions(
         size: Size(1280, 800),
         center: true,
@@ -181,12 +218,7 @@ Future<void> main() async {
     debugPrint("⚠️ SMTC failed: $e");
   }
 
-  // 3. Load Environment Variables
-  try {
-    await dotenv.load(fileName: ".env").timeout(const Duration(seconds: 2));
-  } catch (e) {
-    debugPrint("⚠️ DotEnv failed: $e");
-  }
+  // 3. Removed DotEnv initialization (using envied via Env instead)
 
   runApp(
     ProviderScope(

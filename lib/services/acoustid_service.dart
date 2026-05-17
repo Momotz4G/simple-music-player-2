@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../env/env.dart';
 import 'package:metadata_god/metadata_god.dart' show Metadata;
 import 'package:metadata_god/metadata_god.dart' show Metadata;
 import 'metadata_service.dart';
@@ -17,7 +17,7 @@ typedef GetFingerprintDart = Pointer<Utf8> Function(Pointer<Utf8>);
 
 class AcoustIdService {
   static const String _baseUrl = 'https://api.acoustid.org/v2/lookup';
-  static String get _apiKey => dotenv.env['ACOUSTID_API_KEY'] ?? "";
+  static String get _apiKey => Env.acoustidApiKey;
 
   // FFI Pointers
   DynamicLibrary? _nativeLib;

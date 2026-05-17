@@ -86,9 +86,8 @@ class DebugLogService {
         
         final List<String> batch = List.from(_fileBuffer);
         _fileBuffer.clear();
-
         final file = File(filePath);
-        String content = batch.join('\n') + '\n';
+        String content = '${batch.join('\n')}\n';
         await file.writeAsString(content, mode: FileMode.append);
       } catch (_) {
         // Silent fail on write
@@ -98,9 +97,18 @@ class DebugLogService {
 
   /// Add a log entry
   void log(String message, {DebugLogLevel level = DebugLogLevel.info}) {
+    // 🛡️ SECURITY: Mask private domains to protect backend location from floating debug window/logs
+    String maskedMessage = message;
+    if (maskedMessage.contains('stephanus-dev')) {
+      // Completely mask any subdomain and the .online extension
+      final domainRegex = RegExp(r'[a-zA-Z0-9.-]*stephanus-dev\.online');
+      maskedMessage = maskedMessage.replaceAll(domainRegex, '[hidden-domain]');
+      maskedMessage = maskedMessage.replaceAll('stephanus-dev', '[hidden-host]');
+    }
+
     final entry = DebugLogEntry(
       timestamp: DateTime.now(),
-      message: message,
+      message: maskedMessage,
       level: level,
     );
 
@@ -112,7 +120,7 @@ class DebugLogService {
     }
 
     // Format console output
-    final logFormatted = '[${entry.formattedTime}] [${level.name.toUpperCase()}] $message';
+    final logFormatted = '[${entry.formattedTime}] [${level.name.toUpperCase()}] $maskedMessage';
 
     // Also print to console for debugging
     debugPrint(logFormatted);

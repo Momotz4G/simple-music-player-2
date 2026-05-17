@@ -58,6 +58,15 @@ class ArtCacheService {
   /// Survives app restarts — prevents hundreds of FFI/disk scans on cold scroll.
   Future<bool> hasNoArtFlag(String songPath) async {
     await init();
+
+    // 🛡️ SELF-HEALING: If the file is .m4a or .aac, clear any legacy .noart flags 
+    // to force a fresh, robust FFmpeg/ffprobe tag scan (which replaces buggy MetadataGod).
+    final ext = p.extension(songPath).toLowerCase();
+    if (ext == '.m4a' || ext == '.aac') {
+      await clearNoArtFlag(songPath);
+      return false;
+    }
+
     final flagPath = _getNoArtFlagPath(songPath);
     return File(flagPath).exists();
   }

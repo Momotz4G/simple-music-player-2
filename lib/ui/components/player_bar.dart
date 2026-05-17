@@ -10,9 +10,12 @@ import '../../providers/interface_provider.dart';
 import '../../providers/equalizer_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../providers/library_presentation_provider.dart';
+import '../../providers/playlist_provider.dart';
 import '../../models/song_model.dart';
+import '../../utils/layout_engine.dart';
 import '../screens/full_screen_player.dart';
 import '../screens/mobile_full_player.dart';
+import '../screens/tablet_full_player.dart';
 import '../../l10n/app_localizations.dart';
 import 'smart_art.dart';
 import 'timer_display.dart';
@@ -41,9 +44,9 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   bool _isTitleHovered = false;
 
   // Audio Quality Badge
-   AudioInfo? _audioInfo;
-   String? _lastFilePath;
-   bool _isLoadingQuality = false;
+  AudioInfo? _audioInfo;
+  String? _lastFilePath;
+  bool _isLoadingQuality = false;
 
   Future<void> _fetchAudioInfo(String? filePath) async {
     if (filePath == null) {
@@ -52,14 +55,16 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     }
 
     // Redundancy check: If we already have info OR are currently fetching for this path, stop.
-    if (_lastFilePath == filePath && (_audioInfo != null || _isLoadingQuality)) return;
-    
+    if (_lastFilePath == filePath && (_audioInfo != null || _isLoadingQuality))
+      return;
+
     _lastFilePath = filePath;
     if (mounted) setState(() => _isLoadingQuality = true);
 
     try {
       // Ensure we pass a non-null String
-      final info = await AudioInfoService().getAudioInfo(filePath, isPriority: true);
+      final info =
+          await AudioInfoService().getAudioInfo(filePath, isPriority: true);
       if (mounted && _lastFilePath == filePath) {
         setState(() {
           _audioInfo = info;
@@ -145,7 +150,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // 🚀 ALWAYS clear old quality info when file path changes to prevent stale badges
         if (mounted) setState(() => _audioInfo = null);
-        
+
         // Fetch new info (either for new song or new path)
         _fetchAudioInfo(song?.filePath);
       });
@@ -174,6 +179,11 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     // 🚀 MOBILE: Show simplified mini player bar
     final isMobile = Platform.isAndroid || Platform.isIOS;
     if (isMobile) {
+      // 🚀 TABLET: Show enhanced player bar with more info and controls
+      if (LayoutEngine.isTablet(context)) {
+        return _buildTabletPlayerBar(context, playerState, notifier, song,
+            hasSong, isDark, settings, l10n);
+      }
       return _buildMobilePlayerBar(context, playerState, notifier, song,
           hasSong, isDark, settings, l10n);
     }
@@ -263,8 +273,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                     color: Colors.grey[800],
                                     borderRadius: BorderRadius.circular(4)),
                                 child: Icon(Icons.music_note,
-                                    color:
-                                        primaryColor.withValues(alpha: 0.5)),
+                                    color: primaryColor.withValues(alpha: 0.5)),
                               ),
                       ),
                       const SizedBox(width: 12),
@@ -604,7 +613,8 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                 context: context,
                                 backgroundColor: Colors.transparent,
                                 isScrollControlled: true,
-                                builder: (context) => const DeviceSelectorDialog(),
+                                builder: (context) =>
+                                    const DeviceSelectorDialog(),
                               );
                             } else if (value == 'mini') {
                               ref
@@ -660,7 +670,8 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                     Icon(Icons.equalizer_rounded,
                                         color: primaryColor, size: 20),
                                     const SizedBox(width: 12),
-                                    Text('${l10n.equalizer} (${eq.isEnabled ? "On" : "Off"})',
+                                    Text(
+                                        '${l10n.equalizer} (${eq.isEnabled ? "On" : "Off"})',
                                         style: TextStyle(color: primaryColor)),
                                   ],
                                 ),
@@ -698,7 +709,9 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                 ),
 
                               // 4.5 MINIMIZE TO TRAY OPTION (Desktop Only)
-                              if (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
+                              if (Platform.isWindows ||
+                                  Platform.isMacOS ||
+                                  Platform.isLinux)
                                 PopupMenuItem(
                                   value: 'minimize_tray',
                                   child: Row(
@@ -707,7 +720,8 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                                           color: primaryColor, size: 20),
                                       const SizedBox(width: 12),
                                       Text(l10n.minimizeToTray,
-                                          style: TextStyle(color: primaryColor)),
+                                          style:
+                                              TextStyle(color: primaryColor)),
                                     ],
                                   ),
                                 ),
@@ -961,16 +975,19 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
               const Divider(),
               ListTile(
                 leading: Icon(Icons.edit, color: textColor),
-                title: Text(l10n.customTime, style: TextStyle(color: textColor)),
+                title:
+                    Text(l10n.customTime, style: TextStyle(color: textColor)),
                 onTap: () {
                   Navigator.pop(context);
                   _showCustomTimerInput(context, ref, l10n);
                 },
               ),
-              if (ref.watch(timerProvider).isActive || ref.watch(playerProvider).isSleepPending) ...[
+              if (ref.watch(timerProvider).isActive ||
+                  ref.watch(playerProvider).isSleepPending) ...[
                 const Divider(),
                 ListTile(
-                  leading: const Icon(Icons.timer_off_rounded, color: Colors.redAccent),
+                  leading: const Icon(Icons.timer_off_rounded,
+                      color: Colors.redAccent),
                   title: Text(l10n.turnOffTimer,
                       style: const TextStyle(color: Colors.redAccent)),
                   onTap: () {
@@ -1131,6 +1148,251 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     }
   }
 
+  // 🚀 TABLET ENHANCED PLAYER BAR (72dp, single row with seek + controls)
+  Widget _buildTabletPlayerBar(
+    BuildContext context,
+    PlayerState playerState,
+    PlayerNotifier notifier,
+    SongModel? song,
+    bool hasSong,
+    bool isDark,
+    SettingsState settings,
+    AppLocalizations l10n,
+  ) {
+    final isLandscape = LayoutEngine.isLandscape(context);
+
+    // Progress calculation
+    double currentPos = playerState.currentPosition;
+    double totalDur = playerState.totalDuration;
+    double sliderMax = totalDur;
+    if (sliderMax < currentPos) sliderMax = currentPos;
+    if (sliderMax <= 0) sliderMax = 1.0;
+    double sliderValue = currentPos;
+    if (sliderValue > sliderMax) sliderValue = sliderMax;
+
+    double progress = 0.0;
+    if (hasSong && totalDur > 0) {
+      progress = currentPos / totalDur;
+      if (progress.isNaN || progress.isInfinite) progress = 0.0;
+      if (progress > 1.0) progress = 1.0;
+    }
+
+    return GestureDetector(
+      onTap: hasSong
+          ? () {
+              Navigator.of(context).push(
+                PageRouteBuilder(
+                  opaque: false,
+                  transitionDuration: const Duration(milliseconds: 300),
+                  reverseTransitionDuration: const Duration(milliseconds: 250),
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const TabletFullPlayer(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    return SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 1),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      )),
+                      child: child,
+                    );
+                  },
+                ),
+              );
+            }
+          : null,
+      child: Container(
+        height: 72,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          border: Border(
+            top: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              // Album art thumbnail
+              hasSong
+                  ? SmartArt(
+                      path: song!.filePath,
+                      size: 48,
+                      borderRadius: 6,
+                      onlineArtUrl: song.onlineArtUrl,
+                    )
+                  : Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[800] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(Icons.music_note,
+                          color: isDark ? Colors.white54 : Colors.black38,
+                          size: 24),
+                    ),
+              const SizedBox(width: 12),
+
+              // Track title and artist name
+              SizedBox(
+                width: isLandscape ? 160 : 120,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasSong ? song!.title : l10n.noSongPlaying,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: hasSong
+                            ? (isDark ? Colors.white : Colors.black)
+                            : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hasSong ? song!.artist : l10n.selectTrackToStart,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Seek progress indicator (linear slider)
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 3,
+                        thumbShape:
+                            const RoundSliderThumbShape(enabledThumbRadius: 5),
+                        overlayShape:
+                            const RoundSliderOverlayShape(overlayRadius: 10),
+                        activeTrackColor: hasSong
+                            ? settings.accentColor
+                            : Colors.grey.withValues(alpha: 0.3),
+                        inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
+                        thumbColor: hasSong
+                            ? settings.accentColor
+                            : Colors.grey.withValues(alpha: 0.3),
+                      ),
+                      child: Slider(
+                        value: hasSong ? sliderValue : 0.0,
+                        min: 0.0,
+                        max: sliderMax,
+                        onChanged: hasSong ? (val) => notifier.seek(val) : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Duration text (landscape only)
+              if (isLandscape) ...[
+                const SizedBox(width: 8),
+                Text(
+                  _formatTime(hasSong ? totalDur : 0),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ],
+
+              const SizedBox(width: 12),
+
+              // Playback controls: previous, play/pause, next
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.skip_previous_rounded,
+                        color: hasSong
+                            ? (isDark ? Colors.white : Colors.black)
+                            : Colors.grey.withValues(alpha: 0.3)),
+                    iconSize: 28,
+                    onPressed: hasSong ? notifier.playPrevious : null,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
+                  ),
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: hasSong
+                          ? (isDark ? Colors.white : Colors.black)
+                          : Colors.grey.withValues(alpha: 0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        playerState.isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        color: isDark ? Colors.black : Colors.white,
+                        size: 24,
+                      ),
+                      onPressed: hasSong ? notifier.togglePlay : null,
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.skip_next_rounded,
+                        color: hasSong
+                            ? (isDark ? Colors.white : Colors.black)
+                            : Colors.grey.withValues(alpha: 0.3)),
+                    iconSize: 28,
+                    onPressed: hasSong ? notifier.playNext : null,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
+                  ),
+                ],
+              ),
+
+              // Favorite/like button (landscape only)
+              if (isLandscape) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.favorite_border,
+                      color: Colors.redAccent, size: 22),
+                  onPressed: hasSong
+                      ? () {
+                          ref
+                              .read(playlistProvider.notifier)
+                              .addToLikedSongs(song!);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.addToFavorite)),
+                          );
+                        }
+                      : null,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   // 🚀 MOBILE MINI PLAYER BAR (Floating design) + Bottom Navigation
   Widget _buildMobilePlayerBar(

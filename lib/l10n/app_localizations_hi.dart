@@ -218,6 +218,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get beFirstToClaim => 'शीर्ष स्थान पाने वाले पहले व्यक्ति बनें!';
 
   @override
+  String get backgroundCacheFlacStreams =>
+      'बैकग्राउंड में FLAC स्ट्रीम कैश करें';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      'स्ट्रीम किए गए लॉसलेस ट्रैक को चुपचाप आपकी लोकल डिस्क पर डाउनलोड करता है ताकि रिप्ले तुरंत हो और कोई डेटा उपयोग न हो।';
+
+  @override
   String get behavioralHeader => 'व्यवहार संबंधी उपलब्धियां';
 
   @override
@@ -2689,4 +2697,32 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => 'पूरा हुआ!';
+
+  @override
+  String get externalLinkDetected => 'बाहरी लिंक का पता चला';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      'सख्त नेटवर्क या सर्वर प्रतिबंधों के कारण स्वचालित डाउनलोड विफल रहा।\\n\\nक्या आप अपने सिस्टम ब्राउज़र में Gofile डाउनलोड पेज खोलना चाहेंगे, या मैन्युअल रूप से डाउनलोड करने के लिए लिंक कॉपी करना चाहेंगे?';
+
+  @override
+  String get copyLink => 'लिंक कॉपी करें';
+
+  @override
+  String get openBrowser => 'ब्राउज़र खोलें';
+
+  @override
+  String get linkCopied => 'लिंक क्लिपबोर्ड पर कॉपी किया गया!';
+
+  @override
+  String get waitingForServerResponse =>
+      'सर्वर की प्रतिक्रिया की प्रतीक्षा में...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'कतार $position... कृपया प्रतीक्षा करें';
+  }
+
+  @override
+  String get processingOnServer => 'सर्वर पर प्रोसेसिंग हो रही है...';
 }

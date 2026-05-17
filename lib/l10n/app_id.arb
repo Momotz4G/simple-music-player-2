@@ -577,6 +577,8 @@
   "autumn": "Musim Gugur",
   "avatarPickerDesc": "Pilih template atau impor foto Anda sendiri",
   "beFirstToClaim": "Jadilah yang pertama mengklaim posisi teratas!",
+  "backgroundCacheFlacStreams": "Cache Stream FLAC di Latar Belakang",
+  "backgroundCacheFlacStreamsSubtitle": "Mengunduh trek lossless yang di-streaming secara diam-diam ke disk lokal Anda agar pemutaran ulang instan dan tidak menggunakan data.",
   "behavioralHeader": "PENCAPAIAN PERILAKU",
   "behavioralTitles": "PERILAKU",
   "binariesUpdateRequired": "Pembaruan Binari Diperlukan",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "Mengurai Lirik...",
   "aiLyricsSuccess": "Lirik berhasil dibuat!",
   "aiLyricsLocalFileMissing": "Kesalahan: File audio lokal tidak ditemukan.",
-  "aiLyricsComplete": "Selesai!"
+  "aiLyricsComplete": "Selesai!",
+  "externalLinkDetected": "Tautan Eksternal Terdeteksi",
+  "gofileDownloadFailedPrompt": "Unduhan otomatis gagal karena pembatasan jaringan atau server yang ketat.\\n\\nApakah Anda ingin membuka halaman unduhan Gofile di browser sistem Anda, atau menyalin tautan untuk mengunduh secara manual?",
+  "copyLink": "Salin Tautan",
+  "openBrowser": "Buka Browser",
+  "linkCopied": "Tautan disalin ke papan klip!",
+  "waitingForServerResponse": "Menunggu respons server...",
+  "queuePositionPleaseWait": "Antrean {position}... mohon tunggu",
+  "processingOnServer": "Memproses di server...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -6,6 +6,7 @@ import '../services/pocketbase_service.dart';
 import '../services/metrics_service.dart';
 import '../services/auth_service.dart';
 import '../services/debug_log_service.dart';
+import '../services/sync_engine.dart'; // 🔄 Cloud Stats Sync
 import '../utils/stats_utils.dart';
 import 'stats_provider.dart';
 
@@ -17,7 +18,7 @@ class ProfileState {
   final bool isLinked;
   final String? linkedEmail;
   final String? role; // "developer", "contributor", or null
-  
+
   // 🚀 Cloud Stats
   final int? cloudTotalPlays;
   final int? cloudTotalMinutes;
@@ -101,10 +102,13 @@ class ProfileState {
       cloudDailyPlays: cloudDailyPlays ?? this.cloudDailyPlays,
       cloudWeeklyPlays: cloudWeeklyPlays ?? this.cloudWeeklyPlays,
       cloudTopArtistPlays: cloudTopArtistPlays ?? this.cloudTopArtistPlays,
-      cloudMostListenedPlays: cloudMostListenedPlays ?? this.cloudMostListenedPlays,
+      cloudMostListenedPlays:
+          cloudMostListenedPlays ?? this.cloudMostListenedPlays,
       cloudMaxRepeatStreak: cloudMaxRepeatStreak ?? this.cloudMaxRepeatStreak,
-      cloudCurrentRepeatStreak: cloudCurrentRepeatStreak ?? this.cloudCurrentRepeatStreak,
-      cloudLastRepeatSongId: cloudLastRepeatSongId ?? this.cloudLastRepeatSongId,
+      cloudCurrentRepeatStreak:
+          cloudCurrentRepeatStreak ?? this.cloudCurrentRepeatStreak,
+      cloudLastRepeatSongId:
+          cloudLastRepeatSongId ?? this.cloudLastRepeatSongId,
       cloudLastRepeatTime: cloudLastRepeatTime ?? this.cloudLastRepeatTime,
     );
   }
@@ -112,8 +116,9 @@ class ProfileState {
 
 class ProfileNotifier extends StateNotifier<ProfileState> {
   final Ref ref;
-  
-  ProfileNotifier(this.ref) : super(ProfileState(defaultDeviceName: 'Loading...')) {
+
+  ProfileNotifier(this.ref)
+      : super(ProfileState(defaultDeviceName: 'Loading...')) {
     _init();
   }
 
@@ -179,15 +184,21 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       final linkedUserId = AuthService().linkedUserId;
       final pendingFrom = prefs.getString('pb_pending_migration_from');
       final currentPbUserId = prefs.getString('pb_user_id');
-      
+
       // Determine the old anonymous ID from either the crash breadcrumb or stale pb_user_id
-      final oldAnonymousId = (pendingFrom != null && pendingFrom.isNotEmpty && pendingFrom != linkedUserId)
+      final oldAnonymousId = (pendingFrom != null &&
+              pendingFrom.isNotEmpty &&
+              pendingFrom != linkedUserId)
           ? pendingFrom
-          : (currentPbUserId != null && currentPbUserId != linkedUserId ? currentPbUserId : null);
-      
+          : (currentPbUserId != null && currentPbUserId != linkedUserId
+              ? currentPbUserId
+              : null);
+
       if (linkedUserId != null && oldAnonymousId != null) {
-        DebugLogService().info("🔗 Auto-recovering interrupted migration from $oldAnonymousId...");
-        await PocketBaseService().migrateAnonymousToLinked(linkedUserId, fromUserId: oldAnonymousId);
+        DebugLogService().info(
+            "🔗 Auto-recovering interrupted migration from $oldAnonymousId...");
+        await PocketBaseService()
+            .migrateAnonymousToLinked(linkedUserId, fromUserId: oldAnonymousId);
         await prefs.remove('pb_pending_migration_from');
       }
     }
@@ -210,38 +221,58 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           final cloudTrack = metrics['top_track'] as String?;
           final cloudNickname = metrics['nickname'] as String?;
           final cloudTitle = metrics['selected_title'] as String?;
-          final cloudArtistPlays = (metrics['top_artist_plays'] as num?)?.toInt();
-          final cloudMostListenedPlays = (metrics['most_listened_plays'] as num?)?.toInt();
-          final cloudDailyPlays = (metrics['daily_play_count'] as num?)?.toInt();
-          final cloudWeeklyPlays = (metrics['weekly_play_count'] as num?)?.toInt();
-          final cloudMaxRepeatStreak = (metrics['max_repeat_streak'] as num?)?.toInt();
-          final cloudCurrentRepeatStreak = (metrics['current_repeat_streak'] as num?)?.toInt();
-          final cloudLastRepeatSongId = metrics['last_repeat_song_id'] as String?;
-          final cloudLastRepeatTime = (metrics['last_repeat_time'] as num?)?.toInt();
+          final cloudArtistPlays =
+              (metrics['top_artist_plays'] as num?)?.toInt();
+          final cloudMostListenedPlays =
+              (metrics['most_listened_plays'] as num?)?.toInt();
+          final cloudDailyPlays =
+              (metrics['daily_play_count'] as num?)?.toInt();
+          final cloudWeeklyPlays =
+              (metrics['weekly_play_count'] as num?)?.toInt();
+          final cloudMaxRepeatStreak =
+              (metrics['max_repeat_streak'] as num?)?.toInt();
+          final cloudCurrentRepeatStreak =
+              (metrics['current_repeat_streak'] as num?)?.toInt();
+          final cloudLastRepeatSongId =
+              metrics['last_repeat_song_id'] as String?;
+          final cloudLastRepeatTime =
+              (metrics['last_repeat_time'] as num?)?.toInt();
 
           // 🚀 LIVE RANK VERIFICATION: Standard sync might miss dynamic ranking.
           // We force-calculate it here to ensure "Top 1 Global" works immediately.
-          final verifiedRank = await MetricsService().getCurrentUserRank(cloudMinutes ?? 0);
-          DebugLogService().info("📊 Rank Sync: verified rank #$verifiedRank (cloudMinutes: $cloudMinutes)");
-          
+          final verifiedRank =
+              await MetricsService().getCurrentUserRank(cloudMinutes ?? 0);
+          DebugLogService().info(
+              "📊 Rank Sync: verified rank #$verifiedRank (cloudMinutes: $cloudMinutes)");
+
           final pbService = PocketBaseService();
-          final effectiveNickname = (cloudNickname != null && cloudNickname.isNotEmpty) 
-              ? cloudNickname 
-              : pbService.linkedName;
+          final effectiveNickname =
+              (cloudNickname != null && cloudNickname.isNotEmpty)
+                  ? cloudNickname
+                  : pbService.linkedName;
           final effectiveUrl = freshUrl ?? pbService.linkedAvatarUrl;
-          
-          if (effectiveNickname != null && effectiveNickname.isNotEmpty && effectiveNickname != state.customNickname) {
-            state = state.copyWith(customNickname: effectiveNickname);
-            await prefs.setString('custom_nickname', effectiveNickname);
+
+          if (effectiveNickname != null &&
+              effectiveNickname.isNotEmpty &&
+              effectiveNickname != state.customNickname) {
+            // 🛡️ ANTI-EXPLOIT: Validate uniqueness before accepting cloud nickname.
+            // Prevents orphaned records from hijacking a nickname after unlink/relink.
+            final isNickTaken = await PocketBaseService().isNicknameTaken(effectiveNickname);
+            if (!isNickTaken) {
+              state = state.copyWith(customNickname: effectiveNickname);
+              await prefs.setString('custom_nickname', effectiveNickname);
+            }
           }
-          if (cloudTitle != null && cloudTitle.isNotEmpty && cloudTitle != state.selectedTitle) {
+          if (cloudTitle != null &&
+              cloudTitle.isNotEmpty &&
+              cloudTitle != state.selectedTitle) {
             state = state.copyWith(selectedTitle: cloudTitle);
             await prefs.setString('selected_title', cloudTitle);
           }
-          
+
           if (effectiveUrl != null && effectiveUrl != state.avatarUrl) {
             state = state.copyWith(
-              avatarUrl: effectiveUrl, 
+              avatarUrl: effectiveUrl,
               role: role,
               cloudTotalPlays: cloudPlays,
               cloudTotalMinutes: cloudMinutes,
@@ -258,8 +289,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
               cloudLastRepeatTime: cloudLastRepeatTime,
             );
             await prefs.setString('cached_avatar_url', effectiveUrl);
-            if (cloudDailyPlays != null) await prefs.setInt('cached_cloud_daily_plays', cloudDailyPlays);
-            if (cloudWeeklyPlays != null) await prefs.setInt('cached_cloud_weekly_plays', cloudWeeklyPlays);
+            if (cloudDailyPlays != null)
+              await prefs.setInt('cached_cloud_daily_plays', cloudDailyPlays);
+            if (cloudWeeklyPlays != null)
+              await prefs.setInt('cached_cloud_weekly_plays', cloudWeeklyPlays);
           } else if (effectiveUrl == null && state.avatarUrl != null) {
             // Avatar was removed on server
             state = state.copyWith(
@@ -298,8 +331,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
               cloudLastRepeatSongId: cloudLastRepeatSongId,
               cloudLastRepeatTime: cloudLastRepeatTime,
             );
-            if (cloudDailyPlays != null) await prefs.setInt('cached_cloud_daily_plays', cloudDailyPlays);
-            if (cloudWeeklyPlays != null) await prefs.setInt('cached_cloud_weekly_plays', cloudWeeklyPlays);
+            if (cloudDailyPlays != null)
+              await prefs.setInt('cached_cloud_daily_plays', cloudDailyPlays);
+            if (cloudWeeklyPlays != null)
+              await prefs.setInt('cached_cloud_weekly_plays', cloudWeeklyPlays);
           }
         }
         return; // Success, exit retry loop
@@ -311,11 +346,16 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     }
   }
 
-  /// 🚀 BUMP STATS LOCALLY: Instantly update cloud metrics locally to provide 
+  /// 🚀 BUMP STATS LOCALLY: Instantly update cloud metrics locally to provide
   /// reactive UI feedback before the next actual PocketBase sync fetch occurs.
-  void bumpCloudStats({int playIncrement = 0, int minutesIncrement = 0, int dailyIncrement = 0, int weeklyIncrement = 0}) {
-    if (state.cloudTotalPlays == null && state.cloudTotalMinutes == null) return;
-    
+  void bumpCloudStats(
+      {int playIncrement = 0,
+      int minutesIncrement = 0,
+      int dailyIncrement = 0,
+      int weeklyIncrement = 0}) {
+    if (state.cloudTotalPlays == null && state.cloudTotalMinutes == null)
+      return;
+
     state = state.copyWith(
       cloudTotalPlays: (state.cloudTotalPlays ?? 0) + playIncrement,
       cloudTotalMinutes: (state.cloudTotalMinutes ?? 0) + minutesIncrement,
@@ -343,19 +383,20 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
       await prefs.setString('custom_nickname', cleanedName);
       state = state.copyWith(customNickname: cleanedName);
-      
+
       // 🚀 Force immediate sync to ensure Leaderboard sees newest nickname AND current earned title!
       try {
         final stats = ref.read(statsProvider);
         final calculated = StatsUtils.calculate(stats);
-        
+
         await MetricsService().syncAdvancedStats(
-          selectedTitle: state.selectedTitle ?? StatsUtils.getAutomaticTitle(calculated.totalMinutes),
+          selectedTitle: state.selectedTitle ??
+              StatsUtils.getAutomaticTitle(calculated.totalMinutes),
           totalMinutes: calculated.totalMinutes,
           topArtist: calculated.topArtist?.key,
           topTrack: calculated.topTrack?.key,
         );
-        
+
         await PocketBaseService().syncUserAccountProfile(nickname: cleanedName);
         PocketBaseService().sendHeartbeat();
       } catch (e) {
@@ -364,12 +405,13 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       return null; // Success
     }
   }
+
   Future<void> updateAvatar(File file) async {
     try {
       // 1. Send to PocketBase
       await PocketBaseService().saveData({}, avatarFile: file);
       await PocketBaseService().syncUserAccountProfile(avatarFile: file);
-      
+
       // 2. Refresh local state
       final metrics = await PocketBaseService().getUserMetrics();
       if (metrics != null) {
@@ -391,7 +433,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       // 1. Tell PocketBase to clear the avatar
       await PocketBaseService().saveData({}, clearAvatar: true);
       await PocketBaseService().syncUserAccountProfile(clearAvatar: true);
-      
+
       // 2. Clear local state
       state = ProfileState(
         defaultDeviceName: state.defaultDeviceName,
@@ -417,13 +459,14 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     } else {
       state = state.copyWith(selectedTitle: title);
     }
-    
+
     // 🚀 Force immediate sync with calculated title
     try {
       final stats = ref.read(statsProvider);
       final calculated = StatsUtils.calculate(stats);
-      final activeTitle = title ?? StatsUtils.getAutomaticTitle(calculated.totalMinutes);
-      
+      final activeTitle =
+          title ?? StatsUtils.getAutomaticTitle(calculated.totalMinutes);
+
       await MetricsService().syncAdvancedStats(
         selectedTitle: activeTitle,
         totalMinutes: calculated.totalMinutes,
@@ -447,16 +490,17 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
       // 🛡️ CRASH GUARD: The PocketBase SDK's authWithOAuth2 uses an SSE realtime
       // connection. After auth completes, it asynchronously disconnects the SSE.
-      // On Windows, this native socket teardown can race with the event loop 
-      // and cause a native crash (exit code -1). 
+      // On Windows, this native socket teardown can race with the event loop
+      // and cause a native crash (exit code -1).
       //
-      // STRATEGY: Persist ALL critical auth state IMMEDIATELY so that even if 
+      // STRATEGY: Persist ALL critical auth state IMMEDIATELY so that even if
       // the app crashes during migration, the next startup auto-recovers.
       final prefs = await SharedPreferences.getInstance();
       // 🛡️ Get the current anonymous user ID from the live service (always set)
-      // SharedPreferences is the fallback only  
-      final oldPbUserId = PocketBaseService().userId ?? prefs.getString('pb_user_id');
-      
+      // SharedPreferences is the fallback only
+      final oldPbUserId =
+          PocketBaseService().userId ?? prefs.getString('pb_user_id');
+
       // Save the linked state FIRST — this is the crash recovery checkpoint
       await prefs.setString('pb_linked_user_id', newUserId);
       await prefs.setString('pb_linked_email', AuthService().linkedEmail ?? '');
@@ -464,28 +508,33 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       if (oldPbUserId != null && oldPbUserId != newUserId) {
         await prefs.setString('pb_pending_migration_from', oldPbUserId);
       }
-      DebugLogService().info("🛡️ Auth state persisted. Old=$oldPbUserId, new=$newUserId");
+      DebugLogService()
+          .info("🛡️ Auth state persisted. Old=$oldPbUserId, new=$newUserId");
 
-      // 🛡️ NATIVE WINDOWS TEARDOWN BUFFER: 
+      // 🛡️ NATIVE WINDOWS TEARDOWN BUFFER:
       // The PocketBase SDK is currently unsubscribing from the @oauth2 SSE stream.
-      // On Windows, dart:io uses an IOCP socket pool. If we immediately fire REST 
-      // requests while the SSE socket is tearing down or submitting new subscriptions, 
+      // On Windows, dart:io uses an IOCP socket pool. If we immediately fire REST
+      // requests while the SSE socket is tearing down or submitting new subscriptions,
       // the native threadpool throws Exit Code -1 and kills the app.
       // We wait a generous 2.5 seconds. (If the user closes the app right now,
       // the auto-recovery breadcrumb we just saved will handle migration next time!).
-      DebugLogService().info("⏳ Stabilizing network context (avoiding native IOCP crash)...");
+      DebugLogService().info(
+          "⏳ Stabilizing network context (avoiding native IOCP crash)...");
       await Future.delayed(const Duration(milliseconds: 2500));
 
       // 🛒 SAVVY SYNC: Fetch current cloud data BEFORE migration
-      final cloudMetrics = await PocketBaseService().getRemoteMetricsForUser(newUserId);
+      final cloudMetrics =
+          await PocketBaseService().getRemoteMetricsForUser(newUserId);
 
       // ⚠️ CONFLICT CHECK: Does cloud have a nickname different from local?
       if (cloudMetrics != null && !force) {
         final cloudNickname = cloudMetrics['nickname'] as String?;
         final localNickname = state.customNickname;
-        
-        if (cloudNickname != null && cloudNickname.isNotEmpty && 
-            localNickname != null && localNickname.isNotEmpty &&
+
+        if (cloudNickname != null &&
+            cloudNickname.isNotEmpty &&
+            localNickname != null &&
+            localNickname.isNotEmpty &&
             cloudNickname != localNickname) {
           // Return special code for UI to handle
           return "CONFLICT:$cloudNickname";
@@ -496,7 +545,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       // Pass fromUserId explicitly so it works even if PocketBaseService._userId
       // was already updated during this session
       final migrated = await PocketBaseService().migrateAnonymousToLinked(
-        newUserId, 
+        newUserId,
         fromUserId: oldPbUserId,
       );
       if (!migrated) {
@@ -514,7 +563,12 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       }
 
       // 📊 ADDITIVE STATS SYNC (The Merge)
-      await ref.read(statsProvider.notifier).pullAndSyncRemoteData(isInitialLink: true);
+      await ref
+          .read(statsProvider.notifier)
+          .pullAndSyncRemoteData(isInitialLink: true);
+
+      // 🔄 Notify SyncEngine of account link (Requirement 9.2)
+      SyncEngine().onAccountLinked(newUserId);
 
       return null; // Success
     } catch (e) {
@@ -525,22 +579,27 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
   Future<void> _restoreCloudIdentity(Map<String, dynamic> cloudMetrics) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     final cloudNickname = cloudMetrics['nickname'] as String?;
     final cloudTitle = cloudMetrics['selected_title'] as String?;
     final cloudRole = cloudMetrics['role'] as String?;
     final freshUrl = PocketBaseService().getAvatarUrl(cloudMetrics);
 
     final pbService = PocketBaseService();
-    final effectiveNickname = (cloudNickname != null && cloudNickname.isNotEmpty) 
-        ? cloudNickname 
-        : pbService.linkedName;
+    final effectiveNickname =
+        (cloudNickname != null && cloudNickname.isNotEmpty)
+            ? cloudNickname
+            : pbService.linkedName;
     final effectiveUrl = freshUrl ?? pbService.linkedAvatarUrl;
 
     // Update local prefs and state with cloud identity
     if (effectiveNickname != null && effectiveNickname.isNotEmpty) {
-      await prefs.setString('custom_nickname', effectiveNickname);
-      state = state.copyWith(customNickname: effectiveNickname);
+      // 🛡️ ANTI-EXPLOIT: Validate uniqueness before restoring cloud nickname
+      final isNickTaken = await PocketBaseService().isNicknameTaken(effectiveNickname);
+      if (!isNickTaken) {
+        await prefs.setString('custom_nickname', effectiveNickname);
+        state = state.copyWith(customNickname: effectiveNickname);
+      }
     }
 
     if (cloudTitle != null && cloudTitle.isNotEmpty) {
@@ -556,13 +615,21 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     if (cloudRole != null) {
       state = state.copyWith(role: cloudRole);
     }
-    
-    DebugLogService().success("📥 Account Identity Restored: $effectiveNickname");
+
+    DebugLogService()
+        .success("📥 Account Identity Restored: $effectiveNickname");
   }
 
   /// Unlink Google account and revert to anonymous
   Future<void> unlinkAccount() async {
     try {
+      // 🛡️ ANTI-EXPLOIT: Clear nickname from the metrics record about to be orphaned.
+      // Prevents "multi-account nickname squatting" where unlink/relink cycles
+      // leave orphaned records with the same nickname, inflating leaderboard stats.
+      try {
+        await PocketBaseService().saveData({'nickname': ''});
+      } catch (_) {}
+
       // 1. Log out from Google and transition back to a fresh anonymous ID
       await AuthService().signOut();
       await PocketBaseService().revertToAnonymous();
@@ -585,8 +652,12 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         clearTitle: true,
         clearLinkedEmail: true,
       );
-      
-      DebugLogService().info("🔐 Account unlinked. Identity & local stats cleared.");
+
+      // 🔄 Notify SyncEngine of account unlink (Requirement 9.3)
+      SyncEngine().onAccountUnlinked();
+
+      DebugLogService()
+          .info("🔐 Account unlinked. Identity & local stats cleared.");
     } catch (e) {
       // Log silently
     }

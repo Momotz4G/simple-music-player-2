@@ -4,6 +4,8 @@
 *.pyc
 *.swp
 .DS_Store
+.agent/
+.kiro/
 .atom/
 .build/
 .buildlog/
@@ -62,6 +64,8 @@ landing_page/
 # Helper scripts
 cleanup_pocketbase.dart
 cleanup_titles.dart
+cleanup_totalmin.dart
+merge_metrics.dart
 
 *.hprof
 *.backup
@@ -71,4 +75,6 @@ engine_log.txt
 /Experimental Version/
 ai-lyrics-generator/
 backend/
+vps-monitor/
+Apple-Music-API/
 

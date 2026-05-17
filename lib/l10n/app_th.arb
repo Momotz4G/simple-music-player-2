@@ -577,6 +577,8 @@
   "autumn": "ฤดูใบไม้ร่วง",
   "avatarPickerDesc": "เลือกเทมเพลตหรือนำเข้ารูปภาพของคุณเอง",
   "beFirstToClaim": "เป็นคนแรกที่คว้าอันดับหนึ่ง!",
+  "backgroundCacheFlacStreams": "แคชสตรีม FLAC ในพื้นหลัง",
+  "backgroundCacheFlacStreamsSubtitle": "ดาวน์โหลดเพลง lossless ที่สตรีมไปยังดิสก์ในเครื่องอย่างเงียบๆ เพื่อให้การเล่นซ้ำเป็นทันทีและไม่ใช้ข้อมูล",
   "behavioralHeader": "ความสำเร็จด้านพฤติกรรม",
   "behavioralTitles": "พฤติกรรม",
   "binariesUpdateRequired": "ต้องอัปเดตไบนารี",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "กำลังวิเคราะห์เนื้อเพลง...",
   "aiLyricsSuccess": "สร้างเนื้อเพลงสำเร็จแล้ว!",
   "aiLyricsLocalFileMissing": "ข้อผิดพลาด: ไม่พบไฟล์เสียงในเครื่อง",
-  "aiLyricsComplete": "เสร็จสิ้น!"
+  "aiLyricsComplete": "เสร็จสิ้น!",
+  "externalLinkDetected": "ตรวจพบลิงก์ภายนอก",
+  "gofileDownloadFailedPrompt": "ดาวน์โหลดอัตโนมัติล้มเหลวเนื่องจากข้อจำกัดของเครือข่ายหรือเซิร์ฟเวอร์ที่เข้มงวด\\n\\nคุณต้องการเปิดหน้าดาวน์โหลด Gofile ในเบราว์เซอร์ของระบบ หรือคัดลอกลิงก์เพื่อดาวน์โหลดด้วยตนเอง?",
+  "copyLink": "คัดลอกลิงก์",
+  "openBrowser": "เปิดเบราว์เซอร์",
+  "linkCopied": "คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว!",
+  "waitingForServerResponse": "กำลังรอการตอบกลับจากเซิร์ฟเวอร์...",
+  "queuePositionPleaseWait": "คิวที่ {position}... โปรดรอสักครู่",
+  "processingOnServer": "กำลังประมวลผลบนเซิร์ฟเวอร์...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -218,6 +218,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get beFirstToClaim => 'كن الأول للمطالبة بالمركز الأول!';
 
   @override
+  String get backgroundCacheFlacStreams => 'تخزين مؤقت لتدفقات FLAC في الخلفية';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      'يقوم بتنزيل المسارات عالية الجودة المتدفقة بصمت إلى القرص المحلي لجعل إعادة التشغيل فورية دون استخدام البيانات.';
+
+  @override
   String get behavioralHeader => 'إنجازات سلوكية';
 
   @override
@@ -2669,4 +2676,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => 'اكتمل!';
+
+  @override
+  String get externalLinkDetected => 'تم اكتشاف رابط خارجي';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      'فشل التنزيل التلقائي بسبب قيود الشبكة أو الخادم الصارمة.\\n\\nهل ترغب في فتح صفحة تنزيل Gofile في متصفح النظام، أم نسخ الرابط للتنزيل يدويًا؟';
+
+  @override
+  String get copyLink => 'نسخ الرابط';
+
+  @override
+  String get openBrowser => 'فتح المتصفح';
+
+  @override
+  String get linkCopied => 'تم نسخ الرابط إلى الحافظة!';
+
+  @override
+  String get waitingForServerResponse => 'في انتظار استجابة الخادم...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'طابور $position... يرجى الانتظار';
+  }
+
+  @override
+  String get processingOnServer => 'جاري المعالجة على الخادم...';
 }

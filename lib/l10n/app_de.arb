@@ -577,6 +577,8 @@
   "autumn": "Herbst",
   "avatarPickerDesc": "Wähle eine Vorlage oder importiere dein eigenes Foto",
   "beFirstToClaim": "Sei der Erste, der den ersten Platz beansprucht!",
+  "backgroundCacheFlacStreams": "FLAC-Streams im Hintergrund cachen",
+  "backgroundCacheFlacStreamsSubtitle": "Lädt gestreamte verlustfreie Titel still auf Ihre lokale Festplatte herunter, damit die Wiedergabe sofort erfolgt und keine Daten verbraucht werden.",
   "behavioralHeader": "VERHALTENS-ERFOLGE",
   "behavioralTitles": "VERHALTENSBASIERT",
   "binariesUpdateRequired": "Binär-Update erforderlich",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "Songtexte analysieren...",
   "aiLyricsSuccess": "Songtexte erfolgreich generiert!",
   "aiLyricsLocalFileMissing": "Fehler: Lokale Audiodatei nicht gefunden.",
-  "aiLyricsComplete": "Abgeschlossen!"
+  "aiLyricsComplete": "Abgeschlossen!",
+  "externalLinkDetected": "Externer Link Erkannt",
+  "gofileDownloadFailedPrompt": "Der automatische Download ist aufgrund strenger Netzwerk- oder Serverbeschränkungen fehlgeschlagen.\\n\\nMöchten Sie die Gofile-Download-Seite in Ihrem Systembrowser öffnen oder den Link kopieren, um ihn manuell herunterzuladen?",
+  "copyLink": "Link Kopieren",
+  "openBrowser": "Browser Öffnen",
+  "linkCopied": "Link in die Zwischenablage kopiert!",
+  "waitingForServerResponse": "Warten auf Serverantwort...",
+  "queuePositionPleaseWait": "Warteschlange {position}... bitte warten",
+  "processingOnServer": "Wird auf dem Server verarbeitet...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

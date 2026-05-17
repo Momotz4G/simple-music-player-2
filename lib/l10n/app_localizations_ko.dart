@@ -213,6 +213,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get beFirstToClaim => '1위를 먼저 차지해 보세요!';
 
   @override
+  String get backgroundCacheFlacStreams => '백그라운드 FLAC 스트림 캐시';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      '스트리밍된 무손실 트랙을 로컬 디스크에 자동으로 다운로드하여 재생이 즉각적이고 데이터를 사용하지 않습니다.';
+
+  @override
   String get behavioralHeader => '행동 업적';
 
   @override
@@ -2610,4 +2617,31 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => '완료!';
+
+  @override
+  String get externalLinkDetected => '외부 링크 감지됨';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      '엄격한 네트워크 또는 서버 제한으로 인해 자동 다운로드에 실패했습니다.\\n\\n시스템 브라우저에서 Gofile 다운로드 페이지를 여시겠습니까, 아니면 링크를 복사하여 수동으로 다운로드하시겠습니까?';
+
+  @override
+  String get copyLink => '링크 복사';
+
+  @override
+  String get openBrowser => '브라우저 열기';
+
+  @override
+  String get linkCopied => '링크가 클보드에 복사되었습니다!';
+
+  @override
+  String get waitingForServerResponse => '서버 응답 대기 중...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return '대기열 $position... 잠시 기다려주세요';
+  }
+
+  @override
+  String get processingOnServer => '서버에서 처리 중...';
 }

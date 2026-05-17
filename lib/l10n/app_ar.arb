@@ -577,6 +577,8 @@
   "autumn": "الخريف",
   "avatarPickerDesc": "اختر قالبًا أو استورد صورتك الخاصة",
   "beFirstToClaim": "كن الأول للمطالبة بالمركز الأول!",
+  "backgroundCacheFlacStreams": "تخزين مؤقت لتدفقات FLAC في الخلفية",
+  "backgroundCacheFlacStreamsSubtitle": "يقوم بتنزيل المسارات عالية الجودة المتدفقة بصمت إلى القرص المحلي لجعل إعادة التشغيل فورية دون استخدام البيانات.",
   "behavioralHeader": "إنجازات سلوكية",
   "behavioralTitles": "سلوكي",
   "binariesUpdateRequired": "تحديث الملفات الثنائية مطلوب",
@@ -1326,5 +1328,20 @@
   "aiLyricsParsing": "جاري تحليل الكلمات...",
   "aiLyricsSuccess": "تم إنشاء الكلمات بنجاح!",
   "aiLyricsLocalFileMissing": "خطأ: ملف الصوت المحلي غير موجود.",
-  "aiLyricsComplete": "اكتمل!"
+  "aiLyricsComplete": "اكتمل!",
+  "externalLinkDetected": "تم اكتشاف رابط خارجي",
+  "gofileDownloadFailedPrompt": "فشل التنزيل التلقائي بسبب قيود الشبكة أو الخادم الصارمة.\\n\\nهل ترغب في فتح صفحة تنزيل Gofile في متصفح النظام، أم نسخ الرابط للتنزيل يدويًا؟",
+  "copyLink": "نسخ الرابط",
+  "openBrowser": "فتح المتصفح",
+  "linkCopied": "تم نسخ الرابط إلى الحافظة!",
+  "waitingForServerResponse": "في انتظار استجابة الخادم...",
+  "queuePositionPleaseWait": "طابور {position}... يرجى الانتظار",
+  "processingOnServer": "جاري المعالجة على الخادم...",
+  "@queuePositionPleaseWait": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  }
 }

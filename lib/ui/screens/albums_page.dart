@@ -4,6 +4,7 @@ import '../../providers/library_presentation_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/album_model.dart';
+import '../../utils/layout_engine.dart';
 import '../components/album_card.dart';
 
 class AlbumsPage extends ConsumerWidget {
@@ -70,8 +71,7 @@ class AlbumsPage extends ConsumerWidget {
                     : AppLocalizations.of(context)!.unknownArtist;
 
                 final year = songs
-                        .firstWhere(
-                            (s) => s.year != null && s.year!.isNotEmpty,
+                        .firstWhere((s) => s.year != null && s.year!.isNotEmpty,
                             orElse: () => songs.first)
                         .year ??
                     "Unknown";

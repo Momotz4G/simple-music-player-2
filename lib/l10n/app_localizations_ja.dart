@@ -213,6 +213,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get beFirstToClaim => '1位を誰よりも早く獲得しましょう！';
 
   @override
+  String get backgroundCacheFlacStreams => 'バックグラウンドでFLACストリームをキャッシュ';
+
+  @override
+  String get backgroundCacheFlacStreamsSubtitle =>
+      'ストリーミングされたロスレストラックをローカルディスクに静かにダウンロードし、再生を即座にしてデータを使用しません。';
+
+  @override
   String get behavioralHeader => '行動実績';
 
   @override
@@ -2614,4 +2621,31 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiLyricsComplete => '完了！';
+
+  @override
+  String get externalLinkDetected => '外部リンクが検出されました';
+
+  @override
+  String get gofileDownloadFailedPrompt =>
+      '厳しいネットワークまたはサーバーの制限により、自動ダウンロードに失敗しました。\\n\\nシステムブラウザでGofileダウンロードページを開きますか？それともリンクをコピーして手動でダウンロードしますか？';
+
+  @override
+  String get copyLink => 'リンクをコピー';
+
+  @override
+  String get openBrowser => 'ブラウザを開く';
+
+  @override
+  String get linkCopied => 'リンクがクリップボードにコピーされました！';
+
+  @override
+  String get waitingForServerResponse => 'サーバーの応答を待っています...';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'キュー $position... お待ちください';
+  }
+
+  @override
+  String get processingOnServer => 'サーバーで処理中...';
 }

@@ -169,7 +169,9 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
                             ),
                             child: SelectableText(
                               widget.song.filePath.startsWith('http')
-                                  ? 'Tidal Server Stream'
+                                  ? (widget.song.filePath.contains('apm-api') || widget.song.sourceUrl?.contains('apple') == true
+                                      ? 'Apple Music Stream Server'
+                                      : 'Tidal Server Stream')
                                   : widget.song.filePath,
                               style: TextStyle(
                                 color: subtitleColor,
