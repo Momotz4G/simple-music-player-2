@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   isar_flutter_libs
   just_audio_windows
   media_kit_libs_windows_video
+  media_kit_video
   permission_handler_windows
   screen_retriever
   share_plus

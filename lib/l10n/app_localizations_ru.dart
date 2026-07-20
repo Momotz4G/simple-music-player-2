@@ -38,6 +38,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accountLinkedSuccessfully => 'Аккаунт успешно привязан!';
 
   @override
+  String get accountTiers => 'Уровни аккаунта';
+
+  @override
   String get achievementsUnlocked => 'Разблокированные достижения';
 
   @override
@@ -54,6 +57,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get addFoldersScan => 'Добавить папки для сканирования';
+
+  @override
+  String get addLineToEnd => 'Добавить в конец';
+
+  @override
+  String get addLineToTop => 'Добавить в начало';
 
   @override
   String get addToFavorite => 'Добавить в избранное';
@@ -77,6 +86,67 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get addedToQueue => 'Добавлено в очередь';
+
+  @override
+  String get aiGenerate => 'Генерация ИИ';
+
+  @override
+  String get aiLyricsComplete => 'Завершено!';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsGenerationTitle => 'Генерация текста песни ИИ';
+
+  @override
+  String get aiLyricsInitializing => 'Инициализация...';
+
+  @override
+  String get aiLyricsLocalFileMissing =>
+      'Ошибка: Локальный аудиофайл не найден.';
+
+  @override
+  String get aiLyricsParsing => 'Анализ текста песни...';
+
+  @override
+  String get aiLyricsPolling =>
+      'Получение текста песни... Пожалуйста, подождите!';
+
+  @override
+  String get aiLyricsReceiving => 'Текст песни получен';
+
+  @override
+  String get aiLyricsStatusOk => 'Статус-код 200 OK!';
+
+  @override
+  String get aiLyricsSuccess => 'Текст песни успешно сгенерирован!';
+
+  @override
+  String get aiLyricsUploadFailed => 'Ошибка: Загрузка не удалась.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'Загрузка завершена!';
+
+  @override
+  String get aiLyricsUploading => 'Загрузка песни на сервер...';
+
+  @override
+  String get aiLyricsVerifying => 'Проверка статуса сервера...';
+
+  @override
+  String alacDownloadsPerDay(int count) {
+    return '$count загрузок ALAC в день';
+  }
+
+  @override
+  String get alacHighResDownloads => 'Загрузки ALAC в высоком разрешении';
 
   @override
   String get album => 'Альбом';
@@ -106,6 +176,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get alreadyInLikedSongs => 'Уже в любимых песнях';
 
   @override
+  String get alreadyPaidCheckStatus => 'Уже оплатили? Проверить статус';
+
+  @override
   String get android14BitPerfect => 'Android 14+ Bit-Perfect';
 
   @override
@@ -123,6 +196,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appearance => 'Внешний вид';
+
+  @override
+  String get applyBtn => 'Применить';
 
   @override
   String get applyOnRestart =>
@@ -205,6 +281,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get automatic => 'Автоматически';
 
   @override
+  String get automaticGainControl => 'Автоматическая регулировка усиления';
+
+  @override
+  String get automaticGainControlDesc =>
+      'Нормализует громкость всех песен, чтобы ни одна из них не звучала слишком громко или тихо.';
+
+  @override
   String automaticTitleLabel(String title) {
     return 'Автоматически: $title';
   }
@@ -216,14 +299,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get avatarPickerDesc => 'Выберите шаблон или импортируйте свое фото';
 
   @override
-  String get beFirstToClaim => 'Станьте первым, кто займет первое место!';
-
-  @override
   String get backgroundCacheFlacStreams => 'Кэширование FLAC-потоков в фоне';
 
   @override
   String get backgroundCacheFlacStreamsSubtitle =>
       'Тихо загружает потоковые треки без потерь на локальный диск, чтобы воспроизведение было мгновенным и не использовало данные.';
+
+  @override
+  String get beFirstToClaim => 'Станьте первым, кто займет первое место!';
 
   @override
   String get behavioralHeader => 'ПОВЕДЕНЧЕСКИЕ ДОСТИЖЕНИЯ';
@@ -236,6 +319,24 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bitDepthLabel => 'Разрядность (бит)';
+
+  @override
+  String get bitPerfectBypassSub14 =>
+      'Обход системного микшера с помощью API Bit-Perfect в Android 14+';
+
+  @override
+  String get bitPerfectBypassSubLegacy =>
+      'Обход системного микшера с помощью C++ Audio Engine (Android 13 и ниже)';
+
+  @override
+  String get bitPerfectBypassSuccess => 'Воспроизведение Bit-Perfect включено.';
+
+  @override
+  String get bitPerfectBypassTitle => 'Bit-Perfect / USB Audio Bypass';
+
+  @override
+  String get bitPerfectBypassWarning =>
+      'Сначала необходимо подключить USB ЦАП.';
 
   @override
   String get bitPerfectEnabled =>
@@ -271,6 +372,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cancel => 'Отмена';
+
+  @override
+  String get cancelAllBtn => 'Отменить все';
+
+  @override
+  String get canvasSourcePreferenceSubtitle =>
+      'Выберите, откуда загружать фоновые видеопетли';
+
+  @override
+  String get canvasSourcePreferenceTitle =>
+      'Источник Canvas / анимированной обложки';
 
   @override
   String get championChampionTooltip => 'Станьте Топ-1 мира в течение 5 недель';
@@ -327,6 +439,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chooseAvatar => 'Выбрать аватар';
 
   @override
+  String get chooseFormat => 'Выберите предпочтительный формат:';
+
+  @override
   String get chooseYourTitle => 'Выберите свой титул';
 
   @override
@@ -334,6 +449,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get clearAll => 'Очистить все';
+
+  @override
+  String get clearAllDesc =>
+      'Это очистит текущее состояние редактора. Ваши локальные файлы НЕ будут удалены, если вы не сохраните их позже.';
+
+  @override
+  String get clearAllQuestion => 'Очистить все?';
+
+  @override
+  String get clearBtn => 'Очистить';
 
   @override
   String get clearHistory => 'Очистить историю';
@@ -355,6 +480,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cloud => 'Облако';
+
+  @override
+  String get cloudStatsAndRankings => 'Облачная статистика и рейтинги';
 
   @override
   String get codeCopied => 'Код скопирован в буфер обмена!';
@@ -413,7 +541,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contentRegion => 'Регион контента';
 
   @override
+  String get continueToSociabuzz => 'Перейти в Sociabuzz';
+
+  @override
   String get copyCode => 'Копировать код';
+
+  @override
+  String get copyLink => 'Копировать ссылку';
 
   @override
   String get couldNotDownloadFlac => 'Не удалось загрузить FLAC.';
@@ -448,6 +582,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get crownedChampionTitlesHeader => 'ТИТУЛЫ КОРОНОВАННЫХ ЧЕМПИОНОВ';
+
+  @override
+  String get currentTierLabel => 'Текущий';
 
   @override
   String get customDevice => 'Пользовательское устройство';
@@ -534,6 +671,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get disableRomanization => 'Отключить романизацию';
 
   @override
+  String get disableServicesTitle => 'Отключить службы';
+
+  @override
+  String get disabled => 'Отключено';
+
+  @override
   String get disablingSharingWarning =>
       'При отключении общего доступа код и данные будут навсегда удалены с сервера для экономии места.';
 
@@ -551,6 +694,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get donate => 'Пожертвовать';
+
+  @override
+  String get donateMinToObtain =>
+      'Пожертвуйте минимум 10 000 IDR для получения (Навсегда)';
 
   @override
   String get download => 'Скачать';
@@ -613,6 +760,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dspLabel => 'DSP';
 
   @override
+  String get editLyricsTooltip => 'Редактировать текст песни';
+
+  @override
   String get editMetadata => 'Редактировать метаданные';
 
   @override
@@ -645,6 +795,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get enableBarVisualizer => 'Включить полосовой визуализатор';
+
+  @override
+  String get enableOfflineModeBtn => 'Включить офлайн-режим';
+
+  @override
+  String get enableOfflineModeQuestion => 'Включить офлайн-режим?';
+
+  @override
+  String get endLabel => 'Конец: ';
 
   @override
   String get endlessQueue => 'Бесконечная очередь';
@@ -706,6 +865,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Предупреждение: Эксклюзивный режим работает лучше, если вы выберете конкретное устройство выше вместо системного по умолчанию.';
 
   @override
+  String get exclusiveSupporterTitle =>
+      'Эксклюзивный титул сторонника и роль в Discord';
+
+  @override
   String get exclusiveTitles => 'ЭКСКЛЮЗИВНЫЙ';
 
   @override
@@ -722,7 +885,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get expand => 'Развернуть';
 
   @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
   String get externalFiles => 'Внешние файлы';
+
+  @override
+  String get externalLinkDetected => 'Обнаружена внешняя ссылка';
 
   @override
   String get fadingAtEnd => 'Таймер сна: Затухание в конце трека...';
@@ -747,6 +916,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось создать код общего доступа. Проверьте соединение.';
 
   @override
+  String get failedToSave => 'Не удалось сохранить файл текста песни.';
+
+  @override
   String get failedToSetAvatar => 'Не удалось установить шаблон аватара';
 
   @override
@@ -754,6 +926,82 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get favoriteTrack => 'Любимый трек';
+
+  @override
+  String get featureAiLyrics => 'ИИ-генератор текстов песен';
+
+  @override
+  String get featureAiLyricsDesc =>
+      'Автоматическая синхронизация текстов отключена';
+
+  @override
+  String get featureAiLyricsLongDesc =>
+      'Генерация синхронизированных текстов через ИИ';
+
+  @override
+  String get featureCloudSync => 'Синхронизация статистики в облаке';
+
+  @override
+  String get featureCloudSyncDesc =>
+      'Статистика прослушивания сохраняется только локально';
+
+  @override
+  String get featureCloudSyncLongDesc =>
+      'Синхронизация метрик прослушивания с PocketBase';
+
+  @override
+  String get featureConnectDevice => 'Подключиться к устройству';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'Дистанционное управление и прослушивание в группах отключены';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'Дистанционное управление и прослушивание в группах';
+
+  @override
+  String get featureLeaderboard => 'Глобальная таблица лидеров';
+
+  @override
+  String get featureLeaderboardDesc => 'Обновление рейтинга приостановлено';
+
+  @override
+  String get featureLeaderboardLongDesc =>
+      'Публичное отображение и обновление вашего рейтинга';
+
+  @override
+  String get featureOnlineLyrics => 'Поиск текстов песен онлайн';
+
+  @override
+  String get featureOnlineLyricsDesc => 'Только локальные файлы .lrc/.ttml';
+
+  @override
+  String get featureOnlineLyricsLongDesc =>
+      'Загрузка текстов песен из LRCLIB/Spotify';
+
+  @override
+  String get featureOnlineSearch => 'Онлайн-поиск';
+
+  @override
+  String get featureOnlineSearchDesc => 'Поиск в Spotify/YouTube отключен';
+
+  @override
+  String get featureOnlineSearchLongDesc =>
+      'Удаленный поиск в Spotify и YouTube';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'Фоновое видео отключено';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'Фоновые видео для треков';
+
+  @override
+  String get fetchingAlacAppleMusic =>
+      'Получение ALAC Lossless из Apple Music...';
 
   @override
   String get fetchingCanvas => 'Загрузка Canvas...';
@@ -899,7 +1147,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get general => 'Общие';
 
   @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
   String get generatingShareCode => 'Создание кода общего доступа...';
+
+  @override
+  String get generationFailed => 'Генерация не удалась';
 
   @override
   String get genre => 'Жанр';
@@ -931,6 +1185,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Перейдите в локальную библиотеку, чтобы выбрать папку.';
 
   @override
+  String get gofileDownloadFailedPrompt =>
+      'Автоматическое скачивание не удалось из-за строгих ограничений сети или сервера.\\n\\nХотите открыть страницу загрузки Gofile в системном браузере или скопировать ссылку для скачивания вручную?';
+
+  @override
   String get goodAfternoon => 'Добрый день';
 
   @override
@@ -947,6 +1205,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get grantPermission => 'Предоставить разрешение';
+
+  @override
+  String get guestTier => 'Гость';
 
   @override
   String get hallOfFameHeader => 'ДОСТИЖЕНИЯ ЗАЛА СЛАВЫ';
@@ -1020,6 +1281,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importFromGallery => 'Импортировать из галереи';
 
   @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
   String get importFromSpotify => 'Импорт из Spotify';
 
   @override
@@ -1040,6 +1307,82 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get importLyricsTooltip => 'Импортировать текст';
+
+  @override
+  String get localFile => 'Локальный файл';
+
+  @override
+  String get importLocalFileSubtitle => 'Импорт .lrc, .ttml или .txt';
+
+  @override
+  String get searchFromAppleMusic => 'Поиск в Apple Music';
+
+  @override
+  String get searchAppleMusicSubtitle => 'Автоматическое скачивание LRC/TTML';
+
+  @override
+  String get searchFromSpotifyLyrics => 'Поиск в Spotify';
+
+  @override
+  String get searchSpotifyLyricsSubtitle =>
+      'Скачивание синхронизированных текстов из Spotify';
+
+  @override
+  String get searchFromMusixmatch => 'Поиск в Musixmatch';
+
+  @override
+  String get searchMusixmatchSubtitle =>
+      'Скачивание синхронизированных текстов из Musixmatch';
+
+  @override
+  String get searchingAppleMusic => 'Поиск в Apple Music...';
+
+  @override
+  String get findingMatches => 'Поиск совпадений...';
+
+  @override
+  String get noResultsAppleMusic => 'Результатов в Apple Music не найдено.';
+
+  @override
+  String get selectSong => 'Выберите песню';
+
+  @override
+  String get downloadingLyrics => 'Скачивание текстов...';
+
+  @override
+  String get fetchingLyricsFromServer => 'Получение TTML/LRC с сервера...';
+
+  @override
+  String get failedDownloadAppleMusic =>
+      'Не удалось скачать текст. Возможно, его нет в Apple Music.';
+
+  @override
+  String get lyricsImportedSuccess =>
+      'Текст успешно импортирован! Нажмите «Сохранить», чтобы сохранить его.';
+
+  @override
+  String get receivedEmptyLyrics => 'С сервера получен пустой текст.';
+
+  @override
+  String get downloadingFromSpotify => 'Скачивание из Spotify...';
+
+  @override
+  String get fetchingLyrics => 'Получение текстов...';
+
+  @override
+  String get lyricsImportedSpotify => 'Текст импортирован из Spotify!';
+
+  @override
+  String get noLyricsSpotify => 'Тексты в Spotify не найдены.';
+
+  @override
+  String get downloadingFromMusixmatch => 'Скачивание из Musixmatch...';
+
+  @override
+  String get lyricsImportedMusixmatch => 'Текст импортирован из Musixmatch!';
+
+  @override
+  String get noLyricsMusixmatch => 'Тексты в Musixmatch не найдены.';
 
   @override
   String get importSpotifyPlaylist => 'Импортировать плейлист Spotify';
@@ -1075,6 +1418,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get inputLabel => 'Вход';
 
   @override
+  String get insertAfter => 'Вставить после';
+
+  @override
   String get installNow => 'Установить сейчас';
 
   @override
@@ -1085,6 +1431,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get invalidCode => 'Неверный код доступа';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
 
   @override
   String get invalidSpotifyUrl => 'Неверный URL-адрес плейлиста Spotify';
@@ -1150,6 +1499,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Синхронизируйте и восстанавливайте свой прогресс с помощью Google';
 
   @override
+  String get linkAccountToUpgrade =>
+      'Для повышения уровня необходимо сначала привязать аккаунт. Пожалуйста, используйте тот же email, что и в Sociabuzz!';
+
+  @override
+  String get linkCopied => 'Ссылка скопирована в буфер обмена!';
+
+  @override
   String listenMinutesTooltip(String minutes) {
     return 'Слушайте музыку $minutes минут';
   }
@@ -1194,10 +1550,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get losslessQuality => 'Без потерь (Авто)';
 
   @override
+  String get lrcFormat => 'LRC (Стандартная синхронизация)';
+
+  @override
+  String get lrcFormatDesc => 'Универсальный формат, работает везде.';
+
+  @override
   String get lunarNewYear => 'Лунный Новый год';
 
   @override
+  String get lyricTextHint => 'Текст песни...';
+
+  @override
+  String get lyricsApplied => 'Текст песни применен к панели!';
+
+  @override
   String get lyricsByLRCLIB => 'Текст от LRCLIB';
+
+  @override
+  String get lyricsEditorTitle => 'Редактор текста песен';
 
   @override
   String get lyricsSaveError => 'Ошибка при сохранении текста';
@@ -1210,6 +1581,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get madeForYou => 'Создано для вас';
+
+  @override
+  String get manageIndividualFeatures =>
+      'Управление отдельными онлайн-функциями';
 
   @override
   String get manualSearch => 'Поиск вручную';
@@ -1447,6 +1822,42 @@ class AppLocalizationsRu extends AppLocalizations {
   String get offline => 'Оффлайн';
 
   @override
+  String get offlineModeActive => 'АКТИВНО';
+
+  @override
+  String get offlineModeAllEnabledStatus => 'Все включено';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'Это полностью отключит всю сетевую связь. Следующие функции будут отключены:';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'Отключено ($count)';
+  }
+
+  @override
+  String get offlineModeEnabledStatus => 'Офлайн-режим включен';
+
+  @override
+  String get offlineModeHeader => 'ОФЛАЙН-РЕЖИМ';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'Сеть заблокирована. Статистика сохраняется локально.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'Отключить все сетевые службы и воспроизводить только локальную библиотеку.';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'Ваша статистика автоматически синхронизируется, когда вы это выключите.';
+
+  @override
+  String get offlineModeTitle => 'Офлайн-режим';
+
+  @override
   String get offlineStatus => 'Не в сети';
 
   @override
@@ -1456,8 +1867,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get online => 'В сети';
 
   @override
+  String get onlineModeRestored =>
+      'Онлайн-режим восстановлен. Синхронизация статистики...';
+
+  @override
+  String get onlyAppleMusic => 'Только Apple Music';
+
+  @override
   String get onlyScanSelected =>
       'Сканировать только выбранные папки (включено по умолчанию)';
+
+  @override
+  String get onlySpotify => 'Только Spotify';
 
   @override
   String get opacity => 'Прозрачность';
@@ -1466,6 +1887,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String opacityLabel(int percent) {
     return 'Прозрачность: $percent%';
   }
+
+  @override
+  String get openBrowser => 'Открыть браузер';
 
   @override
   String get openProfile => 'Открыть профиль';
@@ -1484,7 +1908,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Локальный файл .lrc для этой песни уже существует.\\nХотите перезаписать его?';
 
   @override
+  String get owned => 'Приобретено';
+
+  @override
   String get parsingPlaylistData => 'Анализ данных плейлиста...';
+
+  @override
+  String get pasteLyricsHint => 'Вставьте текст песни здесь...';
 
   @override
   String get pathLabel => 'Путь';
@@ -1497,12 +1927,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Разрешение «Доступ ко всем файлам» необходимо для редактирования тегов. Это позволяет изменять ваши музыкальные файлы напрямую.';
 
   @override
+  String get plainMode => 'Обычный текст';
+
+  @override
   String get play => 'Играть';
 
   @override
   String playCountLabel(int count) {
     return '$count воспроизведений';
   }
+
+  @override
+  String get playFromLine => 'Воспроизвести с этой строки';
 
   @override
   String get playNext => 'Играть следующим';
@@ -1559,8 +1995,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get portuguese => 'Португальский (Бразилия)';
 
   @override
+  String get preferAppleMusic => 'Предпочитать Apple Music';
+
+  @override
+  String get preferSpotify => 'Предпочитать Spotify';
+
+  @override
   String get preferredOutputFormat =>
       'Предпочтительный формат вывода для загрузок';
+
+  @override
+  String get premiumMemberDesc =>
+      'У вас есть неограниченные загрузки ALAC и доступ к приоритетной очереди!';
+
+  @override
+  String get premiumMemberTitle => 'Премиум участник';
 
   @override
   String get preparingDownload => 'Подготовка загрузки';
@@ -1581,6 +2030,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get previousTrack => 'Предыдущий трек';
+
+  @override
+  String get priorityVipServerQueue => 'Приоритетная VIP-очередь на сервере';
+
+  @override
+  String get processingOnServer => 'Обработка на сервере...';
 
   @override
   String get profileSettings => 'Настройки профиля';
@@ -1604,6 +2059,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get queueIsEmpty => 'Очередь пуста';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'Очередь $position... пожалуйста, подождите';
+  }
 
   @override
   String get queueTooltip => 'Очередь';
@@ -1684,10 +2144,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get refreshLyricsTooltip => 'Обновить текст';
 
   @override
+  String get registeredLinkedTier => 'Зарегистрирован (Привязан)';
+
+  @override
   String get removeAvatar => 'Удалить текущий аватар';
 
   @override
   String get removeFromPlaylist => 'Удалить из плейлиста';
+
+  @override
+  String get removeLine => 'Удалить строку';
 
   @override
   String removedFolder(Object folder) {
@@ -1702,6 +2168,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeats => 'повторов';
+
+  @override
+  String get reportTrouble => 'Сообщить о проблеме';
 
   @override
   String get requiresAndroid14 => 'Требуется Android 14+ и USB ЦАП';
@@ -1777,6 +2246,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get revert => 'Вернуть';
 
   @override
+  String get romajiHint => 'Ромаджи / Транслитерация (Опционально)...';
+
+  @override
   String get russian => 'Русский';
 
   @override
@@ -1801,8 +2273,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get saveLabel => 'Сохранить';
 
   @override
+  String get saveLocallyBtn => 'Сохранить локально';
+
+  @override
   String get saveLrcPrompt =>
       'Хотите сохранить текущий текст как файл .lrc рядом с аудиофайлом?';
+
+  @override
+  String get saveLyricsTitle => 'Сохранить текст песни';
 
   @override
   String get saveLyricsTooltip => 'Сохранить текст';
@@ -1827,6 +2305,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String savedAsFormat(String format) {
     return 'Сохранено как $format';
+  }
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'Успешно сохранено в файл $extension!';
   }
 
   @override
@@ -1912,6 +2395,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get seeAll => 'Посмотреть все';
 
   @override
+  String get seeBenefitsBtn => 'Посмотреть преимущества';
+
+  @override
+  String get seePremiumBenefits => 'Посмотреть преимущества Premium';
+
+  @override
   String get selectDifferentFolder => 'Выбрать другую папку';
 
   @override
@@ -1942,6 +2431,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get setCustomTimer => 'Установить свой таймер';
+
+  @override
+  String get setEndTooltip => 'Установить конец на текущую позицию';
+
+  @override
+  String get setStartTooltip => 'Установить начало на текущую позицию';
 
   @override
   String get settings => 'Настройки';
@@ -2024,6 +2519,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get songLabelUpper => 'ПЕСНЯ';
 
   @override
+  String get songQueueTitle => 'Очередь песен';
+
+  @override
   String get songTitleKeyword => 'Название или ключевое слово';
 
   @override
@@ -2074,6 +2572,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get standardDesc => 'MP3 - меньший файл, более быстрая загрузка';
 
   @override
+  String get standardDownloadQueue => 'Стандартная очередь загрузок';
+
+  @override
   String get standardQuality => 'Стандартное (MP3)';
 
   @override
@@ -2081,6 +2582,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get startBulkProcess => 'Начать пакетную обработку';
+
+  @override
+  String get startLabel => 'Начало: ';
 
   @override
   String get startedDownloadingAll => 'Начата загрузка всех песен...';
@@ -2142,6 +2646,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get syncThemeAlbumArt => 'Синхронизировать тему с обложкой альбома';
+
+  @override
+  String get syncedMode => 'Синхронизировано';
 
   @override
   String get system => 'Система';
@@ -2255,6 +2762,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get translationLanguage => 'Язык перевода';
 
   @override
+  String get ttmlFormat => 'TTML (Высокая точность)';
+
+  @override
+  String get ttmlFormatDesc =>
+      'Лучше для генерации ИИ и детальной синхронизации.';
+
+  @override
   String get turnOffTimer => 'Выключить таймер';
 
   @override
@@ -2282,6 +2796,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get unknownDevice => 'Неизвестное устройство';
 
   @override
+  String get unlimitedAlacDownloads => 'Неограниченные загрузки ALAC';
+
+  @override
   String get unlink => 'Отвязать';
 
   @override
@@ -2299,6 +2816,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get unlinkFolderClear => 'Отвязать папку и очистить список песен';
+
+  @override
+  String get unlockUnlimitedPremium => 'Разблокировать безлимитный Premium';
 
   @override
   String unlockedCountLabel(int unlocked, int total) {
@@ -2360,6 +2880,15 @@ class AppLocalizationsRu extends AppLocalizations {
       'Использовать смешанные цвета (приоритет синхронизации)';
 
   @override
+  String get useSameEmailCheckStatus =>
+      'Используйте тот же адрес электронной почты, что и в приложении, для автоматической проверки статуса.';
+
+  @override
+  String usedToday(int used, int max) {
+    return 'Использовано сегодня: $used / $max';
+  }
+
+  @override
   String get verifiedDeveloper => 'Верифицированный разработчик';
 
   @override
@@ -2381,6 +2910,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get visualizerStyle => 'Стиль визуализатора';
+
+  @override
+  String get waitingForServerResponse => 'Ожидание ответа сервера...';
 
   @override
   String get wasapiExclusive => 'Эксклюзивный режим WASAPI';
@@ -2417,321 +2949,4 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'Доступна новая версия yt-dlp.';
-
-  @override
-  String get importFromM3u => 'Import from M3U';
-
-  @override
-  String get importFromM3uSubtitle => 'Import an M3U playlist file';
-
-  @override
-  String get exportToM3u => 'Export to M3U';
-
-  @override
-  String get invalidM3uFile => 'Invalid M3U File';
-
-  @override
-  String get generateAiLyrics => 'Generate AI Lyrics';
-
-  @override
-  String get aiLyricsGenerating => 'Generating AI Lyrics...';
-
-  @override
-  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
-
-  @override
-  String get aiLyricsError => 'Error generating AI lyrics.';
-
-  @override
-  String get offlineModeHeader => 'ОФЛАЙН-РЕЖИМ';
-
-  @override
-  String get offlineModeTitle => 'Офлайн-режим';
-
-  @override
-  String get offlineModeActive => 'АКТИВНО';
-
-  @override
-  String get offlineModeEnabledStatus => 'Офлайн-режим включен';
-
-  @override
-  String offlineModeDisabledStatus(int count) {
-    return 'Отключено ($count)';
-  }
-
-  @override
-  String get offlineModeAllEnabledStatus => 'Все включено';
-
-  @override
-  String get offlineModeLockdownDesc =>
-      'Сеть заблокирована. Статистика сохраняется локально.';
-
-  @override
-  String get offlineModeMainDesc =>
-      'Отключить все сетевые службы и воспроизводить только локальную библиотеку.';
-
-  @override
-  String get enableOfflineModeQuestion => 'Включить офлайн-режим?';
-
-  @override
-  String get offlineModeConfirmationDesc =>
-      'Это полностью отключит всю сетевую связь. Следующие функции будут отключены:';
-
-  @override
-  String get offlineModeSyncRestoreNote =>
-      'Ваша статистика автоматически синхронизируется, когда вы это выключите.';
-
-  @override
-  String get enableOfflineModeBtn => 'Включить офлайн-режим';
-
-  @override
-  String get onlineModeRestored =>
-      'Онлайн-режим восстановлен. Синхронизация статистики...';
-
-  @override
-  String get disableServicesTitle => 'Отключить службы';
-
-  @override
-  String get manageIndividualFeatures =>
-      'Управление отдельными онлайн-функциями';
-
-  @override
-  String get featureCloudSync => 'Синхронизация статистики в облаке';
-
-  @override
-  String get featureCloudSyncDesc =>
-      'Статистика прослушивания сохраняется только локально';
-
-  @override
-  String get featureCloudSyncLongDesc =>
-      'Синхронизация метрик прослушивания с PocketBase';
-
-  @override
-  String get featureLeaderboard => 'Глобальная таблица лидеров';
-
-  @override
-  String get featureLeaderboardDesc => 'Обновление рейтинга приостановлено';
-
-  @override
-  String get featureLeaderboardLongDesc =>
-      'Публичное отображение и обновление вашего рейтинга';
-
-  @override
-  String get featureOnlineLyrics => 'Поиск текстов песен онлайн';
-
-  @override
-  String get featureOnlineLyricsDesc => 'Только локальные файлы .lrc/.ttml';
-
-  @override
-  String get featureOnlineLyricsLongDesc =>
-      'Загрузка текстов песен из LRCLIB/Spotify';
-
-  @override
-  String get featureAiLyrics => 'ИИ-генератор текстов песен';
-
-  @override
-  String get featureAiLyricsDesc =>
-      'Автоматическая синхронизация текстов отключена';
-
-  @override
-  String get featureAiLyricsLongDesc =>
-      'Генерация синхронизированных текстов через ИИ';
-
-  @override
-  String get featureSpotifyCanvas => 'Spotify Canvas';
-
-  @override
-  String get featureSpotifyCanvasDesc => 'Фоновое видео отключено';
-
-  @override
-  String get featureSpotifyCanvasLongDesc => 'Фоновые видео для треков';
-
-  @override
-  String get featureOnlineSearch => 'Онлайн-поиск';
-
-  @override
-  String get featureOnlineSearchDesc => 'Поиск в Spotify/YouTube отключен';
-
-  @override
-  String get featureOnlineSearchLongDesc =>
-      'Удаленный поиск в Spotify и YouTube';
-
-  @override
-  String get featureConnectDevice => 'Подключиться к устройству';
-
-  @override
-  String get featureConnectDeviceDesc =>
-      'Дистанционное управление и прослушивание в группах отключены';
-
-  @override
-  String get featureConnectDeviceLongDesc =>
-      'Дистанционное управление и прослушивание в группах';
-
-  @override
-  String get lyricsEditorTitle => 'Редактор текста песен';
-
-  @override
-  String get clearAllQuestion => 'Очистить все?';
-
-  @override
-  String get clearAllDesc =>
-      'Это очистит текущее состояние редактора. Ваши локальные файлы НЕ будут удалены, если вы не сохраните их позже.';
-
-  @override
-  String get clearBtn => 'Очистить';
-
-  @override
-  String get lyricsApplied => 'Текст песни применен к панели!';
-
-  @override
-  String get chooseFormat => 'Выберите предпочтительный формат:';
-
-  @override
-  String get lrcFormat => 'LRC (Стандартная синхронизация)';
-
-  @override
-  String get lrcFormatDesc => 'Универсальный формат, работает везде.';
-
-  @override
-  String get ttmlFormat => 'TTML (Высокая точность)';
-
-  @override
-  String get ttmlFormatDesc =>
-      'Лучше для генерации ИИ и детальной синхронизации.';
-
-  @override
-  String savedSuccessfully(String extension) {
-    return 'Успешно сохранено в файл $extension!';
-  }
-
-  @override
-  String get failedToSave => 'Не удалось сохранить файл текста песни.';
-
-  @override
-  String get generationFailed => 'Генерация не удалась';
-
-  @override
-  String get aiLyricsGenerationTitle => 'Генерация текста песни ИИ';
-
-  @override
-  String get syncedMode => 'Синхронизировано';
-
-  @override
-  String get plainMode => 'Обычный текст';
-
-  @override
-  String get addLineToTop => 'Добавить в начало';
-
-  @override
-  String get addLineToEnd => 'Добавить в конец';
-
-  @override
-  String get lyricTextHint => 'Текст песни...';
-
-  @override
-  String get insertAfter => 'Вставить после';
-
-  @override
-  String get removeLine => 'Удалить строку';
-
-  @override
-  String get romajiHint => 'Ромаджи / Транслитерация (Опционально)...';
-
-  @override
-  String get startLabel => 'Начало: ';
-
-  @override
-  String get setStartTooltip => 'Установить начало на текущую позицию';
-
-  @override
-  String get endLabel => 'Конец: ';
-
-  @override
-  String get setEndTooltip => 'Установить конец на текущую позицию';
-
-  @override
-  String get playFromLine => 'Воспроизвести с этой строки';
-
-  @override
-  String get pasteLyricsHint => 'Вставьте текст песни здесь...';
-
-  @override
-  String get applyBtn => 'Применить';
-
-  @override
-  String get saveLocallyBtn => 'Сохранить локально';
-
-  @override
-  String get editLyricsTooltip => 'Редактировать текст песни';
-
-  @override
-  String get saveLyricsTitle => 'Сохранить текст песни';
-
-  @override
-  String get aiGenerate => 'Генерация ИИ';
-
-  @override
-  String get aiLyricsInitializing => 'Инициализация...';
-
-  @override
-  String get aiLyricsUploading => 'Загрузка песни на сервер...';
-
-  @override
-  String get aiLyricsUploadFailed => 'Ошибка: Загрузка не удалась.';
-
-  @override
-  String get aiLyricsUploadSuccess => 'Загрузка завершена!';
-
-  @override
-  String get aiLyricsVerifying => 'Проверка статуса сервера...';
-
-  @override
-  String get aiLyricsStatusOk => 'Статус-код 200 OK!';
-
-  @override
-  String get aiLyricsPolling =>
-      'Получение текста песни... Пожалуйста, подождите!';
-
-  @override
-  String get aiLyricsReceiving => 'Текст песни получен';
-
-  @override
-  String get aiLyricsParsing => 'Анализ текста песни...';
-
-  @override
-  String get aiLyricsSuccess => 'Текст песни успешно сгенерирован!';
-
-  @override
-  String get aiLyricsLocalFileMissing =>
-      'Ошибка: Локальный аудиофайл не найден.';
-
-  @override
-  String get aiLyricsComplete => 'Завершено!';
-
-  @override
-  String get externalLinkDetected => 'Обнаружена внешняя ссылка';
-
-  @override
-  String get gofileDownloadFailedPrompt =>
-      'Автоматическое скачивание не удалось из-за строгих ограничений сети или сервера.\\n\\nХотите открыть страницу загрузки Gofile в системном браузере или скопировать ссылку для скачивания вручную?';
-
-  @override
-  String get copyLink => 'Копировать ссылку';
-
-  @override
-  String get openBrowser => 'Открыть браузер';
-
-  @override
-  String get linkCopied => 'Ссылка скопирована в буфер обмена!';
-
-  @override
-  String get waitingForServerResponse => 'Ожидание ответа сервера...';
-
-  @override
-  String queuePositionPleaseWait(int position) {
-    return 'Очередь $position... пожалуйста, подождите';
-  }
-
-  @override
-  String get processingOnServer => 'Обработка на сервере...';
 }

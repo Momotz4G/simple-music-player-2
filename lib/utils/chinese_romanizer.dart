@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 /// Chinese text to Pinyin conversion via Vercel-hosted API.
 /// Handles Simplified and Traditional Chinese → Pinyin with tone marks.
@@ -61,7 +62,7 @@ class ChineseRomanizer {
         }
       }
     } catch (e) {
-      print('Chinese pinyin error: $e');
+      debugPrint('Chinese pinyin error: $e');
     }
     return null;
   }

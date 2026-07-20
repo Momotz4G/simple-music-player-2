@@ -1,7 +1,0 @@
---- WASAPI PLAYBACK DEVICES ---
-[0] Speakers (FiiO KA17)
-    ID (wchar_t): {0.0.0.00000000}.{419b1070-5f1b-46a1-a187-b5e247d53b73}
-[1] Speakers (Realtek(R) Audio)
-    ID (wchar_t): {0.0.0.00000000}.{63351c1b-fcce-45de-984c-c3d6d2ad4503}
-[2] Speakers (AMM Virtual Audio Device)
-    ID (wchar_t): {0.0.0.00000000}.{8fabaf09-1cc8-4362-936c-a1974ed29e45}

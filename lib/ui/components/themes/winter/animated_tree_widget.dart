@@ -66,12 +66,12 @@ class _TreePainter extends CustomPainter {
 
     // Normal padding now that it clears the player bar
     final double bottomY = size.height - 5;
-    final double topY = 20;
+    const double topY = 20;
     final double treeHeight = bottomY - topY;
 
     // We build the tree out of overlapping dots (leaves/branches) arranged in a spiral
-    final int totalDots = 400;
-    final double rotations = 15.0; // How many times the spiral wraps around
+    const int totalDots = 400;
+    const double rotations = 15.0; // How many times the spiral wraps around
 
     List<_Point3D> points = [];
 
@@ -195,8 +195,8 @@ class _TreePainter extends CustomPainter {
     void drawStar(Canvas c, Offset center, double outerRadius,
         double innerRadius, Paint p) {
       final path = Path();
-      final int points = 5;
-      final double step = pi / points;
+      const int points = 5;
+      const double step = pi / points;
       // Start pointing straight up  (angle -pi/2)
       double angle = -pi / 2;
 

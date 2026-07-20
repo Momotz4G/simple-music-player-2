@@ -1,4 +1,4 @@
-import 'dart:io';
+
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -147,10 +147,10 @@ class _LyricsEditorState extends ConsumerState<LyricsEditor> {
   }
 
   Future<void> _generateAi() async {
-    print("💎 Lyrics Editor: AI Generate Button Pressed");
+    debugPrint("💎 Lyrics Editor: AI Generate Button Pressed");
     final currentSong = ref.read(playerProvider).currentSong;
     if (currentSong == null) {
-      print("⚠️ Lyrics Editor: No song currently playing");
+      debugPrint("⚠️ Lyrics Editor: No song currently playing");
       return;
     }
 

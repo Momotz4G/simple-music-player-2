@@ -812,7 +812,7 @@ class SyncEngine {
         'title': entry.title,
         'artist': entry.artist,
         'album': entry.album,
-        // 🚀 BUGFIX: Convert to UTC before stringifying. PocketBase DateTime fields
+        // BUGFIX: Convert to UTC before stringifying. PocketBase DateTime fields
         // assume strings without timezone are UTC. If we send local time, it gets
         // shifted into the future by the timezone offset when pulled back down!
         'last_played': entry.lastPlayed.toUtc().toIso8601String(),
@@ -967,7 +967,7 @@ class SyncEngine {
         DateTime parsedDate = DateTime.now();
         if (record['last_played'] != null) {
           parsedDate = DateTime.tryParse(record['last_played'] as String) ?? DateTime.now();
-          // 🚀 BUGFIX: Recover from legacy UTC-shifted bug.
+          // BUGFIX: Recover from legacy UTC-shifted bug.
           // Older versions uploaded local time strings without timezone. PocketBase
           // interpreted them as UTC, resulting in timestamps shifted into the FUTURE
           // by the user's local timezone offset when pulled down.

@@ -31,6 +31,7 @@ class YoutubeDownloaderService {
   // We need paths for all 3 binaries
   late String _ytDlpPath;
   late String _ffmpegPath;
+  // ignore: unused_field
   late String _ffprobePath;
   late String _binDirPath;
 
@@ -39,14 +40,14 @@ class YoutubeDownloaderService {
   // 🔒 Lock to prevent downloads during yt-dlp update
   bool _isUpdatingYtDlp = false;
 
-  // 🚀 Binaries update notifiers (Desktop only)
+  // Binaries update notifiers (Desktop only)
   // UI listens to these to show mandatory update dialog
   final ValueNotifier<BinariesUpdateInfo?> binariesUpdateNotifier =
       ValueNotifier(null);
   final ValueNotifier<DownloadProgress?> binariesProgressNotifier =
       ValueNotifier(null);
 
-  // 🚀 Native yt-dlp for Android (via MethodChannel)
+  // Native yt-dlp for Android (via MethodChannel)
   static const _nativeChannel =
       MethodChannel('com.momotz4g.simplemusicplayer2/ytdlp');
   static bool _nativeInitialized = false;
@@ -58,7 +59,7 @@ class YoutubeDownloaderService {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
     return d.inHours > 0
-        ? "${d.inHours}:${twoDigits(d.inMinutes.remainder(60))}:${twoDigitSeconds}"
+        ? "${d.inHours}:${twoDigits(d.inMinutes.remainder(60))}:$twoDigitSeconds"
         : "${d.inMinutes}:${twoDigits(d.inSeconds.remainder(60))}";
   }
 
@@ -66,11 +67,11 @@ class YoutubeDownloaderService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    // 🚀 Mobile: Initialize native yt-dlp
+    // Mobile: Initialize native yt-dlp
     if (Platform.isAndroid || Platform.isIOS) {
       await _initializeNative();
       _isInitialized = true;
-      print(
+      debugPrint(
           "✅ Downloader Initialized for ${Platform.operatingSystem} (Native yt-dlp)");
       return;
     }
@@ -94,10 +95,10 @@ class YoutubeDownloaderService {
       final fileName = _getExecutableName(binary);
       final file = File('${binDir.path}/$fileName');
 
-      // 🚀 OPTIMIZATION: Only copy binaries if they don't exist.
+      // OPTIMIZATION: Only copy binaries if they don't exist.
       // Overwriting binaries on every startup triggers Windows Defender "suspicious dropper" heuristics.
       if (await file.exists()) {
-        if (kDebugMode) print('📦 Binary already exists: ${file.path}');
+        if (kDebugMode) debugPrint('📦 Binary already exists: ${file.path}');
         continue;
       }
 
@@ -114,9 +115,9 @@ class YoutubeDownloaderService {
           await Process.run('chmod', ['+x', file.path]);
         }
 
-        if (kDebugMode) print('📦 Extracted binary: $assetName -> ${file.path}');
+        if (kDebugMode) debugPrint('📦 Extracted binary: $assetName -> ${file.path}');
       } catch (e) {
-        print("Error copying binary $binary: $e");
+        debugPrint("Error copying binary $binary: $e");
       }
     }
 
@@ -126,15 +127,15 @@ class YoutubeDownloaderService {
     _ffprobePath = '${binDir.path}/${_getExecutableName('ffprobe')}';
     _binDirPath = binDir.path;
 
-    // 🚀 Check for yt-dlp updates (UI will show mandatory dialog if update available)
+    // Check for yt-dlp updates (UI will show mandatory dialog if update available)
     // This only checks, doesn't download - UI triggers download when user sees dialog
     checkForBinariesUpdate();
 
     _isInitialized = true;
-    print("✅ Downloader Initialized for ${Platform.operatingSystem}");
+    debugPrint("✅ Downloader Initialized for ${Platform.operatingSystem}");
   }
 
-  // 🚀 Initialize native yt-dlp on Android/iOS
+  // Initialize native yt-dlp on Android/iOS
   Future<void> _initializeNative() async {
     if (_nativeInitialized) return;
     final debug = DebugLogService();
@@ -182,7 +183,7 @@ class YoutubeDownloaderService {
       // Throttle checks to once per day
       final lastCheck = prefs.getInt(_lastCheckPrefKey) ?? 0;
       final now = DateTime.now().millisecondsSinceEpoch;
-      final oneDayMs = 24 * 60 * 60 * 1000;
+      const oneDayMs = 24 * 60 * 60 * 1000;
 
       if (now - lastCheck < oneDayMs) {
         debug.info('🔄 yt-dlp: Skipping update check (checked within 24h)');
@@ -263,7 +264,7 @@ class YoutubeDownloaderService {
         return;
       }
 
-      // 🚀 Notify UI that update is available (mandatory dialog will show)
+      // Notify UI that update is available (mandatory dialog will show)
       binariesUpdateNotifier.value = BinariesUpdateInfo(
         latestVersion: latestVersion,
         currentVersion: storedVersion,
@@ -357,7 +358,7 @@ class YoutubeDownloaderService {
       binariesUpdateNotifier.value = null;
 
       debug.success('🔄 yt-dlp: Updated to ${updateInfo.latestVersion}!');
-      print('✅ yt-dlp updated to ${updateInfo.latestVersion}');
+      debugPrint('✅ yt-dlp updated to ${updateInfo.latestVersion}');
     } catch (e) {
       _isUpdatingYtDlp = false; // 🔓 Release lock on error
       binariesProgressNotifier.value = null;
@@ -385,7 +386,7 @@ class YoutubeDownloaderService {
           ext ?? ((Platform.isAndroid || Platform.isIOS) ? 'm4a' : 'mp3');
       return '${cacheDir.path}/$safeName.$audioExt';
     } catch (e) {
-      if (kDebugMode) print("Error getting cache path: $e");
+      if (kDebugMode) debugPrint("Error getting cache path: $e");
       return null;
     }
   }
@@ -407,9 +408,9 @@ class YoutubeDownloaderService {
     String? basePath;
 
     if (Platform.isAndroid) {
-      // 🚀 FIX: Use public Download directory on Android
+      // FIX: Use public Download directory on Android
       // /storage/emulated/0/Download/SimpleMusicDownloads
-      print("📱 Android: Getting download path...");
+      debugPrint("📱 Android: Getting download path...");
 
       try {
         // This usually returns /storage/emulated/0/Android/data/.../files
@@ -424,7 +425,7 @@ class YoutubeDownloaderService {
           final updatePath = Directory("/storage/emulated/0/Download");
           if (await updatePath.exists()) {
             basePath = updatePath.path;
-            print("📱 Android: Using public Download directory: $basePath");
+            debugPrint("📱 Android: Using public Download directory: $basePath");
           } else {
             // Fallback logic if hardcoded path fails (unlikely on standard Android)
             // Try to find "Android" segment and slice
@@ -432,18 +433,18 @@ class YoutubeDownloaderService {
             final androidIndex = path.indexOf("/Android/");
             if (androidIndex != -1) {
               basePath = "${path.substring(0, androidIndex)}/Download";
-              print("📱 Android: Derived public Download directory: $basePath");
+              debugPrint("📱 Android: Derived public Download directory: $basePath");
             } else {
               basePath = externalDir.path; // Fallback to app-specific
-              print(
+              debugPrint(
                   "📱 Android: Could not derive public path, using app storage: $basePath");
             }
           }
         } else {
-          print("📱 Android: getExternalStorageDirectory returned null");
+          debugPrint("📱 Android: getExternalStorageDirectory returned null");
         }
       } catch (e) {
-        print("⛔ Android: Error getting external storage: $e");
+        debugPrint("⛔ Android: Error getting external storage: $e");
       }
 
       // Fallback to app documents directory if all else fails
@@ -452,7 +453,7 @@ class YoutubeDownloaderService {
           final appDocDir = await getApplicationDocumentsDirectory();
           basePath = appDocDir.path;
         } catch (e) {
-          print("⛔ Android: Error getting app documents: $e");
+          debugPrint("⛔ Android: Error getting app documents: $e");
         }
       }
     } else if (Platform.isIOS) {
@@ -468,47 +469,51 @@ class YoutubeDownloaderService {
     }
 
     if (basePath == null) {
-      print("⛔ Could not resolve downloads directory.");
+      debugPrint("⛔ Could not resolve downloads directory.");
       return null;
     }
 
     final outputDir = Directory('$basePath/SimpleMusicDownloads');
     try {
       if (!await outputDir.exists()) {
-        print("📂 Creating directory: ${outputDir.path}");
+        debugPrint("📂 Creating directory: ${outputDir.path}");
         await outputDir.create(recursive: true);
       }
       return '${outputDir.path}/$safeName.$ext';
     } catch (e) {
-      print("⛔ Error creating directory: $e");
+      debugPrint("⛔ Error creating directory: $e");
       // Fallback: Just use the base folder if subfolder creation fails
       return '$basePath/$safeName.$ext';
     }
   }
 
   // --- Search Function ---
-  Future<List<YoutubeSearchResult>> searchVideo(String query) async {
+  Future<List<YoutubeSearchResult>> searchVideo(String query, {int limit = 20}) async {
     if (!_isInitialized) return [];
 
-    // 🚀 Mobile Fallback: Use YoutubeExplode
+    // Mobile Fallback: Use YoutubeExplode
     if (Platform.isAndroid || Platform.isIOS) {
-      return await _searchMobile(query);
+      return await _searchMobile(query, limit: limit);
     }
 
-    // Desktop: Use yt-dlp
+    // Desktop: Use yt-dlp with JSON output (always proper unicode, no codepage issues)
     final args = [
-      '--print',
-      '%(title)s:::%(id)s:::%(uploader)s:::%(duration)s:::%(thumbnail)s',
+      '-j',
       '--flat-playlist',
-      'ytsearch10:$query',
+      'ytsearch$limit:$query',
     ];
 
     try {
-      // 🚀 Fix: runInShell: false to handle spaces in path (e.g. "Simple Music Player")
-      final result = await Process.run(_ytDlpPath, args, runInShell: false);
+      final result = await Process.run(
+        _ytDlpPath, 
+        args, 
+        runInShell: false, 
+        stdoutEncoding: utf8,
+        stderrEncoding: utf8,
+      );
 
       if (result.exitCode != 0) {
-        if (kDebugMode) print("Search Error: ${result.stderr}");
+        if (kDebugMode) debugPrint("Search Error: ${result.stderr}");
         return [];
       }
 
@@ -516,40 +521,73 @@ class YoutubeDownloaderService {
       final lines = LineSplitter.split(result.stdout.toString());
 
       for (var line in lines) {
-        final parts = line.split(':::');
-        if (parts.length >= 5) {
+        if (line.trim().isEmpty) continue;
+        try {
+          final json = jsonDecode(line) as Map<String, dynamic>;
+          final String videoId = json['id']?.toString() ?? '';
+          final String title = json['title']?.toString() ?? '';
+          final String uploader = json['uploader']?.toString() ?? json['channel']?.toString() ?? '';
+          
           String durationStr = "0:00";
           try {
-            double seconds = double.parse(parts[3]);
-            durationStr = _formatDuration(seconds.toInt());
-          } catch (e) {
-            durationStr = parts[3];
+            final dur = json['duration'];
+            if (dur != null) {
+              durationStr = _formatDuration((dur as num).toInt());
+            }
+          } catch (_) {
+            durationStr = json['duration_string']?.toString() ?? "0:00";
+          }
+
+          // Get best thumbnail URL
+          String thumb = '';
+          final thumbnails = json['thumbnails'] as List<dynamic>?;
+          if (thumbnails != null && thumbnails.isNotEmpty) {
+            // Pick the last (highest quality) thumbnail
+            thumb = thumbnails.last['url']?.toString() ?? '';
+          }
+          if (thumb.isEmpty) {
+            thumb = "https://i.ytimg.com/vi/$videoId/hqdefault.jpg";
           }
 
           searchResults.add(YoutubeSearchResult(
-            title: parts[0],
-            url: "https://www.youtube.com/watch?v=${parts[1]}",
-            artist: parts[2],
+            title: title,
+            url: "https://www.youtube.com/watch?v=$videoId",
+            artist: uploader,
             duration: durationStr,
-            thumbnailUrl: parts[4],
+            thumbnailUrl: thumb,
           ));
+        } catch (e) {
+          if (kDebugMode) debugPrint("JSON parse error for line: $e");
         }
       }
       return searchResults;
     } catch (e) {
-      if (kDebugMode) print("Search Exception: $e");
+      if (kDebugMode) debugPrint("Search Exception: $e");
       return [];
     }
   }
 
-  // 🚀 Mobile Search Implementation (YoutubeExplode)
-  Future<List<YoutubeSearchResult>> _searchMobile(String query) async {
+  // Mobile Search Implementation (YoutubeExplode)
+  Future<List<YoutubeSearchResult>> _searchMobile(String query, {int limit = 20}) async {
     try {
       final yt = yt_explode.YoutubeExplode();
-      final results = await yt.search.search(query);
+      var results = await yt.search.search(query);
+      var allResults = results.toList();
+      
+      // Fetch next pages if limit is higher than the first page (usually ~20)
+      while (allResults.length < limit) {
+        final next = await results.nextPage();
+        if (next == null || next.isEmpty) break;
+        allResults.addAll(next);
+        results = next;
+      }
+      
+      if (allResults.length > limit) {
+        allResults = allResults.sublist(0, limit);
+      }
       yt.close();
 
-      return results.map((video) {
+      return allResults.map((video) {
         return YoutubeSearchResult(
           title: video.title,
           url: "https://www.youtube.com/watch?v=${video.id}",
@@ -559,8 +597,85 @@ class YoutubeDownloaderService {
         );
       }).toList();
     } catch (e) {
-      if (kDebugMode) print("📱 Mobile Search Error: $e");
+      if (kDebugMode) debugPrint("📱 Mobile Search Error: $e");
       return [];
+    }
+  }
+
+  // --- Fast JIT Stream URL (Instant Playback) ---
+  Future<String?> getStreamUrl(String videoUrl) async {
+    // DESKTOP: Use bundled yt-dlp (Extremely reliable, bypasses 403s)
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      if (!_isInitialized) await initialize();
+      try {
+        final result = await Process.run(
+          _ytDlpPath,
+          ['-g', '-f', 'ba[ext=m4a]/ba', '--no-warnings', videoUrl],
+          runInShell: false,
+        );
+        if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+          return result.stdout.toString().trim().split('\n').first;
+        }
+      } catch (e) {
+        if (kDebugMode) debugPrint("yt-dlp -g failed: $e");
+      }
+      return null;
+    }
+
+    // MOBILE: Stream direct URL to MediaKit (libmpv engine on Android)
+    final debug = DebugLogService();
+
+    // 1️⃣ Ensure native yt-dlp is initialized first
+    if (!_nativeInitialized) {
+      debug.info('[YT Stream] Mobile: Initializing native yt-dlp...');
+      await _initializeNative();
+    }
+
+    if (_nativeInitialized) {
+      try {
+        debug.info('[YT Stream] Mobile: Fetching direct stream URL via native yt-dlp...');
+        final String? nativeUrl = await _nativeChannel
+            .invokeMethod<String>('getAudioUrl', {'url': videoUrl})
+            .timeout(const Duration(seconds: 15));
+
+        if (nativeUrl != null && nativeUrl.isNotEmpty) {
+          debug.success('[YT Stream] Mobile: Native yt-dlp got stream URL ✅');
+          return nativeUrl;
+        }
+      } catch (e) {
+        debug.warning('[YT Stream] Mobile: Native yt-dlp URL failed: $e');
+      }
+    }
+
+    // 2️⃣ Fallback to YoutubeExplode
+    try {
+      debug.info('[YT Stream] Mobile: Falling back to YoutubeExplode...');
+      final yt = yt_explode.YoutubeExplode();
+      try {
+        final videoId = yt_explode.VideoId(videoUrl);
+        final manifest = await yt.videos.streamsClient
+            .getManifest(videoId)
+            .timeout(const Duration(seconds: 15));
+        final audioStreams = manifest.audioOnly;
+        
+        if (audioStreams.isNotEmpty) {
+          final mp4aStreams = audioStreams.where((s) => s.audioCodec.contains('mp4a'));
+          final streamInfo = mp4aStreams.isNotEmpty 
+              ? mp4aStreams.withHighestBitrate() 
+              : audioStreams.withHighestBitrate();
+              
+          final url = streamInfo.url.toString();
+          debug.success('[YT Stream] Mobile: YoutubeExplode got stream URL (${streamInfo.bitrate.kiloBitsPerSecond.round()} kbps)');
+          return url;
+        }
+        return null;
+      } finally {
+        yt.close();
+      }
+    } catch (e) {
+      debug.error('[YT Stream] Mobile: All stream resolvers failed: $e');
+      if (kDebugMode) debugPrint("Error getting YT stream URL: $e");
+      return null;
     }
   }
 
@@ -573,7 +688,8 @@ class YoutubeDownloaderService {
     required Function(bool success) onComplete,
     String audioFormat = 'mp3',
     String streamingQuality = 'high', // standard, high, lossless
-    bool isQuiet = false, // 🚀 Prevent stream flooding for background tasks
+    bool isQuiet = false, // Prevent stream flooding for background tasks
+    bool Function()? isCancelled,
   }) async {
     // 1. MOBILE (Android/iOS): Native Dart Download (YoutubeExplode)
     if (Platform.isAndroid || Platform.isIOS) {
@@ -583,19 +699,19 @@ class YoutubeDownloaderService {
     }
 
     // 2. DESKTOP (Win/Mac/Linux): yt-dlp + ffmpeg
-    // 🚀 AUTO-INITIALIZE if not ready (fixes JIT cache during startup)
+    // AUTO-INITIALIZE if not ready (fixes JIT cache during startup)
     if (!_isInitialized) {
-      print("⚠️ YT-DLP: Auto-initializing before download...");
+      debugPrint("⚠️ YT-DLP: Auto-initializing before download...");
       await initialize();
     }
 
     if (!_isInitialized) {
-      print("❌ YT-DLP: Initialization failed, cannot download.");
+      debugPrint("❌ YT-DLP: Initialization failed, cannot download.");
       onComplete(false);
       return;
     }
     await _downloadDesktop(youtubeUrl, outputFilePath, onProgress, onComplete,
-        audioFormat, streamingQuality, isQuiet);
+        audioFormat, streamingQuality, isQuiet, isCancelled);
   }
 
   // --- Mobile Implementation (Native yt-dlp via MethodChannel) ---
@@ -891,6 +1007,7 @@ class YoutubeDownloaderService {
     String audioFormat,
     String streamingQuality,
     bool isQuiet,
+    bool Function()? isCancelled,
   ) async {
     // SINGLE SHOT COMPLETION: Ensure we only call onComplete once
     bool hasCompleted = false;
@@ -903,14 +1020,14 @@ class YoutubeDownloaderService {
 
     // 🔒 Wait if yt-dlp is being updated (max 30 seconds)
     if (_isUpdatingYtDlp) {
-      print('⏳ Waiting for yt-dlp update to complete...');
+      debugPrint('⏳ Waiting for yt-dlp update to complete...');
       int waitCount = 0;
       while (_isUpdatingYtDlp && waitCount < 30) {
         await Future.delayed(const Duration(seconds: 1));
         waitCount++;
       }
       if (_isUpdatingYtDlp) {
-        print('⚠️ yt-dlp update taking too long, proceeding anyway');
+        debugPrint('⚠️ yt-dlp update taking too long, proceeding anyway');
       }
     }
 
@@ -918,7 +1035,7 @@ class YoutubeDownloaderService {
     // YouTube max is ~128kbps AAC or ~160kbps Opus - we use 128K to match source
 
     final args = [
-      if (isQuiet) '--quiet' else '--newline', // 🚀 PREVENT \r SPAMMING THAT CRASHES FLUTTER IPC
+      if (isQuiet) '--quiet' else '--newline', // PREVENT \r SPAMMING THAT CRASHES FLUTTER IPC
       '--no-warnings',
       '-x',
       '--no-playlist',
@@ -937,14 +1054,18 @@ class YoutubeDownloaderService {
     ];
 
     try {
-      // 🚀 Fix: runInShell: false to handle spaces in path (e.g. "Simple Music Player")
+      // Fix: runInShell: false to handle spaces in path (e.g. "Simple Music Player")
       final process = await Process.start(_ytDlpPath, args, runInShell: false);
 
       // Handle Stdout (Progress) safely
       process.stdout.transform(utf8.decoder).listen(
         (data) {
-          // Intentionally omitting print() here to prevent flooding the Flutter message pump.
+          // Intentionally omitting debugPrint() here to prevent flooding the Flutter message pump.
           try {
+            if (isCancelled != null && isCancelled()) {
+              process.kill();
+              return;
+            }
             final progressMatch =
                 RegExp(r'\[download\]\s+(\d+\.?\d*)%').firstMatch(data);
             if (progressMatch != null) {
@@ -956,7 +1077,7 @@ class YoutubeDownloaderService {
           }
         },
         onError: (e) {
-          if (kDebugMode) print("Stdout stream error: $e");
+          if (kDebugMode) debugPrint("Stdout stream error: $e");
         },
         cancelOnError: false,
       );
@@ -964,20 +1085,40 @@ class YoutubeDownloaderService {
       // Handle Stderr (Errors) safely
       process.stderr.transform(utf8.decoder).listen(
         (data) {
-          // Intentionally omitting print() here to prevent flooding the Flutter message pump during background preload errors.
+          // Intentionally omitting debugPrint() here to prevent flooding the Flutter message pump during background preload errors.
         },
         onError: (e) {
-          if (kDebugMode) print("Stderr stream error: $e");
+          if (kDebugMode) debugPrint("Stderr stream error: $e");
         },
         cancelOnError: false,
       );
 
       // Wait for process exit
       int exitCode = -1;
+      
+      // Also poll isCancelled while waiting for process to exit
+      Timer? cancelTimer;
+      if (isCancelled != null) {
+        cancelTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+          if (isCancelled()) {
+            process.kill();
+            timer.cancel();
+          }
+        });
+      }
+
       try {
         exitCode = await process.exitCode;
       } catch (e) {
-        if (kDebugMode) print("Process exitCode error: $e");
+        if (kDebugMode) debugPrint("Process exitCode error: $e");
+        cancelTimer?.cancel();
+        safeComplete(false);
+        return;
+      }
+      
+      cancelTimer?.cancel();
+
+      if (isCancelled != null && isCancelled()) {
         safeComplete(false);
         return;
       }
@@ -999,7 +1140,7 @@ class YoutubeDownloaderService {
         safeComplete(false);
       }
     } catch (e) {
-      if (kDebugMode) print('FATAL YTDLP Process Error: $e');
+      if (kDebugMode) debugPrint('FATAL YTDLP Process Error: $e');
       safeComplete(false);
     }
   }
@@ -1016,14 +1157,14 @@ class YoutubeDownloaderService {
             try {
               await file.delete();
             } catch (e) {
-              if (kDebugMode) print("Skipping locked file: ${file.path}");
+              if (kDebugMode) debugPrint("Skipping locked file: ${file.path}");
             }
           }
         }
-        if (kDebugMode) print("🗑️ Cache Cleared!");
+        if (kDebugMode) debugPrint("🗑️ Cache Cleared!");
       }
     } catch (e) {
-      if (kDebugMode) print("Error clearing cache: $e");
+      if (kDebugMode) debugPrint("Error clearing cache: $e");
     }
   }
 

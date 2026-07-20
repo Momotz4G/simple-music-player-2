@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/daily_mix_model.dart';
 import '../services/daily_mix_service.dart';
@@ -50,7 +51,7 @@ class DailyMixNotifier extends StateNotifier<DailyMixState> {
         isLoading: false,
       );
     } catch (e) {
-      print("❌ DailyMixNotifier: Error loading mixes: $e");
+      debugPrint("❌ DailyMixNotifier: Error loading mixes: $e");
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -73,7 +74,7 @@ class DailyMixNotifier extends StateNotifier<DailyMixState> {
         isLoading: false,
       );
     } catch (e) {
-      print("❌ DailyMixNotifier: Error refreshing mixes: $e");
+      debugPrint("❌ DailyMixNotifier: Error refreshing mixes: $e");
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),

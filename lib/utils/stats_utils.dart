@@ -43,8 +43,8 @@ class CalculatedStats {
   final MapEntry<String, int>? topTrack;
   final int totalMinutes;
   final int totalPlays;
-  final int dailyPlays; // 🚀 NEW
-  final int weeklyPlays; // 🚀 NEW
+  final int dailyPlays; // NEW
+  final int weeklyPlays; // NEW
 
   final List<MapEntry<String, int>> sortedArtists;
   final Map<String, int> artistMinutes;
@@ -54,8 +54,8 @@ class CalculatedStats {
     this.topTrack,
     required this.totalMinutes,
     required this.totalPlays,
-    this.dailyPlays = 0, // 🚀 NEW
-    this.weeklyPlays = 0, // 🚀 NEW
+    this.dailyPlays = 0, // NEW
+    this.weeklyPlays = 0, // NEW
     this.sortedArtists = const [],
     this.artistMinutes = const {},
   });
@@ -95,7 +95,7 @@ class StatsUtils {
     Map<String, String> trackTitles = {}; // ID to Title for lookup
 
     for (var entry in stats.entries.values) {
-      // 🚀 LEGACY RECOVERY: If totalSeconds is 0 but we have plays, estimate 3.5 min/play
+      // LEGACY RECOVERY: If totalSeconds is 0 but we have plays, estimate 3.5 min/play
       if (entry.totalSeconds == 0 && entry.playCount > 0) {
         totalSeconds += (entry.playCount * 210);
       } else {
@@ -527,7 +527,7 @@ class StatsUtils {
     if (userRank == 2) return "Top 2 Global";
     if (userRank == 3) return "Top 3 Global";
 
-    // 🚀 Priority 2: TIME-based titles
+    // Priority 2: TIME-based titles
     for (final title in musicTitles.reversed) {
       if (title.category == TitleCategory.time &&
           minutes >= title.requiredMinutes) {
@@ -549,7 +549,7 @@ class StatsUtils {
           final pattern = t.name.split('[Artist]').first;
           if (titleName.startsWith(pattern)) return t;
         } else if (t.name == titleName) {
-          // 🚀 COMPETITIVE GUARD: Don't show "Top X Global" unless user actually holds that rank
+          // COMPETITIVE GUARD: Don't show "Top X Global" unless user actually holds that rank
           if (t.category == TitleCategory.competitive) {
             if (t.name == "Top 1 Global" && userRank == 1) return t;
             if (t.name == "Top 2 Global" && userRank == 2) return t;
@@ -563,17 +563,21 @@ class StatsUtils {
     }
 
     // 🏆 Fallback to competitive first
-    if (userRank == 1)
+    if (userRank == 1) {
       return musicTitles.firstWhere((t) => t.name == "Top 1 Global");
-    if (userRank == 2)
+    }
+    if (userRank == 2) {
       return musicTitles.firstWhere((t) => t.name == "Top 2 Global");
-    if (userRank == 3)
+    }
+    if (userRank == 3) {
       return musicTitles.firstWhere((t) => t.name == "Top 3 Global");
+    }
 
-    // 🚀 Fallback to automatic (Time-based)
+    // Fallback to automatic (Time-based)
     for (final t in musicTitles.reversed) {
-      if (t.category == TitleCategory.time && minutes >= t.requiredMinutes)
+      if (t.category == TitleCategory.time && minutes >= t.requiredMinutes) {
         return t;
+      }
     }
     return musicTitles.first;
   }

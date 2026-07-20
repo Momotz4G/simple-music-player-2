@@ -70,7 +70,7 @@ class _PagodaPainter extends CustomPainter {
     // 2. Curved Roof
     final Path roofPath = Path();
     final double rw = w * 1.4; // Roof wider than walls
-    final double rh = 8.0; // Roof height/curve
+    const double rh = 8.0; // Roof height/curve
 
     roofPath.moveTo(cx - rw / 2, cy - h);
     roofPath.quadraticBezierTo(cx, cy - h - rh, cx + rw / 2, cy - h);

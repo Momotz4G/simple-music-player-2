@@ -70,8 +70,8 @@ class _HangingLightsPainter extends CustomPainter {
 
     // The wire hangs top to bottom based on a sine curve to emulate sag.
     // Wire sag: starts at the edge anchors on the top edge
-    final double sagDepth = 55.0; // how deep the wire sags in the center
-    final double wireY = 0.0; // wire anchor at very top
+    const double sagDepth = 55.0; // how deep the wire sags in the center
+    const double wireY = 0.0; // wire anchor at very top
 
     // Draw the wire first
     final wirePaint = Paint()

@@ -48,7 +48,7 @@ class _SupremeTitleBadgeState extends State<SupremeTitleBadge>
   late AnimationController _shimmerController;
   late AnimationController _orbitController;
   late AnimationController
-      _introController; // 🚀 Added for intro animations like falling text
+      _introController; // Added for intro animations like falling text
   late AnimationController _fastPulseController;
   late AnimationController _atomicController;
   late Animation<double> _glowAnimation;
@@ -251,7 +251,7 @@ class _SupremeTitleBadgeState extends State<SupremeTitleBadge>
                           scale: 0.9 + (_glowAnimation.value * 0.2), // Pulse
                           child: CrownWidget(
                             size:
-                                widget.height * 0.6, // 🚀 40% smaller than 1.0
+                                widget.height * 0.6, // 40% smaller than 1.0
                             color: Colors.amber,
                             glowValue: _glowAnimation.value,
                           ),

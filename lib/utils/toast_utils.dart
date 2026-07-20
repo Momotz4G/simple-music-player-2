@@ -36,7 +36,7 @@ class _ToastData {
 
 class _ToastContainer extends StatefulWidget {
   final Function(_ToastContainerState) onInit;
-  const _ToastContainer({required this.onInit, super.key});
+  const _ToastContainer({required this.onInit});
 
   @override
   State<_ToastContainer> createState() => _ToastContainerState();

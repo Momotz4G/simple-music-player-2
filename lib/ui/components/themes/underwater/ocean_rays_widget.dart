@@ -48,7 +48,7 @@ class _OceanRaysPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Random random = Random(42);
-    final int rayCount = 12;
+    const int rayCount = 12;
 
     for (int i = 0; i < rayCount; i++) {
       final double xBase = (i / rayCount) * size.width;

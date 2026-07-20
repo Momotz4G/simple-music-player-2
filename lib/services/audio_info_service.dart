@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:ffmpeg_kit_flutter_new_audio/ffprobe_kit.dart';
-import '../env/env.dart';
 import '../models/song_model.dart';
 
 /// Audio quality information model
@@ -77,6 +76,8 @@ class AudioInfo {
       'wav',
       'aiff',
       'ape',
+      'wavpack',
+      'wv',
       'pcm_s16le',
       'pcm_s24le',
       'pcm_s32le',
@@ -150,9 +151,9 @@ class AudioInfoService {
 
   String? _ffprobePath;
 
-  /// 🚀 CONCURRENCY LIMITER: Prevents ffprobe process storm.
+  /// CONCURRENCY LIMITER: Prevents ffprobe process storm.
   /// Max 2 simultaneous ffprobe.exe processes to avoid overwhelming Windows.
-  static const int _maxConcurrentProbes = 4; // 🚀 Increased for faster clearing
+  static const int _maxConcurrentProbes = 4; // Increased for faster clearing
   static int _activeProbes = 0;
   static final List<({Completer<void> completer, bool isPriority})>
       _probeQueue = [];
@@ -229,7 +230,7 @@ class AudioInfoService {
 
     // 2. Try filePath if it's a URL (Instant Streaming)
     if (song.filePath.startsWith('http')) {
-      // 🚀 NEW: Check if a local cached version exists before probing the URL
+      // NEW: Check if a local cached version exists before probing the URL
       final cachedPath = await _checkCachePath(song);
       if (cachedPath != null) {
         debugPrint(
@@ -285,6 +286,7 @@ class AudioInfoService {
             filePath,
           ],
           runInShell: false,
+          stdoutEncoding: utf8,
         ).timeout(const Duration(seconds: 5), onTimeout: () {
           debugPrint("⏱️ ffprobe (Tags): Timeout reached for $filePath");
           throw TimeoutException("ffprobe timeout");
@@ -308,9 +310,9 @@ class AudioInfoService {
     }
   }
 
-  /// 🚀 COMBINED: Get both tags AND audio info in a single ffprobe invocation.
+  /// COMBINED: Get both tags AND audio info in a single ffprobe invocation.
   /// This halves the number of ffprobe.exe processes during library scan.
-  Future<({Map<String, String> tags, AudioInfo? info})> getTagsAndInfo(
+  Future<({Map<String, String> tags, AudioInfo? info, bool hasArtStream})> getTagsAndInfo(
       String filePath) async {
     try {
       final format = _getFormatFromPath(filePath);
@@ -329,15 +331,26 @@ class AudioInfoService {
         if (mediaInfo == null) {
           return (
             tags: <String, String>{},
-            info: _getBasicInfo(filePath, fileSize, format)
+            info: _getBasicInfo(filePath, fileSize, format),
+            hasArtStream: false,
           );
+        }
+        bool hasArtStream = false;
+        final mediaStreams = mediaInfo.getStreams();
+        if (mediaStreams.isNotEmpty) {
+          for (final stream in mediaStreams) {
+            if (stream.getType() == 'video') {
+              hasArtStream = true;
+              break;
+            }
+          }
         }
         final rawTags = mediaInfo.getTags();
         final tags = rawTags != null
             ? Map<String, String>.from(rawTags)
             : <String, String>{};
         final info = await _getMobileInfo(filePath, fileSize, format);
-        return (tags: tags, info: info);
+        return (tags: tags, info: info, hasArtStream: hasArtStream);
       }
 
       // Desktop: single ffprobe with both -show_format and -show_streams
@@ -345,7 +358,8 @@ class AudioInfoService {
       if (_ffprobePath == null) {
         return (
           tags: <String, String>{},
-          info: _getBasicInfo(filePath, fileSize, format)
+          info: _getBasicInfo(filePath, fileSize, format),
+          hasArtStream: false,
         );
       }
 
@@ -363,6 +377,7 @@ class AudioInfoService {
             filePath,
           ],
           runInShell: false,
+          stdoutEncoding: utf8,
         ).timeout(const Duration(seconds: 5), onTimeout: () {
           debugPrint("⏱️ ffprobe (TagsAndInfo): Timeout reached for $filePath");
           throw TimeoutException("ffprobe timeout");
@@ -371,7 +386,8 @@ class AudioInfoService {
         if (result.exitCode != 0) {
           return (
             tags: <String, String>{},
-            info: _getBasicInfo(filePath, fileSize, format)
+            info: _getBasicInfo(filePath, fileSize, format),
+            hasArtStream: false,
           );
         }
 
@@ -388,17 +404,19 @@ class AudioInfoService {
 
         // Extract audio stream info
         Map? audioStream;
+        bool hasArtStream = false;
         if (streams != null) {
           for (var stream in streams) {
             if (stream['codec_type'] == 'audio') {
               audioStream = stream;
-              break;
+            } else if (stream['codec_type'] == 'video') {
+              hasArtStream = true;
             }
           }
         }
 
         if (audioStream == null) {
-          return (tags: tags, info: _getBasicInfo(filePath, fileSize, format));
+          return (tags: tags, info: _getBasicInfo(filePath, fileSize, format), hasArtStream: hasArtStream);
         }
 
         final codec = audioStream['codec_name'] as String? ?? 'unknown';
@@ -441,13 +459,13 @@ class AudioInfoService {
           duration: duration,
         );
 
-        return (tags: tags, info: info);
+        return (tags: tags, info: info, hasArtStream: hasArtStream);
       } finally {
         _releaseProbeSlot();
       }
     } catch (e) {
       if (kDebugMode) print('AudioInfoService getTagsAndInfo error: $e');
-      return (tags: <String, String>{}, info: null);
+      return (tags: <String, String>{}, info: null, hasArtStream: false);
     }
   }
 
@@ -470,7 +488,7 @@ class AudioInfoService {
 
       final format = _getFormatFromPath(filePath);
 
-      // 🚀 Fast Path for Streams (All Platforms): Skip heavy probes, enrich via fast URL headers
+      // Fast Path for Streams (All Platforms): Skip heavy probes, enrich via fast URL headers
       if (isUrl) {
         final basic = _getBasicInfo(filePath, fileSize, format);
         return await _enrichWithUrlMetadata(basic, filePath);
@@ -483,7 +501,7 @@ class AudioInfoService {
 
       // Desktop: Use ffprobe binary
       if (!Platform.isAndroid && !Platform.isIOS) {
-        // 🚀 Lazy Init: Ensure initialized if called early
+        // Lazy Init: Ensure initialized if called early
         if (_ffprobePath == null) {
           await initialize();
         }
@@ -510,7 +528,7 @@ class AudioInfoService {
   Future<AudioInfo?> _getMobileInfo(
       String filePath, int fileSize, String format) async {
     try {
-      debugPrint("🚀 FFprobeKit: Starting probe for $filePath");
+      debugPrint("FFprobeKit: Starting probe for $filePath");
       final session = await FFprobeKit.getMediaInformation(filePath)
           .timeout(const Duration(seconds: 5), onTimeout: () {
         debugPrint("⏱️ FFprobeKit: Timeout reached for $filePath");
@@ -590,6 +608,12 @@ class AudioInfoService {
 
   /// Get format from file path
   String _getFormatFromPath(String path) {
+    if (path.contains('googlevideo.com') || path.contains('youtube')) {
+      if (path.contains('mime=audio%2Fwebm') || path.contains('itag=251')) {
+        return 'WebM';
+      }
+      return 'M4A';
+    }
     if (path.contains('/stream?') && path.contains('id=')) {
       if (path.contains('quality=HIGH') || path.contains('quality=LOW')) {
         return 'M4A';
@@ -664,7 +688,7 @@ class AudioInfoService {
       estimatedBitrate = ((fileSize * 8) / 210 / 1000).round();
     }
 
-    // 🚀 ENHANCEMENT: Smart guestimate for M4A (ALAC vs AAC)
+    // ENHANCEMENT: Smart guestimate for M4A (ALAC vs AAC)
     // AAC almost never exceeds 320-512kbps. If we see > 500kbps in an M4A, 
     // it's highly likely to be ALAC (Lossless).
     if (format == 'M4A' && estimatedBitrate != null && estimatedBitrate > 500) {
@@ -702,6 +726,7 @@ class AudioInfoService {
             filePath,
           ],
           runInShell: false,
+          stdoutEncoding: utf8,
         ).timeout(const Duration(seconds: 5), onTimeout: () {
           debugPrint("⏱️ ffprobe: Timeout reached for $filePath");
           throw TimeoutException("ffprobe timeout");
@@ -784,10 +809,26 @@ class AudioInfoService {
     }
   }
 
-  /// 🚀 NEW: Enrich AudioInfo using knowledge from the streaming URL
+  /// NEW: Enrich AudioInfo using knowledge from the streaming URL
   /// Now performs a HEAD request to snoops X-Headers for exact specs
   Future<AudioInfo> _enrichWithUrlMetadata(AudioInfo info, String url) async {
     final uri = Uri.parse(url);
+
+    // Fast path for YouTube streams
+    if (url.contains('googlevideo.com') || url.contains('youtube')) {
+      final isWebM = url.contains('mime=audio%2Fwebm') || url.contains('itag=251');
+      return AudioInfo(
+        format: isWebM ? 'WebM' : 'M4A',
+        codec: isWebM ? 'opus' : 'aac',
+        bitrate: isWebM ? 160 : 128,
+        sampleRate: 44100,
+        channels: 2,
+        bitDepth: null,
+        fileSize: null,
+        duration: info.duration,
+      );
+    }
+
     final qualityParam = uri.queryParameters['quality']?.toUpperCase();
 
     int? headerSampleRate;
@@ -810,7 +851,7 @@ class AudioInfoService {
       if (brate != null) headerBitrate = int.tryParse(brate);
       headerCodec = scodec?.toLowerCase();
 
-      // 2. 🚀 SMART FALLBACK: Parse specs from filename/URL
+      // 2. SMART FALLBACK: Parse specs from filename/URL
       // The bot often includes tags like [16B-44.1kHz - ALAC] in the path
       if (headerSampleRate == null || headerBitDepth == null || headerCodec == null) {
         final decodedUrl = Uri.decodeFull(url);
@@ -875,7 +916,7 @@ class AudioInfoService {
     );
   }
 
-  /// 🚀 NEW: Helper to find the potential cache path for a song
+  /// NEW: Helper to find the potential cache path for a song
   Future<String?> _checkCachePath(SongModel song) async {
     try {
       final tempDir = await getTemporaryDirectory();

@@ -69,8 +69,8 @@ class _LunarLanternPainter extends CustomPainter {
 
   void _drawRoundLantern(Canvas canvas, Offset pos, int seed) {
     final double flicker = 0.85 + (sin(animationValue * pi * 2 + seed) * 0.15);
-    final lanternRed = const Color(0xFFD00000);
-    final goldColor = const Color(0xFFFFD700);
+    const lanternRed = Color(0xFFD00000);
+    const goldColor = Color(0xFFFFD700);
 
     // Lantern Body (Large Round)
     final bodyPaint = Paint()

@@ -4,10 +4,13 @@
 /// Works on all platforms where media_kit/just_audio_media_kit is active.
 ///
 /// Band mapping: 10 ISO standard bands → mpv superequalizer's 18 bands.
+library eq_engine;
+
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
-import 'native_music_service.dart'; // 🚀 ADDED
+import 'native_music_service.dart'; // ADDED
 
 class EqEngine {
   EqEngine._(); // Static-only class
@@ -49,10 +52,10 @@ class EqEngine {
           'preamp': preampDb,
         });
       } on PlatformException catch (e) {
-        print("Failed to apply native Android EQ: ${e.message}");
+        debugPrint("Failed to apply native Android EQ: ${e.message}");
       }
     } else if (Platform.isWindows) {
-      // 🚀 Windows: Route EQ through NativeMusicService which forwards to FFI players
+      // Windows: Route EQ through NativeMusicService which forwards to FFI players
       // in their worker isolates. We MUST NOT call AudioEngineFfi.initialize() here
       // because it loads audio_engine.dll on the main thread, which sets COM to MTA mode
       // and permanently breaks the FilePicker (which requires STA mode).
@@ -61,12 +64,12 @@ class EqEngine {
         preampDb: preampDb,
       );
     } else {
-      // 🚀 Linux/macOS Streaming EQ (via mpv filters)
+      // Linux/macOS Streaming EQ (via mpv filters)
       final filter = getMpvFilterString(gains, preampDb);
       try {
         await JustAudioMediaKit.setAudioFilter(filter);
       } catch (e) {
-        print("Failed to apply MediaKit EQ filter: $e");
+        debugPrint("Failed to apply MediaKit EQ filter: $e");
       }
     }
   }
@@ -90,12 +93,12 @@ class EqEngine {
       try {
         await JustAudioMediaKit.setAudioFilter("");
       } catch (e) {
-        print("Failed to clear MediaKit filters: $e");
+        debugPrint("Failed to clear MediaKit filters: $e");
       }
     }
   }
 
-  /// 🚀 Generate mpv / FFmpeg audio filter string for 10-band EQ
+  /// Generate mpv / FFmpeg audio filter string for 10-band EQ
   /// Uses a chain of 10 peaking 'equalizer' filters.
   /// NOTE: mpv does NOT support 'volume' as an af filter (causes "Option af: volume doesn't exist").
   /// Preamp is incorporated by adding it to each band's gain value instead.

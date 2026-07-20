@@ -94,9 +94,15 @@ class KoreanRomanizer {
     return text.runes.any(_isHangul);
   }
 
+  static final Map<String, String> _cache = {};
+
   /// Convert a string with Korean text to its romanized form.
   /// Non-Korean characters are kept as-is.
   static String romanize(String text) {
+    if (_cache.containsKey(text)) {
+      return _cache[text]!;
+    }
+
     final buffer = StringBuffer();
 
     for (int i = 0; i < text.runes.length; i++) {
@@ -116,6 +122,8 @@ class KoreanRomanizer {
       }
     }
 
-    return buffer.toString();
+    final result = buffer.toString();
+    _cache[text] = result;
+    return result;
   }
 }

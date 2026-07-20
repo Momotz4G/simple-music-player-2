@@ -16,6 +16,8 @@ class SmoothHighlightText extends StatefulWidget {
   final bool isItalic;
   final double spacing;
   final List<LyricWord>? words;
+  final bool isKaraokeMode;
+  final bool isActive;
 
   const SmoothHighlightText({
     super.key,
@@ -32,6 +34,8 @@ class SmoothHighlightText extends StatefulWidget {
     this.isItalic = false,
     this.spacing = 8.0,
     this.words,
+    this.isKaraokeMode = false,
+    this.isActive = true,
   });
 
   @override
@@ -48,7 +52,7 @@ class _SmoothHighlightTextState extends State<SmoothHighlightText> with SingleTi
     super.initState();
     _currentSmoothPos = widget.initialPosition;
     _ticker = createTicker(_onTick);
-    if (widget.isPlaying) {
+    if (widget.isPlaying && widget.isActive) {
       _ticker?.start();
     }
   }
@@ -57,15 +61,25 @@ class _SmoothHighlightTextState extends State<SmoothHighlightText> with SingleTi
   void didUpdateWidget(SmoothHighlightText oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    // Sync if drift is too large or seek happened
-    if ((widget.initialPosition - _currentSmoothPos).abs() > 0.5) {
+    if (widget.isActive && !oldWidget.isActive) {
       _currentSmoothPos = widget.initialPosition;
+    } else {
+      final bool seeked = (widget.initialPosition - oldWidget.initialPosition).abs() > 0.5;
+      if (seeked) {
+        _currentSmoothPos = widget.initialPosition;
+      } else {
+        // Only pull forward to correct drift to prevent backwards jitter
+        final double drift = widget.initialPosition - _currentSmoothPos;
+        if (drift > 0.0) {
+          _currentSmoothPos += drift * 0.1;
+        }
+      }
     }
     
-    if (widget.isPlaying && !(_ticker?.isActive ?? false)) {
+    if (widget.isPlaying && widget.isActive && !(_ticker?.isActive ?? false)) {
       _ticker?.start();
       _lastTick = Duration.zero;
-    } else if (!widget.isPlaying && (_ticker?.isActive ?? false)) {
+    } else if ((!widget.isPlaying || !widget.isActive) && (_ticker?.isActive ?? false)) {
       _ticker?.stop();
     }
   }
@@ -99,13 +113,26 @@ class _SmoothHighlightTextState extends State<SmoothHighlightText> with SingleTi
     final int wordCount = widget.words?.length ?? widget.text.split(' ').length;
     final List<String> wordTexts = widget.words?.map((w) => w.text).toList() ?? widget.text.split(' ');
     
+    // Append trailing spaces to words (except the last one) so Wrap with spacing 0.0 looks natural
+    for (int i = 0; i < wordTexts.length - 1; i++) {
+      if (!wordTexts[i].endsWith(' ')) {
+        wordTexts[i] += ' ';
+      }
+    }
+    
     final lineDuration = widget.endTime - widget.startTime;
-    final fallbackWordDuration = lineDuration / (wordCount > 0 ? wordCount : 1);
+    
+    // Finish highlighting slightly early so the last word is fully lit before the line switches
+    final double adjustedLineDuration = widget.words != null 
+        ? lineDuration 
+        : (lineDuration > 0.5 ? lineDuration - 0.3 : lineDuration);
+        
+    final fallbackWordDuration = adjustedLineDuration / (wordCount > 0 ? wordCount : 1);
 
     return Wrap(
       alignment: WrapAlignment.center,
-      spacing: widget.spacing,
-      runSpacing: widget.spacing / 2,
+      spacing: 0.0,
+      runSpacing: 0.0,
       children: List.generate(wordCount, (index) {
         // Use explicit word timings if available, else fallback
         final wordStart = widget.words != null 
@@ -126,39 +153,58 @@ class _SmoothHighlightTextState extends State<SmoothHighlightText> with SingleTi
         }
 
         final dimColor = widget.inactiveColor.withValues(alpha: widget.isItalic ? 0.3 : 0.5);
+        final isPassed = effectivePos >= wordStart;
+        final displayProgress = widget.isKaraokeMode ? (isPassed ? 1.0 : 0.0) : progress;
 
-        return ShaderMask(
-          blendMode: BlendMode.srcIn,
-          shaderCallback: (bounds) {
-            return LinearGradient(
-              colors: [widget.activeColor, dimColor],
-              stops: [
-                (progress - 0.05).clamp(0.0, 1.0),
-                (progress + 0.05).clamp(0.0, 1.0)
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ).createShader(bounds);
-          },
-          child: Text(
-            wordTexts[index],
-            style: TextStyle(
-              fontSize: widget.fontSize,
-              fontWeight: widget.fontWeight,
-              fontStyle: widget.isItalic ? FontStyle.italic : FontStyle.normal,
-              color: Colors.white,
-              height: 1.4,
-              shadows: (progress > 0.05 && !widget.isItalic)
-                  ? [
-                      BoxShadow(
-                        color: widget.activeColor.withValues(alpha: 0.4 * progress),
-                        blurRadius: 15 * progress,
-                      )
-                    ]
-                  : [],
-            ),
+        Widget textWidget = Text(
+          wordTexts[index],
+          style: TextStyle(
+            fontSize: widget.fontSize,
+            fontWeight: widget.fontWeight,
+            fontStyle: widget.isItalic ? FontStyle.italic : FontStyle.normal,
+            color: widget.isActive 
+                ? (widget.isKaraokeMode ? (isPassed ? widget.activeColor : dimColor) : Colors.white)
+                : widget.inactiveColor,
+            height: 1.4,
+            shadows: (!widget.isItalic && widget.isActive)
+                ? [
+                    Shadow(
+                      color: widget.activeColor.withValues(alpha: 0.4 * displayProgress),
+                      blurRadius: 15 * displayProgress,
+                    )
+                  ]
+                : [],
           ),
         );
+
+        if (widget.isKaraokeMode) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutBack,
+            transform: Matrix4.translationValues(0, (widget.isActive && isPassed) ? -10.0 : 0.0, 0),
+            child: textWidget,
+          );
+        } else {
+          if (!widget.isActive) {
+            return textWidget;
+          }
+          return ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) {
+              final double c = progress * 1.4 - 0.2;
+              return LinearGradient(
+                colors: [widget.activeColor, dimColor],
+                stops: [
+                  (c - 0.2).clamp(0.0, 1.0),
+                  (c + 0.2).clamp(0.0, 1.0)
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ).createShader(bounds);
+            },
+            child: textWidget,
+          );
+        }
       }),
     );
   }

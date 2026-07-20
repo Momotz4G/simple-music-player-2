@@ -28,7 +28,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     });
   }
 
-  // 🚀 SMART PLAY FUNCTION
+  // SMART PLAY FUNCTION
   // Handles playing local files OR restoring deleted cached files
   void _handleSongTap(HistoryEntry entry) {
     final song = SongModel(
@@ -142,7 +142,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                       ),
                       subtitle: Row(
                         children: [
-                          // 🚀 VISUAL STATUS BADGES
+                          // VISUAL STATUS BADGES
                           if (!fileExists)
                             Container(
                                 margin: const EdgeInsets.only(right: 6),

@@ -18,8 +18,9 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../services/itunes_api_service.dart';
-import '../../models/song_model.dart';
+
 import '../../services/pocketbase_service.dart'; // 🔒 OFFLINE MODE
+import '../../env/env.dart';
 import '../../utils/layout_engine.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
@@ -32,7 +33,7 @@ class SearchPage extends ConsumerStatefulWidget {
 class _SearchPageState extends ConsumerState<SearchPage> {
   final TextEditingController _urlController = TextEditingController();
 
-  // 🚀 SUGGESTION STATE
+  // SUGGESTION STATE
   Timer? _debounce;
   List<SongMetadata> _songSuggestions = [];
   List<AlbumModel> _albumSuggestions = [];
@@ -40,8 +41,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   bool _isSuggesting = false;
   bool _isLoadingSuggestions = false;
   String _currentStatus = '';
+  
+  // YOUTUBE PAGINATION STATE
+  int _currentYoutubeLimit = 20;
+  bool _isLoadingMore = false;
 
-  // 🚀 NETWORK STATE
+  // NETWORK STATE
   bool _isOnline = true;
   Timer? _connectivityTimer;
 
@@ -56,7 +61,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       (_) => _checkConnectivity(),
     );
 
-    // 🚀 CHECK BRIDGE ON LOAD (Fixes the redirect issue)
+    // CHECK BRIDGE ON LOAD (Fixes the redirect issue)
     // We wait one frame to ensure the widget is built before triggering state changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkBridge();
@@ -109,7 +114,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     }
   }
 
-  // 🚀 NEW: Checks if a song was passed from the Top Bar
+  // NEW: Checks if a song was passed from the Top Bar
   void _checkBridge() {
     final bridgeSong = ref.read(searchBridgeProvider);
     if (bridgeSong != null) {
@@ -124,9 +129,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     }
   }
 
-  // 🚀 NEW: Suggestions Logic
+  // NEW: Suggestions Logic
   void _onSearchQueryChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _currentYoutubeLimit = 20; // Reset limit on new search
 
     // 🔒 OFFLINE MODE: Disable suggestions
     if (PocketBaseService.isOffline || query.isEmpty) {
@@ -139,107 +145,61 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       return;
     }
 
-    // Passively switch to suggestion mode if not already
-    setState(() => _isSuggesting = true);
+    setState(() {
+      _isSuggesting = true;
+      _isLoadingSuggestions = true;
+    });
 
-    _debounce = Timer(const Duration(milliseconds: 300), () async {
-      setState(() => _isLoadingSuggestions = true);
+    _debounce = Timer(const Duration(milliseconds: 600), () {
+      _performSearch(query);
+    });
+  }
+
+  Future<void> _loadMoreYoutube() async {
+    if (_isLoadingMore) return;
+    setState(() {
+      _isLoadingMore = true;
+      _currentYoutubeLimit += 10;
+    });
+    
+    await _performSearch(_urlController.text, isLoadMore: true);
+    
+    if (mounted) {
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
+  }
+
+  Future<void> _performSearch(String keyword, {bool isLoadMore = false}) async {
+      if (!isLoadMore) {
+        setState(() => _isLoadingSuggestions = true);
+      }
 
       final settings = ref.read(settingsProvider);
       final searchEngine = settings.searchEngine;
 
       try {
         if (searchEngine == SearchEngine.appleMusic) {
-          final results = await ITunesApiService.searchSongs(query, limit: 10);
+          final results = await ITunesApiService.searchAll(keyword, limit: 5);
           if (mounted && _isSuggesting) {
             setState(() {
-              _songSuggestions = results;
-              _albumSuggestions = [];
-              _artistSuggestions = [];
+              _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? [];
+              _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? [];
+              _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? [];
               _isLoadingSuggestions = false;
             });
           }
         } else if (searchEngine == SearchEngine.youtube) {
-          // 🚀 Use YouTube Music API for proper music metadata in suggestions
-          try {
-            final encodedQuery = Uri.encodeComponent(query);
-            final searchUrl = Uri.parse(
-                'https://ytmusic-api-omega.vercel.app/api/search?q=$encodedQuery&limit=10');
-            final response = await http.get(searchUrl).timeout(
-                  const Duration(seconds: 8),
-                );
-
-            if (response.statusCode == 200 && mounted && _isSuggesting) {
-              final body = json.decode(response.body);
-              if (body['success'] == true && body['data'] != null) {
-                final results = body['data'] as List<dynamic>;
-                setState(() {
-                  _songSuggestions = results.map((track) {
-                    final title = track['title'] as String? ?? 'Unknown';
-                    final artists = track['artists'] as List<dynamic>? ?? [];
-                    final artist = artists.isNotEmpty
-                        ? artists
-                            .map((a) => a['name'] as String? ?? '')
-                            .join(', ')
-                        : 'Unknown Artist';
-                    final albumData = track['album'] as Map<String, dynamic>?;
-                    final album = albumData?['name'] as String? ?? '';
-                    final videoId = track['videoId'] as String?;
-
-                    // Duration
-                    int durationSeconds = 0;
-                    if (track['duration_seconds'] != null) {
-                      final ds = track['duration_seconds'];
-                      durationSeconds =
-                          (ds is int) ? ds : int.tryParse(ds.toString()) ?? 0;
-                    } else if (track['duration'] != null &&
-                        track['duration'] is String) {
-                      final parts = (track['duration'] as String).split(':');
-                      if (parts.length == 2) {
-                        durationSeconds = (int.tryParse(parts[0]) ?? 0) * 60 +
-                            (int.tryParse(parts[1]) ?? 0);
-                      }
-                    }
-
-                    // Thumbnail
-                    String artUrl = '';
-                    final thumbnails =
-                        track['thumbnails'] as List<dynamic>? ?? [];
-                    if (thumbnails.isNotEmpty) {
-                      artUrl = thumbnails.last['url'] as String? ?? '';
-                    }
-
-                    return SongMetadata(
-                      title: title,
-                      artist: artist,
-                      album: album,
-                      durationSeconds: durationSeconds,
-                      albumArtUrl: artUrl,
-                      youtubeUrl: videoId != null
-                          ? 'https://www.youtube.com/watch?v=$videoId'
-                          : null,
-                    );
-                  }).toList();
-                  _albumSuggestions = [];
-                  _artistSuggestions = [];
-                  _isLoadingSuggestions = false;
-                });
-                return;
-              }
-            }
-          } catch (e) {
-            debugPrint("⚠️ YT Music suggestion search failed: $e");
-          }
-
-          // Fallback to yt-dlp
+          // Use yt-dlp directly for raw YouTube results (no cleaning, original thumbnails)
           final ytService = YoutubeDownloaderService();
-          final results = await ytService.searchVideo(query);
+          final results = await ytService.searchVideo(keyword, limit: _currentYoutubeLimit);
           if (mounted && _isSuggesting) {
             setState(() {
               _songSuggestions = results
                   .map((yt) => SongMetadata(
-                        title: _cleanYouTubeTitle(yt.title, yt.artist),
-                        artist: _cleanYouTubeArtist(yt.artist),
+                        title: yt.title,
+                        artist: yt.artist,
                         album: "",
                         durationSeconds: _parseDuration(yt.duration),
                         albumArtUrl: yt.thumbnailUrl,
@@ -252,7 +212,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             });
           }
         } else {
-          final results = await HybridService.searchAll(query, limit: 5);
+          final results = await HybridService.searchAll(keyword, limit: 5);
           if (mounted && _isSuggesting) {
             setState(() {
               _songSuggestions =
@@ -271,7 +231,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       } catch (e) {
         if (mounted) setState(() => _isLoadingSuggestions = false);
       }
-    });
   }
 
   int _parseDuration(String duration) {
@@ -290,60 +249,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     }
   }
 
-  /// 🚀 Clean YouTube video title for better stats tracking
-  /// Removes common junk like "Official MV", "Lyrics", "Audio", etc.
-  String _cleanYouTubeTitle(String title, String artist) {
-    String clean = title;
-    // Remove artist prefix if title starts with "Artist - Title"
-    if (clean.contains(' - ')) {
-      final parts = clean.split(' - ');
-      if (parts.length == 2 &&
-          parts[0]
-              .toLowerCase()
-              .contains(artist.toLowerCase().split(' ').first)) {
-        clean = parts[1];
-      }
-    }
-    // Remove common YouTube junk
-    clean = clean
-        .replaceAll(
-            RegExp(r'\(Official\s*(Music\s*)?Video\)', caseSensitive: false),
-            '')
-        .replaceAll(
-            RegExp(r'\[Official\s*(Music\s*)?Video\]', caseSensitive: false),
-            '')
-        .replaceAll(RegExp(r'\(Official\s*Audio\)', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\[Official\s*Audio\]', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\(Lyrics?\)', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\[Lyrics?\]', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\(MV\)', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\[MV\]', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\(M/V\)', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\[M/V\]', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\(HD\)', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\(4K\)', caseSensitive: false), '')
-        .replaceAll(
-            RegExp(r'Official\s*(Music\s*)?Video', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-    // Remove trailing/leading quotes
-    if (clean.startsWith("'") && clean.endsWith("'")) {
-      clean = clean.substring(1, clean.length - 1);
-    }
-    if (clean.startsWith('"') && clean.endsWith('"')) {
-      clean = clean.substring(1, clean.length - 1);
-    }
-    return clean.isEmpty ? title : clean;
-  }
 
-  /// 🚀 Clean YouTube uploader name for better artist metadata
-  String _cleanYouTubeArtist(String artist) {
-    return artist
-        .replaceAll(RegExp(r'\s*-\s*Topic$', caseSensitive: false), '')
-        .replaceAll(RegExp(r'VEVO$', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\s*Official$', caseSensitive: false), '')
-        .trim();
-  }
 
   void _onSuggestionSelected(dynamic item) {
     // Hide keyboard
@@ -400,7 +306,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       return;
     }
 
-    // 🚀 Show loading state
+    // Show loading state
     setState(() {
       final settings = ref.read(settingsProvider);
       final engineName = settings.searchEngine == SearchEngine.appleMusic 
@@ -414,111 +320,36 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     try {
       final settings = ref.read(settingsProvider);
       if (settings.searchEngine == SearchEngine.appleMusic) {
-        final results = await ITunesApiService.searchSongs(keyword, limit: 20);
+        final results = await ITunesApiService.searchAll(keyword, limit: 10);
         if (mounted) {
           setState(() {
-            _songSuggestions = results;
-            _albumSuggestions = [];
-            _artistSuggestions = [];
+            _songSuggestions = (results['songs'] as List?)?.cast<SongMetadata>() ?? [];
+            _albumSuggestions = (results['albums'] as List?)?.cast<AlbumModel>() ?? [];
+            _artistSuggestions = (results['artists'] as List?)?.cast<ArtistModel>() ?? [];
             _isLoadingSuggestions = false;
 
             final songCount = _songSuggestions.length;
-            if (songCount > 0) {
-              _currentStatus = _l10n.foundResults(songCount, 0, 0);
+            final albumCount = _albumSuggestions.length;
+            final artistCount = _artistSuggestions.length;
+            
+            if (songCount + albumCount + artistCount > 0) {
+              _currentStatus = _l10n.foundResults(songCount, albumCount, artistCount);
             } else {
               _currentStatus = _l10n.noSpotifyResults; // Generic fallback
             }
           });
         }
       } else if (settings.searchEngine == SearchEngine.youtube) {
-        // 🚀 Use YouTube Music API for proper music metadata (clean title, artist, album, art)
-        try {
-          final query = Uri.encodeComponent(keyword);
-          final searchUrl = Uri.parse(
-              'https://ytmusic-api-omega.vercel.app/api/search?q=$query&limit=10');
-          final response = await http.get(searchUrl).timeout(
-                const Duration(seconds: 10),
-              );
-
-          if (response.statusCode == 200 && mounted) {
-            final body = json.decode(response.body);
-            if (body['success'] == true && body['data'] != null) {
-              final results = body['data'] as List<dynamic>;
-              setState(() {
-                _songSuggestions = results.map((track) {
-                  final title = track['title'] as String? ?? 'Unknown';
-                  final artists = track['artists'] as List<dynamic>? ?? [];
-                  final artist = artists.isNotEmpty
-                      ? artists
-                          .map((a) => a['name'] as String? ?? '')
-                          .join(', ')
-                      : 'Unknown Artist';
-                  final albumData = track['album'] as Map<String, dynamic>?;
-                  final album = albumData?['name'] as String? ?? '';
-                  final videoId = track['videoId'] as String?;
-
-                  // Duration
-                  int durationSeconds = 0;
-                  if (track['duration_seconds'] != null) {
-                    final ds = track['duration_seconds'];
-                    durationSeconds =
-                        (ds is int) ? ds : int.tryParse(ds.toString()) ?? 0;
-                  } else if (track['duration'] != null &&
-                      track['duration'] is String) {
-                    final parts = (track['duration'] as String).split(':');
-                    if (parts.length == 2) {
-                      durationSeconds = (int.tryParse(parts[0]) ?? 0) * 60 +
-                          (int.tryParse(parts[1]) ?? 0);
-                    }
-                  }
-
-                  // Thumbnail
-                  String artUrl = '';
-                  final thumbnails =
-                      track['thumbnails'] as List<dynamic>? ?? [];
-                  if (thumbnails.isNotEmpty) {
-                    artUrl = thumbnails.last['url'] as String? ?? '';
-                  }
-
-                  return SongMetadata(
-                    title: title,
-                    artist: artist,
-                    album: album,
-                    durationSeconds: durationSeconds,
-                    albumArtUrl: artUrl,
-                    youtubeUrl: videoId != null
-                        ? 'https://www.youtube.com/watch?v=$videoId'
-                        : null,
-                  );
-                }).toList();
-                _albumSuggestions = [];
-                _artistSuggestions = [];
-                _isLoadingSuggestions = false;
-
-                final songCount = _songSuggestions.length;
-                if (songCount > 0) {
-                  _currentStatus = _l10n.foundYoutubeResults(songCount);
-                } else {
-                  _currentStatus = _l10n.noYoutubeResults;
-                }
-              });
-              return;
-            }
-          }
-        } catch (e) {
-          debugPrint("⚠️ YT Music search failed: $e, falling back to yt-dlp");
-        }
-
-        // Fallback to yt-dlp if YT Music API fails
+        // Use yt-dlp directly for raw YouTube results (no cleaning, original thumbnails)
         final ytService = YoutubeDownloaderService();
-        final results = await ytService.searchVideo(keyword);
+        final results = await ytService.searchVideo(keyword, limit: _currentYoutubeLimit);
 
         if (mounted) {
           setState(() {
             _songSuggestions = results
                 .map((yt) => SongMetadata(
-                      title: _cleanYouTubeTitle(yt.title, yt.artist),
-                      artist: _cleanYouTubeArtist(yt.artist),
+                      title: yt.title,
+                      artist: yt.artist,
                       album: "",
                       durationSeconds: _parseDuration(yt.duration),
                       albumArtUrl: yt.thumbnailUrl,
@@ -538,7 +369,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           });
         }
       } else {
-        // 🚀 Use searchAll to get Songs, Albums, Artists (5 each)
+        // Use searchAll to get Songs, Albums, Artists (5 each)
         final results = await HybridService.searchAll(keyword, limit: 5);
 
         if (mounted) {
@@ -579,7 +410,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   // --- 2. Match Logic ---
   void _viewMatchResults(SongMetadata metadata) {
-    // 🚀 NAVIGATE TO TRACK DETAIL PAGE (Replaces inline match selection)
+    // NAVIGATE TO TRACK DETAIL PAGE (Replaces inline match selection)
     ref.read(navigationStackProvider.notifier).push(
           NavigationItem(
             type: NavigationType.track,
@@ -594,13 +425,13 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     if (l10nObj == null) return const SizedBox.shrink();
     _l10n = l10nObj;
 
-    // 🚀 Robust Locale Switching: Update status if it's currently a "ready" or "offline" string
+    // Robust Locale Switching: Update status if it's currently a "ready" or "offline" string
     if (_currentStatus.isEmpty ||
         _currentStatus == 'Ready. Search for a song.' ||
         _currentStatus == 'Offline') {
       _currentStatus = _l10n.readySearchSong;
     }
-    // 🚀 3. KEEP LISTENING for subsequent searches
+    // 3. KEEP LISTENING for subsequent searches
     ref.listen<SongMetadata?>(searchBridgeProvider, (previous, next) {
       if (next != null) {
         if (mounted) {
@@ -660,7 +491,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               enabled: true,
 
               style: TextStyle(color: textColor),
-              onChanged: _onSearchQueryChanged, // 🚀 Trigger suggestions
+              onChanged: _onSearchQueryChanged, // Trigger suggestions
               onSubmitted: (_) => _runSearch(),
               decoration: InputDecoration(
                 labelText: _l10n.songTitleKeyword,
@@ -730,7 +561,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             ),
             const SizedBox(height: 10),
 
-            // 🚀 NO INTERNET CONNECTION MESSAGE
+            // NO INTERNET CONNECTION MESSAGE
             if (!_isOnline)
               Expanded(
                 child: Center(
@@ -763,13 +594,13 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   ),
                 ),
               )
-            // 🚀 SUGGESTIONS LIST (Overlay Behavior)
+            // SUGGESTIONS LIST (Overlay Behavior)
             else if (_isSuggesting)
               Expanded(
                 child: _buildSuggestionsList(textColor),
               )
             else
-              // 🚀 EXISTING RESULTS
+              // EXISTING RESULTS
               Expanded(
                 child: ListView.builder(
                   itemCount: searchResults.length,
@@ -1011,7 +842,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         children: [
           if (_songSuggestions.isNotEmpty) ...[
             _buildHeader(_l10n.songs, textColor),
-            ..._songSuggestions.map((s) => _buildSongTile(s, textColor)),
+            ..._songSuggestions.asMap().entries.map((entry) => 
+                _buildSongTile(entry.value, textColor, 
+                    index: ref.read(settingsProvider).searchEngine == SearchEngine.youtube ? entry.key : null)),
+            if (ref.read(settingsProvider).searchEngine == SearchEngine.youtube)
+              _buildLoadMoreButton(),
           ],
           if (_albumSuggestions.isNotEmpty) ...[
             _buildHeader(_l10n.albums, textColor),
@@ -1139,9 +974,13 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         _buildHeader(_l10n.songs, textColor),
         Expanded(
           child: ListView(
-            children: _songSuggestions
-                .map((s) => _buildSongTile(s, textColor))
-                .toList(),
+            children: [
+              ..._songSuggestions.asMap().entries.map((entry) => 
+                  _buildSongTile(entry.value, textColor, 
+                      index: ref.read(settingsProvider).searchEngine == SearchEngine.youtube ? entry.key : null)),
+              if (ref.read(settingsProvider).searchEngine == SearchEngine.youtube)
+                _buildLoadMoreButton(),
+            ],
           ),
         ),
       ],
@@ -1348,16 +1187,32 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     );
   }
 
-  /// Builds a single song list tile for tablet layout.
-  Widget _buildSongTile(SongMetadata s, Color textColor) {
+  Widget _buildSongTile(SongMetadata s, Color textColor, {int? index}) {
     return ListTile(
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: Image.network(s.albumArtUrl,
-            width: 40,
-            height: 40,
-            fit: BoxFit.cover,
-            errorBuilder: (c, o, e) => const Icon(Icons.music_note)),
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (index != null) ...[
+            SizedBox(
+              width: 24,
+              child: Text(
+                '${index + 1}',
+                style: TextStyle(
+                    color: textColor.withValues(alpha: 0.5), fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.network(s.albumArtUrl,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                errorBuilder: (c, o, e) => const Icon(Icons.music_note)),
+          ),
+        ],
       ),
       title: Text(s.title,
           style: TextStyle(color: textColor),
@@ -1368,6 +1223,27 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           maxLines: 1),
       onTap: () => _onSuggestionSelected(s),
       dense: true,
+    );
+  }
+
+  Widget _buildLoadMoreButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+      child: Center(
+        child: ElevatedButton(
+          onPressed: _isLoadingMore ? null : _loadMoreYoutube,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+            foregroundColor: Theme.of(context).colorScheme.primary,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          child: _isLoadingMore 
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text("Show More"),
+        ),
+      ),
     );
   }
 
@@ -1389,25 +1265,44 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       children: [
         if (_songSuggestions.isNotEmpty) ...[
           _buildHeader(_l10n.songs, textColor),
-          ..._songSuggestions.map((s) => ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Image.network(s.albumArtUrl,
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.cover,
-                      errorBuilder: (c, o, e) => const Icon(Icons.music_note)),
+          ..._songSuggestions.asMap().entries.map((entry) => ListTile(
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (ref.read(settingsProvider).searchEngine == SearchEngine.youtube) ...[
+                      SizedBox(
+                        width: 24,
+                        child: Text(
+                          '${entry.key + 1}',
+                          style: TextStyle(
+                              color: textColor.withValues(alpha: 0.5), fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.network(entry.value.albumArtUrl,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, o, e) => const Icon(Icons.music_note)),
+                    ),
+                  ],
                 ),
-                title: Text(s.title,
+                title: Text(entry.value.title,
                     style: TextStyle(color: textColor),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
-                subtitle: Text(s.artist,
+                subtitle: Text(entry.value.artist,
                     style: TextStyle(color: textColor.withValues(alpha: 0.7)),
                     maxLines: 1),
-                onTap: () => _onSuggestionSelected(s),
+                onTap: () => _onSuggestionSelected(entry.value),
                 dense: true,
               )),
+          if (ref.read(settingsProvider).searchEngine == SearchEngine.youtube)
+            _buildLoadMoreButton(),
         ],
         if (_albumSuggestions.isNotEmpty) ...[
           _buildHeader(_l10n.albums, textColor),

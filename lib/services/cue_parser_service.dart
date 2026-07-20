@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import 'package:flutter/foundation.dart';
 
 /// Represents a single track parsed from a CUE sheet.
 class CueTrack {
@@ -127,7 +128,7 @@ class CueParserService {
       final cueDir = p.dirname(cueFilePath);
       return _parseCueContent(content, cueDir);
     } catch (e) {
-      print('⚠️ CUE Parser Error: $e');
+      debugPrint('⚠️ CUE Parser Error: $e');
       return [];
     }
   }
@@ -204,8 +205,8 @@ class CueParserService {
             title: currentTrackTitle ?? 'Track $currentTrackNumber',
             performer: currentTrackPerformer ?? albumPerformer ?? 'Unknown Artist',
             audioFile: currentAudioFile ?? '',
-            trackNumber: currentTrackNumber!,
-            startOffset: currentTrackStart!,
+            trackNumber: currentTrackNumber,
+            startOffset: currentTrackStart,
             albumTitle: albumTitle,
             albumPerformer: albumPerformer,
             genre: genre,
@@ -227,8 +228,8 @@ class CueParserService {
             title: currentTrackTitle ?? 'Track $currentTrackNumber',
             performer: currentTrackPerformer ?? albumPerformer ?? 'Unknown Artist',
             audioFile: currentAudioFile ?? '',
-            trackNumber: currentTrackNumber!,
-            startOffset: currentTrackStart!,
+            trackNumber: currentTrackNumber,
+            startOffset: currentTrackStart,
             albumTitle: albumTitle,
             albumPerformer: albumPerformer,
             genre: genre,
@@ -259,8 +260,8 @@ class CueParserService {
         title: currentTrackTitle ?? 'Track $currentTrackNumber',
         performer: currentTrackPerformer ?? albumPerformer ?? 'Unknown Artist',
         audioFile: currentAudioFile ?? '',
-        trackNumber: currentTrackNumber!,
-        startOffset: currentTrackStart!,
+        trackNumber: currentTrackNumber,
+        startOffset: currentTrackStart,
         albumTitle: albumTitle,
         albumPerformer: albumPerformer,
         genre: genre,

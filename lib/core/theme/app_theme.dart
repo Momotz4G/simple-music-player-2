@@ -24,7 +24,6 @@ class AppTheme {
         primary: accentColor,
         secondary: accentColor.withValues(alpha: 0.8),
         surface: darkCardColor,
-        background: darkBackgroundColor,
       ),
       listTileTheme: ListTileThemeData(
         dense: true,

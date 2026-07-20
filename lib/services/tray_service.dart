@@ -32,15 +32,15 @@ typedef _SetWindowPosDart = int Function(int hWnd, int hWndInsertAfter, int X, i
 typedef _ShowWindowNative = Int32 Function(IntPtr hWnd, Int32 nCmdShow);
 typedef _ShowWindowDart = int Function(int hWnd, int nCmdShow);
 
-const int _GWL_EXSTYLE = -20;
-const int _WS_EX_TOOLWINDOW = 0x00000080;
-const int _WS_EX_APPWINDOW = 0x00040000;
-const int _SWP_NOMOVE = 0x0002;
-const int _SWP_NOSIZE = 0x0001;
-const int _SWP_NOZORDER = 0x0004;
-const int _SWP_FRAMECHANGED = 0x0020;
-const int _SW_HIDE = 0;
-const int _SW_SHOW = 5;
+const int _gwlExstyle = -20;
+const int _wsExToolwindow = 0x00000080;
+const int _wsExAppwindow = 0x00040000;
+const int _swpNomove = 0x0002;
+const int _swpNosize = 0x0001;
+const int _swpNozorder = 0x0004;
+const int _swpFramechanged = 0x0020;
+const int _swHide = 0;
+const int _swShow = 5;
 
 class TrayService with TrayListener {
   static final TrayService _instance = TrayService._internal();
@@ -76,10 +76,16 @@ class TrayService with TrayListener {
     trayManager.addListener(this);
   }
 
+  String? _lastLocaleName;
+
   /// Updates the tray menu with localized labels.
   /// This should be called from the UI when the locale changes.
   Future<void> updateLocalizedMenu(dynamic l10n) async {
     if (!(Platform.isWindows || Platform.isMacOS || Platform.isLinux)) return;
+    
+    final localeName = l10n.localeName as String;
+    if (_lastLocaleName == localeName) return;
+    _lastLocaleName = localeName;
     
     // Note: l10n is passed as dynamic to avoid direct imports if needed, 
     // but we expect AppLocalizations.
@@ -173,10 +179,10 @@ class TrayService with TrayListener {
     final setWindowLong = _user32!.lookupFunction<_SetWindowLongNative, _SetWindowLongDart>('SetWindowLongPtrW');
     final setWindowPos = _user32!.lookupFunction<_SetWindowPosNative, _SetWindowPosDart>('SetWindowPos');
 
-    final style = getWindowLong(hwnd, _GWL_EXSTYLE);
-    setWindowLong(hwnd, _GWL_EXSTYLE, (style | _WS_EX_TOOLWINDOW) & ~_WS_EX_APPWINDOW);
+    final style = getWindowLong(hwnd, _gwlExstyle);
+    setWindowLong(hwnd, _gwlExstyle, (style | _wsExToolwindow) & ~_wsExAppwindow);
     // Apply the style change
-    setWindowPos(hwnd, 0, 0, 0, 0, 0, _SWP_NOMOVE | _SWP_NOSIZE | _SWP_NOZORDER | _SWP_FRAMECHANGED);
+    setWindowPos(hwnd, 0, 0, 0, 0, 0, _swpNomove | _swpNosize | _swpNozorder | _swpFramechanged);
     debugPrint("🪟 [TrayService] Win32: Hidden from taskbar (WS_EX_TOOLWINDOW set)");
   }
 
@@ -187,10 +193,10 @@ class TrayService with TrayListener {
     final setWindowLong = _user32!.lookupFunction<_SetWindowLongNative, _SetWindowLongDart>('SetWindowLongPtrW');
     final setWindowPos = _user32!.lookupFunction<_SetWindowPosNative, _SetWindowPosDart>('SetWindowPos');
 
-    final style = getWindowLong(hwnd, _GWL_EXSTYLE);
-    setWindowLong(hwnd, _GWL_EXSTYLE, (style & ~_WS_EX_TOOLWINDOW) | _WS_EX_APPWINDOW);
+    final style = getWindowLong(hwnd, _gwlExstyle);
+    setWindowLong(hwnd, _gwlExstyle, (style & ~_wsExToolwindow) | _wsExAppwindow);
     // Apply the style change
-    setWindowPos(hwnd, 0, 0, 0, 0, 0, _SWP_NOMOVE | _SWP_NOSIZE | _SWP_NOZORDER | _SWP_FRAMECHANGED);
+    setWindowPos(hwnd, 0, 0, 0, 0, 0, _swpNomove | _swpNosize | _swpNozorder | _swpFramechanged);
     debugPrint("🪟 [TrayService] Win32: Shown in taskbar (WS_EX_APPWINDOW restored)");
   }
 
@@ -198,7 +204,7 @@ class TrayService with TrayListener {
   bool _setWindowVisibility(int hwnd, bool visible) {
     if (_user32 == null || hwnd == 0) return false;
     final showWindow = _user32!.lookupFunction<_ShowWindowNative, _ShowWindowDart>('ShowWindow');
-    return showWindow(hwnd, visible ? _SW_SHOW : _SW_HIDE) != 0;
+    return showWindow(hwnd, visible ? _swShow : _swHide) != 0;
   }
 
   // ─── Public API ─────────────────────────────────────────────────────
@@ -262,6 +268,11 @@ class TrayService with TrayListener {
 
   @override
   void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
+  }
+
+  @override
+  void onTrayIconRightMouseUp() {
     trayManager.popUpContextMenu();
   }
 

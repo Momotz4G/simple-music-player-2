@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,7 +26,7 @@ class QueueSheet extends ConsumerWidget {
     final playlist = playerState.playlist;
 
     // DEBUG: Log recommendation queue status
-    print(
+    debugPrint(
         "🎨 QueueSheet build: recommendationQueue.length = ${playerState.recommendationQueue.length}");
 
     // FULL LIST GENERATION (Lazy Loaded via Slivers)
@@ -68,11 +67,11 @@ class QueueSheet extends ConsumerWidget {
     final subTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
     final accentColor = Theme.of(context).colorScheme.primary;
 
-    // 🚀 FIXED HEIGHT (1/2 Screen to 100%)
+    // FIXED HEIGHT (1/2 Screen to 100%)
     return DraggableScrollableSheet(
       initialChildSize: 0.5, // Start at 1/2 screen
       minChildSize: 0.4,
-      maxChildSize: 1.0, // 🚀 Allow full screen drag
+      maxChildSize: 1.0, // Allow full screen drag
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
@@ -326,7 +325,7 @@ class QueueSheet extends ConsumerWidget {
                       ),
                     ],
 
-                    // 🚀 Loading indicator while fetching recommendations
+                    // Loading indicator while fetching recommendations
                     if (playerState.isLoadingRecommendations &&
                         playerState.recommendationQueue.isEmpty) ...[
                       SliverToBoxAdapter(
@@ -512,7 +511,7 @@ class QueueSheet extends ConsumerWidget {
     );
   }
 
-  /// 🚀 Context menu for recommendation songs (right-click, long-press, or 3-dot button)
+  /// Context menu for recommendation songs (right-click, long-press, or 3-dot button)
   void _showRecContextMenu(BuildContext context, Offset position,
       SongModel song, PlayerNotifier notifier, WidgetRef ref, {int? index}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -575,13 +574,13 @@ class QueueSheet extends ConsumerWidget {
           ),
         ),
         const PopupMenuDivider(),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'remove_from_rec',
           child: Row(
             children: [
-              const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
-              const SizedBox(width: 12),
-              const Text('Remove from recommendations', style: TextStyle(color: Colors.redAccent)),
+              Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+              SizedBox(width: 12),
+              Text('Remove from recommendations', style: TextStyle(color: Colors.redAccent)),
             ],
           ),
         ),
@@ -641,7 +640,7 @@ class QueueSheet extends ConsumerWidget {
     });
   }
 
-  /// 🚀 Add to Playlist dialog (same as library context menu)
+  /// Add to Playlist dialog (same as library context menu)
   void _showAddToPlaylistDialog(
       BuildContext context, SongModel song, WidgetRef ref) {
     final playlists = ref.read(playlistProvider);

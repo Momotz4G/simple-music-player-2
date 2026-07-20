@@ -55,8 +55,8 @@ class MailboxDialog extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.all_inbox_rounded, color: Colors.blueAccent),
-                        SizedBox(width: 12),
+                        const Icon(Icons.all_inbox_rounded, color: Colors.blueAccent),
+                        const SizedBox(width: 12),
                         Text(
                           AppLocalizations.of(context)!.globalMailbox,
                           style: const TextStyle(
@@ -84,8 +84,8 @@ class MailboxDialog extends ConsumerWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.mark_email_read_rounded, size: 64, color: Colors.grey),
-                            SizedBox(height: 16),
+                            const Icon(Icons.mark_email_read_rounded, size: 64, color: Colors.grey),
+                            const SizedBox(height: 16),
                             Text(AppLocalizations.of(context)!.noMessages, style: const TextStyle(color: Colors.grey)),
                           ],
                         ),

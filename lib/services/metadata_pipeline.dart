@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:metadata_god/metadata_god.dart';
 import '../services/spotify_service.dart';
 
@@ -28,7 +29,7 @@ final metadataPipelineProvider = Provider((ref) => MetadataPipeline());
 class MetadataPipeline {
   Future<RecognitionResult?> resolveSong(String filePath) async {
     try {
-      print("Pipeline: Reading local tags for metadata...");
+      debugPrint("Pipeline: Reading local tags for metadata...");
 
       // 1. Read tags directly from the file (No FFI/Fingerprinting)
       final metadata = await MetadataGod.readMetadata(file: filePath);
@@ -38,12 +39,12 @@ class MetadataPipeline {
 
       // If the file has no title, we can't search for it.
       if (localTitle.isEmpty) {
-        print("Pipeline: No title found in file tags. Cannot perform lookup.");
+        debugPrint("Pipeline: No title found in file tags. Cannot perform lookup.");
         return null;
       }
 
-      print("Pipeline: Found Tags -> '$localTitle' by '$localArtist'");
-      print("Pipeline: Searching Spotify...");
+      debugPrint("Pipeline: Found Tags -> '$localTitle' by '$localArtist'");
+      debugPrint("Pipeline: Searching Spotify...");
 
       // 2. Search Spotify using the tags
       // If artist is unknown, we just search the title.
@@ -54,7 +55,7 @@ class MetadataPipeline {
 
       if (spotifyResults.isNotEmpty) {
         final track = spotifyResults.first;
-        print("Pipeline: Spotify Sync Success -> ${track['title']}");
+        debugPrint("Pipeline: Spotify Sync Success -> ${track['title']}");
 
         return RecognitionResult(
           title: track['title'],
@@ -67,7 +68,7 @@ class MetadataPipeline {
         );
       }
 
-      print(
+      debugPrint(
           "Pipeline: Spotify returned no results. Falling back to local tags.");
 
       // 3. Fallback: Return basic info from file tags if Spotify fails
@@ -78,7 +79,7 @@ class MetadataPipeline {
         confidence: 0.5, // Lower confidence since it's just raw tags
       );
     } catch (e) {
-      print("Pipeline Error: $e");
+      debugPrint("Pipeline Error: $e");
       return null;
     }
   }

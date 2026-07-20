@@ -6,7 +6,7 @@ import '../services/pocketbase_service.dart';
 import '../services/metrics_service.dart';
 import '../services/auth_service.dart';
 import '../services/debug_log_service.dart';
-import '../services/sync_engine.dart'; // 🔄 Cloud Stats Sync
+import '../services/sync_engine.dart';
 import '../utils/stats_utils.dart';
 import 'stats_provider.dart';
 
@@ -19,7 +19,11 @@ class ProfileState {
   final String? linkedEmail;
   final String? role; // "developer", "contributor", or null
 
-  // 🚀 Cloud Stats
+  // Quota
+  final bool isPremium;
+  final int dailyDownloads;
+
+  // Cloud Stats
   final int? cloudTotalPlays;
   final int? cloudTotalMinutes;
   final String? cloudTopArtist;
@@ -29,10 +33,10 @@ class ProfileState {
   final int? cloudWeeklyPlays;
   final int? cloudTopArtistPlays;
   final int? cloudMostListenedPlays;
-  final int? cloudMaxRepeatStreak; // 🚀 NEW
-  final int? cloudCurrentRepeatStreak; // 🚀 NEW
-  final String? cloudLastRepeatSongId; // 🚀 NEW
-  final int? cloudLastRepeatTime; // 🚀 NEW
+  final int? cloudMaxRepeatStreak;
+  final int? cloudCurrentRepeatStreak;
+  final String? cloudLastRepeatSongId;
+  final int? cloudLastRepeatTime;
 
   ProfileState({
     required this.defaultDeviceName,
@@ -42,6 +46,8 @@ class ProfileState {
     this.isLinked = false,
     this.linkedEmail,
     this.role,
+    this.isPremium = false,
+    this.dailyDownloads = 0,
     this.cloudTotalPlays,
     this.cloudTotalMinutes,
     this.cloudTopArtist,
@@ -67,6 +73,8 @@ class ProfileState {
     bool? isLinked,
     String? linkedEmail,
     String? role,
+    bool? isPremium,
+    int? dailyDownloads,
     int? cloudTotalPlays,
     int? cloudTotalMinutes,
     String? cloudTopArtist,
@@ -94,6 +102,8 @@ class ProfileState {
       isLinked: isLinked ?? this.isLinked,
       linkedEmail: clearLinkedEmail ? null : (linkedEmail ?? this.linkedEmail),
       role: role ?? this.role,
+      isPremium: isPremium ?? this.isPremium,
+      dailyDownloads: dailyDownloads ?? this.dailyDownloads,
       cloudTotalPlays: cloudTotalPlays ?? this.cloudTotalPlays,
       cloudTotalMinutes: cloudTotalMinutes ?? this.cloudTotalMinutes,
       cloudTopArtist: cloudTopArtist ?? this.cloudTopArtist,
@@ -159,6 +169,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     final cloudWeekly = prefs.getInt('cached_cloud_weekly_plays');
     final cloudMaxStreak = prefs.getInt('cached_cloud_max_repeat_streak');
 
+    final cachedIsPremium = prefs.getBool('cached_is_premium') ?? false;
+    final cachedDailyDownloads = prefs.getInt('cached_daily_downloads') ?? 0;
+
     // Set state immediately with cached data
     state = ProfileState(
       defaultDeviceName: deviceName,
@@ -168,6 +181,8 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       cloudDailyPlays: cloudDaily,
       cloudWeeklyPlays: cloudWeekly,
       cloudMaxRepeatStreak: cloudMaxStreak,
+      isPremium: cachedIsPremium,
+      dailyDownloads: cachedDailyDownloads,
     );
 
     // Initialize AuthService and restore linked account state
@@ -178,7 +193,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         linkedEmail: AuthService().linkedEmail,
       );
 
-      // 🔗 Auto-recover interrupted migration: check for crash-recovery breadcrumb
+      // Auto-recover interrupted migration: check for crash-recovery breadcrumb
       // OR stale pb_user_id. Pass fromUserId explicitly because PocketBaseService._userId
       // was already set to linkedUserId during MetricsService.init().
       final linkedUserId = AuthService().linkedUserId;
@@ -204,6 +219,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     }
 
     // Then attempt to refresh from PocketBase in background
+    if (AuthService().isLinked) {
+      refreshQuotaFromCloud();
+    }
     refreshAvatarFromCloud();
   }
 
@@ -238,7 +256,11 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           final cloudLastRepeatTime =
               (metrics['last_repeat_time'] as num?)?.toInt();
 
-          // 🚀 LIVE RANK VERIFICATION: Standard sync might miss dynamic ranking.
+          final quota = await PocketBaseService().getUserQuota();
+          final isPremium = quota != null ? (quota['is_premium'] as bool? ?? false) : false;
+          final dailyDownloads = quota != null ? ((quota['daily_downloads'] as num?)?.toInt() ?? 0) : 0;
+
+          // LIVE RANK VERIFICATION: Standard sync might miss dynamic ranking.
           // We force-calculate it here to ensure "Top 1 Global" works immediately.
           final verifiedRank =
               await MetricsService().getCurrentUserRank(cloudMinutes ?? 0);
@@ -255,9 +277,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           if (effectiveNickname != null &&
               effectiveNickname.isNotEmpty &&
               effectiveNickname != state.customNickname) {
-            // 🛡️ ANTI-EXPLOIT: Validate uniqueness before accepting cloud nickname.
+            // ANTI-EXPLOIT: Validate uniqueness before accepting cloud nickname.
             // Prevents orphaned records from hijacking a nickname after unlink/relink.
-            final isNickTaken = await PocketBaseService().isNicknameTaken(effectiveNickname);
+            final isNickTaken =
+                await PocketBaseService().isNicknameTaken(effectiveNickname);
             if (!isNickTaken) {
               state = state.copyWith(customNickname: effectiveNickname);
               await prefs.setString('custom_nickname', effectiveNickname);
@@ -287,12 +310,18 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
               cloudCurrentRepeatStreak: cloudCurrentRepeatStreak,
               cloudLastRepeatSongId: cloudLastRepeatSongId,
               cloudLastRepeatTime: cloudLastRepeatTime,
+              isPremium: isPremium,
+              dailyDownloads: dailyDownloads,
             );
             await prefs.setString('cached_avatar_url', effectiveUrl);
-            if (cloudDailyPlays != null)
+            await prefs.setBool('cached_is_premium', isPremium);
+            await prefs.setInt('cached_daily_downloads', dailyDownloads);
+            if (cloudDailyPlays != null) {
               await prefs.setInt('cached_cloud_daily_plays', cloudDailyPlays);
-            if (cloudWeeklyPlays != null)
+            }
+            if (cloudWeeklyPlays != null) {
               await prefs.setInt('cached_cloud_weekly_plays', cloudWeeklyPlays);
+            }
           } else if (effectiveUrl == null && state.avatarUrl != null) {
             // Avatar was removed on server
             state = state.copyWith(
@@ -311,8 +340,12 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
               cloudCurrentRepeatStreak: cloudCurrentRepeatStreak,
               cloudLastRepeatSongId: cloudLastRepeatSongId,
               cloudLastRepeatTime: cloudLastRepeatTime,
+              isPremium: isPremium,
+              dailyDownloads: dailyDownloads,
             );
             await prefs.remove('cached_avatar_url');
+            await prefs.setBool('cached_is_premium', isPremium);
+            await prefs.setInt('cached_daily_downloads', dailyDownloads);
           } else {
             // Avatar unchanged, but still update role and cloud stats
             state = state.copyWith(
@@ -330,11 +363,17 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
               cloudCurrentRepeatStreak: cloudCurrentRepeatStreak,
               cloudLastRepeatSongId: cloudLastRepeatSongId,
               cloudLastRepeatTime: cloudLastRepeatTime,
+              isPremium: isPremium,
+              dailyDownloads: dailyDownloads,
             );
-            if (cloudDailyPlays != null)
+            await prefs.setBool('cached_is_premium', isPremium);
+            await prefs.setInt('cached_daily_downloads', dailyDownloads);
+            if (cloudDailyPlays != null) {
               await prefs.setInt('cached_cloud_daily_plays', cloudDailyPlays);
-            if (cloudWeeklyPlays != null)
+            }
+            if (cloudWeeklyPlays != null) {
               await prefs.setInt('cached_cloud_weekly_plays', cloudWeeklyPlays);
+            }
           }
         }
         return; // Success, exit retry loop
@@ -346,15 +385,16 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     }
   }
 
-  /// 🚀 BUMP STATS LOCALLY: Instantly update cloud metrics locally to provide
+  /// BUMP STATS LOCALLY: Instantly update cloud metrics locally to provide
   /// reactive UI feedback before the next actual PocketBase sync fetch occurs.
   void bumpCloudStats(
       {int playIncrement = 0,
       int minutesIncrement = 0,
       int dailyIncrement = 0,
       int weeklyIncrement = 0}) {
-    if (state.cloudTotalPlays == null && state.cloudTotalMinutes == null)
+    if (state.cloudTotalPlays == null && state.cloudTotalMinutes == null) {
       return;
+    }
 
     state = state.copyWith(
       cloudTotalPlays: (state.cloudTotalPlays ?? 0) + playIncrement,
@@ -362,6 +402,44 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       cloudDailyPlays: (state.cloudDailyPlays ?? 0) + dailyIncrement,
       cloudWeeklyPlays: (state.cloudWeeklyPlays ?? 0) + weeklyIncrement,
     );
+  }
+
+  void bumpQuota() {
+    state = state.copyWith(dailyDownloads: state.dailyDownloads + 1);
+  }
+
+  /// Refreshes ONLY the quota and premium status from the cloud silently.
+  Future<String> refreshQuotaFromCloud() async {
+    try {
+      final quota = await PocketBaseService().getUserQuota();
+      if (quota != null) {
+        // Use == true to safely handle any type mismatches without crashing
+        final isPremium = quota['is_premium'] == true;
+        final dailyDownloads = (quota['daily_downloads'] as num?)?.toInt() ?? 0;
+        
+        state = state.copyWith(
+          isPremium: isPremium,
+          dailyDownloads: dailyDownloads,
+        );
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('cached_is_premium', isPremium);
+        await prefs.setInt('cached_daily_downloads', dailyDownloads);
+        
+        return isPremium ? "Premium Status Active! 🌟" : "You don't have Premium yet. Tap 'Continue to Sociabuzz' to upgrade!";
+      } else {
+        return "You need to link your account first to check your status.";
+      }
+    } catch (e) {
+      String errMsg = e.toString();
+      if (errMsg.contains('statusCode: 502') || errMsg.contains('statusCode: 503')) {
+         return "Server Error: Our database is currently restarting or down. Please try again later.";
+      } else if (errMsg.contains('statusCode: 404') || errMsg.contains('statusCode: 403')) {
+         return "Account not found or access denied. Try linking your account again.";
+      } else if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup') || errMsg.contains('ClientException')) {
+         return "Network Error: Could not connect to the server. Please check your connection.";
+      }
+      return "Could not fetch status at this time. Please try again later.";
+    }
   }
 
   // Returns an error message if failed, or null if successful
@@ -375,7 +453,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       state = state.copyWith(clearNickname: true);
       return null;
     } else {
-      // 🚀 VERIFY UNIQUENESS BEFORE SAVING
+      // VERIFY UNIQUENESS BEFORE SAVING
       final isTaken = await PocketBaseService().isNicknameTaken(cleanedName);
       if (isTaken) {
         return "Nickname '$cleanedName' is already taken by another user.";
@@ -384,7 +462,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       await prefs.setString('custom_nickname', cleanedName);
       state = state.copyWith(customNickname: cleanedName);
 
-      // 🚀 Force immediate sync to ensure Leaderboard sees newest nickname AND current earned title!
+      // Force immediate sync to ensure Leaderboard sees newest nickname AND current earned title!
       try {
         final stats = ref.read(statsProvider);
         final calculated = StatsUtils.calculate(stats);
@@ -460,7 +538,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       state = state.copyWith(selectedTitle: title);
     }
 
-    // 🚀 Force immediate sync with calculated title
+    // Force immediate sync with calculated title
     try {
       final stats = ref.read(statsProvider);
       final calculated = StatsUtils.calculate(stats);
@@ -488,7 +566,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         return "Google sign-in was cancelled or failed.";
       }
 
-      // 🛡️ CRASH GUARD: The PocketBase SDK's authWithOAuth2 uses an SSE realtime
+      // CRASH GUARD: The PocketBase SDK's authWithOAuth2 uses an SSE realtime
       // connection. After auth completes, it asynchronously disconnects the SSE.
       // On Windows, this native socket teardown can race with the event loop
       // and cause a native crash (exit code -1).
@@ -496,7 +574,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       // STRATEGY: Persist ALL critical auth state IMMEDIATELY so that even if
       // the app crashes during migration, the next startup auto-recovers.
       final prefs = await SharedPreferences.getInstance();
-      // 🛡️ Get the current anonymous user ID from the live service (always set)
+      // Get the current anonymous user ID from the live service (always set)
       // SharedPreferences is the fallback only
       final oldPbUserId =
           PocketBaseService().userId ?? prefs.getString('pb_user_id');
@@ -511,7 +589,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       DebugLogService()
           .info("🛡️ Auth state persisted. Old=$oldPbUserId, new=$newUserId");
 
-      // 🛡️ NATIVE WINDOWS TEARDOWN BUFFER:
+      // NATIVE WINDOWS TEARDOWN BUFFER:
       // The PocketBase SDK is currently unsubscribing from the @oauth2 SSE stream.
       // On Windows, dart:io uses an IOCP socket pool. If we immediately fire REST
       // requests while the SSE socket is tearing down or submitting new subscriptions,
@@ -520,13 +598,13 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       // the auto-recovery breadcrumb we just saved will handle migration next time!).
       DebugLogService().info(
           "⏳ Stabilizing network context (avoiding native IOCP crash)...");
-      await Future.delayed(const Duration(milliseconds: 2500));
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      // 🛒 SAVVY SYNC: Fetch current cloud data BEFORE migration
+      // SAVVY SYNC: Fetch current cloud data BEFORE migration
       final cloudMetrics =
           await PocketBaseService().getRemoteMetricsForUser(newUserId);
 
-      // ⚠️ CONFLICT CHECK: Does cloud have a nickname different from local?
+      // CONFLICT CHECK: Does cloud have a nickname different from local?
       if (cloudMetrics != null && !force) {
         final cloudNickname = cloudMetrics['nickname'] as String?;
         final localNickname = state.customNickname;
@@ -557,17 +635,17 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         linkedEmail: AuthService().linkedEmail,
       );
 
-      // 📥 RESTORE CLOUD IDENTITY (The Pull-First Safeguard)
+      // RESTORE CLOUD IDENTITY (The Pull-First Safeguard)
       if (cloudMetrics != null) {
         await _restoreCloudIdentity(cloudMetrics);
       }
 
-      // 📊 ADDITIVE STATS SYNC (The Merge)
+      // ADDITIVE STATS SYNC (The Merge)
       await ref
           .read(statsProvider.notifier)
           .pullAndSyncRemoteData(isInitialLink: true);
 
-      // 🔄 Notify SyncEngine of account link (Requirement 9.2)
+      // Notify SyncEngine of account link (Requirement 9.2)
       SyncEngine().onAccountLinked(newUserId);
 
       return null; // Success
@@ -594,8 +672,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
     // Update local prefs and state with cloud identity
     if (effectiveNickname != null && effectiveNickname.isNotEmpty) {
-      // 🛡️ ANTI-EXPLOIT: Validate uniqueness before restoring cloud nickname
-      final isNickTaken = await PocketBaseService().isNicknameTaken(effectiveNickname);
+      // ANTI-EXPLOIT: Validate uniqueness before restoring cloud nickname
+      final isNickTaken =
+          await PocketBaseService().isNicknameTaken(effectiveNickname);
       if (!isNickTaken) {
         await prefs.setString('custom_nickname', effectiveNickname);
         state = state.copyWith(customNickname: effectiveNickname);
@@ -623,7 +702,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   /// Unlink Google account and revert to anonymous
   Future<void> unlinkAccount() async {
     try {
-      // 🛡️ ANTI-EXPLOIT: Clear nickname from the metrics record about to be orphaned.
+      // ANTI-EXPLOIT: Clear nickname from the metrics record about to be orphaned.
       // Prevents "multi-account nickname squatting" where unlink/relink cycles
       // leave orphaned records with the same nickname, inflating leaderboard stats.
       try {
@@ -641,7 +720,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       await prefs.remove('selected_title');
       await prefs.remove('cached_avatar_url');
 
-      // 🚀 CRITICAL: Wipe local stats so the new anonymous user starts fresh!
+      // CRITICAL: Wipe local stats so the new anonymous user starts fresh!
       // This prevents the "2000 minutes cloned to new ID" bug.
       await ref.read(statsProvider.notifier).resetStats();
 
@@ -653,7 +732,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         clearLinkedEmail: true,
       );
 
-      // 🔄 Notify SyncEngine of account unlink (Requirement 9.3)
+      // Notify SyncEngine of account unlink (Requirement 9.3)
       SyncEngine().onAccountUnlinked();
 
       DebugLogService()

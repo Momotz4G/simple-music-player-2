@@ -10,7 +10,7 @@ class StatEntry {
   // We DON'T save the image bytes to disk (too heavy/slow).
   // We save the path, but if the file is missing, we just show a placeholder.
   final String lastKnownPath;
-  final DateTime? lastPlayed; // 📅 NEW: Important for sync/leaderboard
+  final DateTime? lastPlayed;
   final String? onlineArtUrl;
   final String? youtubeUrl;
   final String? spotifyId;
@@ -64,7 +64,9 @@ class StatEntry {
       playCount: json['playCount'] ?? 0,
       totalSeconds: json['totalSeconds'] ?? 0,
       lastKnownPath: json['lastKnownPath'] ?? '',
-      lastPlayed: json['lastPlayed'] != null ? DateTime.parse(json['lastPlayed']) : null,
+      lastPlayed: json['lastPlayed'] != null
+          ? DateTime.parse(json['lastPlayed'])
+          : null,
       onlineArtUrl: json['onlineArtUrl'],
       youtubeUrl: json['youtubeUrl'],
       spotifyId: json['spotifyId'],

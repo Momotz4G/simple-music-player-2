@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 /// Lyrics translation service via Vercel-hosted Google Translate API.
 /// Supports batch translation of all lyric lines in a single API call.
@@ -85,7 +86,7 @@ class TranslationService {
         return result;
       }
     } catch (e) {
-      print('Translation error: $e');
+      debugPrint('Translation error: $e');
     }
 
     _loading[songKey] = false;
@@ -120,7 +121,7 @@ class TranslationService {
         }
       }
     } catch (e) {
-      print('Translation error: $e');
+      debugPrint('Translation error: $e');
     }
     return null;
   }

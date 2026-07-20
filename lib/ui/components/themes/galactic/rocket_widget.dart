@@ -50,10 +50,10 @@ class _RocketPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Rocket moves diagonally from bottom-left to top-right
-    final double startX = -100;
+    const double startX = -100;
     final double endX = size.width + 100;
     final double startY = size.height + 100;
-    final double endY = -100;
+    const double endY = -100;
 
     final double x = startX + (endX - startX) * progress;
     final double y = startY + (endY - startY) * progress;

@@ -38,6 +38,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get accountLinkedSuccessfully => 'Liên kết tài khoản thành công!';
 
   @override
+  String get accountTiers => 'Cấp độ tài khoản';
+
+  @override
   String get achievementsUnlocked => 'Thành tựu đã mở khóa';
 
   @override
@@ -54,6 +57,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get addFoldersScan => 'Thêm thư mục để quét';
+
+  @override
+  String get addLineToEnd => 'Thêm vào cuối';
+
+  @override
+  String get addLineToTop => 'Thêm vào đầu';
 
   @override
   String get addToFavorite => 'Thêm vào yêu thích';
@@ -77,6 +86,66 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get addedToQueue => 'Đã thêm vào hàng chờ';
+
+  @override
+  String get aiGenerate => 'Tạo bằng AI';
+
+  @override
+  String get aiLyricsComplete => 'Hoàn tất!';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsGenerationTitle => 'Tạo lời bài hát bằng AI';
+
+  @override
+  String get aiLyricsInitializing => 'Đang khởi tạo...';
+
+  @override
+  String get aiLyricsLocalFileMissing =>
+      'Lỗi: Không tìm thấy tệp âm thanh cục bộ.';
+
+  @override
+  String get aiLyricsParsing => 'Đang phân tích lời bài hát...';
+
+  @override
+  String get aiLyricsPolling => 'Đang lấy lời bài hát... Vui lòng kiên nhẫn!';
+
+  @override
+  String get aiLyricsReceiving => 'Đã nhận lời bài hát';
+
+  @override
+  String get aiLyricsStatusOk => 'Mã trạng thái 200 OK!';
+
+  @override
+  String get aiLyricsSuccess => 'Tạo lời bài hát thành công!';
+
+  @override
+  String get aiLyricsUploadFailed => 'Lỗi: Tải lên thất bại.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'Tải lên hoàn tất!';
+
+  @override
+  String get aiLyricsUploading => 'Đang tải bài hát lên máy chủ...';
+
+  @override
+  String get aiLyricsVerifying => 'Đang xác minh trạng thái máy chủ...';
+
+  @override
+  String alacDownloadsPerDay(int count) {
+    return '$count Lượt tải ALAC / ngày';
+  }
+
+  @override
+  String get alacHighResDownloads => 'Tải xuống ALAC độ phân giải cao';
 
   @override
   String get album => 'Album';
@@ -106,6 +175,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get alreadyInLikedSongs => 'Đã có trong bài hát yêu thích';
 
   @override
+  String get alreadyPaidCheckStatus => 'Đã thanh toán? Kiểm tra trạng thái';
+
+  @override
   String get android14BitPerfect => 'Android 14+ Bit-Perfect';
 
   @override
@@ -123,6 +195,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appearance => 'Giao diện';
+
+  @override
+  String get applyBtn => 'Áp dụng';
 
   @override
   String get applyOnRestart =>
@@ -205,6 +280,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get automatic => 'Tự động';
 
   @override
+  String get automaticGainControl => 'Tự động kiểm soát độ lợi';
+
+  @override
+  String get automaticGainControlDesc =>
+      'Chuẩn hóa âm lượng giữa các bài hát để không có bài nào quá to hoặc quá nhỏ.';
+
+  @override
   String automaticTitleLabel(String title) {
     return 'Tự động: $title';
   }
@@ -216,15 +298,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get avatarPickerDesc => 'Chọn một bản mẫu hoặc nhập ảnh của riêng bạn';
 
   @override
-  String get beFirstToClaim =>
-      'Hãy là người đầu tiên giành lấy vị trí dẫn đầu!';
-
-  @override
   String get backgroundCacheFlacStreams => 'Lưu cache luồng FLAC nền';
 
   @override
   String get backgroundCacheFlacStreamsSubtitle =>
       'Tải xuống âm thanh lossless được phát trực tuyến vào đĩa cục bộ một cách im lặng để phát lại tức thì và không tốn dữ liệu.';
+
+  @override
+  String get beFirstToClaim =>
+      'Hãy là người đầu tiên giành lấy vị trí dẫn đầu!';
 
   @override
   String get behavioralHeader => 'THÀNH TÍCH HÀNH VI';
@@ -237,6 +319,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bitDepthLabel => 'Độ sâu bit';
+
+  @override
+  String get bitPerfectBypassSub14 =>
+      'Bỏ qua bộ trộn hệ thống bằng API Bit-Perfect của Android 14+';
+
+  @override
+  String get bitPerfectBypassSubLegacy =>
+      'Bỏ qua bộ trộn hệ thống bằng C++ Audio Engine (Android 13 trở xuống)';
+
+  @override
+  String get bitPerfectBypassSuccess => 'Đã bật phát lại Bit-Perfect.';
+
+  @override
+  String get bitPerfectBypassTitle => 'Bit-Perfect / USB Audio Bypass';
+
+  @override
+  String get bitPerfectBypassWarning => 'Bạn phải kết nối DAC USB trước.';
 
   @override
   String get bitPerfectEnabled =>
@@ -272,6 +371,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cancel => 'Hủy';
+
+  @override
+  String get cancelAllBtn => 'Hủy tất cả';
+
+  @override
+  String get canvasSourcePreferenceSubtitle =>
+      'Chọn nguồn tải các video vòng lặp nền động';
+
+  @override
+  String get canvasSourcePreferenceTitle => 'Nguồn Canvas / Ảnh bìa động';
 
   @override
   String get championChampionTooltip =>
@@ -329,6 +438,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chooseAvatar => 'Chọn ảnh đại diện';
 
   @override
+  String get chooseFormat => 'Chọn định dạng ưa thích của bạn:';
+
+  @override
   String get chooseYourTitle => 'Chọn danh hiệu của bạn';
 
   @override
@@ -336,6 +448,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get clearAll => 'Xóa tất cả';
+
+  @override
+  String get clearAllDesc =>
+      'Thao tác này sẽ xóa trạng thái trình chỉnh sửa hiện tại. Nó sẽ KHÔNG xóa các tệp cục bộ của bạn trừ khi bạn Lưu sau đó.';
+
+  @override
+  String get clearAllQuestion => 'Xóa tất cả?';
+
+  @override
+  String get clearBtn => 'Xóa';
 
   @override
   String get clearHistory => 'Xóa lịch sử';
@@ -357,6 +479,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cloud => 'Đám mây';
+
+  @override
+  String get cloudStatsAndRankings => 'Thống kê đám mây và Bảng xếp hạng';
 
   @override
   String get codeCopied => 'Đã sao chép mã vào danh bạ!';
@@ -415,7 +540,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get contentRegion => 'Khu vực nội dung';
 
   @override
+  String get continueToSociabuzz => 'Tiếp tục đến Sociabuzz';
+
+  @override
   String get copyCode => 'Sao chép Mã';
+
+  @override
+  String get copyLink => 'Sao Chép Liên Kết';
 
   @override
   String get couldNotDownloadFlac => 'Không thể tải FLAC.';
@@ -450,6 +581,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get crownedChampionTitlesHeader =>
       'DANH HIỆU QUÁN QUÂN ĐƯỢC PHONG VƯƠNG';
+
+  @override
+  String get currentTierLabel => 'Hiện tại';
 
   @override
   String get customDevice => 'Thiết bị tùy chỉnh';
@@ -536,6 +670,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get disableRomanization => 'Tắt phiên âm';
 
   @override
+  String get disableServicesTitle => 'Tắt các dịch vụ';
+
+  @override
+  String get disabled => 'Đã tắt';
+
+  @override
   String get disablingSharingWarning =>
       'Tắt chia sẻ sẽ xóa vĩnh viễn mã và dữ liệu khỏi máy chủ để tiết kiệm dung lượng.';
 
@@ -553,6 +693,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get donate => 'Quyên góp';
+
+  @override
+  String get donateMinToObtain =>
+      'Quyên góp tối thiểu 10.000 IDR để nhận (Vĩnh viễn)';
 
   @override
   String get download => 'Tải về';
@@ -615,6 +759,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dspLabel => 'DSP';
 
   @override
+  String get editLyricsTooltip => 'Chỉnh sửa lời bài hát';
+
+  @override
   String get editMetadata => 'Chỉnh sửa metadata';
 
   @override
@@ -648,6 +795,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get enableBarVisualizer => 'Bật trình trực quan dạng thanh';
+
+  @override
+  String get enableOfflineModeBtn => 'Bật chế độ ngoại tuyến';
+
+  @override
+  String get enableOfflineModeQuestion => 'Bật chế độ ngoại tuyến?';
+
+  @override
+  String get endLabel => 'Kết thúc: ';
 
   @override
   String get endlessQueue => 'Hàng chờ vô tận';
@@ -707,6 +863,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cảnh báo: Chế độ độc quyền hoạt động tốt nhất nếu bạn chọn thiết bị cụ thể ở trên thay vì mặc định hệ thống.';
 
   @override
+  String get exclusiveSupporterTitle =>
+      'Danh hiệu người ủng hộ độc quyền và vai trò Discord';
+
+  @override
   String get exclusiveTitles => 'ĐỘC QUYỀN';
 
   @override
@@ -723,7 +883,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get expand => 'Mở rộng';
 
   @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
   String get externalFiles => 'Tệp bên ngoài';
+
+  @override
+  String get externalLinkDetected => 'Phát Hiện Liên Kết Ngoài';
 
   @override
   String get fadingAtEnd => 'Hẹn giờ ngủ: Đang giảm dần ở cuối bài...';
@@ -747,6 +913,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể tạo mã chia sẻ. Kiểm tra kết nối.';
 
   @override
+  String get failedToSave => 'Không lưu được tệp lời bài hát.';
+
+  @override
   String get failedToSetAvatar => 'Lỗi khi thiết lập mẫu ảnh đại diện';
 
   @override
@@ -754,6 +923,77 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get favoriteTrack => 'Bài hát yêu thích';
+
+  @override
+  String get featureAiLyrics => 'Trình tạo lời bài hát AI';
+
+  @override
+  String get featureAiLyricsDesc => 'Đã tắt lời bài hát khớp nhạc tự động';
+
+  @override
+  String get featureAiLyricsLongDesc => 'Tạo lời bài hát khớp nhạc qua AI';
+
+  @override
+  String get featureCloudSync => 'Đồng bộ thống kê đám mây';
+
+  @override
+  String get featureCloudSyncDesc => 'Thống kê nghe chỉ được lưu cục bộ';
+
+  @override
+  String get featureCloudSyncLongDesc => 'Đồng bộ chỉ số nghe với PocketBase';
+
+  @override
+  String get featureConnectDevice => 'Kết nối với thiết bị';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'Đã tắt điều khiển từ xa và nhóm nghe nhạc';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'Điều khiển từ xa và nhóm nghe nhạc';
+
+  @override
+  String get featureLeaderboard => 'Bảng xếp hạng toàn cầu';
+
+  @override
+  String get featureLeaderboardDesc => 'Đã tạm dừng cập nhật xếp hạng';
+
+  @override
+  String get featureLeaderboardLongDesc =>
+      'Hiển thị và cập nhật xếp hạng của bạn công khai';
+
+  @override
+  String get featureOnlineLyrics => 'Tìm kiếm lời bài hát trực tuyến';
+
+  @override
+  String get featureOnlineLyricsDesc => 'Chỉ các tệp .lrc/.ttml cục bộ';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'Lấy lời bài hát từ LRCLIB/Spotify';
+
+  @override
+  String get featureOnlineSearch => 'Tìm kiếm trực tuyến';
+
+  @override
+  String get featureOnlineSearchDesc => 'Đã tắt tìm kiếm Spotify/YouTube';
+
+  @override
+  String get featureOnlineSearchLongDesc =>
+      'Tìm kiếm từ xa trên Spotify và YouTube';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'Đã tắt video nền';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'Video nền cho các bài hát';
+
+  @override
+  String get fetchingAlacAppleMusic =>
+      'Đang lấy ALAC Lossless từ Apple Music...';
 
   @override
   String get fetchingCanvas => 'Đang lấy Canvas...';
@@ -900,7 +1140,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get general => 'Chung';
 
   @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
   String get generatingShareCode => 'Đang tạo mã chia sẻ...';
+
+  @override
+  String get generationFailed => 'Tạo thất bại';
 
   @override
   String get genre => 'Thể loại';
@@ -932,6 +1178,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Vào Thư viện cục bộ để chọn một thư mục.';
 
   @override
+  String get gofileDownloadFailedPrompt =>
+      'Tải xuống tự động không thành công do hạn chế mạng hoặc máy chủ nghiêm ngặt.\\n\\nBạn có muốn mở trang tải xuống Gofile trong trình duyệt hệ thống của mình, hay sao chép liên kết để tải xuống thủ công?';
+
+  @override
   String get goodAfternoon => 'Chào buổi chiều';
 
   @override
@@ -948,6 +1198,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get grantPermission => 'Cấp quyền';
+
+  @override
+  String get guestTier => 'Khách';
 
   @override
   String get hallOfFameHeader => 'THÀNH TÍCH ĐẠI SẢNH DANH VỌNG';
@@ -1019,6 +1272,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get importFromGallery => 'Nhập từ thư viện';
 
   @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
   String get importFromSpotify => 'Nhập từ Spotify';
 
   @override
@@ -1039,6 +1298,83 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get importLyricsTooltip => 'Nhập lời bài hát';
+
+  @override
+  String get localFile => 'Tệp cục bộ';
+
+  @override
+  String get importLocalFileSubtitle => 'Nhập tệp .lrc, .ttml hoặc .txt';
+
+  @override
+  String get searchFromAppleMusic => 'Tìm kiếm từ Apple Music';
+
+  @override
+  String get searchAppleMusicSubtitle => 'Tự động tải xuống LRC/TTML';
+
+  @override
+  String get searchFromSpotifyLyrics => 'Tìm kiếm từ Spotify';
+
+  @override
+  String get searchSpotifyLyricsSubtitle =>
+      'Tải xuống lời bài hát đồng bộ từ Spotify';
+
+  @override
+  String get searchFromMusixmatch => 'Tìm kiếm từ Musixmatch';
+
+  @override
+  String get searchMusixmatchSubtitle =>
+      'Tải xuống lời bài hát đồng bộ từ Musixmatch';
+
+  @override
+  String get searchingAppleMusic => 'Đang tìm kiếm trên Apple Music...';
+
+  @override
+  String get findingMatches => 'Đang tìm kết quả phù hợp...';
+
+  @override
+  String get noResultsAppleMusic => 'Không tìm thấy kết quả trên Apple Music.';
+
+  @override
+  String get selectSong => 'Chọn bài hát';
+
+  @override
+  String get downloadingLyrics => 'Đang tải xuống lời bài hát...';
+
+  @override
+  String get fetchingLyricsFromServer => 'Đang lấy TTML/LRC từ máy chủ...';
+
+  @override
+  String get failedDownloadAppleMusic =>
+      'Tải xuống lời bài hát thất bại. Có thể chúng không tồn tại trên Apple Music.';
+
+  @override
+  String get lyricsImportedSuccess =>
+      'Đã nhập lời bài hát thành công! Nhấn Lưu để giữ lại.';
+
+  @override
+  String get receivedEmptyLyrics => 'Nhận được lời bài hát trống từ máy chủ.';
+
+  @override
+  String get downloadingFromSpotify => 'Đang tải xuống từ Spotify...';
+
+  @override
+  String get fetchingLyrics => 'Đang lấy lời bài hát...';
+
+  @override
+  String get lyricsImportedSpotify => 'Đã nhập lời bài hát từ Spotify!';
+
+  @override
+  String get noLyricsSpotify => 'Không tìm thấy lời bài hát trên Spotify.';
+
+  @override
+  String get downloadingFromMusixmatch => 'Đang tải xuống từ Musixmatch...';
+
+  @override
+  String get lyricsImportedMusixmatch => 'Đã nhập lời bài hát từ Musixmatch!';
+
+  @override
+  String get noLyricsMusixmatch =>
+      'Không tìm thấy lời bài hát trên Musixmatch.';
 
   @override
   String get importSpotifyPlaylist => 'Nhập danh sách phát Spotify';
@@ -1073,6 +1409,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get inputLabel => 'Đầu vào';
 
   @override
+  String get insertAfter => 'Chèn sau';
+
+  @override
   String get installNow => 'Cài đặt ngay';
 
   @override
@@ -1083,6 +1422,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get invalidCode => 'Mã truy cập không hợp lệ';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
 
   @override
   String get invalidSpotifyUrl => 'URL danh sách phát Spotify không hợp lệ';
@@ -1148,6 +1490,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đồng bộ hóa và khôi phục tiến trìnhของ bạn với Google';
 
   @override
+  String get linkAccountToUpgrade =>
+      'Bạn cần liên kết tài khoản của mình trước để nâng cấp. Vui lòng sử dụng cùng một email trên Sociabuzz!';
+
+  @override
+  String get linkCopied => 'Liên kết đã được sao chép vào bộ nhớ tạm!';
+
+  @override
   String listenMinutesTooltip(String minutes) {
     return 'Nghe $minutes phút nhạc';
   }
@@ -1191,10 +1540,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get losslessQuality => 'Không nén (Tự động)';
 
   @override
+  String get lrcFormat => 'LRC (Đồng bộ chuẩn)';
+
+  @override
+  String get lrcFormatDesc => 'Định dạng phổ biến, hoạt động ở mọi nơi.';
+
+  @override
   String get lunarNewYear => 'Tết Nguyên Đán';
 
   @override
+  String get lyricTextHint => 'Văn bản lời bài hát...';
+
+  @override
+  String get lyricsApplied => 'Lời bài hát đã được áp dụng vào bảng!';
+
+  @override
   String get lyricsByLRCLIB => 'Lời bởi LRCLIB';
+
+  @override
+  String get lyricsEditorTitle => 'Trình chỉnh sửa lời bài hát';
 
   @override
   String get lyricsSaveError => 'Lỗi khi lưu lời bài hát';
@@ -1207,6 +1571,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get madeForYou => 'Dành cho bạn';
+
+  @override
+  String get manageIndividualFeatures =>
+      'Quản lý các tính năng trực tuyến riêng lẻ';
 
   @override
   String get manualSearch => 'Tìm kiếm thủ công';
@@ -1443,6 +1811,42 @@ class AppLocalizationsVi extends AppLocalizations {
   String get offline => 'Ngoại tuyến';
 
   @override
+  String get offlineModeActive => 'ĐANG HOẠT ĐỘNG';
+
+  @override
+  String get offlineModeAllEnabledStatus => 'Đã bật tất cả';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'Thao tác này sẽ tắt hoàn toàn mọi giao tiếp mạng. Các tính năng sau sẽ bị tắt:';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'Đã tắt ($count)';
+  }
+
+  @override
+  String get offlineModeEnabledStatus => 'Đã bật chế độ ngoại tuyến';
+
+  @override
+  String get offlineModeHeader => 'CHẾ ĐỘ NGOẠI TUYẾN';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'Đang khóa mạng. Thống kê được lưu cục bộ.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'Tắt tất cả các dịch vụ mạng và chỉ phát thư viện cục bộ.';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'Thống kê của bạn sẽ tự động đồng bộ hóa khi bạn tắt tính năng này.';
+
+  @override
+  String get offlineModeTitle => 'Chế độ ngoại tuyến';
+
+  @override
   String get offlineStatus => 'Ngoại tuyến';
 
   @override
@@ -1452,7 +1856,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get online => 'Trực tuyến';
 
   @override
+  String get onlineModeRestored =>
+      'Đã khôi phục chế độ trực tuyến. Đang đồng bộ thống kê...';
+
+  @override
+  String get onlyAppleMusic => 'Chỉ Apple Music';
+
+  @override
   String get onlyScanSelected => 'Chỉ quét thư mục đã chọn (mặc định bật)';
+
+  @override
+  String get onlySpotify => 'Chỉ Spotify';
 
   @override
   String get opacity => 'Độ mờ';
@@ -1461,6 +1875,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String opacityLabel(int percent) {
     return 'Độ mờ: $percent%';
   }
+
+  @override
+  String get openBrowser => 'Mở Trình Duyệt';
 
   @override
   String get openProfile => 'Mở hồ sơ';
@@ -1479,7 +1896,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tệp .lrc cục bộ đã tồn tại.\\nBạn có muốn ghi đè không?';
 
   @override
+  String get owned => 'Đã sở hữu';
+
+  @override
   String get parsingPlaylistData => 'Đang phân tích dữ liệu danh sách phát...';
+
+  @override
+  String get pasteLyricsHint => 'Dán lời bài hát của bạn vào đây...';
 
   @override
   String get pathLabel => 'Đường dẫn';
@@ -1492,12 +1915,18 @@ class AppLocalizationsVi extends AppLocalizations {
       'Quyền \"Truy cập tất cả tệp\" là cần thiết để chỉnh sửa thẻ nhạc. Điều này cho phép sửa trực tiếp tệp nhạc của bạn.';
 
   @override
+  String get plainMode => 'Văn bản thuần túy';
+
+  @override
   String get play => 'Phát';
 
   @override
   String playCountLabel(int count) {
     return '$count lượt phát';
   }
+
+  @override
+  String get playFromLine => 'Phát từ dòng này';
 
   @override
   String get playNext => 'Phát kế tiếp';
@@ -1556,7 +1985,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get portuguese => 'Tiếng Bồ Đào Nha (Brazil)';
 
   @override
+  String get preferAppleMusic => 'Ưu tiên Apple Music';
+
+  @override
+  String get preferSpotify => 'Ưu tiên Spotify';
+
+  @override
   String get preferredOutputFormat => 'Định dạng đầu ra ưu tiên khi tải về';
+
+  @override
+  String get premiumMemberDesc =>
+      'Bạn có lượt tải xuống ALAC không giới hạn và quyền truy cập Hàng đợi ưu tiên!';
+
+  @override
+  String get premiumMemberTitle => 'Thành viên Premium';
 
   @override
   String get preparingDownload => 'Đang chuẩn bị tải về';
@@ -1577,6 +2019,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get previousTrack => 'Bài trước';
+
+  @override
+  String get priorityVipServerQueue => 'Hàng đợi máy chủ VIP ưu tiên';
+
+  @override
+  String get processingOnServer => 'Đang xử lý trên máy chủ...';
 
   @override
   String get profileSettings => 'Cài đặt hồ sơ';
@@ -1600,6 +2048,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get queueIsEmpty => 'Hàng chờ trống';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'Hàng đợi $position... vui lòng chờ';
+  }
 
   @override
   String get queueTooltip => 'Hàng chờ';
@@ -1680,10 +2133,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get refreshLyricsTooltip => 'Làm mới lời bài hát';
 
   @override
+  String get registeredLinkedTier => 'Đã đăng ký (Đã liên kết)';
+
+  @override
   String get removeAvatar => 'Xóa ảnh đại diện hiện tại';
 
   @override
   String get removeFromPlaylist => 'Xóa khỏi danh sách phát';
+
+  @override
+  String get removeLine => 'Xóa dòng';
 
   @override
   String removedFolder(Object folder) {
@@ -1698,6 +2157,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get repeats => 'lượt phát lại';
+
+  @override
+  String get reportTrouble => 'Báo cáo sự cố';
 
   @override
   String get requiresAndroid14 => 'Yêu cầu Android 14+ và USB DAC';
@@ -1773,6 +2235,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get revert => 'Hoàn tác';
 
   @override
+  String get romajiHint => 'Romaji / Phiên âm (Tùy chọn)...';
+
+  @override
   String get russian => 'Tiếng Nga';
 
   @override
@@ -1797,8 +2262,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get saveLabel => 'Lưu';
 
   @override
+  String get saveLocallyBtn => 'Lưu cục bộ';
+
+  @override
   String get saveLrcPrompt =>
       'Bạn có muốn lưu lời hiện tại thành tệp .lrc bên cạnh tệp nhạc không?';
+
+  @override
+  String get saveLyricsTitle => 'Lưu lời bài hát';
 
   @override
   String get saveLyricsTooltip => 'Lưu lời bài hát';
@@ -1823,6 +2294,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String savedAsFormat(String format) {
     return 'Đã lưu dưới dạng $format';
+  }
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'Đã lưu vào tệp $extension thành công!';
   }
 
   @override
@@ -1908,6 +2384,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seeAll => 'Xem tất cả';
 
   @override
+  String get seeBenefitsBtn => 'Xem lợi ích';
+
+  @override
+  String get seePremiumBenefits => 'Xem quyền lợi Premium';
+
+  @override
   String get selectDifferentFolder => 'Chọn thư mục khác';
 
   @override
@@ -1939,6 +2421,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get setCustomTimer => 'Đặt thời gian hẹn tắt';
+
+  @override
+  String get setEndTooltip => 'Đặt kết thúc thành vị trí hiện tại';
+
+  @override
+  String get setStartTooltip => 'Đặt bắt đầu thành vị trí hiện tại';
 
   @override
   String get settings => 'Cài đặt';
@@ -2020,6 +2508,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get songLabelUpper => 'BÀI HÁT';
 
   @override
+  String get songQueueTitle => 'Hàng đợi bài hát';
+
+  @override
   String get songTitleKeyword => 'Tiêu đề hoặc từ khóa';
 
   @override
@@ -2068,6 +2559,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get standardDesc => 'MP3 - Dung lượng nhỏ, tải nhanh';
 
   @override
+  String get standardDownloadQueue => 'Hàng đợi tải xuống tiêu chuẩn';
+
+  @override
   String get standardQuality => 'Tiêu chuẩn (MP3)';
 
   @override
@@ -2075,6 +2569,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get startBulkProcess => 'Bắt đầu xử lý hàng loạt';
+
+  @override
+  String get startLabel => 'Bắt đầu: ';
 
   @override
   String get startedDownloadingAll => 'Đã bắt đầu tải tất cả bài hát...';
@@ -2136,6 +2633,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get syncThemeAlbumArt => 'Đồng bộ giao diện với ảnh bìa album';
+
+  @override
+  String get syncedMode => 'Đã đồng bộ';
 
   @override
   String get system => 'Hệ thống';
@@ -2250,6 +2750,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get translationLanguage => 'Ngôn ngữ dịch';
 
   @override
+  String get ttmlFormat => 'TTML (Độ chính xác cao)';
+
+  @override
+  String get ttmlFormatDesc =>
+      'Tốt hơn cho việc tạo bằng AI & đồng bộ chi tiết.';
+
+  @override
   String get turnOffTimer => 'Tắt hẹn giờ';
 
   @override
@@ -2277,6 +2784,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get unknownDevice => 'Thiết bị không xác định';
 
   @override
+  String get unlimitedAlacDownloads => 'Tải xuống ALAC không giới hạn';
+
+  @override
   String get unlink => 'Hủy liên kết';
 
   @override
@@ -2295,6 +2805,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get unlinkFolderClear =>
       'Hủy liên kết thư mục và xóa danh sách bài hát';
+
+  @override
+  String get unlockUnlimitedPremium => 'Mở khóa Premium không giới hạn';
 
   @override
   String unlockedCountLabel(int unlocked, int total) {
@@ -2356,6 +2869,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get useMixedColors => 'Sử dụng màu hỗn hợp (Ưu tiên đồng bộ)';
 
   @override
+  String get useSameEmailCheckStatus =>
+      'Sử dụng cùng một email như trong ứng dụng để tự động kiểm tra trạng thái.';
+
+  @override
+  String usedToday(int used, int max) {
+    return 'Đã dùng hôm nay $used / $max';
+  }
+
+  @override
   String get verifiedDeveloper => 'Nhà phát triển được xác minh';
 
   @override
@@ -2377,6 +2899,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get visualizerStyle => 'Kiểu trình trực quan';
+
+  @override
+  String get waitingForServerResponse => 'Đang chờ phản hồi từ máy chủ...';
 
   @override
   String get wasapiExclusive => 'Chế độ WASAPI Exclusive';
@@ -2413,315 +2938,4 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'Đã có phiên bản mới của yt-dlp.';
-
-  @override
-  String get importFromM3u => 'Import from M3U';
-
-  @override
-  String get importFromM3uSubtitle => 'Import an M3U playlist file';
-
-  @override
-  String get exportToM3u => 'Export to M3U';
-
-  @override
-  String get invalidM3uFile => 'Invalid M3U File';
-
-  @override
-  String get generateAiLyrics => 'Generate AI Lyrics';
-
-  @override
-  String get aiLyricsGenerating => 'Generating AI Lyrics...';
-
-  @override
-  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
-
-  @override
-  String get aiLyricsError => 'Error generating AI lyrics.';
-
-  @override
-  String get offlineModeHeader => 'CHẾ ĐỘ NGOẠI TUYẾN';
-
-  @override
-  String get offlineModeTitle => 'Chế độ ngoại tuyến';
-
-  @override
-  String get offlineModeActive => 'ĐANG HOẠT ĐỘNG';
-
-  @override
-  String get offlineModeEnabledStatus => 'Đã bật chế độ ngoại tuyến';
-
-  @override
-  String offlineModeDisabledStatus(int count) {
-    return 'Đã tắt ($count)';
-  }
-
-  @override
-  String get offlineModeAllEnabledStatus => 'Đã bật tất cả';
-
-  @override
-  String get offlineModeLockdownDesc =>
-      'Đang khóa mạng. Thống kê được lưu cục bộ.';
-
-  @override
-  String get offlineModeMainDesc =>
-      'Tắt tất cả các dịch vụ mạng và chỉ phát thư viện cục bộ.';
-
-  @override
-  String get enableOfflineModeQuestion => 'Bật chế độ ngoại tuyến?';
-
-  @override
-  String get offlineModeConfirmationDesc =>
-      'Thao tác này sẽ tắt hoàn toàn mọi giao tiếp mạng. Các tính năng sau sẽ bị tắt:';
-
-  @override
-  String get offlineModeSyncRestoreNote =>
-      'Thống kê của bạn sẽ tự động đồng bộ hóa khi bạn tắt tính năng này.';
-
-  @override
-  String get enableOfflineModeBtn => 'Bật chế độ ngoại tuyến';
-
-  @override
-  String get onlineModeRestored =>
-      'Đã khôi phục chế độ trực tuyến. Đang đồng bộ thống kê...';
-
-  @override
-  String get disableServicesTitle => 'Tắt các dịch vụ';
-
-  @override
-  String get manageIndividualFeatures =>
-      'Quản lý các tính năng trực tuyến riêng lẻ';
-
-  @override
-  String get featureCloudSync => 'Đồng bộ thống kê đám mây';
-
-  @override
-  String get featureCloudSyncDesc => 'Thống kê nghe chỉ được lưu cục bộ';
-
-  @override
-  String get featureCloudSyncLongDesc => 'Đồng bộ chỉ số nghe với PocketBase';
-
-  @override
-  String get featureLeaderboard => 'Bảng xếp hạng toàn cầu';
-
-  @override
-  String get featureLeaderboardDesc => 'Đã tạm dừng cập nhật xếp hạng';
-
-  @override
-  String get featureLeaderboardLongDesc =>
-      'Hiển thị và cập nhật xếp hạng của bạn công khai';
-
-  @override
-  String get featureOnlineLyrics => 'Tìm kiếm lời bài hát trực tuyến';
-
-  @override
-  String get featureOnlineLyricsDesc => 'Chỉ các tệp .lrc/.ttml cục bộ';
-
-  @override
-  String get featureOnlineLyricsLongDesc => 'Lấy lời bài hát từ LRCLIB/Spotify';
-
-  @override
-  String get featureAiLyrics => 'Trình tạo lời bài hát AI';
-
-  @override
-  String get featureAiLyricsDesc => 'Đã tắt lời bài hát khớp nhạc tự động';
-
-  @override
-  String get featureAiLyricsLongDesc => 'Tạo lời bài hát khớp nhạc qua AI';
-
-  @override
-  String get featureSpotifyCanvas => 'Spotify Canvas';
-
-  @override
-  String get featureSpotifyCanvasDesc => 'Đã tắt video nền';
-
-  @override
-  String get featureSpotifyCanvasLongDesc => 'Video nền cho các bài hát';
-
-  @override
-  String get featureOnlineSearch => 'Tìm kiếm trực tuyến';
-
-  @override
-  String get featureOnlineSearchDesc => 'Đã tắt tìm kiếm Spotify/YouTube';
-
-  @override
-  String get featureOnlineSearchLongDesc =>
-      'Tìm kiếm từ xa trên Spotify và YouTube';
-
-  @override
-  String get featureConnectDevice => 'Kết nối với thiết bị';
-
-  @override
-  String get featureConnectDeviceDesc =>
-      'Đã tắt điều khiển từ xa và nhóm nghe nhạc';
-
-  @override
-  String get featureConnectDeviceLongDesc =>
-      'Điều khiển từ xa và nhóm nghe nhạc';
-
-  @override
-  String get lyricsEditorTitle => 'Trình chỉnh sửa lời bài hát';
-
-  @override
-  String get clearAllQuestion => 'Xóa tất cả?';
-
-  @override
-  String get clearAllDesc =>
-      'Thao tác này sẽ xóa trạng thái trình chỉnh sửa hiện tại. Nó sẽ KHÔNG xóa các tệp cục bộ của bạn trừ khi bạn Lưu sau đó.';
-
-  @override
-  String get clearBtn => 'Xóa';
-
-  @override
-  String get lyricsApplied => 'Lời bài hát đã được áp dụng vào bảng!';
-
-  @override
-  String get chooseFormat => 'Chọn định dạng ưa thích của bạn:';
-
-  @override
-  String get lrcFormat => 'LRC (Đồng bộ chuẩn)';
-
-  @override
-  String get lrcFormatDesc => 'Định dạng phổ biến, hoạt động ở mọi nơi.';
-
-  @override
-  String get ttmlFormat => 'TTML (Độ chính xác cao)';
-
-  @override
-  String get ttmlFormatDesc =>
-      'Tốt hơn cho việc tạo bằng AI & đồng bộ chi tiết.';
-
-  @override
-  String savedSuccessfully(String extension) {
-    return 'Đã lưu vào tệp $extension thành công!';
-  }
-
-  @override
-  String get failedToSave => 'Không lưu được tệp lời bài hát.';
-
-  @override
-  String get generationFailed => 'Tạo thất bại';
-
-  @override
-  String get aiLyricsGenerationTitle => 'Tạo lời bài hát bằng AI';
-
-  @override
-  String get syncedMode => 'Đã đồng bộ';
-
-  @override
-  String get plainMode => 'Văn bản thuần túy';
-
-  @override
-  String get addLineToTop => 'Thêm vào đầu';
-
-  @override
-  String get addLineToEnd => 'Thêm vào cuối';
-
-  @override
-  String get lyricTextHint => 'Văn bản lời bài hát...';
-
-  @override
-  String get insertAfter => 'Chèn sau';
-
-  @override
-  String get removeLine => 'Xóa dòng';
-
-  @override
-  String get romajiHint => 'Romaji / Phiên âm (Tùy chọn)...';
-
-  @override
-  String get startLabel => 'Bắt đầu: ';
-
-  @override
-  String get setStartTooltip => 'Đặt bắt đầu thành vị trí hiện tại';
-
-  @override
-  String get endLabel => 'Kết thúc: ';
-
-  @override
-  String get setEndTooltip => 'Đặt kết thúc thành vị trí hiện tại';
-
-  @override
-  String get playFromLine => 'Phát từ dòng này';
-
-  @override
-  String get pasteLyricsHint => 'Dán lời bài hát của bạn vào đây...';
-
-  @override
-  String get applyBtn => 'Áp dụng';
-
-  @override
-  String get saveLocallyBtn => 'Lưu cục bộ';
-
-  @override
-  String get editLyricsTooltip => 'Chỉnh sửa lời bài hát';
-
-  @override
-  String get saveLyricsTitle => 'Lưu lời bài hát';
-
-  @override
-  String get aiGenerate => 'Tạo bằng AI';
-
-  @override
-  String get aiLyricsInitializing => 'Đang khởi tạo...';
-
-  @override
-  String get aiLyricsUploading => 'Đang tải bài hát lên máy chủ...';
-
-  @override
-  String get aiLyricsUploadFailed => 'Lỗi: Tải lên thất bại.';
-
-  @override
-  String get aiLyricsUploadSuccess => 'Tải lên hoàn tất!';
-
-  @override
-  String get aiLyricsVerifying => 'Đang xác minh trạng thái máy chủ...';
-
-  @override
-  String get aiLyricsStatusOk => 'Mã trạng thái 200 OK!';
-
-  @override
-  String get aiLyricsPolling => 'Đang lấy lời bài hát... Vui lòng kiên nhẫn!';
-
-  @override
-  String get aiLyricsReceiving => 'Đã nhận lời bài hát';
-
-  @override
-  String get aiLyricsParsing => 'Đang phân tích lời bài hát...';
-
-  @override
-  String get aiLyricsSuccess => 'Tạo lời bài hát thành công!';
-
-  @override
-  String get aiLyricsLocalFileMissing =>
-      'Lỗi: Không tìm thấy tệp âm thanh cục bộ.';
-
-  @override
-  String get aiLyricsComplete => 'Hoàn tất!';
-
-  @override
-  String get externalLinkDetected => 'Phát Hiện Liên Kết Ngoài';
-
-  @override
-  String get gofileDownloadFailedPrompt =>
-      'Tải xuống tự động không thành công do hạn chế mạng hoặc máy chủ nghiêm ngặt.\\n\\nBạn có muốn mở trang tải xuống Gofile trong trình duyệt hệ thống của mình, hay sao chép liên kết để tải xuống thủ công?';
-
-  @override
-  String get copyLink => 'Sao Chép Liên Kết';
-
-  @override
-  String get openBrowser => 'Mở Trình Duyệt';
-
-  @override
-  String get linkCopied => 'Liên kết đã được sao chép vào bộ nhớ tạm!';
-
-  @override
-  String get waitingForServerResponse => 'Đang chờ phản hồi từ máy chủ...';
-
-  @override
-  String queuePositionPleaseWait(int position) {
-    return 'Hàng đợi $position... vui lòng chờ';
-  }
-
-  @override
-  String get processingOnServer => 'Đang xử lý trên máy chủ...';
 }

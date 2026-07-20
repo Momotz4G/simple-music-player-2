@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
-// --- CORE DEPENDENCIES ---
+// CORE DEPENDENCIES
 import '../models/song_model.dart';
 import './library_provider.dart';
 
-// --- ENUMS & STATE ---
+// ENUMS & STATE
 enum LibraryView {
   browse,
   search,
@@ -33,7 +33,7 @@ class LibraryPresentationState {
   final LibraryFilter currentFilter;
   final LibrarySort sortBy;
   final bool isSortDescending;
-  final String? selectedFolderPath; // 🚀 Use FULL PATH for precise filtering
+  final String? selectedFolderPath;
 
   LibraryPresentationState({
     this.currentView = LibraryView.localLibrary,
@@ -65,7 +65,7 @@ class LibraryPresentationState {
   }
 }
 
-// --- NOTIFIER ---
+// NOTIFIER
 class LibraryPresentationNotifier
     extends StateNotifier<LibraryPresentationState> {
   LibraryPresentationNotifier() : super(LibraryPresentationState());
@@ -119,13 +119,9 @@ final libraryPresentationProvider = StateNotifierProvider<
   return LibraryPresentationNotifier();
 });
 
-// -------------------------------------------------------------------
-// --- SYNC PROVIDERS FOR INSTANT UPDATES ---
-// -------------------------------------------------------------------
+// SYNC PROVIDERS FOR INSTANT UPDATES
 
 /// Provides a list of songs sorted by the user's preference (Synchronous for speed)
-/// 🚀 Uses allSongs (unfiltered) to avoid re-sorting on every search keystroke.
-/// 🚀 Uses .select((p) => p.allSongs) so it ONLY rebuilds when the actual library changes, NOT when searching!
 final sortedSongsProvider = Provider<List<SongModel>>((ref) {
   final allSongs = ref.watch(libraryProvider.select((p) => p.allSongs));
   final presentationState = ref.watch(libraryPresentationProvider);
@@ -158,18 +154,22 @@ final sortedSongsProvider = Provider<List<SongModel>>((ref) {
 });
 
 final displaySortedSongsProvider = Provider<List<SongModel>>((ref) {
-  // 🚀 MASTER SOURCE: Use the already-sorted list as the base for filtering.
+  // MASTER SOURCE: Use the already-sorted list as the base for filtering.
   // This physically guarantees the result is sorted without ever calling `.sort()` again.
   final allSortedSongs = ref.watch(sortedSongsProvider);
-  final hasSearchQuery = ref.watch(libraryProvider.select((p) => p.hasSearchQuery));
-  
+  final hasSearchQuery =
+      ref.watch(libraryProvider.select((p) => p.hasSearchQuery));
+
   if (!hasSearchQuery) return allSortedSongs;
 
-  // 🚀 FAST FILTER: Simply filter the sorted master list.
+  // FAST FILTER: Simply filter the sorted master list.
   // The results stay in the correct relative sorted order automatically!
-  final query = ref.watch(libraryProvider.select((p) => p.searchQuery)).toLowerCase();
-  
-  return allSortedSongs.where((song) => song.searchKey.contains(query)).toList();
+  final query =
+      ref.watch(libraryProvider.select((p) => p.searchQuery)).toLowerCase();
+
+  return allSortedSongs
+      .where((song) => song.searchKey.contains(query))
+      .toList();
 });
 
 /// Provides a Map of Artist Name -> List of SongModel objects by that artist.
@@ -187,7 +187,7 @@ final groupedArtistsProvider = Provider<Map<String, List<SongModel>>>((ref) {
     grouped[artist]!.add(song);
   }
 
-  // 🚀 Alphabetical Sort for Artist Names
+  // Alphabetical Sort for Artist Names
   final sortedKeys = grouped.keys.toList()
     ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 

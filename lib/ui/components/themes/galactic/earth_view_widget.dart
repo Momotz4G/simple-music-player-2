@@ -36,15 +36,15 @@ class _EarthPainter extends CustomPainter {
 
     // 2. EARTH BODY (OCEAN)
     final Paint earthPaint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.2, -0.8), // Light source from top left
+      ..shader = const RadialGradient(
+        center: Alignment(-0.2, -0.8), // Light source from top left
         radius: 0.8,
         colors: [
-          const Color(0xFF0D47A1), // Darker Ocean
-          const Color(0xFF000033), // Deeper Ocean
-          const Color(0xFF000000), // Shadow side
+          Color(0xFF0D47A1), // Darker Ocean
+          Color(0xFF000033), // Deeper Ocean
+          Color(0xFF000000), // Shadow side
         ],
-        stops: const [0.0, 0.6, 1.0],
+        stops: [0.0, 0.6, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.fill;
 
@@ -52,15 +52,15 @@ class _EarthPainter extends CustomPainter {
 
     // 2.5 CONTINENTS
     final Paint continentPaint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.2, -0.8), // Same light source
+      ..shader = const RadialGradient(
+        center: Alignment(-0.2, -0.8), // Same light source
         radius: 0.8,
         colors: [
-          const Color(0xFF388E3C), // Sunlit Green
-          const Color(0xFF1B5E20), // Deep Forest Green
-          const Color(0xFF000000), // Shadow side
+          Color(0xFF388E3C), // Sunlit Green
+          Color(0xFF1B5E20), // Deep Forest Green
+          Color(0xFF000000), // Shadow side
         ],
-        stops: const [0.0, 0.5, 1.0],
+        stops: [0.0, 0.5, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.fill;
 

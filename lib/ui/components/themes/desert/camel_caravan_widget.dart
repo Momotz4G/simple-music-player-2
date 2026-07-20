@@ -50,7 +50,7 @@ class _CamelPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // Walk from right to left
     final double startX = size.width + 100;
-    final double endX = -300; // Wide enough to clear 3 camels
+    const double endX = -300; // Wide enough to clear 3 camels
 
     // Walk along the ridge of the midground dune (roughly 75% height)
     final double basePathY = size.height * 0.72;

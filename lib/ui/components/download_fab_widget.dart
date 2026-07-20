@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import '../../models/download_progress.dart';
 import '../../services/bulk_download_service.dart';
 import '../../services/download_queue_service.dart';
-import '../../services/smart_download_service.dart';
+
+import 'package:simple_music_player_2/l10n/app_localizations.dart';
+
 import 'download_progress_widget.dart';
 import 'smart_art.dart';
 
@@ -284,6 +286,7 @@ class _DownloadPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final bg = isDark
         ? Colors.grey[900]!.withValues(alpha: 0.97)
         : Colors.white.withValues(alpha: 0.97);
@@ -318,7 +321,7 @@ class _DownloadPanel extends StatelessWidget {
                   Icon(Icons.download_rounded, color: accent, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'Downloads',
+                    l10n.downloads,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
@@ -350,12 +353,15 @@ class _DownloadPanel extends StatelessWidget {
                     },
                   ),
                   const SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: onClose,
-                    child: Icon(
-                      Icons.close,
-                      size: 18,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  IconButton(
+                    onPressed: onClose,
+                    icon: const Icon(Icons.close),
+                    iconSize: 18,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(),
+                    style: IconButton.styleFrom(
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
                 ],
@@ -392,7 +398,7 @@ class _DownloadPanel extends StatelessWidget {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'Song Queue',
+                                      AppLocalizations.of(context)!.songQueueTitle,
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
@@ -406,15 +412,23 @@ class _DownloadPanel extends StatelessWidget {
                                         i.status ==
                                             DownloadQueueStatus.downloading ||
                                         i.status == DownloadQueueStatus.queued))
-                                      GestureDetector(
-                                        onTap: () =>
+                                      TextButton(
+                                        onPressed: () =>
                                             DownloadQueueService().cancelAll(),
-                                        child: const Text(
-                                          'Cancel All',
-                                          style: TextStyle(
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          minimumSize: Size.zero,
+                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          foregroundColor: Colors.redAccent,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          AppLocalizations.of(context)!.cancelAllBtn,
+                                          style: const TextStyle(
                                             fontSize: 11,
-                                            fontWeight: FontWeight.w500,
-                                            color: Colors.redAccent,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                       ),
@@ -457,44 +471,6 @@ class _DownloadPanel extends StatelessWidget {
                               progress: progress,
                               onCancel: () =>
                                   BulkDownloadService().cancelDownload(),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-
-                    // ── Legacy single-song progress (direct, not queued) ───
-                    ValueListenableBuilder<DownloadProgress?>(
-                      valueListenable: SmartDownloadService.progressNotifier,
-                      builder: (context, progress, _) {
-                        if (progress == null) return const SizedBox.shrink();
-                        // Only show if not already shown via queue
-                        final queue =
-                            DownloadQueueService().queueNotifier.value;
-                        final hasActiveQueueItem = queue.any(
-                            (i) => i.status == DownloadQueueStatus.downloading);
-                        if (hasActiveQueueItem) return const SizedBox.shrink();
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                              child: Text(
-                                'Downloading',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark
-                                      ? Colors.grey[500]
-                                      : Colors.grey[600],
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                            DownloadProgressWidget(
-                              progress: progress,
-                              onCancel: () =>
-                                  SmartDownloadService.cancelDownload(),
                             ),
                           ],
                         );
@@ -597,31 +573,39 @@ class _QueueItemTileState extends State<_QueueItemTile> {
     if (canCancel) {
       // Always show cancel on mobile; show on hover on desktop
       final showCancel = isMobile || _hovered;
-      trailing = GestureDetector(
-        onTap: () => DownloadQueueService().cancelItem(item.id),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 150),
-          child: showCancel
-              ? Container(
-                  key: const ValueKey('cancel'),
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
+      trailing = AnimatedSwitcher(
+        duration: const Duration(milliseconds: 150),
+        child: showCancel
+            ? SizedBox(
+                key: const ValueKey('cancel'),
+                width: 26,
+                height: 26,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 14,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.red.withValues(alpha: 0.12),
+                    foregroundColor: Colors.red,
                   ),
-                  child: const Icon(Icons.close, size: 14, color: Colors.red),
-                )
-              : Icon(
-                  key: const ValueKey('schedule'),
-                  statusIcon,
-                  size: 16,
-                  color: statusColor,
+                  icon: const Icon(Icons.close),
+                  onPressed: () => DownloadQueueService().cancelItem(item.id),
+                  tooltip: 'Cancel',
                 ),
-        ),
+              )
+            : Icon(
+                key: const ValueKey('schedule'),
+                statusIcon,
+                size: 16,
+                color: statusColor,
+              ),
       );
     } else {
-      trailing = Icon(statusIcon, size: 18, color: statusColor);
+      // Hide trailing icon for cancelled/failed to avoid confusing it with an active button
+      if (item.status == DownloadQueueStatus.cancelled || item.status == DownloadQueueStatus.failed) {
+        trailing = const SizedBox.shrink();
+      } else {
+        trailing = Icon(statusIcon, size: 18, color: statusColor);
+      }
     }
 
     return MouseRegion(

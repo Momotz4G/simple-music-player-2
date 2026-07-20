@@ -45,7 +45,7 @@ class _TitlePickerDialogState extends ConsumerState<TitlePickerDialog> {
       }
 
       if (mounted) {
-        // 🚀 SYNC: Update the global profile state if the rank we just found is better/different
+        // SYNC: Update the global profile state if the rank we just found is better/different
         if (rank > 0 && rank != ref.read(profileProvider).cloudRank) {
            // We could trigger a provider update here if needed, 
            // but for now just update local UI
@@ -62,8 +62,9 @@ class _TitlePickerDialogState extends ConsumerState<TitlePickerDialog> {
     if (t.category == TitleCategory.time) return totalMin;
     if (t.category == TitleCategory.behavior) {
       if (t.name == "Binge Listener") return dailyPlays;
-      if (t.name == "Music Marathoner" || t.name == "Unstoppable Pulse" || t.name == "Atomic Rhythm") 
+      if (t.name == "Music Marathoner" || t.name == "Unstoppable Pulse" || t.name == "Atomic Rhythm") {
         return weeklyPlays;
+      }
       return currentStreak;
     }
     if (t.category == TitleCategory.superfan) {
@@ -113,8 +114,9 @@ class _TitlePickerDialogState extends ConsumerState<TitlePickerDialog> {
     
     if (t.category == TitleCategory.behavior) {
       if (t.name == "Binge Listener") return l10n.reachDailyPlaysTooltip(t.requiredMinutes);
-      if (t.name == "Music Marathoner" || t.name == "Unstoppable Pulse" || t.name == "Atomic Rhythm") 
+      if (t.name == "Music Marathoner" || t.name == "Unstoppable Pulse" || t.name == "Atomic Rhythm") {
         return l10n.reachWeeklyPlaysTooltip(t.requiredMinutes);
+      }
       return l10n.consecutivePlaysTooltip(t.requiredMinutes);
     }
     
@@ -287,7 +289,7 @@ class _TitlePickerDialogState extends ConsumerState<TitlePickerDialog> {
       dynamicMinuteOverride: selectedDynamicArtistMinutes,
     );
 
-    // 🚀 NEW: If the title is already unlocked, always show it as completed (maxed out progress)
+    // NEW: If the title is already unlocked, always show it as completed (maxed out progress)
     // This ensures that "Repeat Offender" shows 50/50 once earned, even if the current song streak is 1.
     final currentProgress = previewUnlocked 
         ? previewTitle.requiredMinutes 
@@ -396,7 +398,7 @@ class _TitlePickerDialogState extends ConsumerState<TitlePickerDialog> {
                         Expanded(
                           flex: 4,
                           child: ListView(
-                            // 🚀 Shifted list to center with balanced padding
+                            // Shifted list to center with balanced padding
                             padding: const EdgeInsets.only(bottom: 80, top: 20, left: 8, right: 8),
                             children: [
                               if (groupedTitles[TitleCategory.exclusive]!.isNotEmpty)
@@ -541,7 +543,7 @@ class _TitlePickerDialogState extends ConsumerState<TitlePickerDialog> {
                                     if (previewTitle.isDynamic && eligibleArtists.isNotEmpty) ...[
                                         const SizedBox(height: 16),
                                         Text(AppLocalizations.of(context)!.chooseArtist, 
-                                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.5)),
+                                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.5)),
                                         const SizedBox(height: 8),
                                         Container(
                                             height: 48,

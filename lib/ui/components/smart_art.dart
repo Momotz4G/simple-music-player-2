@@ -13,32 +13,34 @@ class SmartArt extends StatefulWidget {
   final double? borderRadius;
   final String? onlineArtUrl;
 
-  // 🚀 STATIC CACHES
+  // STATIC CACHES
   static final Map<String, Uint8List?> _cache = {};
   static final Map<String, File> _knownDiskCache = {};
   static final Set<String> _nonExistentPaths = {};
-  static final Set<String> _noEmbeddedArtPaths = {}; // 🚀 Negative Cache
-  static final Set<String> _noArtPaths = {}; // 🚀 Absolute Negative Cache (No embedded, no folder art)
+  static final Set<String> _noEmbeddedArtPaths = {}; // Negative Cache
+  static final Set<String> _noArtPaths = {}; // Absolute Negative Cache (No embedded, no folder art)
 
-  // 🚀 GLOBAL VERSION: Incremented on invalidation to force rebuilds
+  // GLOBAL VERSION: Incremented on invalidation to force rebuilds
   static int _globalVersion = 0;
   // Per-path version tracking
   static final Map<String, int> _pathVersions = {};
 
   static bool isCached(String path) {
-    return _cache.containsKey(path) || _knownDiskCache.containsKey(path);
+    final k = p.canonicalize(path);
+    return _cache.containsKey(k) || _knownDiskCache.containsKey(k);
   }
 
-  // 🚀 INVALIDATE: Clear all caches AND bump version so widgets rebuild
+  // INVALIDATE: Clear all caches AND bump version so widgets rebuild
   static void invalidateCache(String path) {
-    _cache.remove(path);
-    _knownDiskCache.remove(path);
-    _nonExistentPaths.remove(path);
-    _noEmbeddedArtPaths.remove(path); // 🚀 Clear negative cache too
-    _noArtPaths.remove(path); // 🚀 Clear absolute negative cache
+    final k = p.canonicalize(path);
+    _cache.remove(k);
+    _knownDiskCache.remove(k);
+    _nonExistentPaths.remove(k);
+    _noEmbeddedArtPaths.remove(k); // Clear negative cache too
+    _noArtPaths.remove(k); // Clear absolute negative cache
     _globalVersion++;
-    _pathVersions[path] = _globalVersion;
-    // 🚀 Clear persistent negative cache flag
+    _pathVersions[k] = _globalVersion;
+    // Clear persistent negative cache flag
     ArtCacheService().clearNoArtFlag(path);
     // Also clear Flutter's image cache for this file
     imageCache.clear();
@@ -75,17 +77,21 @@ class _SmartArtState extends State<SmartArt> {
   @override
   void initState() {
     super.initState();
-    _localVersion = SmartArt._pathVersions[widget.path] ?? 0;
+    _localVersion = SmartArt._pathVersions[p.canonicalize(widget.path)] ?? SmartArt._globalVersion;
   }
 
   @override
   void didUpdateWidget(covariant SmartArt oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final currentPathVersion = SmartArt._pathVersions[widget.path] ?? 0;
-    if (currentPathVersion != _localVersion || widget.path != oldWidget.path) {
-      _localVersion = currentPathVersion;
-      // Force state change to trigger rebuild with new FutureBuilder
-      setState(() {});
+    if (oldWidget.path != widget.path) {
+      _localVersion = SmartArt._pathVersions[p.canonicalize(widget.path)] ?? SmartArt._globalVersion;
+    } else {
+      final latestVersion = SmartArt._pathVersions[p.canonicalize(widget.path)] ?? SmartArt._globalVersion;
+      if (_localVersion != latestVersion) {
+        setState(() {
+          _localVersion = latestVersion;
+        });
+      }
     }
   }
 
@@ -113,22 +119,23 @@ class _SmartArtState extends State<SmartArt> {
     }
 
     // CHECK IN-MEMORY BYTES
-    if (SmartArt._cache.containsKey(widget.path)) {
-      return _buildImage(SmartArt._cache[widget.path]);
+    final k = p.canonicalize(widget.path);
+    if (SmartArt._cache.containsKey(k)) {
+      return _buildImage(SmartArt._cache[k]);
     }
 
     // CHECK KNOWN DISK CACHE
-    if (SmartArt._knownDiskCache.containsKey(widget.path)) {
-      return _buildFileImage(SmartArt._knownDiskCache[widget.path]!);
+    if (SmartArt._knownDiskCache.containsKey(k)) {
+      return _buildFileImage(SmartArt._knownDiskCache[k]!);
     }
 
     // SKIP non-existent paths
-    if (SmartArt._nonExistentPaths.contains(widget.path)) {
+    if (SmartArt._nonExistentPaths.contains(k)) {
       return _buildPlaceholder();
     }
 
     // SKIP paths proven to have no art
-    if (SmartArt._noArtPaths.contains(widget.path)) {
+    if (SmartArt._noArtPaths.contains(k)) {
       return _buildPlaceholder();
     }
 
@@ -137,12 +144,13 @@ class _SmartArtState extends State<SmartArt> {
 
   Widget _buildFileArt() {
     return FutureBuilder<File?>(
-      // 🚀 KEY includes version to force new Future on invalidation
+      // KEY includes version to force new Future on invalidation
       key: ValueKey('disk_${widget.path}_$_localVersion'),
       future: ArtCacheService().getCachedArt(widget.path),
       builder: (context, cacheSnapshot) {
+        final k = p.canonicalize(widget.path);
         if (cacheSnapshot.hasData && cacheSnapshot.data != null) {
-          SmartArt._knownDiskCache[widget.path] = cacheSnapshot.data!;
+          SmartArt._knownDiskCache[k] = cacheSnapshot.data!;
           return _buildFileImage(cacheSnapshot.data!);
         }
 
@@ -156,11 +164,11 @@ class _SmartArtState extends State<SmartArt> {
             File(widget.path).exists(),
             ArtCacheService().hasNoArtFlag(widget.path),
           ]).then((results) {
-            final exists = results[0] as bool;
-            final hasNoArt = results[1] as bool;
+            final exists = results[0];
+            final hasNoArt = results[1];
             if (!exists) return false; // file doesn't exist
             if (hasNoArt) {
-              // 🚀 PERSISTENT NEGATIVE CACHE HIT: Skip all FFI/disk scans
+              // PERSISTENT NEGATIVE CACHE HIT: Skip all FFI/disk scans
               SmartArt._noArtPaths.add(widget.path);
               return false;
             }
@@ -171,15 +179,16 @@ class _SmartArtState extends State<SmartArt> {
               return _buildPlaceholder();
             }
 
+            final k = p.canonicalize(widget.path);
             if (existsSnapshot.data != true) {
-              if (!SmartArt._noArtPaths.contains(widget.path)) {
-                SmartArt._nonExistentPaths.add(widget.path);
+              if (!SmartArt._noArtPaths.contains(k)) {
+                SmartArt._nonExistentPaths.add(k);
               }
               return _buildPlaceholder();
             }
 
-            // 🚀 NEGATIVE CACHE CHECK: If we already scanned this file and found no art, skip ffprobe/metadata read!
-            if (SmartArt._noEmbeddedArtPaths.contains(widget.path)) {
+            // NEGATIVE CACHE CHECK: If we already scanned this file and found no art, skip ffprobe/metadata read!
+            if (SmartArt._noEmbeddedArtPaths.contains(k)) {
               return FutureBuilder<File?>(
                 future: _findFolderArt(widget.path),
                 builder: (context, folderArtSnapshot) {
@@ -187,11 +196,11 @@ class _SmartArtState extends State<SmartArt> {
                     return _buildPlaceholder();
                   }
                   if (folderArtSnapshot.hasData && folderArtSnapshot.data != null) {
-                    SmartArt._knownDiskCache[widget.path] = folderArtSnapshot.data!;
+                    SmartArt._knownDiskCache[k] = folderArtSnapshot.data!;
                     return _buildFileImage(folderArtSnapshot.data!);
                   }
-                  SmartArt._noArtPaths.add(widget.path);
-                  // 🚀 Persist the negative result so it survives app restart
+                  SmartArt._noArtPaths.add(k);
+                  // Persist the negative result so it survives app restart
                   ArtCacheService().setNoArtFlag(widget.path);
                   return _buildPlaceholder();
                 },
@@ -201,16 +210,17 @@ class _SmartArtState extends State<SmartArt> {
             return FutureBuilder<Metadata?>(
               future: MetadataService().readMetadata(widget.path),
               builder: (context, snapshot) {
+                final k = p.canonicalize(widget.path);
                 if (snapshot.hasData && snapshot.data?.picture != null) {
                   final bytes = snapshot.data!.picture!.data;
-                  SmartArt._cache[widget.path] = bytes;
+                  SmartArt._cache[k] = bytes;
                   ArtCacheService().saveArt(widget.path, bytes);
                   return _buildImage(bytes);
                 }
-                // 🚀 Mark as having no embedded art to prevent future FFProbe loops
-                SmartArt._noEmbeddedArtPaths.add(widget.path);
+                // Mark as having no embedded art to prevent future FFProbe loops
+                SmartArt._noEmbeddedArtPaths.add(k);
 
-                // 🚀 FOLDER ART FALLBACK: If no embedded art, check directory for cover.jpg, folder.jpg, etc.
+                // FOLDER ART FALLBACK: If no embedded art, check directory for cover.jpg, folder.jpg, etc.
                 return FutureBuilder<File?>(
                   future: _findFolderArt(widget.path),
                   builder: (context, folderArtSnapshot) {
@@ -218,11 +228,11 @@ class _SmartArtState extends State<SmartArt> {
                       return _buildPlaceholder();
                     }
                     if (folderArtSnapshot.hasData && folderArtSnapshot.data != null) {
-                      SmartArt._knownDiskCache[widget.path] = folderArtSnapshot.data!;
+                      SmartArt._knownDiskCache[k] = folderArtSnapshot.data!;
                       return _buildFileImage(folderArtSnapshot.data!);
                     }
-                    SmartArt._noArtPaths.add(widget.path);
-                    // 🚀 Persist the negative result so it survives app restart
+                    SmartArt._noArtPaths.add(k);
+                    // Persist the negative result so it survives app restart
                     ArtCacheService().setNoArtFlag(widget.path);
                     return _buildPlaceholder();
                   },
@@ -235,10 +245,10 @@ class _SmartArtState extends State<SmartArt> {
     );
   }
 
-  /// 🚀 Searches for common album art filenames in the song's directory.
+  /// Searches for common album art filenames in the song's directory.
   Future<File?> _findFolderArt(String songPath) async {
     try {
-      // 🚀 CUE SUPPORT: Resolve virtual path to real audio path for directory check
+      // CUE SUPPORT: Resolve virtual path to real audio path for directory check
       final resolvedPath = CuePath.isCuePath(songPath) 
           ? CuePath.extractAudioPath(songPath) 
           : songPath;

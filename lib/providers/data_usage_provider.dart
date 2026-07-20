@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_provider.dart';
-import '../services/flac_downloader_service.dart'; // Added
-import '../services/youtube_downloader_service.dart'; // Added
-import '../services/canvas_service.dart'; // Added
-import '../services/apple_music_backend_service.dart'; // Added
+import '../services/flac_downloader_service.dart';
+import '../services/youtube_downloader_service.dart';
+import '../services/canvas_service.dart';
+import '../services/apple_music_backend_service.dart';
 
-import 'dart:convert'; // Added for JSON encoding
+import 'dart:convert';
 
 class DataUsageState {
   final int totalBytes;
@@ -20,7 +20,9 @@ class DataUsageState {
     if (bytes <= 0) return "0 B";
     if (bytes < 1024) return "$bytes B";
     if (bytes < 1024 * 1024) return "${(bytes / 1024).toStringAsFixed(1)} KB";
-    if (bytes < 1024 * 1024 * 1024) return "${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB";
+    if (bytes < 1024 * 1024 * 1024) {
+      return "${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB";
+    }
     return "${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB";
   }
 
@@ -72,14 +74,14 @@ class DataUsageNotifier extends StateNotifier<DataUsageState> {
     final bytes = _prefs.getInt(_prefKeyTotal) ?? 0;
     final dailyJson = _prefs.getString(_prefKeyDaily);
     Map<String, int> daily = {};
-    
+
     if (dailyJson != null) {
       try {
         final Map<String, dynamic> decoded = jsonDecode(dailyJson);
         daily = decoded.map((key, value) => MapEntry(key, value as int));
       } catch (_) {}
     }
-    
+
     state = DataUsageState(totalBytes: bytes, dailyBytes: daily);
   }
 
@@ -87,7 +89,8 @@ class DataUsageNotifier extends StateNotifier<DataUsageState> {
     if (bytes <= 0) return;
 
     final now = DateTime.now();
-    final todayKey = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    final todayKey =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
     final newTotal = state.totalBytes + bytes;
     final Map<String, int> newDaily = Map.from(state.dailyBytes);
@@ -114,14 +117,15 @@ class DataUsageNotifier extends StateNotifier<DataUsageState> {
   }
 }
 
-final dataUsageProvider = StateNotifierProvider<DataUsageNotifier, DataUsageState>((ref) {
+final dataUsageProvider =
+    StateNotifierProvider<DataUsageNotifier, DataUsageState>((ref) {
   final prefs = ref.watch(sharedPrefsProvider);
-  
+
   // Wire up singletons for background data usage tracking
   FlacDownloaderService.globalRef = ref;
   YoutubeDownloaderService.globalRef = ref;
-  CanvasService.globalRef = ref; // Added
-  AppleMusicBackendService.globalRef = ref; // Added
+  CanvasService.globalRef = ref;
+  AppleMusicBackendService.globalRef = ref;
 
   return DataUsageNotifier(prefs);
 });

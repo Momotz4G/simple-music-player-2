@@ -16,6 +16,7 @@ import '../../utils/japanese_romanizer.dart';
 import '../../utils/korean_romanizer.dart';
 import '../../utils/translation_service.dart';
 import '../../services/apple_music_backend_service.dart';
+import '../../services/spotify_lyrics_service.dart';
 import '../../services/itunes_api_service.dart';
 import '../../models/song_metadata.dart';
 import 'package:http/http.dart' as http;
@@ -41,17 +42,40 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
   bool _isUserScrolling = false;
   bool _translationLoading = false;
   Timer? _scrollResumeTimer;
+  Timer? _karaokeIdleTimer;
+  bool _showExitButton = true;
   
   // Smooth scroll ticker
   Ticker? _ticker;
   double _smoothPosition = 0;
   Duration _lastTick = Duration.zero;
 
+  void _resetKaraokeIdleTimer() {
+    _karaokeIdleTimer?.cancel();
+    if (!mounted) return;
+    if (!_showExitButton) {
+      setState(() {
+        _showExitButton = true;
+      });
+    }
+    _karaokeIdleTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _showExitButton = false;
+        });
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _ticker = createTicker(_onTick);
     _ticker!.start();
+
+    if (ref.read(lyricsProvider).isKaraokeMode) {
+      _resetKaraokeIdleTimer();
+    }
 
     Future.microtask(() {
       final currentSong = ref.read(playerProvider).currentSong;
@@ -140,6 +164,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
   void dispose() {
     _ticker?.dispose();
     _scrollResumeTimer?.cancel();
+    _karaokeIdleTimer?.cancel();
     super.dispose();
   }
 
@@ -160,7 +185,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = Platform.isAndroid || Platform.isIOS;
     final showActions = playerState.currentSong != null;
-    final sideWidth = showActions ? (isMobile ? 48.0 : 180.0) : 48.0;
+    final sideWidth = showActions ? (isMobile ? 48.0 : 240.0) : 48.0;
 
     ref.listen(playerProvider.select((s) => s.currentSong), (previous, next) {
       if (!mounted) return;
@@ -233,12 +258,43 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
       }
     });
 
-    return GestureDetector(
-      onVerticalDragEnd: (details) {
-        if (details.primaryVelocity != null && details.primaryVelocity! > 500) {
-          ref.read(playerProvider.notifier).setLyricsVisibility(false);
+    // Auto-reset Karaoke idle timer on mode change
+    ref.listen<LyricsState>(lyricsProvider, (previous, next) {
+      if (previous?.isKaraokeMode != next.isKaraokeMode) {
+        if (next.isKaraokeMode) {
+          _resetKaraokeIdleTimer();
+        } else {
+          _karaokeIdleTimer?.cancel();
+        }
+      }
+    });
+
+    return Listener(
+      onPointerDown: (_) {
+        if (ref.read(lyricsProvider).isKaraokeMode) {
+          _resetKaraokeIdleTimer();
         }
       },
+      onPointerHover: (_) {
+        if (ref.read(lyricsProvider).isKaraokeMode) {
+          _resetKaraokeIdleTimer();
+        }
+      },
+      onPointerMove: (_) {
+        if (ref.read(lyricsProvider).isKaraokeMode) {
+          _resetKaraokeIdleTimer();
+        }
+      },
+      child: MouseRegion(
+        cursor: (lyricsState.isKaraokeMode && !_showExitButton)
+            ? SystemMouseCursors.none
+            : SystemMouseCursors.basic,
+        child: GestureDetector(
+        onVerticalDragEnd: (details) {
+          if (details.primaryVelocity != null && details.primaryVelocity! > 500) {
+            ref.read(playerProvider.notifier).setLyricsVisibility(false);
+          }
+        },
       child: Container(
         color: bgColor,
         child: Stack(
@@ -282,9 +338,39 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
             Column(
               children: [
                 // Header
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                if (lyricsState.isKaraokeMode)
+                  AnimatedOpacity(
+                    opacity: _showExitButton ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: IgnorePointer(
+                      ignoring: !_showExitButton,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: IconButton(
+                                tooltip: "Exit Immersive Mode",
+                                icon: Icon(Icons.close_rounded, color: headerTextColor),
+                                onPressed: () {
+                                  ref.read(lyricsProvider.notifier).setKaraokeMode(false);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                   child: Row(
                     children: [
                       // Left side: down arrow, sized to balance the right side
@@ -398,6 +484,10 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                                                   .read(lyricsProvider.notifier)
                                                   .generateAiLyrics(
                                                       song.filePath);
+                                            } else if (value == 'karaoke') {
+                                                ref
+                                                    .read(lyricsProvider.notifier)
+                                                    .toggleKaraokeMode();
                                             } else if (value == 'edit') {
                                               setState(() {
                                                 _isEditing = true;
@@ -443,6 +533,26 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                                                   ],
                                                 ),
                                               ),
+                                            PopupMenuItem<String>(
+                                              value: 'karaoke',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                      Icons.mic_external_on_rounded,
+                                                      color: lyricsState
+                                                              .isKaraokeMode
+                                                          ? accentColor
+                                                          : headerTextColor,
+                                                      size: 20),
+                                                  const SizedBox(width: 12),
+                                                  Text(
+                                                      "Karaoke Mode",
+                                                      style: TextStyle(
+                                                          color:
+                                                              headerTextColor)),
+                                                ],
+                                              ),
+                                            ),
                                             PopupMenuItem<String>(
                                               value: 'refresh',
                                               child: Row(
@@ -635,6 +745,28 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                                                 ),
                                               ),
                                             ),
+                                          Tooltip(
+                                            message: "Karaoke Mode",
+                                            child: InkWell(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              onTap: () => ref
+                                                  .read(lyricsProvider.notifier)
+                                                  .toggleKaraokeMode(),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8),
+                                                child: Icon(
+                                                  Icons.mic_external_on_rounded,
+                                                  color: lyricsState
+                                                          .isKaraokeMode
+                                                      ? accentColor
+                                                      : headerTextColor,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                     ],
                                   ),
                         )
@@ -685,7 +817,8 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
             if (lyricsState.isFromApi &&
                 !lyricsState.isLoading &&
                 lyricsState.parsedLyrics.isNotEmpty &&
-                !_isEditing)
+                !_isEditing &&
+                !lyricsState.isKaraokeMode)
               Positioned(
                 top: 90,
                 right: 24,
@@ -709,7 +842,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
               ),
 
             // LAYER 5: TIMESHIFT
-            if (lyricsState.parsedLyrics.isNotEmpty)
+            if (lyricsState.parsedLyrics.isNotEmpty && !lyricsState.isKaraokeMode)
               Positioned(
                 bottom: 110,
                 right: 24,
@@ -745,6 +878,8 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
           ],
         ),
       ),
+    ),
+    ),
     );
   }
 
@@ -808,6 +943,14 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
               icon: Icons.auto_awesome_outlined,
               value: "ttml",
             ),
+            const SizedBox(height: 12),
+            _buildFormatOption(
+              context,
+              title: "Embed in Audio File",
+              subtitle: "Writes lyrics directly into the song metadata.",
+              icon: Icons.album_outlined,
+              value: "embed",
+            ),
           ],
         ),
         actions: [
@@ -819,26 +962,44 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
     if (format == null) return;
 
     try {
-      final String extension = '.$format';
-      final String savePath = song.filePath.replaceAll(RegExp(r'\.[^.]+$'), extension);
-      
-      final success = await ref.read(lyricsProvider.notifier).saveLyrics(
-        savePath,
-        asTtml: format == "ttml",
-      );
+      if (format == 'embed') {
+        final success = await ref.read(lyricsProvider.notifier).embedLyrics(song.filePath);
+        if (mounted) {
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text("Lyrics embedded into audio file successfully!"),
+                backgroundColor: Colors.green.withValues(alpha: 0.8),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.failedToSave)),
+            );
+          }
+        }
+      } else {
+        final String extension = '.$format';
+        final String savePath = song.filePath.replaceAll(RegExp(r'\.[^.]+$'), extension);
+        
+        final success = await ref.read(lyricsProvider.notifier).saveLyrics(
+          savePath,
+          asTtml: format == "ttml",
+        );
 
-      if (mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.savedSuccessfully(extension)),
-              backgroundColor: Colors.green.withValues(alpha: 0.8),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.failedToSave)),
-          );
+        if (mounted) {
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.savedSuccessfully(extension)),
+                backgroundColor: Colors.green.withValues(alpha: 0.8),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.failedToSave)),
+            );
+          }
         }
       }
     } catch (e) {
@@ -889,6 +1050,14 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
     }
 
     if (index != _activeLyricIndex) {
+      if (index < _activeLyricIndex && _activeLyricIndex >= 0 && _activeLyricIndex < lyrics.length) {
+        double activeLineTime = lyrics[_activeLyricIndex].time;
+        if (activeLineTime - effectiveTime > 0.0 && activeLineTime - effectiveTime < 0.5) {
+          // Ignore tiny backward time jitters to prevent rapid flickering
+          return;
+        }
+      }
+
       if (index == -1 && _activeLyricIndex >= 0) {
         setState(() => _activeLyricIndex = -1);
         if (_itemScrollController.isAttached) {
@@ -896,7 +1065,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
             index: 0,
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutQuart,
-            alignment: 0.0,
+            alignment: ref.read(lyricsProvider).isKaraokeMode ? 0.45 : 0.0,
           );
         }
         return;
@@ -908,15 +1077,31 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
       }
     }
   }
-
   void _scrollToActiveLine() {
     if (_itemScrollController.isAttached) {
-      _itemScrollController.scrollTo(
-        index: _activeLyricIndex,
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeOutQuart,
-        alignment: 0.45,
-      );
+      final isKaraoke = ref.read(lyricsProvider).isKaraokeMode;
+      if (isKaraoke) {
+        _itemScrollController.scrollTo(
+          index: _activeLyricIndex,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeOutQuart,
+          alignment: 0.45,
+        );
+      } else if (_activeLyricIndex < 3) {
+        _itemScrollController.scrollTo(
+          index: 0,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeOutQuart,
+          alignment: 0.0,
+        );
+      } else {
+        _itemScrollController.scrollTo(
+          index: _activeLyricIndex,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeOutQuart,
+          alignment: 0.45,
+        );
+      }
     }
   }
 
@@ -930,30 +1115,41 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
     double currentPosition,
     bool isPlaying,
   ) {
-    return Listener(
-      onPointerDown: (_) => _isUserScrolling = true,
-      onPointerUp: (_) {
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) _isUserScrolling = false;
-        });
-      },
-      child: ScrollablePositionedList.builder(
-        itemScrollController: _itemScrollController,
-        itemPositionsListener: _itemPositionsListener,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        itemCount: lyrics.length + 1,
-        itemBuilder: (context, index) {
-          if (index == lyrics.length) {
-            return SizedBox(height: screenHeight * 0.5);
+    Widget buildLyricItem(BuildContext context, int index) {
+      if (index == lyrics.length) {
+        return SizedBox(height: screenHeight * 0.45);
+      }
+
+      final line = lyrics[index];
+      final isActive = index == _activeLyricIndex;
+      double opacity = 0.3;
+          if (lyricsState.isKaraokeMode) {
+            opacity = isActive ? 1.0 : 0.0;
+          } else {
+            if (isActive) {
+              opacity = 1.0;
+            } else if ((index - _activeLyricIndex).abs() == 1) {
+              opacity = 0.6;
+            } else if ((index - _activeLyricIndex).abs() == 2) {
+              opacity = 0.4;
+            } else {
+              opacity = 0.2;
+            }
           }
 
-          final line = lyrics[index];
-          final isActive = index == _activeLyricIndex;
-          double opacity = 0.3;
-          if (isActive) {
-            opacity = 1.0;
-          } else if ((index - _activeLyricIndex).abs() <= 1) {
-            opacity = 0.6;
+          // Calculate dynamic font size for main text based on length
+          double mainActiveFontSize = 32.0;
+          if (lyricsState.isKaraokeMode) {
+            double maxFont = MediaQuery.of(context).size.height < 500 ? 32.0 : 48.0;
+            if (line.text.length > 70) {
+              mainActiveFontSize = maxFont * 0.66;
+            } else if (line.text.length > 40) {
+              mainActiveFontSize = maxFont * 0.83;
+            } else {
+              mainActiveFontSize = maxFont;
+            }
+          } else {
+            mainActiveFontSize = 26.0;
           }
 
           final hasKorean = KoreanRomanizer.containsKorean(line.text);
@@ -973,15 +1169,40 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
             }
           }
 
-          return GestureDetector(
-            onTap: () {
+          double romanizedActiveFontSize = 18.0;
+          if (lyricsState.isKaraokeMode && romanized != null) {
+            double maxRomFont = MediaQuery.of(context).size.height < 500 ? 18.0 : 24.0;
+            if (romanized.length > 70) {
+              romanizedActiveFontSize = maxRomFont * 0.75;
+            } else if (romanized.length > 40) {
+              romanizedActiveFontSize = maxRomFont * 0.83;
+            } else {
+              romanizedActiveFontSize = maxRomFont;
+            }
+          }
+
+          return ConstrainedBox(
+            key: ValueKey(index),
+            constraints: BoxConstraints(
+              minHeight: lyricsState.isKaraokeMode ? 140 : 60,
+            ),
+            child: GestureDetector(
+              onTap: lyricsState.isKaraokeMode ? null : () {
               playerNotifier.seek(line.time);
               setState(() => _activeLyricIndex = index);
-              _itemScrollController.scrollTo(
-                index: index,
-                duration: const Duration(milliseconds: 300),
-                alignment: 0.5,
-              );
+              if (index < 3) {
+                _itemScrollController.scrollTo(
+                  index: 0,
+                  duration: const Duration(milliseconds: 300),
+                  alignment: 0.0,
+                );
+              } else {
+                _itemScrollController.scrollTo(
+                  index: index,
+                  duration: const Duration(milliseconds: 300),
+                  alignment: 0.45,
+                );
+              }
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -989,16 +1210,23 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
               transform: Matrix4.diagonal3Values(
                   isActive ? 1.05 : 1.0, isActive ? 1.05 : 1.0, 1.0),
               alignment: Alignment.center,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                  children: [
                   // Original text
                   !isActive
                       ? Text(
                           line.text,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: 22.0,
                             fontWeight: FontWeight.w600,
                             color: inactiveColor.withValues(alpha: opacity),
                             height: 1.4,
@@ -1014,28 +1242,30 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                           isPlaying: isPlaying,
                           syncOffset: lyricsState.syncOffset,
                           activeColor: activeColor,
-                          inactiveColor: inactiveColor,
-                          fontSize: 32,
+                          inactiveColor: inactiveColor.withValues(alpha: 1.0),
+                          fontSize: mainActiveFontSize,
                           fontWeight: FontWeight.w900,
                           words: line.words,
+                          isKaraokeMode: lyricsState.isKaraokeMode,
+                          isActive: true,
                         ),
                   // Romanization
                   if (romanized != null) ...[
-                    const SizedBox(height: 4),
+                    SizedBox(height: lyricsState.isKaraokeMode ? 24 : 8),
                     !isActive
                         ? Text(
                             romanized,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
                               fontStyle: FontStyle.italic,
                               color: inactiveColor.withValues(alpha: opacity * 0.6),
-                              height: 1.3,
+                              height: 1.4,
                             ),
                           )
                         : SmoothHighlightText(
-                            text: romanized!,
+                            text: romanized,
                             startTime: line.time,
                             endTime: (index + 1 < lyrics.length)
                                 ? lyrics[index + 1].time
@@ -1044,11 +1274,13 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                             isPlaying: isPlaying,
                             syncOffset: lyricsState.syncOffset,
                             activeColor: activeColor,
-                            inactiveColor: inactiveColor,
-                            fontSize: 18,
+                            inactiveColor: inactiveColor.withValues(alpha: 1.0),
+                            fontSize: romanizedActiveFontSize,
                             fontWeight: FontWeight.w500,
                             isItalic: true,
                             spacing: 6.0,
+                            isKaraokeMode: lyricsState.isKaraokeMode,
+                            isActive: true,
                           ),
                   ],
                   // Translation
@@ -1065,7 +1297,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                         return const SizedBox.shrink();
                       }
                       return Padding(
-                        padding: const EdgeInsets.only(top: 4),
+                        padding: EdgeInsets.only(top: lyricsState.isKaraokeMode ? 24 : 8),
                         child: Text(
                           '(${translations[index]})',
                           textAlign: TextAlign.center,
@@ -1084,12 +1316,126 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
                   ],
                 ],
               ),
-            ),
-          );
-        },
+              ), // Close SizedBox
+              ), // Close AnimatedSize
+            ), // Close AnimatedContainer
+          ),
+        );
+    } // End of buildLyricItem
+
+    if (lyricsState.isKaraokeMode) {
+      if (lyrics.isEmpty) {
+        return const SizedBox();
+      }
+
+      double effectiveTime = currentPosition - lyricsState.syncOffset;
+
+      bool isIntro = _activeLyricIndex < 0 || (lyrics.isNotEmpty && effectiveTime < lyrics[0].time);
+      bool isOutro = _activeLyricIndex >= lyrics.length ||
+                     (_activeLyricIndex == lyrics.length - 1 &&
+                      effectiveTime > (lyrics.last.time + 5.0));
+
+      bool isInterlude = false;
+      if (!isIntro && !isOutro && _activeLyricIndex >= 0 && _activeLyricIndex < lyrics.length - 1) {
+        final currentLine = lyrics[_activeLyricIndex];
+        double currentLineStart = currentLine.time;
+        double nextLineTime = lyrics[_activeLyricIndex + 1].time;
+        
+        if (currentLine.endTime != null) {
+          // If TTML/Karaoke provides an explicit end time, use it
+          double gap = nextLineTime - currentLine.endTime!;
+          // Only show note if there is at least a 3 second gap.
+          // Note appears 1.5s AFTER the line ends, and stays until the next line starts.
+          if (gap >= 3.0 && effectiveTime >= (currentLine.endTime! + 1.5) && effectiveTime < nextLineTime) {
+            isInterlude = true;
+          }
+        } else {
+          // Fallback for LRC (no end time)
+          double lineGap = nextLineTime - currentLineStart;
+          
+          // Only show notes for significant gaps (>= 8s) since we don't know the exact end time.
+          if (lineGap >= 8.0) {
+            // Assume the lyric takes at most 5s or 50% of the gap, whichever is smaller
+            double maxAllowed = lineGap * 0.5;
+            double estimatedDuration = 5.0;
+            if (estimatedDuration > maxAllowed) estimatedDuration = maxAllowed;
+            
+            double estimatedEnd = currentLineStart + estimatedDuration;
+            
+            if (effectiveTime >= (estimatedEnd + 1.5) && effectiveTime < nextLineTime) {
+              isInterlude = true;
+            }
+          }
+        }
+      }
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Center(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: (isIntro || isInterlude || isOutro)
+                ? KeyedSubtree(
+                    key: const ValueKey('karaoke_notes_indicator'),
+                    child: _buildMusicalNotesIndicator(activeColor),
+                  )
+                : KeyedSubtree(
+                    key: ValueKey('karaoke_line_$_activeLyricIndex'),
+                    child: buildLyricItem(context, _activeLyricIndex),
+                  ),
+          ),
+        ),
+      );
+    }
+
+    return Listener(
+      onPointerDown: (_) => _isUserScrolling = true,
+      onPointerUp: (_) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) _isUserScrolling = false;
+        });
+      },
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: true),
+        child: ScrollablePositionedList.builder(
+          initialScrollIndex: _activeLyricIndex > 0 ? _activeLyricIndex : 0,
+          itemScrollController: _itemScrollController,
+          itemPositionsListener: _itemPositionsListener,
+          padding: const EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 32,
+            bottom: 32,
+          ),
+          itemCount: lyrics.length + 1,
+          itemBuilder: (context, index) => buildLyricItem(context, index),
+        ),
       ),
     );
   }
+
+  Widget _buildMusicalNotesIndicator(Color color) {
+    return Text(
+      '♪',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: 48.0,
+        fontWeight: FontWeight.bold,
+        color: color,
+        shadows: [
+          Shadow(
+            color: color.withValues(alpha: 0.6),
+            blurRadius: 20,
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildRawLyrics(String text, bool isDark, String? artPath,
       String? onlineArtUrl, bool isPlaying, AppLocalizations l10n) {
@@ -1099,7 +1445,8 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
         text.contains("Error") || 
         text.contains("No local lyrics") || 
         text.contains("No lyrics found") || 
-        text.contains("Offline Mode");
+        text.contains("Offline Mode") ||
+        text.contains("Offline or Disabled");
 
     if (!isErrorOrEmpty && !text.startsWith('<tt')) {
       return Column(
@@ -1162,7 +1509,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
           ),
           const SizedBox(height: 8),
           Text(
-            text.contains("Error") ? text : l10n.justEnjoyVibes,
+            (text.contains("Error") || text.contains("Offline")) ? text : l10n.justEnjoyVibes,
             style: TextStyle(
                 fontSize: 14, color: isDark ? Colors.white54 : Colors.black54),
           ),
@@ -1193,36 +1540,58 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (BuildContext ctx) {
-        return SafeArea(
-          child: Column(
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(l10n.importLyricsFile, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
                 leading: Icon(Icons.file_open_outlined, color: isDark ? Colors.white : Colors.black),
-                title: Text(l10n.importLyricsFile, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                title: Text(l10n.localFile, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                subtitle: Text(l10n.importLocalFileSubtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickAndImportLyrics(ref);
                 },
               ),
               ListTile(
-                leading: Icon(Icons.apple, color: isDark ? Colors.white : Colors.black),
-                title: Text("Search from Apple Music", style: TextStyle(color: isDark ? Colors.white : Colors.black)),
-                subtitle: const Text("Downloads LRC/TTML automatically", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                leading: const Icon(Icons.apple, color: Colors.redAccent),
+                title: Text(l10n.searchFromAppleMusic, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                subtitle: Text(l10n.searchAppleMusicSubtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 onTap: () {
                   Navigator.pop(ctx);
                   _searchAppleMusicLyrics(context, ref, currentSong);
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.music_note, color: Colors.green),
+                title: Text(l10n.searchFromSpotifyLyrics, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                subtitle: Text(l10n.searchSpotifyLyricsSubtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _searchSpotifyLyrics(context, ref, currentSong);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.library_music, color: Colors.orange),
+                title: Text(l10n.searchFromMusixmatch, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                subtitle: Text(l10n.searchMusixmatchSubtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _searchMusixmatchLyrics(context, ref, currentSong);
+                },
+              ),
             ],
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          ],
         );
       },
     );
@@ -1239,12 +1608,12 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        title: Text("Searching Apple Music...", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 16)),
-        content: const Row(
+        title: Text(l10n.searchingAppleMusic, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 16)),
+        content: Row(
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 20),
-            Expanded(child: Text("Finding matches...", style: TextStyle(color: Colors.grey))),
+            const CircularProgressIndicator(),
+            const SizedBox(width: 20),
+            Expanded(child: Text(l10n.findingMatches, style: const TextStyle(color: Colors.grey))),
           ],
         ),
       ),
@@ -1258,7 +1627,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
 
     if (results.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No results found on Apple Music.")),
+        SnackBar(content: Text(l10n.noResultsAppleMusic)),
       );
       return;
     }
@@ -1268,7 +1637,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        title: Text("Select Song", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(l10n.selectSong, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.separated(
@@ -1310,12 +1679,12 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        title: Text("Downloading Lyrics...", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 16)),
+        title: Text(l10n.downloadingLyrics, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 16)),
         content: Row(
           children: [
             const CircularProgressIndicator(),
             const SizedBox(width: 20),
-            Expanded(child: Text("Fetching TTML/LRC from server...", style: TextStyle(color: isDark ? Colors.white70 : Colors.black54))),
+            Expanded(child: Text(l10n.fetchingLyricsFromServer, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54))),
           ],
         ),
       ),
@@ -1332,7 +1701,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
 
     if (lyricsUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to download lyrics. They might not exist on Apple Music.")),
+        SnackBar(content: Text(l10n.failedDownloadAppleMusic)),
       );
       return;
     }
@@ -1340,19 +1709,20 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
     // 5. Fetch raw text and import
     try {
       final response = await http.get(Uri.parse(lyricsUrl)).timeout(const Duration(seconds: 15));
+      if (!context.mounted) return;
       if (response.statusCode == 200) {
         final rawText = response.body;
         if (rawText.trim().isNotEmpty) {
           ref.read(lyricsProvider.notifier).loadLyricsFromContent(rawText);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Lyrics imported successfully! Press Save to keep them."),
+            SnackBar(
+              content: Text(l10n.lyricsImportedSuccess),
               backgroundColor: Colors.green,
             ),
           );
         } else {
            ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Received empty lyrics from server.")),
+            SnackBar(content: Text(l10n.receivedEmptyLyrics)),
           );
         }
       } else {
@@ -1361,8 +1731,83 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> with SingleTickerProv
         );
       }
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error fetching lyrics: $e")),
+      );
+    }
+  }
+
+  void _searchSpotifyLyrics(BuildContext context, WidgetRef ref, dynamic currentSong) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        title: Text(l10n.downloadingFromSpotify, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 16)),
+        content: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 20),
+            Expanded(child: Text(l10n.fetchingLyrics, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54))),
+          ],
+        ),
+      ),
+    );
+
+    final rawLyrics = await SpotifyLyricsService.fetchSpotifyLyrics(currentSong.title, currentSong.artist);
+    
+    if (!context.mounted) return;
+    Navigator.pop(context); // close loading
+
+    if (rawLyrics != null && rawLyrics.trim().isNotEmpty) {
+      ref.read(lyricsProvider.notifier).loadLyricsFromContent(rawLyrics);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.lyricsImportedSpotify), backgroundColor: Colors.green),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.noLyricsSpotify)),
+      );
+    }
+  }
+
+  void _searchMusixmatchLyrics(BuildContext context, WidgetRef ref, dynamic currentSong) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        title: Text(l10n.downloadingFromMusixmatch, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 16)),
+        content: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 20),
+            Expanded(child: Text(l10n.fetchingLyrics, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54))),
+          ],
+        ),
+      ),
+    );
+
+    final rawLyrics = await SpotifyLyricsService.fetchMusixmatchLyrics(currentSong.title, currentSong.artist);
+    
+    if (!context.mounted) return;
+    Navigator.pop(context); // close loading
+
+    if (rawLyrics != null && rawLyrics.trim().isNotEmpty) {
+      ref.read(lyricsProvider.notifier).loadLyricsFromContent(rawLyrics);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.lyricsImportedMusixmatch), backgroundColor: Colors.green),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.noLyricsMusixmatch)),
       );
     }
   }

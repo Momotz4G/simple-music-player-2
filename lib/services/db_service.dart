@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter/foundation.dart';
 import '../data/schemas.dart';
 
 class DBService {
@@ -48,7 +49,7 @@ class DBService {
           DeletedMailboxMessageSchema,
           OnlineArtCacheSchema,
           OnlineDataCacheSchema,
-          // SyncQueueEntrySchema, // TODO: Re-enable after build_runner regenerates schemas.g.dart
+          // SyncQueueEntrySchema, // Re-enable after SyncQueueEntry is added to schemas.dart
         ], // Register schemas here
         directory: dir.path,
         inspector: true,
@@ -61,19 +62,19 @@ class DBService {
   }
 
   // 2. Save Scanned Songs (The "Scanner" Logic)
-  // 🚀 PERF FIX: Pre-loads existing songs into a Map for O(1) lookup
+  // PERF FIX: Pre-loads existing songs into a Map for O(1) lookup
   // instead of N individual Isar filter queries per batch.
   Future<void> saveSongs(List<Song> newSongs) async {
     final isar = await db;
 
     await isar.writeTxn(() async {
-      // 🚀 Build canonical paths first
+      // Build canonical paths first
       final List<String> canonicalPaths = [];
       for (final song in newSongs) {
         canonicalPaths.add(p.canonicalize(song.path));
       }
 
-      // 🚀 Batch lookup: Find all existing songs matching these paths
+      // Batch lookup: Find all existing songs matching these paths
       final Map<String, Song> existingMap = {};
       for (final cp in canonicalPaths) {
         final existing = await isar.songs.filter().pathEqualTo(cp).findFirst();
@@ -82,7 +83,7 @@ class DBService {
         }
       }
 
-      // 🚀 Merge: Update existing or prepare new
+      // Merge: Update existing or prepare new
       final List<Song> songsToSave = [];
       for (int i = 0; i < newSongs.length; i++) {
         final newSong = newSongs[i];
@@ -108,7 +109,7 @@ class DBService {
         }
       }
 
-      // 🚀 Single batch write instead of N individual puts
+      // Single batch write instead of N individual puts
       await isar.songs.putAll(songsToSave);
     });
   }
@@ -162,27 +163,40 @@ class DBService {
     return await isar.songs.where().sortByPlayCountDesc().limit(10).findAll();
   }
 
-  // 6. Clean Database (Optional: Remove songs that no longer exist on disk)
-  Future<void> cleanMissingSongs(List<String> existingPaths) async {
+  // 6. Bulk Delete (For Scanner Cleanup)
+  Future<void> deleteSongsByIds(List<int> ids) async {
     final isar = await db;
-    // Convert to Set for O(1) lookups
-    final pathSet = existingPaths.map((e) => p.canonicalize(e)).toSet();
+    await isar.writeTxn(() async {
+      await isar.songs.deleteAll(ids);
+    });
+  }
 
+  // Instant delete single song
+  Future<void> deleteSongByPath(String path) async {
+    final isar = await db;
+    final canonicalPath = p.canonicalize(path);
+    await isar.writeTxn(() async {
+      final existing = await isar.songs.filter().pathEqualTo(canonicalPath).findFirst();
+      if (existing != null) {
+        await isar.songs.delete(existing.id);
+      }
+    });
+  }
+
+  // Instant delete folder (for playlist deletion)
+  Future<void> deleteSongsByFolder(String folderPath) async {
+    final isar = await db;
+    final canonicalFolder = p.canonicalize(folderPath);
     await isar.writeTxn(() async {
       final allSongs = await isar.songs.where().findAll();
       final idsToDelete = <int>[];
-
       for (final song in allSongs) {
-        final canonicalPath = p.canonicalize(song.path);
-        if (!pathSet.contains(canonicalPath)) {
+        if (p.isWithin(canonicalFolder, song.path) || p.equals(p.dirname(song.path), canonicalFolder)) {
           idsToDelete.add(song.id);
         }
       }
-
       if (idsToDelete.isNotEmpty) {
         await isar.songs.deleteAll(idsToDelete);
-        print(
-            "🧹 DBService: Cleaned ${idsToDelete.length} stale song entries.");
       }
     });
   }
@@ -213,10 +227,10 @@ class DBService {
       final dirProp = Directory('${docDir.path}/SimpleMusicDB');
       if (await dirProp.exists()) {
         await dirProp.delete(recursive: true);
-        print("💥 DBService: Database deleted/reset due to corruption.");
+        debugPrint("💥 DBService: Database deleted/reset due to corruption.");
       }
     } catch (e) {
-      print("💥 DBService: Failed to reset database: $e");
+      debugPrint("💥 DBService: Failed to reset database: $e");
     }
   }
 
@@ -359,7 +373,25 @@ class DBService {
     final isar = await db;
     final artCount = await isar.onlineArtCaches.count();
     final dataCount = await isar.onlineDataCaches.count();
-    return artCount + dataCount;
+    int fileCount = 0;
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final folders = ['canvas_cache', 'album_arts'];
+      for (var folder in folders) {
+        final dir = Directory('${tempDir.path}/$folder');
+        if (await dir.exists()) {
+          final List<FileSystemEntity> files = dir.listSync(recursive: true, followLinks: false);
+          for (var file in files) {
+            if (file is File) {
+              fileCount++;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    return artCount + dataCount + fileCount;
   }
 
   Future<String> getMetadataCacheSize() async {
@@ -369,24 +401,26 @@ class DBService {
     // 1. Sum up Isar database strings
     final allData = await isar.onlineDataCaches.where().findAll();
     for (var item in allData) {
-      totalBytes += (item.json?.length ?? 0);
+      totalBytes += (item.json.length);
     }
     final allArt = await isar.onlineArtCaches.where().findAll();
     for (var item in allArt) {
-      totalBytes += (item.url?.length ?? 0);
+      totalBytes += (item.url.length);
     }
 
-    // 2. Sum up File System folders
+    // 2. Sum up File System folders (Canvas MP4s & Album Arts)
     try {
       final tempDir = await getTemporaryDirectory();
       final folders = ['canvas_cache', 'album_arts'];
       for (var folder in folders) {
         final dir = Directory('${tempDir.path}/$folder');
         if (await dir.exists()) {
-          await for (var file
-              in dir.list(recursive: true, followLinks: false)) {
+          final List<FileSystemEntity> files = dir.listSync(recursive: true, followLinks: false);
+          for (var file in files) {
             if (file is File) {
-              totalBytes += await file.length();
+              try {
+                totalBytes += await file.length();
+              } catch (_) {}
             }
           }
         }
@@ -416,16 +450,44 @@ class DBService {
       for (var folder in folders) {
         final dir = Directory('${tempDir.path}/$folder');
         if (await dir.exists()) {
-          final List<FileSystemEntity> files = dir.listSync();
-          for (var file in files) {
-            if (file is File) {
-              try {
-                await file.delete();
-              } catch (_) {}
-            }
+          try {
+            await dir.delete(recursive: true);
+          } catch (_) {
+            try {
+              final entities = dir.listSync(recursive: true);
+              for (var entity in entities) {
+                if (entity is File) {
+                  try {
+                    await entity.delete();
+                  } catch (_) {}
+                }
+              }
+            } catch (_) {}
           }
+        }
+        if (!await dir.exists()) {
+          await dir.create(recursive: true);
         }
       }
     } catch (_) {}
+  }
+
+  // --- ReplayGain Operations ---
+
+  Future<List<Song>> getSongsWithoutReplayGain() async {
+    final isar = await db;
+    // Return songs where replayGain is null
+    return await isar.songs.filter().replayGainIsNull().findAll();
+  }
+
+  Future<void> updateSongReplayGain(int songId, double? gain) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final song = await isar.songs.get(songId);
+      if (song != null) {
+        song.replayGain = gain;
+        await isar.songs.put(song);
+      }
+    });
   }
 }

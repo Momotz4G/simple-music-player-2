@@ -1,4 +1,5 @@
 import 'package:soundcloud_explode_dart/soundcloud_explode_dart.dart';
+import 'package:flutter/foundation.dart';
 
 class SoundcloudService {
   final SoundcloudClient _sc = SoundcloudClient();
@@ -22,7 +23,7 @@ class SoundcloudService {
 
       final Track track = basicResult as Track; // Explicit casting
 
-      print("✅ SoundCloud Match: ${track.title}");
+      debugPrint("✅ SoundCloud Match: ${track.title}");
 
       // 3. Get the list of streams using the Track ID
       final streams = await _sc.tracks.getStreams(track.id);
@@ -35,7 +36,7 @@ class SoundcloudService {
 
       return bestStream.url.toString();
     } catch (e) {
-      print("SoundCloud Error: $e");
+      debugPrint("SoundCloud Error: $e");
       return null;
     }
   }

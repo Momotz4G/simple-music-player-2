@@ -144,6 +144,19 @@ class UsbAudioService {
     }
   }
 
+  /// Open connection to the built-in Android AudioTrack (Bypass OS mixer)
+  static Future<bool> openBuiltInDac() async {
+    if (!Platform.isAndroid) return false;
+
+    try {
+      final result = await _invokeMethod<bool>('openBuiltInDac');
+      return result ?? false;
+    } on PlatformException catch (e) {
+      debugPrint("openBuiltInDac error: ${e.message}");
+      return false;
+    }
+  }
+
   /// Close current DAC connection
   static Future<void> closeDac() async {
     if (!Platform.isAndroid) return;
@@ -231,7 +244,13 @@ class UsbAudioService {
     await _invokeMethod('seek', {'positionMs': positionMs});
   }
 
-  // ============ Status ============
+  /// Set the engine volume (0.0 to 1.0)
+  static Future<void> setVolume(double volume) async {
+    if (!Platform.isAndroid) return;
+    await _invokeMethod('setVolume', {'volume': volume});
+  }
+
+  // ============ Status & Info ============
 
   /// Get current player state
   static Future<UsbAudioState> getState() async {

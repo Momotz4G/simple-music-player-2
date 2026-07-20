@@ -8,7 +8,10 @@ import '../../l10n/app_localizations.dart';
 import '../../models/album_model.dart';
 
 import '../../models/song_model.dart';
+import '../../models/song_metadata.dart';
 import '../../services/hybrid_service.dart';
+import '../../services/itunes_api_service.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/smart_download_service.dart';
 import '../../services/youtube_downloader_service.dart';
 import '../../services/bulk_download_service.dart';
@@ -41,7 +44,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
   Color _dominantColor = const Color(0xFF121212);
   String? _artistImageUrl;
   String _headerImageUrl = "";
-  Uint8List? _localImageBytes; // 🚀 ADDED: For local album art
+  Uint8List? _localImageBytes; // ADDED: For local album art
   bool _isArtistHovered = false;
 
   // Playback Loading State
@@ -96,11 +99,18 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
       return;
     }
 
-    // CASE 2: Spotify Album
+    // CASE 2: Spotify Album / Apple Music Album
     try {
-      // Use Hybrid Safe method which can fall back to Deezer search if ID fails
-      final tracks = await HybridService.getAlbumTracksSafe(
-          widget.album.id, widget.album.title, widget.album.artist);
+      final searchEngine = ref.read(settingsProvider).searchEngine;
+      List<SongMetadata> tracks = [];
+
+      if (searchEngine == SearchEngine.appleMusic) {
+        tracks = await ITunesApiService.getAlbumTracks(widget.album.id);
+      } else {
+        // Use Hybrid Safe method which can fall back to Deezer search if ID fails
+        tracks = await HybridService.getAlbumTracksSafe(
+            widget.album.id, widget.album.title, widget.album.artist);
+      }
 
       // Convert to SongModel with predicted paths
       final songModels = await Future.wait(tracks.map((t) async {
@@ -113,6 +123,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
           fileExtension: '.mp3',
           duration: t.durationSeconds.toDouble(),
           onlineArtUrl: widget.album.imageUrl,
+          sourceUrl: t.youtubeUrl,
           isrc: t.isrc,
           trackNumber: t.trackNumber,
           discNumber: t.discNumber,
@@ -315,7 +326,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                             padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
-                                // 🚀 Responsive: Use vertical layout on narrow screens
+                                // Responsive: Use vertical layout on narrow screens
                                 final isNarrow = constraints.maxWidth < 500;
                                 final artSize = isNarrow
                                     ? constraints.maxWidth * 0.6
@@ -595,14 +606,15 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                     icon: const Icon(Icons.play_arrow_rounded,
                                         color: Colors.black, size: 38),
                                     onPressed: () {
-                                      if (_tracks.isNotEmpty)
+                                      if (_tracks.isNotEmpty) {
                                         _playTrack(_tracks[0]);
+                                      }
                                     },
                                   ),
                                 ),
                                 const SizedBox(width: 24),
 
-                                // 🚀 FAVORITE ALBUM BUTTON
+                                // FAVORITE ALBUM BUTTON
                                 Consumer(
                                   builder: (context, ref, child) {
                                     final playlists =
@@ -671,7 +683,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
 
                                 const SizedBox(width: 24),
 
-                                // 🚀 DOWNLOAD ALL BUTTON
+                                // DOWNLOAD ALL BUTTON
                                 if (!_isLocal)
                                   IconButton(
                                     icon: Icon(Icons.download_rounded,
@@ -805,17 +817,6 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                               context, ref, action, song);
                                         },
                                         itemBuilder: (context) => [
-                                          if (!_isLocal)
-                                            PopupMenuItem(
-                                                value: SongAction.download,
-                                                child: Row(children: [
-                                                  const Icon(
-                                                      Icons.download_rounded),
-                                                  const SizedBox(width: 12),
-                                                  Text(AppLocalizations.of(
-                                                          context)!
-                                                      .download)
-                                                ])),
                                           PopupMenuItem(
                                               value: SongAction.playNext,
                                               child: Row(children: [
@@ -862,6 +863,17 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                                         context)!
                                                     .goToArtist)
                                               ])),
+                                          if (!_isLocal)
+                                            PopupMenuItem(
+                                                value: SongAction.download,
+                                                child: Row(children: [
+                                                  const Icon(
+                                                      Icons.download_rounded),
+                                                  const SizedBox(width: 12),
+                                                  Text(AppLocalizations.of(
+                                                          context)!
+                                                      .download)
+                                                ])),
                                         ],
                                       ),
                                     ],
@@ -1351,14 +1363,6 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                 SongContextMenuRegion.handleAction(context, ref, action, song);
               },
               itemBuilder: (context) => [
-                if (!_isLocal)
-                  PopupMenuItem(
-                      value: SongAction.download,
-                      child: Row(children: [
-                        const Icon(Icons.download_rounded),
-                        const SizedBox(width: 12),
-                        Text(AppLocalizations.of(context)!.download)
-                      ])),
                 PopupMenuItem(
                     value: SongAction.playNext,
                     child: Row(children: [
@@ -1394,6 +1398,14 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                       const SizedBox(width: 12),
                       Text(AppLocalizations.of(context)!.goToArtist)
                     ])),
+                if (!_isLocal)
+                  PopupMenuItem(
+                      value: SongAction.download,
+                      child: Row(children: [
+                        const Icon(Icons.download_rounded),
+                        const SizedBox(width: 12),
+                        Text(AppLocalizations.of(context)!.download)
+                      ])),
               ],
             ),
           ],

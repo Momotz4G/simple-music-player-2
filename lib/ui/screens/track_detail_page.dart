@@ -8,6 +8,7 @@ import '../../services/spotify_service.dart';
 import '../../services/smart_download_service.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../components/music_notification.dart';
 import '../components/song_context_menu.dart';
 
@@ -27,7 +28,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
   bool _isArtistHovered = false;
 
   // Track Logic
-  SongModel? _song; // 🚀 FIX: Removed late, made nullable
+  SongModel? _song;
   String? _loadingSongTitle;
   String? _artistImageUrl;
 
@@ -50,7 +51,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
           artist: widget.songMetadata.artist,
           album: widget.songMetadata.album,
           filePath: predictedPath,
-          fileExtension: '.mp3',
+          fileExtension: predictedPath.isNotEmpty ? '.${predictedPath.split('.').last}' : '.mp3',
           duration: widget.songMetadata.durationSeconds.toDouble(),
           onlineArtUrl: widget.songMetadata.albumArtUrl,
           isrc: widget.songMetadata.isrc,
@@ -126,7 +127,8 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text("${AppLocalizations.of(context)!.playbackError}: $e"),
+              content:
+                  Text("${AppLocalizations.of(context)!.playbackError}: $e"),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 2)),
         );
@@ -190,7 +192,7 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                 padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // 🚀 Responsive: Use vertical layout on narrow screens
+                    // Responsive: Use vertical layout on narrow screens
                     final isNarrow = constraints.maxWidth < 500;
                     final artSize = isNarrow
                         ? constraints.maxWidth * 0.6
@@ -246,45 +248,54 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                           ),
                           const SizedBox(height: 16),
                           // Artist Row
-                          GestureDetector(
-                            onTap: () {
-                              ref.read(navigationStackProvider.notifier).push(
-                                    NavigationItem(
-                                      type: NavigationType.artist,
-                                      data: ArtistSelection(
-                                          artistName: song.artist,
-                                          songs: <SongModel>[]),
-                                    ),
-                                  );
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor: Colors.grey,
-                                  backgroundImage: _artistImageUrl != null
-                                      ? NetworkImage(_artistImageUrl!)
-                                      : null,
-                                  child: _artistImageUrl == null
-                                      ? const Icon(Icons.person, size: 16)
-                                      : null,
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    song.artist,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                      fontSize: 15,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                          MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            onEnter: (_) => setState(() => _isArtistHovered = true),
+                            onExit: (_) => setState(() => _isArtistHovered = false),
+                            child: GestureDetector(
+                              onTap: () {
+                                ref.read(navigationStackProvider.notifier).push(
+                                      NavigationItem(
+                                        type: NavigationType.artist,
+                                        data: ArtistSelection(
+                                            artistName: song.artist,
+                                            songs: <SongModel>[]),
+                                      ),
+                                    );
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: Colors.grey,
+                                    backgroundImage: _artistImageUrl != null
+                                        ? NetworkImage(_artistImageUrl!)
+                                        : null,
+                                    child: _artistImageUrl == null
+                                        ? const Icon(Icons.person, size: 16)
+                                        : null,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      song.artist,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        decoration: _isArtistHovered
+                                            ? TextDecoration.underline
+                                            : null,
+                                        decorationColor: textColor,
+                                        color: textColor,
+                                        fontSize: 15,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -328,7 +339,9 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  Text(AppLocalizations.of(context)!.songLabelUpper,
+                                  Text(
+                                      AppLocalizations.of(context)!
+                                          .songLabelUpper,
                                       style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
@@ -346,48 +359,53 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 24),
-                                  Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 12,
-                                        backgroundColor: Colors.grey,
-                                        backgroundImage: _artistImageUrl != null
-                                            ? NetworkImage(_artistImageUrl!)
-                                            : null,
-                                        child: _artistImageUrl == null
-                                            ? const Icon(Icons.person, size: 14)
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: _MarqueeText(
-                                          text: song.artist,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            decoration: _isArtistHovered
-                                                ? TextDecoration.underline
-                                                : null,
-                                            decorationColor: textColor,
-                                            color: textColor,
+                                  MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    onEnter: (_) => setState(() => _isArtistHovered = true),
+                                    onExit: (_) => setState(() => _isArtistHovered = false),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        ref.read(navigationStackProvider.notifier).push(
+                                          NavigationItem(
+                                            type: NavigationType.artist,
+                                            data: ArtistSelection(
+                                                artistName: song.artist,
+                                                songs: <SongModel>[]),
                                           ),
-                                          onTap: () {
-                                            ref
-                                                .read(navigationStackProvider
-                                                    .notifier)
-                                                .push(
-                                                  NavigationItem(
-                                                    type: NavigationType.artist,
-                                                    data: ArtistSelection(
-                                                        artistName: song.artist,
-                                                        songs: <SongModel>[]),
-                                                  ),
-                                                );
-                                          },
-                                          onHover: (isHovered) => setState(() =>
-                                              _isArtistHovered = isHovered),
-                                        ),
+                                        );
+                                      },
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 12,
+                                            backgroundColor: Colors.grey,
+                                            backgroundImage: _artistImageUrl != null
+                                                ? NetworkImage(_artistImageUrl!)
+                                                : null,
+                                            child: _artistImageUrl == null
+                                                ? const Icon(Icons.person, size: 14)
+                                                : null,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              song.artist,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                decoration: _isArtistHovered
+                                                    ? TextDecoration.underline
+                                                    : null,
+                                                decorationColor: textColor,
+                                                color: textColor,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
@@ -445,18 +463,18 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                       },
                       itemBuilder: (context) => [
                         PopupMenuItem(
-                            value: SongAction.download,
-                            child: Row(children: [
-                              const Icon(Icons.download_rounded),
-                              const SizedBox(width: 12),
-                              Text(AppLocalizations.of(context)!.download)
-                            ])),
-                        PopupMenuItem(
                             value: SongAction.playNext,
                             child: Row(children: [
                               const Icon(Icons.playlist_play),
                               const SizedBox(width: 12),
                               Text(AppLocalizations.of(context)!.playNext)
+                            ])),
+                        PopupMenuItem(
+                            value: SongAction.addToQueue,
+                            child: Row(children: [
+                              const Icon(Icons.queue_music),
+                              const SizedBox(width: 12),
+                              Text(AppLocalizations.of(context)!.addToQueue)
                             ])),
                         PopupMenuItem(
                             value: SongAction.addToPlaylist,
@@ -478,6 +496,13 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                               const Icon(Icons.person_search),
                               const SizedBox(width: 12),
                               Text(AppLocalizations.of(context)!.goToArtist)
+                            ])),
+                        PopupMenuItem(
+                            value: SongAction.download,
+                            child: Row(children: [
+                              const Icon(Icons.download_rounded),
+                              const SizedBox(width: 12),
+                              Text(AppLocalizations.of(context)!.download)
                             ])),
                       ],
                     ),
@@ -549,18 +574,18 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                           },
                           itemBuilder: (context) => [
                             PopupMenuItem(
-                                value: SongAction.download,
-                                child: Row(children: [
-                                  const Icon(Icons.download_rounded),
-                                  const SizedBox(width: 12),
-                                  Text(AppLocalizations.of(context)!.download)
-                                ])),
-                            PopupMenuItem(
                                 value: SongAction.playNext,
                                 child: Row(children: [
                                   const Icon(Icons.playlist_play),
                                   const SizedBox(width: 12),
                                   Text(AppLocalizations.of(context)!.playNext)
+                                ])),
+                            PopupMenuItem(
+                                value: SongAction.addToQueue,
+                                child: Row(children: [
+                                  const Icon(Icons.queue_music),
+                                  const SizedBox(width: 12),
+                                  Text(AppLocalizations.of(context)!.addToQueue)
                                 ])),
                             PopupMenuItem(
                                 value: SongAction.addToPlaylist,
@@ -585,6 +610,13 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
                                   const SizedBox(width: 12),
                                   Text(AppLocalizations.of(context)!.goToArtist)
                                 ])),
+                            PopupMenuItem(
+                                value: SongAction.download,
+                                child: Row(children: [
+                                  const Icon(Icons.download_rounded),
+                                  const SizedBox(width: 12),
+                                  Text(AppLocalizations.of(context)!.download)
+                                ])),
                           ],
                         ),
                       ],
@@ -605,15 +637,9 @@ class _TrackDetailPageState extends ConsumerState<TrackDetailPage> {
 // --- MARQUEE TEXT WIDGET ---
 class _MarqueeText extends StatefulWidget {
   final String text;
-  final TextStyle? style;
-  final VoidCallback? onTap;
-  final Function(bool)? onHover;
 
   const _MarqueeText({
     required this.text,
-    this.style,
-    this.onTap,
-    this.onHover,
   });
 
   @override
@@ -697,27 +723,14 @@ class _MarqueeTextState extends State<_MarqueeText>
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) {
-        widget.onHover?.call(true);
-      },
-      onExit: (_) {
-        widget.onHover?.call(false);
-      },
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: ClipRect(
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            physics: const NeverScrollableScrollPhysics(),
-            child: Text(
-              widget.text,
-              style: widget.style,
-              maxLines: 1,
-            ),
-          ),
+    return ClipRect(
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        child: Text(
+          widget.text,
+          maxLines: 1,
         ),
       ),
     );

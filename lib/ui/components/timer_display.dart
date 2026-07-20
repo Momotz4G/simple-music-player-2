@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/timer_provider.dart';
-import '../../providers/player_provider.dart';
+
 
 import '../../l10n/app_localizations.dart';
 
@@ -29,7 +29,7 @@ class TimerDisplay extends ConsumerWidget {
         ? Colors.white
         : Colors.black87;
 
-    final playerState = ref.watch(playerProvider);
+
 
     if (!timerState.isActive) {
       return Text(l10n.sleepTimer, style: TextStyle(color: textColor));

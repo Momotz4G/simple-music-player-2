@@ -81,7 +81,7 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
                   Switch(
                     value: eq.isEnabled,
                     onChanged: (val) => notifier.toggleEnabled(val),
-                    activeColor: accentColor,
+                    activeThumbColor: accentColor,
                     activeTrackColor: accentColor.withValues(alpha: 0.4),
                     inactiveThumbColor: dimText,
                     inactiveTrackColor: trackColor,
@@ -136,9 +136,7 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
                   icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                   tooltip: l10n.deletePreset,
                   onPressed: () {
-                    if (dropdownValue != null) {
-                      notifier.deletePreset(dropdownValue.id);
-                    }
+                    notifier.deletePreset(dropdownValue.id);
                   },
                 ),
               ]
@@ -253,7 +251,7 @@ class _EqualizerSheetState extends ConsumerState<EqualizerSheet> {
                                         inactiveTrackColor: trackColor,
                                         thumbColor: accentColor,
                                         overlayColor: accentColor.withValues(alpha: 0.2),
-                                        showValueIndicator: ShowValueIndicator.always,
+                                        showValueIndicator: ShowValueIndicator.onDrag,
                                         valueIndicatorShape: const HorizontalValueIndicatorShape(),
                                         valueIndicatorColor: surfaceColor,
                                         valueIndicatorTextStyle: const TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.w600),
@@ -408,7 +406,7 @@ class HorizontalValueIndicatorShape extends SliderComponentShape {
     canvas.rotate(1.5708); // Rotate back 90 degrees (pi/2) to make it horizontal
     
     // Draw the rounded background box
-    final double padding = 8.0;
+    const double padding = 8.0;
     final Size labelSize = labelPainter.size;
     final double rectWidth = labelSize.width + padding * 2;
     final double rectHeight = labelSize.height + padding;

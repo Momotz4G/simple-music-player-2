@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Match USB Audio Class devices.
+        class="1" = AUDIO (per USB-IF base class codes)
+        This makes Android present this app as a handler when a USB DAC is
+        attached, enabling the "Always open" checkbox in the permission dialog.
+    -->
+    <usb-device class="1" />
+</resources>

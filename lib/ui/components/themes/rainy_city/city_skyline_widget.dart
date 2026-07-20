@@ -67,7 +67,7 @@ class _CitySkylinePainter extends CustomPainter {
     for (int i = 0; i < buildingCount; i++) {
       final double bHeight = size.height * (0.4 + random.nextDouble() * 0.4);
       final double bX = i * buildingWidth + 5;
-      final double bW = buildingWidth - 10;
+      const double bW = buildingWidth - 10;
 
       final Rect bRect = Rect.fromLTWH(bX, bottomY - bHeight, bW, bHeight);
       canvas.drawRect(bRect, buildingPaint);
@@ -75,7 +75,7 @@ class _CitySkylinePainter extends CustomPainter {
       // 2. Draw Windows
       const int rows = 5;
       const int cols = 2;
-      final double winW = bW / (cols + 1);
+      const double winW = bW / (cols + 1);
 
       for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {

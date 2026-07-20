@@ -6,6 +6,7 @@ import 'package:palette_generator/palette_generator.dart';
 import '../../models/song_model.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/search_bridge_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../l10n/app_localizations.dart';
 
 import '../../services/vps_scraper_service.dart';
@@ -39,7 +40,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
   String? _loadingSongTitle;
 
   // Spotify Mode State
-  bool _isSpotifyMode = false;
+  bool _isSearchMode = false;
   List<SongModel> _topTracks = [];
   List<AlbumModel> _albums = [];
   bool _isLoadingTracks = false;
@@ -52,10 +53,10 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
   @override
   void initState() {
     super.initState();
-    _isSpotifyMode = widget.songs.isEmpty;
+    _isSearchMode = widget.songs.isEmpty;
     _fetchArtistHeader(force: false);
-    if (_isSpotifyMode) {
-      _loadFromCache(); // 🚀 Instant load from DB
+    if (_isSearchMode) {
+      _loadFromCache(); // Instant load from DB
       _fetchTopTracks(); // Background refresh
     }
   }
@@ -92,12 +93,12 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
         _topTracks = [];
         _albums = [];
         _isLoadingTracks = true;
-        _isSpotifyMode = widget.songs.isEmpty;
+        _isSearchMode = widget.songs.isEmpty;
       });
 
       // RE-FETCH
       _fetchArtistHeader(force: false);
-      if (_isSpotifyMode) {
+      if (_isSearchMode) {
         _fetchTopTracks();
       }
     }
@@ -107,11 +108,13 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
     if (!mounted) return;
     setState(() => _isLoadingTracks = true);
 
+    final settings = ref.read(settingsProvider);
+
     try {
       debugPrint("🔍 [ArtistDetail] Fetching Top Tracks for ${widget.artistName}...");
       
       // 1. FETCH TOP TRACKS
-      final tracks = await HybridService.getArtistTopTracks(widget.artistName);
+      final tracks = await HybridService.getArtistTopTracks(widget.artistName, engine: settings.searchEngine);
       
       if (mounted) {
         if (tracks.isNotEmpty) {
@@ -126,7 +129,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
               fileExtension: '.mp3',
               duration: t.durationSeconds.toDouble(),
               onlineArtUrl: t.albumArtUrl,
-              sourceUrl: null, // Will be resolved by JIT
+              sourceUrl: t.youtubeUrl, // Important for Apple Music direct download routing
             );
           }));
           
@@ -134,7 +137,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
             _topTracks = songModels;
           });
 
-          // 🚀 SAVE TO CACHE
+          // SAVE TO CACHE
           final tracksJson = jsonEncode(songModels.map((s) => s.toJson()).toList());
           DBService().saveDataCache("artist_tracks:${widget.artistName}", tracksJson);
         } else {
@@ -144,7 +147,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
 
       // 2. FETCH ALBUMS (Independent of tracks)
       debugPrint("🔍 [ArtistDetail] Fetching Discography for ${widget.artistName}...");
-      final albums = await HybridService.getArtistAlbums(widget.artistName);
+      final albums = await HybridService.getArtistAlbums(widget.artistName, engine: settings.searchEngine);
       
       if (mounted) {
         setState(() {
@@ -152,7 +155,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
           _isLoadingTracks = false;
         });
 
-        // 🚀 SAVE TO CACHE
+        // SAVE TO CACHE
         if (albums.isNotEmpty) {
           final albumsJson = jsonEncode(albums.map((a) => a.toMap()).toList());
           DBService().saveDataCache("artist_albums:${widget.artistName}", albumsJson);
@@ -174,19 +177,19 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
     String? cachedUrl;
     final String cacheKey = "banner:${widget.artistName}";
 
-    // 🚀 PHASE 1: Load from Cache (Instant UI)
+    // PHASE 1: Load from Cache (Instant UI)
     try {
       cachedUrl = await DBService().getArtCache(cacheKey);
       if (cachedUrl != null && cachedUrl.isNotEmpty && !force) {
         if (mounted) {
           setState(() => _headerImageUrl = cachedUrl);
-          _extractColors(cachedUrl!);
+          _extractColors(cachedUrl);
         }
         // Don't stop here! We will re-validate in the background (Phase 2)
       }
     } catch (_) {}
 
-    if (force) {
+    if (force && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Refreshing banner for ${widget.artistName}..."),
@@ -196,7 +199,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
       );
     }
 
-    // 🚀 PHASE 2: Background Re-validation (Check for better/new banner)
+    // PHASE 2: Background Re-validation (Check for better/new banner)
     try {
       String? freshUrl;
       final spotifyId = await SpotifyService.getArtistId(artistName: widget.artistName);
@@ -204,31 +207,42 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
       if (spotifyId != null) {
         final bannerData = await VpsScraperService.getArtistBanner(spotifyId);
         freshUrl = bannerData['banner'] ?? bannerData['gallery'] ?? bannerData['profile'];
+        
+        // Fallback 1: Client-side scrape
+        freshUrl ??= await SpotifyService.getFreshBannerUrl(spotifyId);
       }
 
-      // If VPS fails and we HAVE NO CACHE, try Wikipedia fallback
+      // Fallback 2: Official Spotify API Profile Image (using dual credentials fallback)
+      if (freshUrl == null && (_headerImageUrl == null || force)) {
+        freshUrl = await SpotifyService.getArtistImage(
+          artistName: widget.artistName,
+          highQuality: true,
+        );
+      }
+
+      // Fallback 3: Wikipedia fallback
       if (freshUrl == null && (_headerImageUrl == null || force)) {
         freshUrl = await WikipediaService.getArtistImage(widget.artistName);
       }
 
-      // Final fallback if still null and no UI image
+      // Final fallback to Deezer/Hybrid
       if (freshUrl == null && (_headerImageUrl == null || force)) {
         final artist = await HybridService.getArtist("unknown", artistName: widget.artistName);
         freshUrl = artist?.imageUrl;
       }
 
-      // 🚀 PHASE 3: Comparison & Update
+      // PHASE 3: Comparison & Update
       if (freshUrl != null && freshUrl != cachedUrl) {
         debugPrint("✨ Banner Updated for ${widget.artistName}: New URL found!");
         
         // 💾 ALWAYS save to database in background, even if user left the page
-        DBService().saveArtCache(cacheKey, freshUrl!);
+        DBService().saveArtCache(cacheKey, freshUrl);
 
         if (mounted) {
           setState(() {
             _headerImageUrl = freshUrl;
           });
-          _extractColors(freshUrl!);
+          _extractColors(freshUrl);
         }
       } else {
         debugPrint("✅ Banner for ${widget.artistName} is already up to date.");
@@ -293,9 +307,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
     final baseBg = Theme.of(context).scaffoldBackgroundColor;
 
     // Determine which list to show
-    final currentList = _isSpotifyMode ? _topTracks : widget.songs;
+    final currentList = _isSearchMode ? _topTracks : widget.songs;
     final int totalItems = currentList.length;
-    final int displayCount = _isSpotifyMode
+    final int displayCount = _isSearchMode
         ? ((totalItems > _displayLimit) ? _displayLimit : totalItems)
         : totalItems;
 
@@ -374,7 +388,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                           const SizedBox(height: 8),
                           Builder(
                             builder: (context) {
-                              // 🚀 Responsive font size
+                              // Responsive font size
                               final screenWidth =
                                   MediaQuery.of(context).size.width;
                               final isNarrow = screenWidth < 500;
@@ -399,7 +413,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            _isSpotifyMode
+                            _isSearchMode
                                 ? AppLocalizations.of(context)!.popularOnSpotify
                                 : AppLocalizations.of(context)!
                                     .songsInLibrary(widget.songs.length),
@@ -450,7 +464,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                             color: Colors.black, size: 38),
                         onPressed: () {
                           if (currentList.isNotEmpty) {
-                            // 🚀 PLAY ALL with Queue
+                            // PLAY ALL with Queue
                             notifier.playSong(currentList.first,
                                 newQueue: currentList);
                           }
@@ -503,7 +517,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
             ),
 
             // --- SONG LIST ---
-            if (_isSpotifyMode && _isLoadingTracks)
+            if (_isSearchMode && _isLoadingTracks)
               const SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(child: CircularProgressIndicator()),
@@ -590,15 +604,6 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                                     context, ref, action, song);
                               },
                               itemBuilder: (context) => [
-                                if (_isSpotifyMode)
-                                  PopupMenuItem(
-                                      value: SongAction.download,
-                                      child: Row(children: [
-                                        const Icon(Icons.download_rounded),
-                                        const SizedBox(width: 12),
-                                        Text(AppLocalizations.of(context)!
-                                            .download)
-                                      ])),
                                 PopupMenuItem(
                                     value: SongAction.playNext,
                                     child: Row(children: [
@@ -631,6 +636,23 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                                       Text(AppLocalizations.of(context)!
                                           .addToFavorite)
                                     ])),
+                                PopupMenuItem(
+                                    value: SongAction.goToArtist,
+                                    child: Row(children: [
+                                      const Icon(Icons.person_search),
+                                      const SizedBox(width: 12),
+                                      Text(AppLocalizations.of(context)!
+                                          .goToArtist)
+                                    ])),
+                                if (_isSearchMode)
+                                  PopupMenuItem(
+                                      value: SongAction.download,
+                                      child: Row(children: [
+                                        const Icon(Icons.download_rounded),
+                                        const SizedBox(width: 12),
+                                        Text(AppLocalizations.of(context)!
+                                            .download)
+                                      ])),
                               ],
                             ),
                           ],
@@ -648,7 +670,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
               ),
 
             // SHOW MORE / SHOW LESS BUTTON
-            if (_isSpotifyMode && totalItems > 5)
+            if (_isSearchMode && totalItems > 5)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),
@@ -676,7 +698,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
               ),
 
             // DISCOGRAPHY SECTION
-            if (_isSpotifyMode && _albums.isNotEmpty) ...[
+            if (_isSearchMode && _albums.isNotEmpty) ...[
               SliverToBoxAdapter(
                 child: Padding(
                   padding:
@@ -797,7 +819,7 @@ class _DiscographySectionState extends State<DiscographySection> {
   @override
   Widget build(BuildContext context) {
     final isDesktop =
-        MediaQuery.of(context).size.width > 800; // 🚀 Define Desktop
+        MediaQuery.of(context).size.width > 800; // Define Desktop
     const limit = 10;
     final showExpandButton = !_showAll && widget.albums.length > limit;
     final itemCount = _showAll

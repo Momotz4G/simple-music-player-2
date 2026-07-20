@@ -53,8 +53,8 @@ class _PumpkinPackPainter extends CustomPainter {
       ..strokeWidth = 1;
 
     // Pumpkin body (3 overlapping ovals)
-    final double width = 30.0;
-    final double height = 24.0;
+    const double width = 30.0;
+    const double height = 24.0;
 
     // Stem
     canvas.drawRect(

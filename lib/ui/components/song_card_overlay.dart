@@ -32,7 +32,7 @@ class _SongCardOverlayState extends ConsumerState<SongCardOverlay> {
   @override
   Widget build(BuildContext context) {
     final notifier = ref.read(playerProvider.notifier);
-    // 🚀 SELECTIVE WATCH: Only rebuild when current song or play state changes
+    // SELECTIVE WATCH: Only rebuild when current song or play state changes
     final currentFilePath = ref.watch(playerProvider.select((s) => s.currentSong?.filePath));
     final isGlobalPlaying = ref.watch(playerProvider.select((s) => s.isPlaying));
     final primaryColor = Theme.of(context).colorScheme.primary;

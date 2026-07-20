@@ -54,7 +54,7 @@ class _FirecrackerPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final Random random = Random(88); // Stable string
     final double centerX = size.width / 2;
-    final double stringTopY = 10.0;
+    const double stringTopY = 10.0;
     final double stringBottomY = size.height - 40;
 
     final redPaint = Paint()
@@ -99,7 +99,7 @@ class _FirecrackerPainter extends CustomPainter {
     }
 
     // Bottom bundle
-    final double bundleY = stringTopY + (6 * 16) + 10;
+    const double bundleY = stringTopY + (6 * 16) + 10;
     canvas.drawCircle(Offset(centerX, bundleY), 8, redPaint);
     canvas.drawCircle(
         Offset(centerX, bundleY),

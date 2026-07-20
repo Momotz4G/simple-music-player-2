@@ -9,6 +9,7 @@ import 'package:open_filex/open_filex.dart';
 
 import '../../models/song_model.dart';
 import '../../providers/player_provider.dart';
+import '../../providers/library_provider.dart';
 import '../components/smart_art.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -30,7 +31,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
     _loadFiles();
   }
 
-  Future<void> _loadFiles() async {
+  Future<void> _loadFiles({bool forceRefresh = false}) async {
     setState(() => _isLoading = true);
 
     try {
@@ -40,7 +41,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
 
       if (path == null) {
         if (Platform.isAndroid) {
-          // 🚀 Use public Download directory on Android
+          // Use public Download directory on Android
           try {
             final updatePath = Directory("/storage/emulated/0/Download");
             if (await updatePath.exists()) {
@@ -59,7 +60,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
             }
           } catch (e) {
             debugPrint("Error accessing public directory: $e");
-            // 🚀 Hardcoded fallback for offline mode
+            // Hardcoded fallback for offline mode
             path = "/storage/emulated/0/Download/SimpleMusicDownloads";
           }
         } else if (Platform.isIOS) {
@@ -99,9 +100,16 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
               '.aif',
               '.opus',
               '.ogg',
-              '.alac'
+              '.alac',
+              '.wv'
             ].contains(ext);
           }).toList();
+
+          if (forceRefresh) {
+            for (final f in audioFiles) {
+              SmartArt.invalidateCache(f.path);
+            }
+          }
 
           // Fetch all stats in parallel
           final stats = await Future.wait(audioFiles.map((f) => f.stat()));
@@ -151,7 +159,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
       // Linux: Opens the directory
       await Process.run('xdg-open', [file.parent.path]);
     } else if (Platform.isAndroid) {
-      // 🚀 Android: Open the parent folder using open_filex
+      // Android: Open the parent folder using open_filex
       try {
         // open_filex can open directories on Android
         final result = await _openFolderOnAndroid(file.parent.path);
@@ -298,6 +306,9 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
     if (confirm == true) {
       try {
         await file.delete();
+        if (mounted) {
+           ref.read(libraryProvider.notifier).removeSongByPath(file.path);
+        }
         _loadFiles();
       } catch (e) {
         if (mounted) {
@@ -366,7 +377,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.refresh),
-                    onPressed: _loadFiles,
+                    onPressed: () => _loadFiles(forceRefresh: true),
                     tooltip: AppLocalizations.of(context)!.refreshList,
                   ),
                 ],

@@ -90,17 +90,21 @@ class YoutubeDLPlugin : FlutterPlugin, MethodCallHandler {
             try {
                 Log.d(TAG, "Getting URL for: $url")
                 val request = YoutubeDLRequest(url)
-                request.addOption("-f", "bestaudio/best")
-                request.addOption("--get-url") 
-                request.addOption("-v")
+                request.addOption("-g")
+                request.addOption("-f", "ba[ext=m4a]/ba")
                 
-                val info = YoutubeDL.getInstance().getInfo(request)
-                Log.d(TAG, "URL Found: ${info.url}")
+                val response = YoutubeDL.getInstance().execute(request)
+                val streamUrl = response.out.trim().split("\n").firstOrNull()
+                Log.d(TAG, "URL Found: $streamUrl")
                 withContext(Dispatchers.Main) {
-                    result.success(info.url)
+                    if (!streamUrl.isNullOrEmpty()) {
+                        result.success(streamUrl)
+                    } else {
+                        result.error("YTDLP_ERROR", "Empty URL returned from yt-dlp", null)
+                    }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Get URL Failed: $e")
+                Log.e(TAG, "Get URL Failed: ${e.message}")
                 withContext(Dispatchers.Main) {
                     result.error("YTDLP_ERROR", e.message, null)
                 }

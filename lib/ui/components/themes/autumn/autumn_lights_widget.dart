@@ -73,7 +73,7 @@ class _AutumnLightsPainter extends CustomPainter {
       final double x = i * spacing;
       // Find Y on the sagging curve at x
       // Quadratic bezier at center point is roughly yOffset + sag * 0.75
-      final double y = yOffset + 8;
+      const double y = yOffset + 8;
 
       final double flicker =
           sin(animationValue * 2 * pi + (i * 0.5)) * 0.2 + 0.8;

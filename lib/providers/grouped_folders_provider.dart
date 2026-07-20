@@ -5,7 +5,7 @@ import 'library_provider.dart';
 
 /// Provides a Map of Folder Name -> List of SongModel objects in that folder.
 final groupedFoldersProvider = Provider<Map<String, List<SongModel>>>((ref) {
-  // 🚀 Use selective watch + allSongs (unfiltered) to avoid recalculating
+  // Use selective watch + allSongs (unfiltered) to avoid recalculating
   // on every search keystroke — matches pattern of other grouped providers
   final isLoading = ref.watch(libraryProvider.select((p) => p.isLoading));
 

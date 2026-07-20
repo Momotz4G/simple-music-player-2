@@ -14,6 +14,7 @@ import '../../utils/japanese_romanizer.dart';
 import '../../utils/korean_romanizer.dart';
 import '../../utils/translation_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../widgets/smooth_highlight_text.dart';
 
 class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key});
@@ -346,7 +347,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                               ),
                             ),
                             child: _buildMiniLyrics(
-                                lyrics, currentIndex, lyricsState),
+                                lyrics, currentIndex, lyricsState, playerState),
                           ),
                         ),
                     ],
@@ -389,7 +390,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
   }
 
   Widget _buildMiniLyrics(
-      List<LyricLine> lyrics, int currentIndex, LyricsState lyricsState) {
+      List<LyricLine> lyrics, int currentIndex, LyricsState lyricsState, PlayerState playerState) {
     if (lyricsState.isLoading) {
       return const Center(
         child: SizedBox(
@@ -417,7 +418,8 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
     }
 
     // Show current and next line
-    final currentText = currentIndex >= 0 ? lyrics[currentIndex].text : "♪ ♪ ♪";
+    final currentLine = currentIndex >= 0 ? lyrics[currentIndex] : null;
+    final currentText = currentLine?.text ?? "♪ ♪ ♪";
     final nextText =
         (currentIndex + 1 < lyrics.length) ? lyrics[currentIndex + 1].text : "";
 
@@ -445,31 +447,92 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
           // Current line
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
-            child: Text(
-              currentText,
-              key: ValueKey(currentText),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: currentIndex >= 0 ? accentColor : Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                alignment: Alignment.topLeft,
+                children: <Widget>[
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              );
+            },
+            child: (currentIndex >= 0)
+                ? SmoothHighlightText(
+                    key: ValueKey(currentText),
+                    text: currentText,
+                    startTime: currentLine!.time,
+                    endTime: (currentIndex + 1 < lyrics.length)
+                        ? lyrics[currentIndex + 1].time
+                        : currentLine.time + 5.0,
+                    initialPosition: playerState.currentPosition,
+                    isPlaying: playerState.isPlaying,
+                    syncOffset: lyricsState.syncOffset,
+                    activeColor: accentColor,
+                    inactiveColor: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    words: currentLine.words,
+                  )
+                : Text(
+                    currentText,
+                    key: ValueKey(currentText),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
           // Romanization
           if (currentRoman != null && currentRoman.isNotEmpty)
-            Text(
-              currentRoman,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: currentIndex >= 0
-                    ? accentColor.withValues(alpha: 0.8)
-                    : Colors.white54,
-                fontSize: 11,
-                fontStyle: FontStyle.italic,
-              ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  alignment: Alignment.topLeft,
+                  children: <Widget>[
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              child: (currentIndex >= 0)
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: SmoothHighlightText(
+                        key: ValueKey(currentRoman),
+                        text: currentRoman,
+                        startTime: currentLine!.time,
+                        endTime: (currentIndex + 1 < lyrics.length)
+                            ? lyrics[currentIndex + 1].time
+                            : currentLine.time + 5.0,
+                        initialPosition: playerState.currentPosition,
+                        isPlaying: playerState.isPlaying,
+                        syncOffset: lyricsState.syncOffset,
+                        activeColor: accentColor.withValues(alpha: 0.8),
+                        inactiveColor: Colors.white54,
+                        fontSize: 11,
+                        fontWeight: FontWeight.normal,
+                        isItalic: true,
+                        spacing: 4.0,
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        currentRoman,
+                        key: ValueKey(currentRoman),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
             ),
           // Translation (if cached AND translation toggle is on)
           if (currentIndex >= 0 &&
@@ -484,15 +547,29 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                   translations[currentIndex].isEmpty) {
                 return const SizedBox.shrink();
               }
-              return Text(
-                '(${translations[currentIndex]})',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: currentIndex >= 0
-                      ? accentColor.withValues(alpha: 0.6)
-                      : Colors.white38,
-                  fontSize: 11,
+              final transText = translations[currentIndex];
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                layoutBuilder: (currentChild, previousChildren) {
+                  return Stack(
+                    alignment: Alignment.topLeft,
+                    children: <Widget>[
+                      ...previousChildren,
+                      if (currentChild != null) currentChild,
+                    ],
+                  );
+                },
+                child: Text(
+                  '($transText)',
+                  key: ValueKey(transText),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: currentIndex >= 0
+                        ? accentColor.withValues(alpha: 0.6)
+                        : Colors.white38,
+                    fontSize: 11,
+                  ),
                 ),
               );
             }),
@@ -501,6 +578,15 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
           if (nextText.isNotEmpty)
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  alignment: Alignment.topLeft,
+                  children: <Widget>[
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
               child: Text(
                 nextText,
                 key: ValueKey(nextText),

@@ -46,7 +46,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
   @override
   void initState() {
     super.initState();
-    // 🚀 Clear any leftover search from previous visit
+    // Clear any leftover search from previous visit
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         p.Provider.of<LibraryProvider>(context, listen: false).search('');
@@ -128,7 +128,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
-                            controller: _searchCtrl, // 🚀 Persistent controller
+                            controller: _searchCtrl, // Persistent controller
                             decoration: InputDecoration(
                               hintText:
                                   AppLocalizations.of(context)!.searchSongs,
@@ -235,29 +235,6 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                   ),
                   child: PopupMenuButton<LibraryFilter>(
                     key: filterKey,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => filterKey.currentState?.showButtonMenu(),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.filters,
-                              style: TextStyle(
-                                color: titleColor,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Icon(Icons.filter_list_rounded,
-                                color: settings.accentColor, size: 20),
-                          ],
-                        ),
-                      ),
-                    ),
                     tooltip: "",
                     offset: const Offset(0, 40),
                     shape: RoundedRectangleBorder(
@@ -308,6 +285,29 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                         ),
                       );
                     }).toList(),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => filterKey.currentState?.showButtonMenu(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.filters,
+                              style: TextStyle(
+                                color: titleColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(Icons.filter_list_rounded,
+                                color: settings.accentColor, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
 
@@ -329,37 +329,6 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                   ),
                   child: PopupMenuButton<LibrarySort>(
                     key: sortKey,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => sortKey.currentState?.showButtonMenu(),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _getSortLabel(
-                                  context,
-                                  presentationState.sortBy,
-                                  presentationState.currentFilter,
-                                  presentationState.isSortDescending),
-                              style: TextStyle(
-                                color: titleColor,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Icon(
-                                presentationState.isSortDescending
-                                    ? Icons.arrow_downward_rounded
-                                    : Icons.arrow_upward_rounded,
-                                color: settings.accentColor,
-                                size: 18),
-                          ],
-                        ),
-                      ),
-                    ),
                     tooltip: "",
                     offset: const Offset(0, 40),
                     shape: RoundedRectangleBorder(
@@ -418,6 +387,46 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                         );
                       }).toList();
                     },
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => sortKey.currentState?.showButtonMenu(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _getSortLabel(
+                                  context,
+                                  presentationState.sortBy,
+                                  presentationState.currentFilter,
+                                  presentationState.isSortDescending),
+                              style: TextStyle(
+                                color: titleColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                                presentationState.isSortDescending
+                                    ? Icons.arrow_downward_rounded
+                                    : Icons.arrow_upward_rounded,
+                                color: settings.accentColor,
+                                size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  "${library.songs.length} ${AppLocalizations.of(context)!.songs.toLowerCase()}",
+                  style: TextStyle(
+                    color: titleColor.withValues(alpha: 0.6),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -475,7 +484,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
       bool isGridView,
       bool isDark,
       Color textColor) {
-    // 🚀 IMPROVED LOADING LOGIC:
+    // IMPROVED LOADING LOGIC:
     // Only show the big spinner if we have NO songs yet.
     // If we have songs, let the user browse even if it's "loading" in the background.
     if (library.isLoading && library.songs.isEmpty) {
@@ -546,7 +555,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
           groupedFolders[presentationState.selectedFolderPath!] ?? [];
     }
 
-    // 🚀 STABLE GRID: Cache last non-empty results so the grid/list
+    // STABLE GRID: Cache last non-empty results so the grid/list
     // retains its tiles instead of mass-disposing them (which deadlocks Win32).
     if (displaySongs.isNotEmpty) {
       _stableGridSongs = displaySongs;
@@ -586,7 +595,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
             Expanded(
               child: Stack(
                 children: [
-                  // 🚀 STRUCTURAL PRESERVATION GRID:
+                  // STRUCTURAL PRESERVATION GRID:
                   // This Grid/List remains in the tree at all times with the cached gridSongs.
                   // It is visually hidden by the full-screen overlay below when search hits zero.
                   isGridView
@@ -624,7 +633,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                           ),
                         ),
 
-                  // 🚀 PERMANENT INDEXER:
+                  // PERMANENT INDEXER:
                   // We NEVER remove the Indexer from the tree to avoid Win32 deadlocks.
                   if (!isGridView && settings.enableAlphabetIndexer)
                     Positioned(
@@ -666,7 +675,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
           ],
         ),
 
-        // 🚀 FULL-VIEWPORT OVERLAY:
+        // FULL-VIEWPORT OVERLAY:
         // By placing this in the outer Stack, we ignore the 32px horizontal padding
         // of the parent Column and cover the entire screen edge-to-edge.
         if (displaySongs.isEmpty)
@@ -675,7 +684,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
-                  // 🚀 TRUE ATMOSPHERIC GLASS:
+                  // TRUE ATMOSPHERIC GLASS:
                   // We match your grid cards exactly by using a dark tint in dark mode,
                   // but with a lower alpha (0.08) to make it even smoother.
                   color: hasTheme
@@ -689,7 +698,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // 🚀 ICON THEMING: Use accent color for thematic pop
+                        // ICON THEMING: Use accent color for thematic pop
                         Icon(Icons.music_off_rounded,
                             size: 80,
                             color: Theme.of(context)
@@ -1089,7 +1098,7 @@ class SongListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 🚀 SELECTIVE WATCH: Only rebuild when the current song changes, not on every position tick
+    // SELECTIVE WATCH: Only rebuild when the current song changes, not on every position tick
     final currentFilePath =
         ref.watch(playerProvider.select((s) => s.currentSong?.filePath));
     final notifier = ref.read(playerProvider.notifier);
@@ -1260,7 +1269,7 @@ class SongGridTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 🚀 SELECTIVE WATCH: Only rebuild when the current song changes, not on every position tick
+    // SELECTIVE WATCH: Only rebuild when the current song changes, not on every position tick
     final currentFilePath =
         ref.watch(playerProvider.select((s) => s.currentSong?.filePath));
     final notifier = ref.read(playerProvider.notifier);

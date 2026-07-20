@@ -7,7 +7,6 @@ class AndroidAudioService {
   static const MethodChannel _channel =
       MethodChannel('com.momotz4g.simplemusicplayer2/audio_settings');
 
-  /// Check if the device is running Android 14 (API 34) or higher
   static Future<bool> isBitPerfectSupported() async {
     if (!Platform.isAndroid) return false;
 

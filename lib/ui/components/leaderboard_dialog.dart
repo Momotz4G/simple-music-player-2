@@ -48,7 +48,7 @@ class _LeaderboardDialogState extends State<LeaderboardDialog> {
          final count = r[sortBy] ?? 0;
          if (count <= 0) continue; 
          
-         // 🚀 EXCLUDE USERS WHO HAVEN'T SET A NICKNAME
+         // EXCLUDE USERS WHO HAVEN'T SET A NICKNAME
          final rawNick = r['nickname'] as String?;
          if (rawNick == null || rawNick.trim().isEmpty) continue;
          
@@ -208,11 +208,11 @@ class _LeaderboardDialogState extends State<LeaderboardDialog> {
                  child: Row(
                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                    children: [
-                     Row(
+                     const Row(
                        children: [
-                         const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 24),
-                         const SizedBox(width: 12),
-                         const Text(
+                         Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 24),
+                         SizedBox(width: 12),
+                         Text(
                            "Global Leaderboard",
                            style: TextStyle(
                              fontSize: 20,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:metadata_god/metadata_god.dart';
@@ -20,6 +21,30 @@ class MetadataService {
 
   bool _isInitialized = false;
 
+  // Concurrency limiter for heavy ffmpeg art extractions
+  static const int _maxConcurrentArtExtractions = 3;
+  static int _activeArtExtractions = 0;
+  static final List<Completer<void>> _artQueue = [];
+
+  static Future<void> _acquireArtSlot() async {
+    if (_activeArtExtractions < _maxConcurrentArtExtractions) {
+      _activeArtExtractions++;
+      return;
+    }
+    final completer = Completer<void>();
+    _artQueue.add(completer);
+    await completer.future;
+  }
+
+  static void _releaseArtSlot() {
+    if (_artQueue.isNotEmpty) {
+      final next = _artQueue.removeAt(0);
+      next.complete();
+    } else {
+      _activeArtExtractions--;
+    }
+  }
+
   Future<void> _ensureInitialized() async {
     if (!_isInitialized) {
       try {
@@ -27,6 +52,34 @@ class MetadataService {
         _isInitialized = true;
       } catch (_) {}
     }
+  }
+
+  Metadata _cleanMetadata(Metadata meta) {
+    return Metadata(
+      title: meta.title != null ? _fixMojibake(meta.title!) : null,
+      artist: meta.artist != null ? _fixMojibake(meta.artist!) : null,
+      album: meta.album != null ? _fixMojibake(meta.album!) : null,
+      albumArtist: meta.albumArtist != null ? _fixMojibake(meta.albumArtist!) : null,
+      genre: meta.genre != null ? _fixMojibake(meta.genre!) : null,
+      durationMs: meta.durationMs,
+      trackNumber: meta.trackNumber,
+      trackTotal: meta.trackTotal,
+      discNumber: meta.discNumber,
+      discTotal: meta.discTotal,
+      year: meta.year,
+      fileSize: meta.fileSize,
+      picture: meta.picture,
+    );
+  }
+
+  String _fixMojibake(String input) {
+    try {
+      if (input.contains('Ã') || input.contains('ì') || input.contains('ë') || input.contains('ê') || input.contains('í')) {
+        final bytes = latin1.encode(input);
+        return utf8.decode(bytes);
+      }
+    } catch (_) {}
+    return input;
   }
 
   /// Reads metadata safely with deadlock protection.
@@ -39,7 +92,7 @@ class MetadataService {
           return await MetadataGod.readMetadata(file: filePath);
         }).timeout(const Duration(seconds: 3));
 
-        // 🚀 Mobile fallback: If no embedded art found in M4A/AAC, extract it robustly via FFmpegKit
+        // Mobile fallback: If no embedded art found in M4A/AAC, extract it robustly via FFmpegKit
         if (meta.picture == null) {
           final ext = p.extension(filePath).toLowerCase();
           if (['.m4a', '.aac', '.mp4', '.m4v'].contains(ext)) {
@@ -60,9 +113,9 @@ class MetadataService {
             }
           }
         }
-        return meta;
+        return _cleanMetadata(meta);
       } catch (_) {
-        return Metadata(title: p.basenameWithoutExtension(filePath));
+        return _cleanMetadata(Metadata(title: p.basenameWithoutExtension(filePath)));
       }
     }
 
@@ -81,24 +134,27 @@ class MetadataService {
       '.ape',
       '.aiff',
       '.aif',
-      '.alac'
+      '.alac',
+      '.wv'
     ];
     if (unsafeExtensions.contains(ext)) {
-      return await _readMetadataViaFFprobe(filePath);
+      final meta = await _readMetadataViaFFprobe(filePath);
+      return _cleanMetadata(meta);
     }
 
     try {
-      return await Isolate.run(() async {
+      final meta = await Isolate.run(() async {
         await MetadataGod.initialize();
         return await MetadataGod.readMetadata(file: filePath);
       }).timeout(const Duration(seconds: 3));
+      return _cleanMetadata(meta);
     } catch (_) {
-      return Metadata(title: p.basenameWithoutExtension(filePath));
+      return _cleanMetadata(Metadata(title: p.basenameWithoutExtension(filePath)));
     }
   }
 
   /// Processes a batch of tracks sequentially to avoid burst-blocking the main thread.
-  /// 🚀 PERF FIX: Previously used Future.wait() which fired all 20 reads concurrently,
+  /// PERF FIX: Previously used Future.wait() which fired all 20 reads concurrently,
   /// causing ~40ms of FFI jank per chunk. Sequential processing yields to the event loop
   /// between each read, keeping the UI responsive during scan.
   Future<List<Metadata?>> readMetadataBatch(List<String> filePaths) async {
@@ -118,7 +174,8 @@ class MetadataService {
       '.ape',
       '.aiff',
       '.aif',
-      '.alac'
+      '.alac',
+      '.wv'
     ];
 
     final List<Metadata?> results = [];
@@ -130,7 +187,7 @@ class MetadataService {
             return await MetadataGod.readMetadata(file: path);
           }).timeout(const Duration(seconds: 3));
 
-          // 🚀 Mobile fallback: If no embedded art found in M4A/AAC, extract it robustly via FFmpegKit
+          // Mobile fallback: If no embedded art found in M4A/AAC, extract it robustly via FFmpegKit
           if (meta.picture == null) {
             final ext = p.extension(path).toLowerCase();
             if (['.m4a', '.aac', '.mp4', '.m4v'].contains(ext)) {
@@ -152,16 +209,18 @@ class MetadataService {
               }
             }
           }
-          results.add(meta);
+          results.add(_cleanMetadata(meta));
         } else {
           final ext = p.extension(path).toLowerCase();
           if (unsafeExtensions.contains(ext)) {
-            results.add(await _readMetadataViaFFprobe(path));
+            final meta = await _readMetadataViaFFprobe(path);
+            results.add(_cleanMetadata(meta));
           } else {
-            results.add(await Isolate.run(() async {
+            final meta = await Isolate.run(() async {
               await MetadataGod.initialize();
               return await MetadataGod.readMetadata(file: path);
-            }).timeout(const Duration(seconds: 3)));
+            }).timeout(const Duration(seconds: 3));
+            results.add(_cleanMetadata(meta));
           }
         }
       } catch (_) {
@@ -181,30 +240,32 @@ class MetadataService {
   }
 
   Future<Metadata> _readMetadataViaFFprobe(String filePath) async {
-    // 🚀 Single ffprobe invocation for both tags + audio info
+    // Single ffprobe invocation for both tags + audio info
     final result = await AudioInfoService().getTagsAndInfo(filePath);
-    final tags = result.tags;
+    
+    // Normalize keys to lowercase for robust case-insensitive lookup
+    final tags = result.tags.map((key, value) => MapEntry(key.toLowerCase(), value));
     final audioInfo = result.info;
 
-    // 🚀 Extract embedded album art via ffmpeg for unsafe formats
+    // Extract embedded album art via ffmpeg for unsafe formats
     Picture? picture;
-    try {
-      picture = await _extractArtViaFFmpeg(filePath);
-    } catch (_) {
-      // Silent — art extraction is best-effort
+    if (result.hasArtStream) {
+      try {
+        picture = await _extractArtViaFFmpeg(filePath);
+      } catch (_) {
+        // Silent — art extraction is best-effort
+      }
     }
 
     return Metadata(
-      title: tags['title'] ??
-          tags['TITLE'] ??
-          p.basenameWithoutExtension(filePath),
-      artist: tags['artist'] ?? tags['ARTIST'],
-      album: tags['album'] ?? tags['ALBUM'],
+      title: tags['title'] ?? p.basenameWithoutExtension(filePath),
+      artist: tags['artist'],
+      album: tags['album'],
       durationMs: audioInfo?.duration?.inMilliseconds.toDouble(),
       trackNumber: int.tryParse(tags['track']?.split('/').first ?? ''),
       discNumber: int.tryParse(tags['disc']?.split('/').first ?? ''),
       year: int.tryParse(tags['date']?.substring(0, 4) ?? tags['year'] ?? ''),
-      genre: tags['genre'] ?? tags['GENRE'],
+      genre: tags['genre'],
       fileSize: audioInfo?.fileSize != null
           ? BigInt.from(audioInfo!.fileSize!)
           : null,
@@ -215,86 +276,101 @@ class MetadataService {
   /// Extracts embedded album art from an audio file using ffmpeg/FFmpegKit.
   /// Works for AIFF, WAV, OGG, OPUS, and other formats where MetadataGod deadlocks or fails.
   Future<Picture?> _extractArtViaFFmpeg(String filePath) async {
-    final tempDir = Directory.systemTemp;
-    final tempArtFile =
-        File('${tempDir.path}/art_extract_${filePath.hashCode}.jpg');
-
+    await _acquireArtSlot();
     try {
-      if (Platform.isAndroid || Platform.isIOS) {
-        // Mobile: Use FFmpegKit
-        final session = await FFmpegKit.execute(
-            '-y -i "$filePath" -map 0:v:0 -c:v mjpeg -frames:v 1 "${tempArtFile.path}"');
-        final returnCode = await session.getReturnCode();
-        if (ReturnCode.isSuccess(returnCode) && tempArtFile.existsSync() && tempArtFile.lengthSync() > 0) {
-          final Uint8List bytes = await tempArtFile.readAsBytes();
-          debugPrint(
-              '🎨 [MetadataService] Extracted ${bytes.length} bytes of art via FFmpegKit from $filePath');
-          try {
-            await tempArtFile.delete();
-          } catch (_) {}
-          return Picture(data: bytes, mimeType: 'image/jpeg');
-        } else {
-          debugPrint(
-              '⚠️ [MetadataService] FFmpegKit art extraction failed or returned no output for $filePath');
-        }
-      } else {
-        // Desktop: Use native Process
-        final ffmpegPath = await _getFFmpegPath();
-        if (ffmpegPath == null) {
-          debugPrint('⚠️ [MetadataService] ffmpeg not found, cannot extract art');
-          return null;
-        }
+      final tempDir = Directory.systemTemp;
+      final tempArtFile =
+          File('${tempDir.path}/art_extract_${filePath.hashCode}.jpg');
 
-        final processResult = await Process.run(
-          ffmpegPath,
-          [
-            '-y', // Overwrite output
-            '-i', filePath, // Input file
-            '-map', '0:v:0', // Select first video stream (embedded art)
-            '-c:v', 'mjpeg', // Encode as JPEG (handles PNG/BMP art too)
-            '-frames:v', '1', // Only one frame
+      try {
+        if (Platform.isAndroid || Platform.isIOS) {
+          // Mobile: Use FFmpegKit
+          final session = await FFmpegKit.executeWithArguments([
+            '-y',
+            '-i',
+            filePath,
+            '-map',
+            '0:v:0',
+            '-c:v',
+            'mjpeg',
+            '-frames:v',
+            '1',
             tempArtFile.path,
-          ],
-          runInShell: false,
-        ).timeout(const Duration(seconds: 5), onTimeout: () {
-          throw TimeoutException('ffmpeg art extraction timeout');
-        });
-
-        debugPrint(
-            '🎨 [MetadataService] ffmpeg art extraction exit code: ${processResult.exitCode} for $filePath');
-        if (processResult.exitCode != 0) {
-          debugPrint(
-              '⚠️ [MetadataService] ffmpeg stderr: ${processResult.stderr}');
-        }
-
-        if (tempArtFile.existsSync() && tempArtFile.lengthSync() > 0) {
-          final Uint8List bytes = await tempArtFile.readAsBytes();
-          debugPrint(
-              '🎨 [MetadataService] Extracted ${bytes.length} bytes of art from $filePath');
-          try {
-            await tempArtFile.delete();
-          } catch (_) {}
-          return Picture(data: bytes, mimeType: 'image/jpeg');
+          ]);
+          final returnCode = await session.getReturnCode();
+          if (ReturnCode.isSuccess(returnCode) && tempArtFile.existsSync() && tempArtFile.lengthSync() > 0) {
+            final Uint8List bytes = await tempArtFile.readAsBytes();
+            debugPrint(
+                '🎨 [MetadataService] Extracted ${bytes.length} bytes of art via FFmpegKit from $filePath');
+            try {
+              await tempArtFile.delete();
+            } catch (_) {}
+            return Picture(data: bytes, mimeType: 'image/jpeg');
+          } else {
+            debugPrint(
+                '⚠️ [MetadataService] FFmpegKit art extraction failed or returned no output for $filePath');
+          }
         } else {
-          debugPrint(
-              '⚠️ [MetadataService] No art output file or empty for $filePath');
-        }
-      }
-    } catch (e) {
-      debugPrint(
-          '⚠️ [MetadataService] Art extraction failed for $filePath: $e');
-    }
+          // Desktop: Use native Process
+          final ffmpegPath = await getFFmpegPath();
+          if (ffmpegPath == null) {
+            debugPrint('⚠️ [MetadataService] ffmpeg not found, cannot extract art');
+            return null;
+          }
 
-    // Clean up temp file on failure
-    try {
-      if (tempArtFile.existsSync()) await tempArtFile.delete();
-    } catch (_) {}
-    return null;
+          final processResult = await Process.run(
+            ffmpegPath,
+            [
+              '-y', // Overwrite output
+              '-i', filePath, // Input file
+              '-map', '0:v:0', // Select first video stream (embedded art)
+              '-c:v', 'mjpeg', // Encode as JPEG (handles PNG/BMP art too)
+              '-frames:v', '1', // Only one frame
+              tempArtFile.path,
+            ],
+            runInShell: false,
+          ).timeout(const Duration(seconds: 5), onTimeout: () {
+            throw TimeoutException('ffmpeg art extraction timeout');
+          });
+
+          debugPrint(
+              '🎨 [MetadataService] ffmpeg art extraction exit code: ${processResult.exitCode} for $filePath');
+          if (processResult.exitCode != 0) {
+            debugPrint(
+                '⚠️ [MetadataService] ffmpeg stderr: ${processResult.stderr}');
+          }
+
+          if (tempArtFile.existsSync() && tempArtFile.lengthSync() > 0) {
+            final Uint8List bytes = await tempArtFile.readAsBytes();
+            debugPrint(
+                '🎨 [MetadataService] Extracted ${bytes.length} bytes of art from $filePath');
+            try {
+              await tempArtFile.delete();
+            } catch (_) {}
+            return Picture(data: bytes, mimeType: 'image/jpeg');
+          } else {
+            debugPrint(
+                '⚠️ [MetadataService] No art output file or empty for $filePath');
+          }
+        }
+      } catch (e) {
+        debugPrint(
+            '⚠️ [MetadataService] Art extraction failed for $filePath: $e');
+      }
+
+      // Clean up temp file on failure
+      try {
+        if (tempArtFile.existsSync()) await tempArtFile.delete();
+      } catch (_) {}
+      return null;
+    } finally {
+      _releaseArtSlot();
+    }
   }
 
   /// Get FFmpeg path from bin directory
   static String? _cachedFFmpegPath;
-  Future<String?> _getFFmpegPath() async {
+  static Future<String?> getFFmpegPath() async {
     if (_cachedFFmpegPath != null) return _cachedFFmpegPath;
     try {
       final appDir = await getApplicationSupportDirectory();

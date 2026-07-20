@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import '../../env/env.dart';
 import '../../services/metrics_service.dart';
 import '../../services/pocketbase_service.dart';
 
@@ -25,7 +27,7 @@ class AdminStatsPage extends StatelessWidget {
   // Helper to format date in Jakarta Time (GMT+7)
   String _formatDate(DateTime? date) {
     if (date == null) return "Never";
-    // 🚀 SYNC: Use the same GMT+7 offset as the Server Clock
+    // SYNC: Use the same GMT+7 offset as the Server Clock
     final jakartaTime = date.toUtc().add(const Duration(hours: 7));
     return DateFormat('yyyy-MM-dd HH:mm').format(jakartaTime);
   }
@@ -38,15 +40,24 @@ class AdminStatsPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          if (isAdmin)
-             Padding(
-               padding: const EdgeInsets.only(right: 8.0),
-               child: IconButton(
-                 icon: const Icon(Icons.campaign),
-                 tooltip: "Broadcast Message",
-                 onPressed: () => _showBroadcastDialog(context),
-               ),
-             ),
+          if (isAdmin) ...[
+            Padding(
+              padding: const EdgeInsets.only(right: 4.0),
+              child: IconButton(
+                icon: const Icon(Icons.cleaning_services_rounded, color: Colors.orangeAccent),
+                tooltip: "Purge Stream Cache",
+                onPressed: () => _confirmPurgeCache(context),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.campaign),
+                tooltip: "Broadcast Message",
+                onPressed: () => _showBroadcastDialog(context),
+              ),
+            ),
+          ],
           const Center(
             child: Padding(
               padding: EdgeInsets.only(right: 24.0),
@@ -76,7 +87,7 @@ class AdminStatsPage extends StatelessWidget {
                 child: Text("No user data found (PocketBase Mode)."));
           }
 
-          // 🚀 DEDUPLICATE: Keep only the latest record per user_id
+          // DEDUPLICATE: Keep only the latest record per user_id
           // Duplicates cause the heartbeat's record to be different from what's shown here,
           // making users appear offline even when they're active.
           final Map<String, AdminUserData> uniqueUsers = {};
@@ -96,17 +107,17 @@ class AdminStatsPage extends StatelessWidget {
           }
           final docs = uniqueUsers.values.toList();
 
-          // 🚀 METRICS AGGREGATION
+          // METRICS AGGREGATION
           final activeUsers = docs.where((user) {
             final timestamp = _parseTimestamp(user.data['last_active']);
             if (timestamp == null) return false;
-            // 🚀 FIX: Must use .toUtc() to match the timestamp from PocketBase
+            // FIX: Must use .toUtc() to match the timestamp from PocketBase
             return DateTime.now().toUtc().difference(timestamp).inMinutes < 2;
           }).length;
 
           return Column(
             children: [
-              // 🚀 SUMMARY DETAILS
+              // SUMMARY DETAILS
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
@@ -126,7 +137,7 @@ class AdminStatsPage extends StatelessWidget {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: DataTable(
-                      columnSpacing: 25, // 🚀 Tight outer pads
+                      columnSpacing: 25, // Tight outer pads
                       columns: const [
                         DataColumn(label: Text('#')), // NUMBER COLUMN
                         DataColumn(label: Text('User ID')),
@@ -135,7 +146,7 @@ class AdminStatsPage extends StatelessWidget {
                         DataColumn(label: Text('Downloads')),
                         DataColumn(
                             label: Text('Quota Left')), //  QUOTA REMAINING
-                        DataColumn(label: Text('Version')), // 🚀 NEW
+                        DataColumn(label: Text('Version')), // NEW
                         DataColumn(label: Text('Last Active')),
                         DataColumn(label: Text('Action')),
                       ],
@@ -148,7 +159,7 @@ class AdminStatsPage extends StatelessWidget {
                         final lastDate =
                             _parseTimestamp(data['last_download_date']);
                         final now = DateTime.now()
-                            .toUtc(); // 🚀 FIX: Match MetricsService UTC logic
+                            .toUtc(); // FIX: Match MetricsService UTC logic
                         final isToday = lastDate != null &&
                             lastDate.day == now.day &&
                             lastDate.month == now.month &&
@@ -171,7 +182,7 @@ class AdminStatsPage extends StatelessWidget {
                           DataCell(Text((index + 1).toString())), // ROW NUMBER
                           DataCell(
                             SizedBox(
-                              width: 300, // 🚀 Force User ID wide to fill screen width
+                              width: 300, // Force User ID wide to fill screen width
                               child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -255,7 +266,7 @@ class AdminStatsPage extends StatelessWidget {
                               ],
                             ),
                           ),
-                          DataCell(Text(data['client_version']?.toString() ?? '—')), // 🚀 NEW
+                          DataCell(Text(data['client_version']?.toString() ?? '—')), // NEW
                           DataCell(
                             Builder(builder: (context) {
                               final timestamp =
@@ -263,7 +274,7 @@ class AdminStatsPage extends StatelessWidget {
                               if (timestamp == null) return const Text("Never");
 
                               final isOnline = DateTime.now()
-                                      .toUtc() // 🚀 FIX: Compare UTC to UTC
+                                      .toUtc() // FIX: Compare UTC to UTC
                                       .difference(timestamp)
                                       .inMinutes <
                                   2;
@@ -357,6 +368,7 @@ class AdminStatsPage extends StatelessWidget {
                                           'delete',
                                           recordId: data['id'],
                                         );
+                                        if (!context.mounted) return;
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           const SnackBar(
@@ -417,6 +429,65 @@ class AdminStatsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmPurgeCache(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.cleaning_services_rounded, color: Colors.orangeAccent),
+            SizedBox(width: 8),
+            Text("Purge Stream Cache?"),
+          ],
+        ),
+        content: const Text(
+          "This will wipe RAM and Redis caches on the stream server. Active streams will refetch from Tidal on demand.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Purge Cache"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final purgeUrl = Uri.parse('${Env.tidalApiUrl}${Env.purgeCachePath}');
+      final response = await http.post(
+        purgeUrl,
+        headers: {
+          'X-Admin-Key': Env.tidalApiKey,
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (context.mounted) {
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("✅ Stream server cache purged successfully!")),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("❌ Purge failed: HTTP ${response.statusCode}")),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Error purging cache: $e")),
+        );
+      }
+    }
   }
 
   void _showBroadcastDialog(BuildContext context) {
@@ -536,7 +607,7 @@ class _ServerClockWidgetState extends State<_ServerClockWidget> {
           const Icon(Icons.access_time_rounded, size: 16),
           const SizedBox(width: 8),
           Text(
-            "Server Time: ${DateFormat('yyyy-MM-dd : HH-mm-ss').format(_serverTime)}", // 🚀 GMT+7
+            "Server Time: ${DateFormat('yyyy-MM-dd : HH-mm-ss').format(_serverTime)}", // GMT+7
             style: const TextStyle(
                 fontWeight: FontWeight.bold, fontFamily: 'monospace'),
           ),

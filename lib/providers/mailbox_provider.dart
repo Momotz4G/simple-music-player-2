@@ -3,7 +3,8 @@ import '../services/db_service.dart';
 import '../data/schemas.dart';
 import '../services/pocketbase_service.dart';
 
-final mailboxProvider = StateNotifierProvider<MailboxNotifier, List<MailboxMessage>>((ref) {
+final mailboxProvider =
+    StateNotifierProvider<MailboxNotifier, List<MailboxMessage>>((ref) {
   return MailboxNotifier();
 });
 
@@ -17,8 +18,10 @@ class MailboxNotifier extends StateNotifier<List<MailboxMessage>> {
     state = messages;
   }
 
-  Future<void> addMessage(String message, {String? remoteId, DateTime? timestamp}) async {
-    await DBService().addMailboxMessage(message, remoteId: remoteId, timestamp: timestamp);
+  Future<void> addMessage(String message,
+      {String? remoteId, DateTime? timestamp}) async {
+    await DBService()
+        .addMailboxMessage(message, remoteId: remoteId, timestamp: timestamp);
     await _loadMessages();
   }
 
@@ -28,11 +31,11 @@ class MailboxNotifier extends StateNotifier<List<MailboxMessage>> {
 
     for (final raw in remoteMsgs) {
       final msg = raw['message'] as String?;
-      if (msg == null || msg.isEmpty) continue; // Skip malformed
-      
+      if (msg == null || msg.isEmpty) continue;
+
       final id = raw['id'] as String? ?? 'unknown';
       final time = DateTime.tryParse(raw['created'] ?? '') ?? DateTime.now();
-      
+
       await DBService().addMailboxMessage(msg, remoteId: id, timestamp: time);
     }
     await _loadMessages();

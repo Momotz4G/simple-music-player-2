@@ -6,6 +6,7 @@ import '../models/stat_model.dart';
 import 'spotify_service.dart';
 import 'deezer_service.dart';
 import 'debug_log_service.dart';
+import 'package:flutter/foundation.dart';
 
 /// Service to generate personalized daily mixes based on user's listening history
 class DailyMixService {
@@ -213,6 +214,6 @@ class DailyMixService {
     _cachedMixes = [];
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_cacheKey);
-    print("🗑️ DailyMixes: Cache cleared");
+    debugPrint("🗑️ DailyMixes: Cache cleared");
   }
 }

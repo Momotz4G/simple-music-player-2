@@ -1,21 +1,24 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:video_player/video_player.dart';
-import 'package:qr_flutter/qr_flutter.dart'; // 🚀 QR Code
+import 'package:qr_flutter/qr_flutter.dart'; // QR Code
 
 import '../../providers/player_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/timer_provider.dart';
 import '../../providers/equalizer_provider.dart';
 import '../../l10n/app_localizations.dart';
-import '../../providers/lyrics_provider.dart'; // 🚀 For mini lyrics preview
+import '../../providers/lyrics_provider.dart'; // For mini lyrics preview
 import '../../services/canvas_service.dart';
 import '../../services/spotify_service.dart';
-import '../../services/db_service.dart'; // 🚀 Added for Caching
-import '../../services/pocketbase_service.dart'; // 🚀 Session ID
-import '../../env/env.dart'; // 🚀 URLs
+import '../../services/db_service.dart'; // Added for Caching
+import '../../services/debug_log_service.dart'; // Added for Debug Logs
+import '../../services/pocketbase_service.dart'; // Session ID
+import '../../env/env.dart'; // URLs
 import '../../models/song_model.dart';
 import '../components/smart_art.dart';
 
@@ -25,10 +28,10 @@ import '../components/equalizer_sheet.dart';
 import '../components/version_selection_dialog.dart';
 import '../components/song_context_menu.dart';
 import 'lyrics_panel.dart';
-import '../components/queue_sheet.dart'; // 🚀 IMPORT
-import '../components/song_info_dialog.dart'; // 🚀 IMPORT
-import '../../services/audio_info_service.dart'; // 🚀 Audio Quality Info
-import '../components/audio_output_dialog.dart'; // 🚀 Audio Output
+import '../components/queue_sheet.dart'; // IMPORT
+import '../components/song_info_dialog.dart'; // IMPORT
+import '../../services/audio_info_service.dart'; // Audio Quality Info
+import '../components/audio_output_dialog.dart'; // Audio Output
 import '../../utils/chinese_romanizer.dart';
 import '../../utils/japanese_romanizer.dart';
 import '../../utils/korean_romanizer.dart';
@@ -47,16 +50,21 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     with SingleTickerProviderStateMixin {
   VideoPlayerController? _videoController;
   bool _isLoadingCanvas = false;
-  double _dragOffset = 0.0; // 🚀 Track drag distance
+  bool _isAppleMusicVideo = false;
+  double _dragOffset = 0.0; // Track drag distance
   bool _showTranslation = false;
   bool _translationLoading = false;
-  double _panningOffset = 0.0; // 🚀 Visual scroll cancellation
+  double _panningOffset = 0.0; // Visual scroll cancellation
   final ScrollController _scrollController = ScrollController();
-  AnimationController? _dragAnimationController; // 🚀 For interactive drag
+  AnimationController? _dragAnimationController; // For interactive drag
 
-  // 🚀 HORIZONTAL SWIPE CAROUSEL STATE
+  // HORIZONTAL SWIPE CAROUSEL STATE
   double _horizontalDragOffset = 0.0;
   AnimationController? _horizontalDragAnimationController;
+
+  // SEEKBAR DRAG STATE
+  bool _isDraggingSlider = false;
+  double _sliderDragValue = 0.0;
 
   void _runHorizontalDragAnimation(double target, VoidCallback? onComplete) {
     _horizontalDragAnimationController?.dispose();
@@ -89,13 +97,16 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     _horizontalDragAnimationController!.forward();
   }
 
-  /// 🚀 Responsive art size: caps at 40% of screen height on small screens
+  /// Responsive art size: caps at 40% of screen height on small screens
   /// to prevent overlap with controls on 4.7" devices
   double _getResponsiveArtSize(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final widthBased = screenWidth - 80;
-    final heightBased = screenHeight * 0.38; // Max 38% of screen height
+    // On small screens (e.g. 4.7" displays or low resolutions), scale down
+    // the album art further to leave enough room for bottom controls.
+    final double artRatio = screenHeight < 720 ? 0.30 : 0.38;
+    final heightBased = screenHeight * artRatio;
     return widthBased < heightBased ? widthBased : heightBased;
   }
 
@@ -127,7 +138,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     );
   }
 
-  // 🚀 AUDIO QUALITY INFO STATE
+  // AUDIO QUALITY INFO STATE
   AudioInfo? _audioInfo;
   bool _isLoadingInfo = false;
 
@@ -139,14 +150,14 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       final song = ref.read(playerProvider).currentSong;
       if (song != null) {
         _autoLoadCanvas(song.title, song.artist);
-        // 🚀 Auto-load lyrics when player opens
+        // Auto-load lyrics when player opens
         ref.read(lyricsProvider.notifier).loadLyrics(
               song.filePath,
               song.title,
               song.artist,
               song.duration,
             );
-        // 🚀 Fetch Audio Quality
+        // Fetch Audio Quality
         _fetchAudioInfo(song);
       }
     });
@@ -154,10 +165,38 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
 
   @override
   void dispose() {
-    _scrollController.dispose(); // 🚀 Dispose scroll controller
+    _scrollController.dispose(); // Dispose scroll controller
     _videoController?.dispose();
     _dragAnimationController?.dispose();
+    
+    // Always restore portrait mode and UI when exiting player
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    
+    // Ensure Karaoke Mode is disabled so it doesn't break the home screen layout
+    final lyricsNotifier = ref.read(lyricsProvider.notifier);
+    if (ref.read(lyricsProvider).isKaraokeMode) {
+      Future.microtask(() => lyricsNotifier.setKaraokeMode(false));
+    }
+    
     super.dispose();
+  }
+
+  void _closePlayer() {
+    if (ref.read(lyricsProvider).isKaraokeMode) {
+      ref.read(lyricsProvider.notifier).setKaraokeMode(false);
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
+    if (mounted && Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
   }
 
   void _runDragAnimation(double target) {
@@ -177,7 +216,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     animation.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         if (target > 0) {
-          Navigator.pop(context);
+          _closePlayer();
         }
         _dragAnimationController?.dispose();
         _dragAnimationController = null;
@@ -197,14 +236,16 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
 
   // Canvas loading logic (from desktop full_screen_player)
   Future<void> _autoLoadCanvas(String title, String artist) async {
-    // 🚀 Check if canvas is disabled in settings
     final settings = ref.read(settingsProvider);
-    if (settings.disableCanvas) {
+    final pref = settings.canvasSourcePreference;
+
+    if (pref == 'disabled') {
       if (mounted) {
         setState(() {
           _videoController?.dispose();
           _videoController = null;
           _isLoadingCanvas = false;
+          _isAppleMusicVideo = false;
         });
       }
       return;
@@ -215,69 +256,174 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       setState(() {
         _videoController = null;
         _isLoadingCanvas = true;
+        _isAppleMusicVideo = false;
       });
     }
     if (oldController != null) await oldController.dispose();
 
     try {
-      // 🚀 TIER 1: Check Video URL Cache (FASTEST)
-      try {
-        final String videoCacheKey = "canvas_video:$artist-$title";
-        final cachedVideoUrl = await DBService().getArtCache(videoCacheKey);
-        if (cachedVideoUrl != null && cachedVideoUrl.isNotEmpty) {
-          debugPrint("💾 [DB CACHE] Canvas Video Found: $artist - $title");
-          await _loadCanvasFromUrl(cachedVideoUrl, isDirectVideoUrl: true);
-          if (_videoController != null) return; // Success!
-        }
-      } catch (e) {
-        debugPrint("⚠️ Canvas Cache Read Error (Video): $e");
-      }
+      final String appleCacheKey = "canvas_video_apple:$artist-$title";
+      final String spotifyCacheKey = "canvas_video_spotify:$artist-$title";
+      final String legacyCacheKey = "canvas_video:$artist-$title";
 
-      // 🚀 TIER 2: Check Spotify Link Cache (Saves API Quota)
-      String? spotifyUrl;
-      final String linkCacheKey = "spotify_link:$artist-$title";
-      try {
-        spotifyUrl = await DBService().getArtCache(linkCacheKey);
-        if (spotifyUrl != null && spotifyUrl.isNotEmpty) {
-          debugPrint("💾 [DB CACHE] Spotify Link Found: $artist - $title");
-        }
-      } catch (e) {
-        debugPrint("⚠️ Canvas Cache Read Error (Link): $e");
-      }
+      String? preferredCachedUrl;
+      String? fallbackCachedUrl;
 
-      // 🚀 TIER 3: Fetch from Official Spotify API (with 10s timeout)
-      if (spotifyUrl == null || spotifyUrl.isEmpty) {
-        debugPrint("🌐 [NETWORK] Searching Spotify for: $artist - $title");
-        spotifyUrl = await SpotifyService.getTrackLink(title, artist)
-            .timeout(const Duration(seconds: 10), onTimeout: () => null);
-        if (spotifyUrl != null) {
-          DBService().saveArtCache(linkCacheKey, spotifyUrl);
+      if (pref == 'apple_first' || pref == 'apple_only') {
+        preferredCachedUrl = await DBService().getArtCache(appleCacheKey);
+        if (pref == 'apple_first') {
+          fallbackCachedUrl = await DBService().getArtCache(spotifyCacheKey);
+        }
+      } else if (pref == 'spotify_first' || pref == 'spotify_only') {
+        preferredCachedUrl = await DBService().getArtCache(spotifyCacheKey);
+        if (pref == 'spotify_first') {
+          fallbackCachedUrl = await DBService().getArtCache(appleCacheKey);
         }
       }
 
-      if (spotifyUrl != null) {
-        if (!mounted) return;
-        await _loadCanvasFromUrl(spotifyUrl)
-            .timeout(const Duration(seconds: 15), onTimeout: () {
-          debugPrint("⚠️ Canvas fetch timed out for: $artist - $title");
-        });
+      // TIER 1: Check Video URL Cache (FASTEST)
+      if (preferredCachedUrl != null && preferredCachedUrl.isNotEmpty) {
+        debugPrint("💾 [DB CACHE] Preferred Canvas Video Found: $artist - $title");
+        await _loadCanvasFromUrl(preferredCachedUrl, isDirectVideoUrl: true);
+        if (_videoController != null) return; // Success!
+      }
+
+      // Check legacy cache
+      final legacyCachedUrl = await DBService().getArtCache(legacyCacheKey);
+      if (legacyCachedUrl != null && legacyCachedUrl.isNotEmpty) {
+        final isLegacyApple = legacyCachedUrl.contains("apple.com") || legacyCachedUrl.contains("itunes");
+        
+        bool useAsPreferred = false;
+        bool useAsFallback = false;
+
+        if (pref == 'apple_only' && isLegacyApple) useAsPreferred = true;
+        if (pref == 'spotify_only' && !isLegacyApple) useAsPreferred = true;
+        if (pref == 'apple_first') {
+          if (isLegacyApple) {
+            useAsPreferred = true;
+          } else {
+            useAsFallback = true;
+          }
+        }
+        if (pref == 'spotify_first') {
+          if (!isLegacyApple) {
+            useAsPreferred = true;
+          } else {
+            useAsFallback = true;
+          }
+        }
+
+        if (useAsPreferred) {
+          debugPrint("💾 [DB LEGACY CACHE] Legacy preferred video found: $artist - $title");
+          await _loadCanvasFromUrl(legacyCachedUrl, isDirectVideoUrl: true);
+          if (_videoController != null) return;
+        } else if (useAsFallback) {
+          fallbackCachedUrl ??= legacyCachedUrl;
+        }
+      }
+
+      // Use fallback from cache immediately to avoid network calls
+      if (fallbackCachedUrl != null && fallbackCachedUrl.isNotEmpty) {
+        debugPrint("💾 [DB CACHE] Fallback Canvas Video Found in Cache: $artist - $title");
+        await _loadCanvasFromUrl(fallbackCachedUrl, isDirectVideoUrl: true);
+        if (_videoController != null) return; // Success!
+      }
+
+      // TIER 2: Load preferred source from network
+      if (pref == 'apple_first' || pref == 'apple_only') {
+        final success = await _tryLoadAppleMusic(title, artist);
+        if (success && _videoController != null) return;
+      } else if (pref == 'spotify_first' || pref == 'spotify_only') {
+        final success = await _tryLoadSpotify(title, artist);
+        if (success && _videoController != null) return;
+      }
+
+      // TIER 3: Fallbacks
+      if (pref == 'apple_first') {
+        if (fallbackCachedUrl != null) {
+          debugPrint("💾 [DB CACHE] Using fallback Spotify canvas: $artist - $title");
+          await _loadCanvasFromUrl(fallbackCachedUrl, isDirectVideoUrl: true);
+          if (_videoController != null) return;
+        }
+        final success = await _tryLoadSpotify(title, artist);
+        if (success && _videoController != null) return;
+      } else if (pref == 'spotify_first') {
+        if (fallbackCachedUrl != null) {
+          debugPrint("💾 [DB CACHE] Using fallback Apple Music video: $artist - $title");
+          await _loadCanvasFromUrl(fallbackCachedUrl, isDirectVideoUrl: true);
+          if (_videoController != null) return;
+        }
+        final success = await _tryLoadAppleMusic(title, artist);
+        if (success && _videoController != null) return;
       }
     } catch (e) {
       debugPrint("⚠️ Canvas loading error: $e");
     } finally {
-      // 🚀 GUARANTEE: Always stop loading state regardless of outcome
       if (mounted && _isLoadingCanvas) {
         setState(() {
           _isLoadingCanvas = false;
         });
       }
-      // Log result to debug console
       if (_videoController != null) {
         debugPrint("✅ Canvas loaded for: $artist - $title");
       } else {
         debugPrint("ℹ️ No canvas available for: $artist - $title");
       }
     }
+  }
+
+  Future<bool> _tryLoadAppleMusic(String title, String artist) async {
+    try {
+      DebugLogService().info("🍎 [Apple Music] Searching Motion Artwork for: $artist - $title");
+      final appleVideoUrl = await CanvasService.getAppleMusicAnimatedArtworkUrl(title, artist, preferVertical: true, preferHls: true);
+      if (appleVideoUrl != null && appleVideoUrl.isNotEmpty) {
+        DebugLogService().info("✅ [Apple Music] Found Motion Artwork URL: $appleVideoUrl");
+        await _loadCanvasFromUrl(appleVideoUrl, isDirectVideoUrl: true);
+        if (_videoController != null) {
+          DBService().saveArtCache("canvas_video_apple:$artist-$title", appleVideoUrl);
+          return true; // Success!
+        }
+      }
+    } catch (e) {
+      DebugLogService().error("⚠️ Apple Music Motion Artwork Fetch Error: $e");
+    }
+    return false;
+  }
+
+  Future<bool> _tryLoadSpotify(String title, String artist) async {
+    String? spotifyUrl;
+    final String linkCacheKey = "spotify_link:$artist-$title";
+    try {
+      spotifyUrl = await DBService().getArtCache(linkCacheKey);
+      if (spotifyUrl != null && spotifyUrl.isNotEmpty) {
+        DebugLogService().info("💾 [DB CACHE] Spotify Link Found: $artist - $title");
+      }
+    } catch (e) {
+      DebugLogService().error("⚠️ Canvas Cache Read Error (Link): $e");
+    }
+
+    if (spotifyUrl == null || spotifyUrl.isEmpty) {
+      DebugLogService().info("🌐 [NETWORK] Searching Spotify for: $artist - $title");
+      try {
+        spotifyUrl = await SpotifyService.getTrackLink(title, artist, fallbackToProxy: true)
+            .timeout(const Duration(seconds: 30), onTimeout: () => null);
+        if (spotifyUrl != null) {
+          DBService().saveArtCache(linkCacheKey, spotifyUrl);
+        }
+      } catch (e) {
+        DebugLogService().error("⚠️ Spotify Search Error: $e");
+      }
+    }
+
+    if (spotifyUrl != null) {
+      if (!mounted) return false;
+      await _loadCanvasFromUrl(spotifyUrl)
+          .timeout(const Duration(seconds: 30), onTimeout: () {
+        debugPrint("⚠️ Canvas fetch timed out for: $artist - $title");
+      });
+      if (_videoController != null) return true;
+    }
+    return false;
   }
 
   Future<void> _loadCanvasFromUrl(String url,
@@ -292,8 +438,11 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
         // Save to Video Cache for next time
         final song = ref.read(playerProvider).currentSong;
         if (song != null) {
-          DBService().saveArtCache(
-              "canvas_video:${song.artist}-${song.title}", videoUrl);
+          final isApple = videoUrl.contains("apple.com") || videoUrl.contains("itunes");
+          final cacheKey = isApple 
+              ? "canvas_video_apple:${song.artist}-${song.title}"
+              : "canvas_video_spotify:${song.artist}-${song.title}";
+          DBService().saveArtCache(cacheKey, videoUrl);
           // Also save the Spotify Link if we were using an override or found it
           DBService()
               .saveArtCache("spotify_link:${song.artist}-${song.title}", url);
@@ -304,17 +453,57 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     if (videoUrl != null) {
       if (!mounted) return;
 
-      final cachedFile = await CanvasService.downloadCanvasToCache(videoUrl);
+      final bool isAppleMusic = videoUrl.contains("apple.com") || videoUrl.contains("itunes");
+      setState(() {
+        _isAppleMusicVideo = isAppleMusic;
+      });
+      VideoPlayerController controller;
 
-      if (cachedFile == null) {
-        if (mounted) setState(() => _isLoadingCanvas = false);
-        return;
+      final bool isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+
+      if (!isDesktop && isAppleMusic && videoUrl.contains(".m3u8")) {
+        // 📱 MOBILE + Apple Music HLS: Stream HLS directly (.m3u8 is dynamic, low memory, no 404/decoding errors)
+        DebugLogService().info("🌐 [Mobile Canvas] Streaming Apple Music HLS directly: $videoUrl");
+        controller = VideoPlayerController.networkUrl(
+          Uri.parse(videoUrl),
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+        );
+      } else if (!isDesktop && isAppleMusic) {
+        // 📱 MOBILE + Apple Music MP4 (fallback): Download to file
+        DebugLogService().info("🍎 [Mobile Canvas] Downloading Apple Music video file: $videoUrl");
+        File? cachedFile = await CanvasService.getCachedCanvasFile(videoUrl);
+        final file = cachedFile ?? await CanvasService.downloadCanvasToCache(videoUrl);
+        if (file == null) {
+          if (mounted) setState(() => _isLoadingCanvas = false);
+          return;
+        }
+        controller = VideoPlayerController.file(
+          file,
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+        );
+      } else if (!isDesktop) {
+        // 📱 MOBILE (non-Apple): Stream video directly from URL
+        DebugLogService().info("🌐 [Mobile Canvas] Streaming video directly from: $videoUrl");
+        controller = VideoPlayerController.networkUrl(
+          Uri.parse(videoUrl),
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          httpHeaders: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+          },
+        );
+      } else {
+        // 💻 DESKTOP: Download and cache to disk
+        File? cachedFile = await CanvasService.getCachedCanvasFile(videoUrl);
+        final file = cachedFile ?? await CanvasService.downloadCanvasToCache(videoUrl);
+        if (file == null) {
+          if (mounted) setState(() => _isLoadingCanvas = false);
+          return;
+        }
+        controller = VideoPlayerController.file(
+          file,
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+        );
       }
-
-      final controller = VideoPlayerController.file(
-        cachedFile,
-        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-      );
       try {
         await controller.initialize();
         controller.setLooping(true);
@@ -330,6 +519,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
           controller.dispose();
         }
       } catch (e) {
+        DebugLogService().error("❌ [Mobile Canvas] Video init/play error: $e");
+        controller.dispose();
         if (mounted) setState(() => _isLoadingCanvas = false);
       }
     } else {
@@ -337,7 +528,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     }
   }
 
-  // 🚀 FETCH AUDIO INFO
+  // FETCH AUDIO INFO
   Future<void> _fetchAudioInfo(SongModel song) async {
     if (!mounted) return;
     setState(() {
@@ -363,6 +554,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     final settings = ref.watch(settingsProvider);
     final eq = ref.watch(equalizerProvider);
     final song = playerState.currentSong;
+    final isKaraokeMode = ref.watch(lyricsProvider.select((state) => state.isKaraokeMode));
 
     final hasVideo =
         _videoController != null && _videoController!.value.isInitialized;
@@ -384,9 +576,9 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
           });
 
           _autoLoadCanvas(nextSong.title, nextSong.artist);
-          _fetchAudioInfo(nextSong); // 🚀 Update Info
+          _fetchAudioInfo(nextSong); // Update Info
 
-          // 🚀 Update Lyrics Preview
+          // Update Lyrics Preview
           ref.read(lyricsProvider.notifier).loadLyrics(
                 nextSong.filePath,
                 nextSong.title,
@@ -397,21 +589,60 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
       }
     });
 
-    // 🚀 Reactive Canvas Disable: Watch settings and dispose if disabled mid-session
+    // Reactive Canvas Disable/Preference Change: Watch settings and update canvas
     ref.listen<SettingsState>(settingsProvider, (prev, next) {
-      if (next.disableCanvas && _videoController != null) {
+      final isNowDisabled = next.canvasSourcePreference == 'disabled';
+      final wasDisabled = prev?.canvasSourcePreference == 'disabled';
+      final preferenceChanged = prev?.canvasSourcePreference != next.canvasSourcePreference;
+
+      if (isNowDisabled && _videoController != null) {
         setState(() {
           _videoController?.dispose();
           _videoController = null;
           _isLoadingCanvas = false;
+          _isAppleMusicVideo = false;
         });
-      } else if (!next.disableCanvas &&
-          prev?.disableCanvas == true &&
-          _videoController == null) {
-        // Re-load if enabled mid-session
+      } else if ((!isNowDisabled && wasDisabled && _videoController == null) ||
+                 (!isNowDisabled && preferenceChanged)) {
+        // Re-load if enabled or setting changed mid-session
         final song = ref.read(playerProvider).currentSong;
         if (song != null) {
           _autoLoadCanvas(song.title, song.artist);
+        }
+      }
+    });
+
+    ref.listen<int>(canvasCacheInvalidationProvider, (previous, next) async {
+      if (previous != next) {
+        _videoController?.dispose();
+        if (mounted) {
+          setState(() {
+            _videoController = null;
+          });
+        }
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted && song != null) {
+          _autoLoadCanvas(song.title, song.artist);
+        }
+      }
+    });
+
+    // Handle Karaoke Mode Rotation and Immersive UI
+    ref.listen<LyricsState>(lyricsProvider, (prev, next) {
+      if (prev?.isKaraokeMode != next.isKaraokeMode) {
+        if (next.isKaraokeMode) {
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ]);
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        } else {
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.portraitDown,
+          ]);
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
         }
       }
     });
@@ -424,7 +655,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
+            onPressed: _closePlayer,
           ),
         ),
         body: Center(
@@ -442,29 +673,44 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     double sliderMax = totalDur;
     if (sliderMax < currentPos) sliderMax = currentPos;
     if (sliderMax <= 0) sliderMax = 1.0;
-    double sliderValue = currentPos;
+    
+    double sliderValue = _isDraggingSlider ? _sliderDragValue : currentPos;
     if (sliderValue > sliderMax) sliderValue = sliderMax;
+    if (sliderValue < 0) sliderValue = 0;
 
     // Wrap in Dismissible for drag-to-close behavior
     // Custom Drag-to-Dismiss using Transform
-    return Transform.translate(
-      offset: Offset(0, _dragOffset),
-      child: Stack(
-        children: [
-          Scaffold(
-            backgroundColor: Colors.black,
-            extendBodyBehindAppBar: true,
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Colors.white,
-                  size: 32,
+    return PopScope(
+      canPop: !isKaraokeMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (isKaraokeMode) {
+          ref.read(lyricsProvider.notifier).setKaraokeMode(false);
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.portraitDown,
+          ]);
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+        }
+      },
+      child: Transform.translate(
+        offset: Offset(0, _dragOffset),
+        child: Stack(
+          children: [
+            Scaffold(
+              backgroundColor: Colors.black,
+              extendBodyBehindAppBar: true,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                  onPressed: _closePlayer,
                 ),
-                onPressed: () => Navigator.pop(context),
-              ),
               centerTitle: true,
               title: (notifier.isRemoteSessionActive &&
                       !notifier.isMaster &&
@@ -659,12 +905,17 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
               children: [
                 // LAYER 1: Background - Canvas video OR blurred album art
                 Positioned.fill(
-                  child: hasVideo
+                  child: (hasVideo && !_isAppleMusicVideo)
                       ? FittedBox(
                           fit: BoxFit.cover,
                           child: SizedBox(
-                            width: _videoController!.value.size.width,
-                            height: _videoController!.value.size.height,
+                            // Fallback to screen size if video reports 0x0 (Android decode edge case)
+                            width: _videoController!.value.size.width > 0
+                                ? _videoController!.value.size.width
+                                : MediaQuery.of(context).size.width,
+                            height: _videoController!.value.size.height > 0
+                                ? _videoController!.value.size.height
+                                : MediaQuery.of(context).size.height,
                             child: VideoPlayer(_videoController!),
                           ),
                         )
@@ -675,31 +926,13 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                           borderRadius: 0,
                         ),
                 ),
-                // LAYER 2: Blur overlay (less blur when video is playing)
+                // LAYER 2: Blur overlay (less blur when video is playing in background)
                 Positioned.fill(
                   child: Container(
-                    color: Colors.black.withValues(alpha: hasVideo ? 0.4 : 0.6),
+                    color: Colors.black.withValues(
+                        alpha: (hasVideo && !_isAppleMusicVideo) ? 0.4 : 0.6),
                   ),
                 ),
-                // LAYER 3: Video in center (if playing)
-                if (hasVideo)
-                  Center(
-                    child: AspectRatio(
-                      aspectRatio: _videoController!.value.aspectRatio,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              blurRadius: 20,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: VideoPlayer(_videoController!),
-                      ),
-                    ),
-                  ),
                 // LAYER 4: Gradient overlay for controls visibility
                 Positioned.fill(
                   child: Container(
@@ -719,10 +952,11 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                   ),
                 ),
 
-                // 🚀 REMOTE PLAYBACK BANNER (PREVIOUSLY HERE - MOVED DOWN)
+                // REMOTE PLAYBACK BANNER (PREVIOUSLY HERE - MOVED DOWN)
 
                 // LAYER 5: Scrollable Controls + Lyrics
-                Listener(
+                if (!isKaraokeMode)
+                  Listener(
                   onPointerDown: (_) {
                     // Stop animation if user catches it
                     if (_dragAnimationController != null) {
@@ -755,7 +989,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                         }
 
                         if (dragDetails != null) {
-                          // 🚀 PRIORITY: If controlling page offset, consume ALL touches
+                          // PRIORITY: If controlling page offset, consume ALL touches
                           if (_dragOffset > 0) {
                             setState(() {
                               _dragOffset += dragDetails!.delta.dy;
@@ -764,7 +998,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                               _panningOffset = notification.metrics.pixels;
                             });
                           }
-                          // 🚀 START: Initiate drag if at top and pulling down
+                          // START: Initiate drag if at top and pulling down
                           else if (notification.metrics.pixels <= 0 &&
                               dragDetails.delta.dy > 0) {
                             setState(() {
@@ -778,6 +1012,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                     child: SafeArea(
                       child: LayoutBuilder(
                         builder: (context, constraints) {
+                          final bool isSmallScreen = constraints.maxHeight < 720;
                           return SingleChildScrollView(
                             controller: _scrollController,
                             physics: const ClampingScrollPhysics(),
@@ -786,12 +1021,19 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                   0, _dragOffset > 0 ? _panningOffset : 0),
                               child: Column(
                                 children: [
-                                  // 🚀 PAGE 1: FULL HEIGHT CLEAN PLAYER
-                                  SizedBox(
-                                    height: constraints.maxHeight,
+                                  // PAGE 1: FULL HEIGHT CLEAN PLAYER
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight: constraints.maxHeight,
+                                      maxHeight: isSmallScreen
+                                          ? double.infinity
+                                          : constraints.maxHeight,
+                                    ),
                                     child: Column(
                                       children: [
-                                        const Spacer(flex: 3),
+                                        isSmallScreen
+                                            ? const SizedBox(height: 12)
+                                            : const Spacer(flex: 3),
                                         // Album Art / Video Swipe Zone
                                         GestureDetector(
                                           behavior: HitTestBehavior.opaque,
@@ -897,63 +1139,65 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                   child: Container(
                                                     width: double.infinity,
                                                     alignment: Alignment.center,
-                                                    child: !hasVideo
-                                                        ? Hero(
-                                                            tag:
-                                                                'mobile_player_art',
-                                                            child: Container(
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            12),
-                                                                boxShadow: [
-                                                                  BoxShadow(
-                                                                    color: Colors
-                                                                        .black
-                                                                        .withValues(
-                                                                            alpha:
-                                                                                0.5),
-                                                                    blurRadius:
-                                                                        30,
-                                                                    spreadRadius:
-                                                                        5,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              child: ClipRRect(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            12),
-                                                                child: SmartArt(
-                                                                  path: song
-                                                                      .filePath,
-                                                                  onlineArtUrl:
-                                                                      song.onlineArtUrl,
-                                                                  size: _getResponsiveArtSize(
-                                                                      context),
-                                                                  borderRadius:
-                                                                      12,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          )
-                                                        : SizedBox(
-                                                            height: MediaQuery.of(
-                                                                        context)
-                                                                    .size
-                                                                    .width -
-                                                                80,
-                                                          ),
+                                                    child: (hasVideo && _isAppleMusicVideo)
+                                                         ? Container(
+                                                             width: _getResponsiveArtSize(context),
+                                                             height: _getResponsiveArtSize(context),
+                                                             decoration: BoxDecoration(
+                                                               borderRadius: BorderRadius.circular(12),
+                                                               boxShadow: [
+                                                                 BoxShadow(
+                                                                   color: Colors.black.withValues(alpha: 0.5),
+                                                                   blurRadius: 30,
+                                                                   spreadRadius: 5,
+                                                                 ),
+                                                               ],
+                                                             ),
+                                                             child: ClipRRect(
+                                                               borderRadius: BorderRadius.circular(12),
+                                                               child: AspectRatio(
+                                                                 aspectRatio: _videoController!.value.aspectRatio,
+                                                                 child: VideoPlayer(_videoController!),
+                                                               ),
+                                                             ),
+                                                           )
+                                                         : (hasVideo && !_isAppleMusicVideo)
+                                                             ? SizedBox(
+                                                                 height: _getResponsiveArtSize(context),
+                                                               )
+                                                             : Hero(
+                                                                 tag: 'mobile_player_art',
+                                                                 child: Container(
+                                                                   decoration: BoxDecoration(
+                                                                     borderRadius: BorderRadius.circular(12),
+                                                                     boxShadow: [
+                                                                       BoxShadow(
+                                                                         color: Colors.black.withValues(alpha: 0.5),
+                                                                         blurRadius: 30,
+                                                                         spreadRadius: 5,
+                                                                       ),
+                                                                     ],
+                                                                   ),
+                                                                   child: ClipRRect(
+                                                                     borderRadius: BorderRadius.circular(12),
+                                                                     child: SmartArt(
+                                                                       path: song.filePath,
+                                                                       onlineArtUrl: song.onlineArtUrl,
+                                                                       size: _getResponsiveArtSize(context),
+                                                                       borderRadius: 12,
+                                                                     ),
+                                                                   ),
+                                                                 ),
+                                                               ),
                                                   ),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        const Spacer(flex: 2),
+                                        isSmallScreen
+                                            ? const SizedBox(height: 8)
+                                            : const Spacer(flex: 2),
                                         // Title and Artist
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
@@ -995,7 +1239,8 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(height: 24),
+                                        SizedBox(
+                                            height: isSmallScreen ? 12 : 24),
                                         // Seekbar
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
@@ -1017,8 +1262,28 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                               value: sliderValue,
                                               min: 0.0,
                                               max: sliderMax,
-                                              onChanged: (val) =>
-                                                  notifier.seek(val),
+                                              onChangeStart: (val) {
+                                                setState(() {
+                                                  _isDraggingSlider = true;
+                                                  _sliderDragValue = val;
+                                                });
+                                              },
+                                              onChanged: (val) {
+                                                setState(() {
+                                                  _sliderDragValue = val;
+                                                });
+                                              },
+                                              onChangeEnd: (val) async {
+                                                // Wait for the backend engine to fully process the seek
+                                                // before releasing the slider back to the data stream.
+                                                // This completely eliminates the "snap back" visual bug.
+                                                await notifier.seek(val);
+                                                if (mounted) {
+                                                  setState(() {
+                                                    _isDraggingSlider = false;
+                                                  });
+                                                }
+                                              },
                                             ),
                                           ),
                                         ),
@@ -1047,13 +1312,14 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(height: 16),
-                                        // 🚀 AUDIO QUALITY INFO BAR
+                                        SizedBox(
+                                            height: isSmallScreen ? 8 : 16),
+                                        // AUDIO QUALITY INFO BAR
                                         if (_audioInfo != null ||
                                             _isLoadingInfo)
                                           Padding(
-                                            padding: const EdgeInsets.only(
-                                                bottom: 16),
+                                            padding: EdgeInsets.only(
+                                                bottom: isSmallScreen ? 8 : 16),
                                             child: _isLoadingInfo
                                                 ? const SizedBox(
                                                     height: 14,
@@ -1147,7 +1413,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                                   ),
                                           ),
                                         // Controls row
-                                        // 🚀 NEAT 5-COLUMN CONTROLS GRID (Fixed Height Slots for Alignment)
+                                        // NEAT 5-COLUMN CONTROLS GRID (Fixed Height Slots for Alignment)
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceEvenly,
@@ -1355,7 +1621,9 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                             ),
                                           ],
                                         ),
-                                        const Spacer(flex: 2),
+                                        isSmallScreen
+                                            ? const SizedBox(height: 8)
+                                            : const Spacer(flex: 2),
                                         // Scroll Indicator
                                         const Icon(
                                           Icons.keyboard_arrow_down,
@@ -1370,11 +1638,12 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                                               color: Colors.white30,
                                               fontSize: 11),
                                         ),
-                                        const SizedBox(height: 16),
+                                        SizedBox(
+                                            height: isSmallScreen ? 8 : 16),
                                       ],
                                     ),
                                   ),
-                                  // 🚀 PAGE 2: LYRICS CONTAINER
+                                  // PAGE 2: LYRICS CONTAINER
                                   _buildScrollableLyrics(
                                       playerState, settings, notifier),
                                 ],
@@ -1398,8 +1667,25 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
                 child: LyricsPanel(),
               ),
             ),
+            
+          // Mini progress line for karaoke mode
+          if (isKaraokeMode)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 4,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: MediaQuery.of(context).size.width * (sliderMax > 0 ? (currentPos / sliderMax).clamp(0.0, 1.0) : 0),
+                  color: settings.accentColor,
+                ),
+              ),
+            ),
         ],
       ),
+    ),
     );
   }
 
@@ -1494,7 +1780,7 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     );
   }
 
-  // 🚀 SCROLLABLE LYRICS SECTION - Appears when scroll down
+  // SCROLLABLE LYRICS SECTION - Appears when scroll down
   Widget _buildScrollableLyrics(
       PlayerState playerState, dynamic settings, PlayerNotifier notifier) {
     final lyricsState = ref.watch(lyricsProvider);
@@ -1820,8 +2106,9 @@ class _MobileFullPlayerState extends ConsumerState<MobileFullPlayer>
     );
   }
 
-  // 🚀 LISTENING PARTY DIALOG
+  // LISTENING PARTY DIALOG
   void _showListeningPartyDialog() async {
+    ref.read(playerProvider.notifier).enableRemoteSession();
     String? sessionId = await PocketBaseService().getUniqueSessionId();
     if (sessionId == null) {
       if (mounted) {

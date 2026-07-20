@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 /// Japanese text romanization via Vercel-hosted Kuroshiro API.
 /// Handles Kanji, Hiragana, and Katakana → Romaji conversion.
@@ -56,7 +57,7 @@ class JapaneseRomanizer {
         }
       }
     } catch (e) {
-      print('Japanese romanize error: $e');
+      debugPrint('Japanese romanize error: $e');
     }
     return null;
   }

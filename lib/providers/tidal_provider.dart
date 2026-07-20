@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/tidal_service.dart';
-import '../services/pocketbase_service.dart'; // 🔒 OFFLINE MODE
+import '../services/pocketbase_service.dart';
 
 class TidalStatusState {
   final TidalApiStatus status;
@@ -40,7 +40,7 @@ class TidalStatusNotifier extends AsyncNotifier<TidalStatusState> {
   FutureOr<TidalStatusState> build() async {
     // Start polling when provider is initialized
     _startPolling();
-    
+
     // Stop polling when provider is disposed
     ref.onDispose(() {
       _timer?.cancel();
@@ -58,7 +58,7 @@ class TidalStatusNotifier extends AsyncNotifier<TidalStatusState> {
   }
 
   Future<TidalStatusState> _fetchStatus() async {
-    // 🔒 OFFLINE MODE
+    // OFFLINE MODE
     if (PocketBaseService.isOffline) {
       return TidalStatusState(status: TidalApiStatus.offlineStatus);
     }
@@ -68,7 +68,7 @@ class TidalStatusNotifier extends AsyncNotifier<TidalStatusState> {
       final result = await InternetAddress.lookup('google.com')
           .timeout(const Duration(seconds: 3));
       final isOnline = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-      
+
       if (!isOnline) {
         return TidalStatusState(status: TidalApiStatus.noInternet);
       }
@@ -92,6 +92,7 @@ class TidalStatusNotifier extends AsyncNotifier<TidalStatusState> {
   }
 }
 
-final tidalStatusProvider = AsyncNotifierProvider<TidalStatusNotifier, TidalStatusState>(() {
+final tidalStatusProvider =
+    AsyncNotifierProvider<TidalStatusNotifier, TidalStatusState>(() {
   return TidalStatusNotifier();
 });

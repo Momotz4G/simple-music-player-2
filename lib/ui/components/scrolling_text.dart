@@ -84,7 +84,9 @@ class _ScrollingTextState extends State<ScrollingText>
   void _startLoop() async {
     while (mounted) {
       if (!_scrollController.hasClients ||
-          _scrollController.position.maxScrollExtent <= 0) break;
+          _scrollController.position.maxScrollExtent <= 0) {
+        break;
+      }
 
       // 1. Scroll to End
       _animationController.forward(from: 0.0);

@@ -1,5 +1,6 @@
 import 'dart:io'; // Platform check
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 
@@ -55,8 +56,9 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     }
 
     // Redundancy check: If we already have info OR are currently fetching for this path, stop.
-    if (_lastFilePath == filePath && (_audioInfo != null || _isLoadingQuality))
+    if (_lastFilePath == filePath && (_audioInfo != null || _isLoadingQuality)) {
       return;
+    }
 
     _lastFilePath = filePath;
     if (mounted) setState(() => _isLoadingQuality = true);
@@ -148,7 +150,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
 
       // Reset info and fetch new
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // 🚀 ALWAYS clear old quality info when file path changes to prevent stale badges
+        // ALWAYS clear old quality info when file path changes to prevent stale badges
         if (mounted) setState(() => _audioInfo = null);
 
         // Fetch new info (either for new song or new path)
@@ -176,10 +178,10 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     final primaryColor = isDark ? Colors.white : Colors.black;
     final l10n = AppLocalizations.of(context)!;
 
-    // 🚀 MOBILE: Show simplified mini player bar
+    // MOBILE: Show simplified mini player bar
     final isMobile = Platform.isAndroid || Platform.isIOS;
     if (isMobile) {
-      // 🚀 TABLET: Show enhanced player bar with more info and controls
+      // TABLET: Show enhanced player bar with more info and controls
       if (LayoutEngine.isTablet(context)) {
         return _buildTabletPlayerBar(context, playerState, notifier, song,
             hasSong, isDark, settings, l10n);
@@ -483,7 +485,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
-                                // 🚀 BUFFERING ANIMATION - Thin animated line on track
+                                // BUFFERING ANIMATION - Thin animated line on track
                                 if (playerState.isBuffering)
                                   Positioned(
                                     left: 12,
@@ -779,57 +781,77 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                       const SizedBox(width: 8),
 
                       // Volume
-                      Tooltip(
-                        message: playerState.volume == 0
-                            ? l10n.unmuteTooltip
-                            : l10n.muteTooltip,
-                        child: IconButton(
-                          icon: Icon(
-                            playerState.volume == 0
-                                ? Icons.volume_off_rounded
-                                : playerState.volume < 0.5
-                                    ? Icons.volume_down_rounded
-                                    : Icons.volume_up_rounded,
-                            size: 20,
-                            color: Colors.grey,
-                          ),
-                          onPressed: notifier.toggleMute,
-                        ),
-                      ),
-
-                      SizedBox(
-                        width: 70,
-                        height: 20,
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 2,
-                            thumbShape: const RoundSliderThumbShape(
-                                enabledThumbRadius: 4),
-                            overlayShape:
-                                const RoundSliderOverlayShape(overlayRadius: 6),
-                            activeTrackColor: Colors.grey,
-                            inactiveTrackColor:
-                                Colors.grey.withValues(alpha: 0.3),
-                            thumbColor: Colors.grey,
-                          ),
-                          child: Slider(
-                            value: playerState.volume,
-                            min: 0.0,
-                            max: 1.0,
-                            onChanged: (val) => notifier.setVolume(val),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(
-                        width: 35,
-                        child: Text(
-                          "${(playerState.volume * 100).toInt()}%",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[400],
-                              fontWeight: FontWeight.bold),
+                      Listener(
+                        onPointerSignal: (pointerSignal) {
+                          if (pointerSignal is PointerScrollEvent) {
+                            double newVolume = playerState.volume;
+                            if (pointerSignal.scrollDelta.dy > 0) {
+                              newVolume -= 0.05; // Scroll down, decrease volume
+                            } else if (pointerSignal.scrollDelta.dy < 0) {
+                              newVolume += 0.05; // Scroll up, increase volume
+                            }
+                            if (newVolume < 0.0) newVolume = 0.0;
+                            if (newVolume > 1.0) newVolume = 1.0;
+                            notifier.setVolume(newVolume);
+                          }
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Tooltip(
+                              message: playerState.volume == 0
+                                  ? l10n.unmuteTooltip
+                                  : l10n.muteTooltip,
+                              child: IconButton(
+                                icon: Icon(
+                                  playerState.volume == 0
+                                      ? Icons.volume_off_rounded
+                                      : playerState.volume < 0.5
+                                          ? Icons.volume_down_rounded
+                                          : Icons.volume_up_rounded,
+                                  size: 20,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: notifier.toggleMute,
+                              ),
+                            ),
+                            
+                            SizedBox(
+                              width: 70,
+                              height: 20,
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 2,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 4),
+                                  overlayShape:
+                                      const RoundSliderOverlayShape(overlayRadius: 6),
+                                  activeTrackColor: Colors.grey,
+                                  inactiveTrackColor:
+                                      Colors.grey.withValues(alpha: 0.3),
+                                  thumbColor: Colors.grey,
+                                ),
+                                child: Slider(
+                                  value: playerState.volume,
+                                  min: 0.0,
+                                  max: 1.0,
+                                  onChanged: (val) => notifier.setVolume(val),
+                                ),
+                              ),
+                            ),
+                            
+                            SizedBox(
+                              width: 35,
+                              child: Text(
+                                "${(playerState.volume * 100).toInt()}%",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[400],
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -912,7 +934,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
           value: 'add_to_favorite',
           child: Row(
             children: [
-              Icon(Icons.favorite_border, color: Colors.redAccent, size: 20),
+              const Icon(Icons.favorite_border, color: Colors.redAccent, size: 20),
               const SizedBox(width: 12),
               Text(l10n.addToFavorite, style: TextStyle(color: textColor)),
             ],
@@ -930,6 +952,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
         ),
       ],
     ).then((value) {
+      if (!context.mounted) return;
       if (value == 'add_to_playlist') {
         // Use song context menu handler for Add to Playlist
         SongContextMenuRegion.handleAction(
@@ -960,7 +983,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         title: Text(l10n.sleepTimer, style: TextStyle(color: textColor)),
         content: SizedBox(
-          width: 240, // 🚀 Slimmer width to avoid "fat" look
+          width: 240, // Slimmer width to avoid "fat" look
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1136,6 +1159,8 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
       // But we can just use dynamic dispatch or cast
       final newVersion = result; // as YoutubeSearchResult
 
+      if (!context.mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(
@@ -1148,7 +1173,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     }
   }
 
-  // 🚀 TABLET ENHANCED PLAYER BAR (72dp, single row with seek + controls)
+  // TABLET ENHANCED PLAYER BAR (72dp, single row with seek + controls)
   Widget _buildTabletPlayerBar(
     BuildContext context,
     PlayerState playerState,
@@ -1394,7 +1419,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     );
   }
 
-  // 🚀 MOBILE MINI PLAYER BAR (Floating design) + Bottom Navigation
+  // MOBILE MINI PLAYER BAR (Floating design) + Bottom Navigation
   Widget _buildMobilePlayerBar(
     BuildContext context,
     PlayerState playerState,
@@ -1429,7 +1454,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                     Navigator.of(context).push(
                       PageRouteBuilder(
                         opaque:
-                            false, // 🚀 Allow seeing behind when dragging down
+                            false, // Allow seeing behind when dragging down
                         transitionDuration: const Duration(milliseconds: 300),
                         reverseTransitionDuration:
                             const Duration(milliseconds: 250),
@@ -1452,13 +1477,13 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                     );
                   }
                 : null,
-            // 🚀 GESTURE: Pull Up to Expand
-            // 🚀 GESTURE: Pull Up to Expand
+            // GESTURE: Pull Up to Expand
+            // GESTURE: Pull Up to Expand
             onVerticalDragEnd: (details) {
               if (hasSong && details.primaryVelocity! < -150) {
                 Navigator.of(context).push(
                   PageRouteBuilder(
-                    opaque: false, // 🚀 Allow seeing behind when dragging down
+                    opaque: false, // Allow seeing behind when dragging down
                     transitionDuration: const Duration(milliseconds: 300),
                     reverseTransitionDuration:
                         const Duration(milliseconds: 250),
@@ -1482,7 +1507,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
               }
             },
             child: TweenAnimationBuilder<Color?>(
-              // 🚀 ANIMATE color changes for smooth transitions
+              // ANIMATE color changes for smooth transitions
               duration: const Duration(milliseconds: 500),
               tween: ColorTween(
                 begin: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -1497,7 +1522,7 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
                 return Container(
                   height: 60,
                   decoration: BoxDecoration(
-                    // 🚀 Use dominant album color with reduced opacity
+                    // Use dominant album color with reduced opacity
                     color: hasCustomColor
                         ? primaryColor.withValues(
                             alpha: 0.1) // Much more subtle!

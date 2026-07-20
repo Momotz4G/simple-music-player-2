@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:smtc_windows/smtc_windows.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
@@ -40,7 +41,7 @@ class WindowsTaskbarService {
           album: '',
           thumbnail: null,
         ),
-        timeline: PlaybackTimeline(
+        timeline: const PlaybackTimeline(
           startTimeMs: 0,
           endTimeMs: 1000,
           positionMs: 0,
@@ -75,7 +76,7 @@ class WindowsTaskbarService {
         }
       });
     } catch (e) {
-      print("Failed to initialize Windows Taskbar: $e");
+      debugPrint("Failed to initialize Windows Taskbar: $e");
     }
   }
 
@@ -83,10 +84,10 @@ class WindowsTaskbarService {
   Future<void> _setTaskbarButtons({required bool isPlaying}) async {
     if (!Platform.isWindows) return;
 
-    final String prevIcon = 'assets/win_icon_prev.ico';
-    final String nextIcon = 'assets/win_icon_next.ico';
-    final String playIcon = 'assets/win_icon_play.ico';
-    final String pauseIcon = 'assets/win_icon_pause.ico';
+    const String prevIcon = 'assets/win_icon_prev.ico';
+    const String nextIcon = 'assets/win_icon_next.ico';
+    const String playIcon = 'assets/win_icon_play.ico';
+    const String pauseIcon = 'assets/win_icon_pause.ico';
 
     try {
       await WindowsTaskbar.setThumbnailToolbar([

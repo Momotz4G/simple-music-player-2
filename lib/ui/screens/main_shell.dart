@@ -8,7 +8,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../services/tray_service.dart';
 import '../../l10n/app_localizations.dart';
-import 'package:package_info_plus/package_info_plus.dart'; // 🚀 IMPORT
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // --- PROVIDER IMPORTS ---
@@ -16,15 +16,18 @@ import '../../providers/player_provider.dart';
 import '../../providers/library_presentation_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../models/album_model.dart';
-import '../../providers/library_provider.dart'; // 🚀 IMPORT (For refresh)
-import '../../providers/settings_provider.dart'; // 🚀 DEBUG BUTTON SETTING
-import 'package:permission_handler/permission_handler.dart'; // 🚀 IMPORT
+import '../../providers/library_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../providers/lyrics_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 // --- COMPONENT IMPORTS ---
 import '../components/player_bar.dart';
 import '../components/queue_drawer.dart';
-import '../components/ambient_background.dart';
+import '../components/timer_display.dart';
 import '../components/top_search_bar.dart';
+import '../components/profile_dialog.dart';
+import '../components/ambient_background.dart';
 import '../components/themes/winter/snow_fall_widget.dart';
 import '../components/themes/winter/santa_sleigh_widget.dart';
 import '../components/themes/winter/animated_tree_widget.dart';
@@ -102,17 +105,18 @@ import '../../utils/layout_engine.dart';
 import 'album_detail_page.dart';
 import 'playlist_detail_page.dart';
 import 'artist_detail_page.dart';
-import 'track_detail_page.dart'; // 🚀 IMPORTED
-import 'daily_mix_detail_page.dart'; // 🎵 Daily Mix
-import 'leaderboard_page.dart'; // 🏆 Leaderboard
-import '../../models/song_metadata.dart'; // 🚀 IMPORTED
-import '../../models/daily_mix_model.dart'; // 🎵 Daily Mix model
+import 'track_detail_page.dart';
+import 'daily_mix_detail_page.dart';
+import 'leaderboard_page.dart';
+import '../../models/song_metadata.dart';
+import '../../models/daily_mix_model.dart';
 import '../../services/update_service.dart';
 import '../../services/bulk_download_service.dart';
-import '../../services/smart_download_service.dart';
-import '../../services/youtube_downloader_service.dart'; // 🚀 Binaries update
-import '../../models/binaries_update_info.dart'; // 🚀 Binaries update
+
+import '../../services/youtube_downloader_service.dart';
+import '../../models/binaries_update_info.dart';
 import '../components/download_progress_widget.dart';
+import '../components/download_fab_widget.dart';
 
 import '../../providers/interface_provider.dart';
 import 'mini_player.dart';
@@ -122,11 +126,11 @@ import '../components/whats_new_dialog.dart';
 import '../../utils/toast_utils.dart';
 import '../../services/pocketbase_service.dart';
 import '../../services/native_music_service.dart';
-import '../../services/sync_engine.dart'; // 🔄 Cloud Stats Sync
-import '../../providers/mailbox_provider.dart'; // 🚀 IMPORT
-import '../components/mailbox_dialog.dart'; // 🚀 IMPORT
-import '../../providers/profile_provider.dart'; // 🚀 IMPORT
-import '../components/profile_dialog.dart'; // 🚀 IMPORT
+import '../../services/sync_engine.dart';
+import '../../providers/mailbox_provider.dart';
+import '../components/mailbox_dialog.dart';
+import '../../providers/profile_provider.dart';
+import '../components/profile_dialog.dart';
 
 bool _isExiting = false; // Global flag for exit loop prevention
 
@@ -140,10 +144,10 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell>
     with WidgetsBindingObserver, WindowListener {
   final UpdateService _updateService = UpdateService();
-  // 🚀 GlobalKey for drawer control on mobile
+  // GlobalKey for drawer control on mobile
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // 🚀 CONNECTIVITY MONITORING
+  // CONNECTIVITY MONITORING
   bool _wasOffline = false;
   Timer? _connectivityTimer;
 
@@ -157,34 +161,35 @@ class _MainShellState extends ConsumerState<MainShell>
             icon: Icons.campaign_rounded,
             duration: const Duration(seconds: 10));
 
-        // 🚀 ADD TO LOCAL MAILBOX (Real-time)
+        // ADD TO LOCAL MAILBOX (Real-time)
         ref
             .read(mailboxProvider.notifier)
             .addMessage(message, remoteId: remoteId);
       }
     });
 
-    // 🚀 SYNC MISSED MESSAGES (Offline Collection)
+    // SYNC MISSED MESSAGES (Offline Collection)
     ref.read(mailboxProvider.notifier).syncWithRemote();
 
-    // 🚀 CHECK FOR UPDATES ON STARTUP
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _requestPermissions(); // 🚀 Request Permissions
+    // CHECK FOR UPDATES ON STARTUP
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _requestPermissions(); // Request Permissions
 
-      // 🚀 CLEANUP OLD UPDATE APKs (Free ~300MB after successful update)
+      // CLEANUP OLD UPDATE APKs (Free ~300MB after successful update)
       // Do this BEFORE checking for updates so stale markers don't block the check
-      UpdateService.cleanupOldUpdates();
+      await UpdateService.cleanupOldUpdates();
 
+      if (!mounted) return;
       _checkForUpdates();
       _checkWhatsNew();
-      _startConnectivityMonitor(); // 🚀 Start monitoring
+      _startConnectivityMonitor(); // Start monitoring
 
-      // 🚀 Delay reminder slightly to ensure window is visible and stable
+      // Delay reminder slightly to ensure window is visible and stable
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) _checkOfflineModeStatus();
       });
 
-      // 🚀 CHECK FOR INTERRUPTED UPDATES (Android)
+      // CHECK FOR INTERRUPTED UPDATES (Android)
       _checkPendingUpdate();
 
       if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
@@ -217,19 +222,19 @@ class _MainShellState extends ConsumerState<MainShell>
       }
     });
 
-    // 🚀 LISTEN FOR APP LIFECYCLE (To resume update after permission grant)
+    // LISTEN FOR APP LIFECYCLE (To resume update after permission grant)
     WidgetsBinding.instance.addObserver(this);
 
-    // 🚀 LISTEN FOR BULK DOWNLOAD ERRORS (Ban/Limit)
+    // LISTEN FOR BULK DOWNLOAD ERRORS (Ban/Limit)
     BulkDownloadService().errorNotifier.addListener(_onBulkDownloadError);
 
-    // 🚀 LISTEN FOR BINARIES UPDATE (Desktop only - mandatory update)
+    // LISTEN FOR BINARIES UPDATE (Desktop only - mandatory update)
     YoutubeDownloaderService()
         .binariesUpdateNotifier
         .addListener(_onBinariesUpdate);
   }
 
-  // 🚀 OFFLINE MODE REMINDER
+  // OFFLINE MODE REMINDER
   void _checkOfflineModeStatus() {
     if (PocketBaseService.isOffline) {
       final colorScheme = Theme.of(context).colorScheme;
@@ -254,7 +259,7 @@ class _MainShellState extends ConsumerState<MainShell>
             ),
             ElevatedButton(
               onPressed: () {
-                // 🚀 Navigate to settings AND signal to scroll to offline section
+                // Navigate to settings AND signal to scroll to offline section
                 ref.read(settingsNavigationProvider.notifier).state =
                     SettingsSection.offlineMode;
                 ref
@@ -270,7 +275,7 @@ class _MainShellState extends ConsumerState<MainShell>
     }
   }
 
-  // 🚀 CONNECTIVITY MONITOR
+  // CONNECTIVITY MONITOR
   void _startConnectivityMonitor() {
     if (PocketBaseService.isOffline) return; // 🔒 OFFLINE MODE: Skip monitoring
 
@@ -293,7 +298,7 @@ class _MainShellState extends ConsumerState<MainShell>
       // 🔄 Notify SyncEngine of connectivity changes
       SyncEngine().onConnectivityChanged(isOnline);
 
-      // 🚀 Show toast when transitioning from offline to online
+      // Show toast when transitioning from offline to online
       if (_wasOffline && isOnline && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -322,7 +327,7 @@ class _MainShellState extends ConsumerState<MainShell>
     }
   }
 
-  // 🚀 REQUEST RUNTIME PERMISSIONS (Fix for Android 13+ / 10+)
+  // REQUEST RUNTIME PERMISSIONS (Fix for Android 13+ / 10+)
   Future<void> _requestPermissions() async {
     if (!Platform.isAndroid) return;
 
@@ -337,7 +342,7 @@ class _MainShellState extends ConsumerState<MainShell>
       granted = true;
     }
 
-    // 🚀 3. Request Notification Permission (Android 13+)
+    // 3. Request Notification Permission (Android 13+)
     if (await Permission.notification.isDenied) {
       await Permission.notification.request();
     }
@@ -352,20 +357,54 @@ class _MainShellState extends ConsumerState<MainShell>
   void _onBulkDownloadError() {
     final error = BulkDownloadService().errorNotifier.value;
     if (error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor:
-              error.contains("suspended") ? Colors.red : Colors.orange,
-          duration: const Duration(seconds: 4),
-        ),
-      );
+      if (error == "QUOTA_EXCEEDED") {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.workspace_premium_rounded, color: Colors.amber),
+                SizedBox(width: 10),
+                Text("Quota Exceeded", style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: const Text(
+                "You have reached your ALAC download quota! Upgrade to Premium to unlock unlimited high-quality downloads."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                onPressed: () {
+                  Navigator.pop(context);
+                  showDialog(
+                    context: context,
+                    builder: (context) => const ProfileDialog(),
+                  );
+                },
+                child: const Text("Upgrade to Premium", style: TextStyle(color: Colors.black)),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor:
+                error.contains("suspended") ? Colors.red : Colors.orange,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
       // Clear the error after showing
       BulkDownloadService().errorNotifier.value = null;
     }
   }
 
-  // 🚀 BINARIES UPDATE (Desktop only - mandatory)
+  // BINARIES UPDATE (Desktop only - mandatory)
   void _onBinariesUpdate() {
     final updateInfo = YoutubeDownloaderService().binariesUpdateNotifier.value;
     if (updateInfo != null && mounted) {
@@ -517,11 +556,11 @@ class _MainShellState extends ConsumerState<MainShell>
       windowManager.removeListener(this);
       TrayService().dispose();
     }
-    _connectivityTimer?.cancel(); // 🚀 Cancel connectivity monitor
+    _connectivityTimer?.cancel(); // Cancel connectivity monitor
     PocketBaseService()
         .pb
         .collection('broadcasts')
-        .unsubscribe(); // 🚀 Clean up broadcast listener
+        .unsubscribe(); // Clean up broadcast listener
     BulkDownloadService().errorNotifier.removeListener(_onBulkDownloadError);
     YoutubeDownloaderService()
         .binariesUpdateNotifier
@@ -573,7 +612,7 @@ class _MainShellState extends ConsumerState<MainShell>
     await windowManager.setPreventClose(false);
     appWindow.close();
 
-    // 🚀 HARD EXIT: Ensure all native background threads (MPV, FFI) are killed
+    // HARD EXIT: Ensure all native background threads (MPV, FFI) are killed
     // to release any lingering hardware locks (WASAPI Exclusive).
     exit(0);
   }
@@ -610,15 +649,17 @@ class _MainShellState extends ConsumerState<MainShell>
   Future<void> _checkForUpdates() async {
     final release = await _updateService.checkForUpdate();
     if (release != null && mounted) {
-      // 🚀 Only show update dialog if we DON'T have a pending APK already
+      // Only show update dialog if we DON'T have a pending APK already
       final pendingApk = await _updateService.getPendingUpdatePath();
       if (pendingApk == null) {
         _showUpdateDialog(release);
       }
+    } else if (release == null) {
+      await _updateService.clearPendingUpdate();
     }
   }
 
-  // 🚀 RESUME PENDING UPDATE (Android)
+  // RESUME PENDING UPDATE (Android)
   Future<void> _checkPendingUpdate() async {
     if (!Platform.isAndroid) return;
 
@@ -658,7 +699,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 🚀 When returning to app (e.g. from Permission Settings),
+    // When returning to app (e.g. from Permission Settings),
     // check if we have a pending update to resume!
     if (state == AppLifecycleState.resumed && Platform.isAndroid) {
       _checkPendingUpdateAuto();
@@ -688,7 +729,7 @@ class _MainShellState extends ConsumerState<MainShell>
           children: [
             Text(l10n.updateAvailableVersion(release['tag_name'] ?? '?')),
             const SizedBox(height: 4),
-            // 🚀 Show Size if available
+            // Show Size if available
             if (release['assets'] != null &&
                 (release['assets'] as List).isNotEmpty)
               FutureBuilder<Map<String, String>?>(
@@ -734,21 +775,23 @@ class _MainShellState extends ConsumerState<MainShell>
   }
 
   Future<void> _downloadAndInstall(Map<String, dynamic> release) async {
-    // 🚀 Platform-aware asset selection
+    // Platform-aware asset selection
     final asset = await _updateService.getAssetForPlatform(release);
 
     if (asset != null) {
       final downloadUrl = asset['downloadUrl']!;
       final fileName = asset['fileName']!;
+      final String tagName = release['tag_name'] ?? '';
+      final targetVersion = tagName.replaceAll('v', '');
 
-      // 🚀 Show download progress dialog ONLY on Android
+      // Show download progress dialog ONLY on Android
       // On desktop (Windows/Mac/Linux), sidebar widget shows progress
       if (Platform.isAndroid) {
         _showDownloadProgressDialog();
       }
 
       try {
-        await _updateService.downloadAndInstall(downloadUrl, fileName);
+        await _updateService.downloadAndInstall(downloadUrl, fileName, targetVersion);
         // Dialog will close automatically when progress reaches 100%
       } catch (e) {
         // Close dialog on error (Android only)
@@ -775,7 +818,7 @@ class _MainShellState extends ConsumerState<MainShell>
     }
   }
 
-  // 🚀 Track if download has started (to avoid closing dialog immediately)
+  // Track if download has started (to avoid closing dialog immediately)
   bool _downloadHasStarted = false;
 
   void _showDownloadProgressDialog() {
@@ -840,7 +883,7 @@ class _MainShellState extends ConsumerState<MainShell>
                         color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
-                    // 🚀 Speed display
+                    // Speed display
                     if (progress?.speedMBps != null && progress!.speedMBps! > 0)
                       Text(
                         "${progress.speedMBps!.toStringAsFixed(1)} MB/s",
@@ -992,23 +1035,23 @@ class _MainShellState extends ConsumerState<MainShell>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    // 🚀 SAFETY: If localization is not yet ready, show a placeholder to avoid LateInitializationError
+    // SAFETY: If localization is not yet ready, show a placeholder to avoid LateInitializationError
     if (l10n == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // 🚀 Update Tray Menu localization if on desktop
+    // Update Tray Menu localization if on desktop
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       TrayService().updateLocalizedMenu(l10n);
     }
 
-    // 🚀 MINI PLAYER SWITCH
+    // MINI PLAYER SWITCH
     final interfaceState = ref.watch(interfaceProvider);
     if (interfaceState.isMiniPlayer) {
       return const MiniPlayer();
     }
 
-    // 🚀 LISTEN FOR SLEEP TIMER TRIGGER
+    // LISTEN FOR SLEEP TIMER TRIGGER
     ref.listen<PlayerState>(playerProvider, (previous, next) {
       if (next.isSleepPending &&
           (previous == null || !previous.isSleepPending)) {
@@ -1030,6 +1073,8 @@ class _MainShellState extends ConsumerState<MainShell>
 
     final playerState = ref.watch(playerProvider);
     final isLyricsVisible = playerState.isLyricsVisible;
+    final lyricsState = ref.watch(lyricsProvider);
+    final isKaraokeMode = lyricsState.isKaraokeMode;
 
     final navigationStack = ref.watch(navigationStackProvider);
 
@@ -1150,10 +1195,10 @@ class _MainShellState extends ConsumerState<MainShell>
             );
           },
           child: Scaffold(
-            key: _scaffoldKey, // 🚀 Use GlobalKey for drawer access
+            key: _scaffoldKey, // Use GlobalKey for drawer access
             endDrawer: const QueueDrawer(),
-            // 🚀 MOBILE: Navigation Drawer (Hamburger Menu)
-            drawer: (!isDesktop && !isTablet)
+            // MOBILE & TABLET: Navigation Drawer (Hamburger Menu)
+            drawer: !isDesktop
                 ? _buildMobileDrawer(context, currentView, isDark, settings)
                 : null,
             body: Stack(
@@ -1222,7 +1267,7 @@ class _MainShellState extends ConsumerState<MainShell>
                       ? 32
                       : 0, // Title bar on desktop only
                   child: isTablet
-                      // 🚀 TABLET: NavigationRail + Content via TabletMainShell
+                      // TABLET: NavigationRail + Content via TabletMainShell
                       ? const Padding(
                           padding: EdgeInsets.only(bottom: 90),
                           child: TabletMainShell(),
@@ -1330,7 +1375,7 @@ class _MainShellState extends ConsumerState<MainShell>
                                   ],
                                   Stack(
                                     children: [
-                                      // 🚀 BASE LAYER: IndexedStack for instant tab switching
+                                      // BASE LAYER: IndexedStack for instant tab switching
                                       // We only show this if the navigation stack is empty
                                       IgnorePointer(
                                         ignoring: navigationStack.isNotEmpty,
@@ -1365,7 +1410,7 @@ class _MainShellState extends ConsumerState<MainShell>
                                         ),
                                       ),
 
-                                      // 🚀 DETAIL LAYER: AnimatedSwitcher for detail pages
+                                      // DETAIL LAYER: AnimatedSwitcher for detail pages
                                       AnimatedSwitcher(
                                         duration:
                                             const Duration(milliseconds: 300),
@@ -1453,23 +1498,50 @@ class _MainShellState extends ConsumerState<MainShell>
                                       : const NeonSignsWidget(),
                     ),
                   ),
-                if (isDesktop)
+                if (isDesktop || isTablet)
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 350),
                     curve: Curves.easeInOutCubic,
                     left: 0,
                     right: 0,
-                    top: isLyricsVisible ? 32 : screenHeight,
-                    height: screenHeight - 32,
+                    top: isLyricsVisible ? (isKaraokeMode ? 0 : 32) : screenHeight,
+                    height: isKaraokeMode ? screenHeight : screenHeight - 32,
                     child: const LyricsPanel(),
                   ),
 
                 // 5. PLAYER BAR (Fixed Bottom)
-                const Positioned(
-                    left: 0, right: 0, bottom: 0, child: PlayerBar()),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOutCubic,
+                  left: 0,
+                  right: 0,
+                  bottom: (isLyricsVisible && isKaraokeMode) ? -150 : 0,
+                  child: const PlayerBar(),
+                ),
+
+                // Mini progress line for karaoke mode
+                if ((isDesktop || isTablet) && isLyricsVisible && isKaraokeMode)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 4,
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final currentPos = ref.watch(playerProvider.select((s) => s.currentPosition));
+                        final total = ref.read(playerProvider).currentSong?.duration ?? 1.0;
+                        final double progress = total > 0 ? currentPos / total : 0;
+                        return LinearProgressIndicator(
+                          value: progress.clamp(0.0, 1.0),
+                          backgroundColor: Colors.black26,
+                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                        );
+                      },
+                    ),
+                  ),
 
                 // 6. MOBILE: Hamburger Menu Button (Overlay)
-                // 🚀 Only show on main pages (empty stack), otherwise rely on Back button
+                // Only show on main pages (empty stack), otherwise rely on Back button
                 if (!isDesktop && !isTablet && navigationStack.isEmpty)
                   Positioned(
                     top: MediaQuery.of(context).padding.top + 16,
@@ -1504,9 +1576,12 @@ class _MainShellState extends ConsumerState<MainShell>
                 // 7. DEBUG FLOATING BUTTON (Conditional - All Platforms)
                 if (ref.watch(settingsProvider).showDebugButton)
                   const DebugFloatingButton(child: SizedBox.shrink()),
+
+                // 8. GLOBAL DOWNLOAD FAB
+                const DownloadFabWidget(),
               ],
             ),
-            // 🚀 Removed NavigationBar - replaced with drawer
+            // Removed NavigationBar - replaced with drawer
           ),
         ),
       ), // Close PopScope
@@ -1740,44 +1815,9 @@ class _MainShellState extends ConsumerState<MainShell>
                             isDark,
                             hasSelection),
 
-                        // 🚀 DOWNLOAD PROGRESS WIDGET
+                        // APP UPDATE PROGRESS WIDGET
                         ValueListenableBuilder<DownloadProgress?>(
                           valueListenable: _updateService.progressNotifier,
-                          builder: (context, progress, child) {
-                            if (progress == null) {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 16),
-                              child: DownloadProgressWidget(progress: progress),
-                            );
-                          },
-                        ),
-
-                        // 🚀 BULK DOWNLOAD PROGRESS WIDGET
-                        ValueListenableBuilder<DownloadProgress?>(
-                          valueListenable:
-                              BulkDownloadService().progressNotifier,
-                          builder: (context, progress, child) {
-                            if (progress == null) {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 16),
-                              child: DownloadProgressWidget(
-                                progress: progress,
-                                onCancel: () {
-                                  BulkDownloadService().cancelDownload();
-                                },
-                              ),
-                            );
-                          },
-                        ),
-
-                        // 🚀 SINGLE SONG DOWNLOAD PROGRESS WIDGET (from context menu)
-                        ValueListenableBuilder<DownloadProgress?>(
-                          valueListenable:
-                              SmartDownloadService.progressNotifier,
                           builder: (context, progress, child) {
                             if (progress == null) {
                               return const SizedBox.shrink();
@@ -1846,9 +1886,6 @@ class _MainShellState extends ConsumerState<MainShell>
     final navigationStack = ref.watch(navigationStackProvider);
     final hasSelection = navigationStack.isNotEmpty;
     final accentColor = Theme.of(context).colorScheme.primary;
-    final defaultColor = isDark
-        ? Colors.grey[400] ?? Colors.grey
-        : Colors.grey[800] ?? Colors.grey;
 
     return Drawer(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -1999,42 +2036,20 @@ class _MainShellState extends ConsumerState<MainShell>
                       hasSelection,
                       accentColor),
 
-                  // 🚀 DOWNLOAD PROGRESS WIDGETS
-                  const Divider(height: 16),
+                  // APP UPDATE PROGRESS WIDGET
                   ValueListenableBuilder<DownloadProgress?>(
                     valueListenable: UpdateService().progressNotifier,
                     builder: (context, progress, child) {
                       if (progress == null) return const SizedBox.shrink();
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: DownloadProgressWidget(progress: progress),
-                      );
-                    },
-                  ),
-                  ValueListenableBuilder<DownloadProgress?>(
-                    valueListenable: BulkDownloadService().progressNotifier,
-                    builder: (context, progress, child) {
-                      if (progress == null) return const SizedBox.shrink();
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: DownloadProgressWidget(
-                          progress: progress,
-                          onCancel: () =>
-                              BulkDownloadService().cancelDownload(),
-                        ),
-                      );
-                    },
-                  ),
-                  ValueListenableBuilder<DownloadProgress?>(
-                    valueListenable: SmartDownloadService.progressNotifier,
-                    builder: (context, progress, child) {
-                      if (progress == null) return const SizedBox.shrink();
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: DownloadProgressWidget(progress: progress),
+                      return Column(
+                        children: [
+                          const Divider(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            child: DownloadProgressWidget(progress: progress),
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -2090,16 +2105,15 @@ class _MainShellState extends ConsumerState<MainShell>
               ),
             ),
 
-            // 🚀 UTILITY FOOTER (Pinned to bottom)
+            // UTILITY FOOTER (Pinned to bottom)
             const Divider(height: 1),
-            Padding(
-              padding:
-                  const EdgeInsets.only(left: 24, right: 24, bottom: 8, top: 4),
+            const Padding(
+              padding: EdgeInsets.only(left: 24, right: 24, bottom: 8, top: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  const _MailboxButton(isBottomNav: true),
-                  const _ProfileButton(isBottomNav: true),
+                  _MailboxButton(isBottomNav: true),
+                  _ProfileButton(isBottomNav: true),
                 ],
               ),
             ),
@@ -2259,8 +2273,8 @@ class WindowButtons extends ConsumerWidget {
             ),
           ),
         ),
-        const _MailboxButton(), // 🚀 New Mailbox Button
-        const _ProfileButton(), // 🚀 New Profile Button
+        const _MailboxButton(), // New Mailbox Button
+        const _ProfileButton(), // New Profile Button
         MinimizeWindowButton(colors: buttonColors),
         MaximizeWindowButton(colors: buttonColors),
         CloseWindowButton(

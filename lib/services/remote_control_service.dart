@@ -88,7 +88,7 @@ class RemoteControlService {
 
   final DateTime _serviceStartTime = DateTime.now();
 
-  // 🚀 Continuous sync dedup tracking (prevents spamming identical data to slaves)
+  // Continuous sync dedup tracking (prevents spamming identical data to slaves)
   String? _lastSyncTitle;
   double _lastSyncPosition = -1.0;
   bool? _lastSyncPlaying;
@@ -116,12 +116,12 @@ class RemoteControlService {
     final isShuffleCooldown = msSinceShuffle < 3000;
     final isLoopCooldown = msSinceLoop < 3000;
 
-    // 🚀 Check if this is an empty/newly created session (no active song)
+    // Check if this is an empty/newly created session (no active song)
     // If it is, DO NOT adopt its default false/0 values because it will reset the local player
     final title = data['current_title'] as String?;
     final isNewEmptySession = title == null || title.isEmpty;
 
-    // 🚀 SAFE SYNC (Loop Breaker Pattern for Shuffle/Loop)
+    // SAFE SYNC (Loop Breaker Pattern for Shuffle/Loop)
     // Only dispatch if state DIFFERS from what we last sent AND is not in isolated cooldown.
     final newShuffle = data['is_shuffle'] as bool?;
     final newLoop = data['loop_mode'] as int?;
@@ -132,15 +132,11 @@ class RemoteControlService {
 
     // Reject sync if it's an empty session
     if (!isNewEmptySession) {
-        if (isStartupPeriod) {
-          DebugLogService().info("📡 Remote: Sync IGNORED (startup cooldown)");
-        } else {
+        if (!isStartupPeriod) {
         // Evaluate Shuffle
         if (shuffleChanged) {
-          if (isShuffleCooldown) {
-            DebugLogService().info("📡 Remote: Shuffle Sync IGNORED (cooldown)");
-          } else {
-            _lastShuffleChangeTime = DateTime.now(); // 🚀 Prevent stale data echo from polling
+          if (!isShuffleCooldown) {
+            _lastShuffleChangeTime = DateTime.now(); // Prevent stale data echo from polling
             _lastShuffle = newShuffle;
             hasNewState = true;
           }
@@ -148,10 +144,8 @@ class RemoteControlService {
         
         // Evaluate Loop
         if (loopChanged) {
-          if (isLoopCooldown) {
-            DebugLogService().info("📡 Remote: Loop Sync IGNORED (cooldown)");
-          } else {
-            _lastLoopChangeTime = DateTime.now(); // 🚀 Prevent stale data echo from polling
+          if (!isLoopCooldown) {
+            _lastLoopChangeTime = DateTime.now(); // Prevent stale data echo from polling
             _lastLoop = newLoop;
             hasNewState = true;
           }
@@ -164,7 +158,7 @@ class RemoteControlService {
       onCommand('sync_state', data);
     }
 
-    // 🚀 CONTINUOUS SYNC: Always dispatch sync_state for slave UI updates
+    // CONTINUOUS SYNC: Always dispatch sync_state for slave UI updates
     // This ensures slaves receive position, title, art, and isPlaying changes
     // even when shuffle/loop haven't changed. Dedup prevents spamming identical data.
     if (!isStartupPeriod && !isNewEmptySession && !hasNewState) {
@@ -173,7 +167,7 @@ class RemoteControlService {
       final syncTitle = data['current_title'] as String?;
 
       final titleChanged = syncTitle != _lastSyncTitle;
-      final posChanged = (syncPos - _lastSyncPosition).abs() > 0.5; // 🚀 HIGH PRECISION: 0.5s threshold
+      final posChanged = (syncPos - _lastSyncPosition).abs() > 0.5; // HIGH PRECISION: 0.5s threshold
       final playChanged = syncPlaying != _lastSyncPlaying;
 
       if (titleChanged || posChanged || playChanged) {
@@ -340,8 +334,8 @@ class RemoteControlService {
     double? volume,
     bool? isShuffle,
     int? loopMode,
-    num? positionSeconds, // 🚀 HIGH PRECISION: Accepts double
-    num? durationSeconds, // 🚀 HIGH PRECISION: Accepts double
+    num? positionSeconds, // HIGH PRECISION: Accepts double
+    num? durationSeconds, // HIGH PRECISION: Accepts double
     String? artUrl,
     String? filePath,
     String? sourceUrl,
@@ -376,7 +370,7 @@ class RemoteControlService {
     if (positionSeconds != null) data['position_seconds'] = positionSeconds;
     if (durationSeconds != null) data['duration_seconds'] = durationSeconds;
     
-    // 🚀 STALE CACHE FIX: If artUrl is null, explicitly clear the PocketBase entry 
+    // STALE CACHE FIX: If artUrl is null, explicitly clear the PocketBase entry 
     // so it doesn't accidentally retain the previous song's image during a PATCH update!
     if (artUrl != null) {
       data['album_art_url'] = artUrl;
@@ -389,7 +383,7 @@ class RemoteControlService {
     if (queue != null) data['queue'] = queue;
     if (albumDetails != null) data['active_album_details'] = albumDetails;
 
-    // 🚀 MASTER DECLARATION: If we are broadcasting state, we mark ourselves as active
+    // MASTER DECLARATION: If we are broadcasting state, we mark ourselves as active
     // UNLESS we are in Follower mode (handled by PlayerProvider)
     if (forceActive || (isPlaying == true)) {
       data['active_device_id'] = _deviceId;
@@ -397,7 +391,6 @@ class RemoteControlService {
     }
 
     data['last_active'] = DateTime.now().toIso8601String();
-    data['last_command'] = '';
 
     await PocketBaseService().updateSession(data);
   }

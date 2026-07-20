@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '../models/playlist_model.dart';
@@ -24,8 +23,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
     _loadPlaylists();
   }
 
-  static const String _storageKey =
-      'user_playlists_v2'; // New key to avoid crash
+  static const String _storageKey = 'user_playlists_v2';
 
   void _loadPlaylists() {
     final String? jsonString = _prefs.getString(_storageKey);
@@ -34,7 +32,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
         final List<dynamic> decoded = json.decode(jsonString);
         state = decoded.map((map) => PlaylistModel.fromMap(map)).toList();
       } catch (e) {
-        print("Error loading playlists: $e");
+        debugPrint("Error loading playlists: $e");
       }
     }
   }
@@ -87,7 +85,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
                 sourceUrl: song.sourceUrl, // SAVE SOURCE URL
                 isrc: song.isrc, // SAVE ISRC
                 duration: song.duration.toInt(), // SAVE DURATION
-                spotifyId: song.spotifyId, // 🚀 SAVE SPOTIFY ID
+                spotifyId: song.spotifyId, // SAVE SPOTIFY ID
               )
             ])
           else
@@ -117,7 +115,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
                       sourceUrl: s.sourceUrl, // SAVE SOURCE URL
                       isrc: s.isrc, // SAVE ISRC
                       duration: s.duration.toInt(), // SAVE DURATION
-                      spotifyId: s.spotifyId, // 🚀 SAVE SPOTIFY ID
+                      spotifyId: s.spotifyId, // SAVE SPOTIFY ID
                     ))
           ])
         else
@@ -159,7 +157,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
     addSongToPlaylist(likedPlaylist.id, song);
   }
 
-  // 🚀 IMPORT SPOTIFY PLAYLIST
+  // IMPORT SPOTIFY PLAYLIST
   /// Imports a Spotify playlist by URL and creates a new local playlist
   /// Returns the new playlist ID on success, null on failure
   Future<String?> importSpotifyPlaylist(
@@ -211,7 +209,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
           artist: track.artist,
           album: track.album,
           artUrl: track.albumArtUrl.isNotEmpty ? track.albumArtUrl : coverUrl,
-          sourceUrl: null, // Will be resolved via YouTube on play
+          sourceUrl: null,
           isrc: track.isrc,
           duration: track.durationSeconds,
         ));
@@ -233,13 +231,13 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
       onStatus?.call("importedTracks", args: {'count': tracks.length});
       return newId;
     } catch (e) {
-      print("Import Error: $e");
+      debugPrint("Import Error: $e");
       onStatus?.call("importFailed", args: {'error': e.toString()});
       return null;
     }
   }
 
-  // 🚀 IMPORT YOUTUBE MUSIC PLAYLIST (via Vercel API)
+  // IMPORT YOUTUBE MUSIC PLAYLIST (via Vercel API)
   static const String _ytMusicApiBase = 'https://ytmusic-api-omega.vercel.app';
 
   Future<String?> importYoutubeMusicPlaylist(
@@ -382,7 +380,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
     }
   }
 
-  // 🚀 M3U PLAYLIST EXPORT/IMPORT
+  // M3U PLAYLIST EXPORT/IMPORT
 
   Future<void> exportM3uPlaylist(String playlistId,
       {Function(String statusKey, {Map<String, dynamic>? args})?
@@ -442,7 +440,7 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
 
       onStatus?.call("exportedM3u");
     } catch (e) {
-      print("Export M3U Error: $e");
+      debugPrint("Export M3U Error: $e");
       onStatus?.call("exportFailed", args: {'error': e.toString()});
     }
   }
@@ -559,13 +557,13 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
         return newId;
       }
     } catch (e) {
-      print("Import M3U Error: $e");
+      debugPrint("Import M3U Error: $e");
       onStatus?.call("importFailed", args: {'error': e.toString()});
     }
     return null;
   }
 
-  // 🚀 SHAREABLE PLAYLISTS (PocketBase)
+  // SHAREABLE PLAYLISTS (PocketBase)
 
   /// Shares a playlist and returns the 6-digit code
   Future<String?> sharePlaylist(String playlistId) async {
@@ -620,14 +618,14 @@ class PlaylistNotifier extends StateNotifier<List<PlaylistModel>> {
           ?.call("importedPlaylistName", args: {'name': localPlaylist.name});
       return newId;
     } catch (e) {
-      print("Import Shared Error: $e");
+      debugPrint("Import Shared Error: $e");
       onStatus?.call("importFailed", args: {'error': e.toString()});
       return null;
     }
   }
 }
 
-// 🚀 Helper to change ID for PlaylistModel
+// Helper to change ID for PlaylistModel
 extension PlaylistModelExt on PlaylistModel {
   PlaylistModel copyWithId(String newId) {
     return PlaylistModel(

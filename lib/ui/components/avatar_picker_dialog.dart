@@ -174,7 +174,8 @@ class _AvatarPickerDialogState extends ConsumerState<AvatarPickerDialog> {
                     onPressed: () async {
                       setState(() => _isLoading = true);
                       await ref.read(profileProvider.notifier).removeAvatar();
-                      if (mounted) Navigator.pop(context);
+                      if (!context.mounted) return;
+                      Navigator.pop(context);
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.redAccent,

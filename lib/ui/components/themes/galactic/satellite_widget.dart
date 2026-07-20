@@ -51,7 +51,7 @@ class _SatellitePainter extends CustomPainter {
     // Move from right to left slowly, with a slight upward drift
     // Starts off-screen right, ends off-screen left
     final double startX = size.width + 100;
-    final double endX = -100;
+    const double endX = -100;
     final double startY = size.height * 0.6;
     final double endY = size.height * 0.2;
 

@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import '../env/env.dart';
 import 'package:http/http.dart' as http;
 
@@ -28,7 +27,7 @@ class AiLyricsService {
       }
 
       final fileSizeMB = (await file.length()) / (1024 * 1024);
-      print("🚀 AI Lyrics: Uploading ${fileSizeMB.toStringAsFixed(2)} MB to VPS API...");
+      debugPrint("AI Lyrics: Uploading ${fileSizeMB.toStringAsFixed(2)} MB to VPS API...");
       onProgress?.call("Uploading ${fileSizeMB.toStringAsFixed(2)} MB to API...");
 
       final request = http.MultipartRequest('POST', Uri.parse(_apiUrl));
@@ -76,7 +75,7 @@ class AiLyricsService {
       }
       return null;
     } catch (e) {
-      print("❌ AI Lyrics API Error: $e");
+      debugPrint("❌ AI Lyrics API Error: $e");
       onProgress?.call("Error: $e");
       return null;
     }

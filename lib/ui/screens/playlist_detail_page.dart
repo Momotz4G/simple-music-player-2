@@ -13,13 +13,13 @@ import '../components/song_card_overlay.dart';
 import '../components/playlist_collage.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../services/bulk_download_service.dart';
-import '../../services/smart_download_service.dart'; // 🚀 IMPORT
-import '../../models/song_metadata.dart'; // 🚀 IMPORT
-import '../../services/spotify_service.dart'; // 🚀 ADDED SPOTIFY SERVICE
-import '../../services/deezer_service.dart'; // 🚀 ADDED DEEZER SERVICE
-import 'dart:io'; // 🚀 IMPORT
-import 'dart:async'; // 🚀 IMPORT
-import '../components/playlist_sharing_dialogs.dart'; // 🚀 IMPORT
+import '../../services/smart_download_service.dart'; // IMPORT
+import '../../models/song_metadata.dart'; // IMPORT
+import '../../services/spotify_service.dart'; // ADDED SPOTIFY SERVICE
+import '../../services/deezer_service.dart'; // ADDED DEEZER SERVICE
+import 'dart:io'; // IMPORT
+import 'dart:async'; // IMPORT
+import '../components/playlist_sharing_dialogs.dart'; // IMPORT
 import '../../utils/layout_engine.dart';
 
 enum PlaylistSortColumn { none, originalIndex, title, artist, dateAdded }
@@ -35,7 +35,7 @@ class PlaylistDetailPage extends ConsumerStatefulWidget {
 
 class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
   String? _loadingSongTitle;
-  Map<String, bool> _downloadStatus = {}; // 🚀 Track local status
+  Map<String, bool> _downloadStatus = {}; // Track local status
   bool _isCheckingDownloads = false;
 
   PlaylistSortColumn _currentSortColumn = PlaylistSortColumn.none;
@@ -46,12 +46,12 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
   @override
   void initState() {
     super.initState();
-    // 🚀 Check status on load
+    // Check status on load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkDownloadStatus();
     });
 
-    // 🚀 LISTEN FOR UPDATES
+    // LISTEN FOR UPDATES
     _completionSubscription =
         BulkDownloadService().songCompleteStream.listen((path) {
       if (mounted) {
@@ -76,7 +76,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     if (mounted) setState(() {});
   }
 
-  // 🚀 Logic to check if files exist locally
+  // Logic to check if files exist locally
   Future<void> _checkDownloadStatus() async {
     if (_isCheckingDownloads) return;
     setState(() => _isCheckingDownloads = true);
@@ -123,7 +123,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
         }
       } catch (_) {}
 
-      // 🚀 Yield to UI thread every 10 items to prevent "not responding"
+      // Yield to UI thread every 10 items to prevent "not responding"
       if (i % 10 == 9) {
         await Future.delayed(Duration.zero);
         if (!mounted) return;
@@ -138,7 +138,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     }
   }
 
-  // 🚀 Resolve Queue to use Local Files (Priority Chain)
+  // Resolve Queue to use Local Files (Priority Chain)
   Future<List<SongModel>> _resolveLocalFiles(
       List<SongModel> songs, String playlistName) async {
     final baseDir =
@@ -151,7 +151,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     for (var i = 0; i < songs.length; i++) {
       var song = songs[i];
 
-      // 🚀 PRIORITY 1 (highest): Use original filePath if it exists on disk
+      // PRIORITY 1 (highest): Use original filePath if it exists on disk
       if (song.filePath != "cloud_stream" &&
           await File(song.filePath).exists()) {
         resolvedSongs.add(song);
@@ -170,14 +170,14 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       final filename = await smartService.generateFilename(meta,
           patternKey: 'playlist_filename_pattern', playlistIndex: i + 1);
 
-      // 🚀 PRIORITY 2: Check for FLAC cache in download folder
+      // PRIORITY 2: Check for FLAC cache in download folder
       final flacPath = "${baseDir.path}/$filename.flac";
       if (await File(flacPath).exists()) {
         resolvedSongs.add(song.copyWith(filePath: flacPath));
         continue;
       }
 
-      // 🚀 PRIORITY 3: Check for .m4a in download folder (existing logic)
+      // PRIORITY 3: Check for .m4a in download folder (existing logic)
       final predictedPath = "${baseDir.path}/$filename.m4a";
       if (await File(predictedPath).exists()) {
         resolvedSongs.add(song.copyWith(filePath: predictedPath));
@@ -195,7 +195,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     setState(() => _loadingSongTitle = song.title);
 
     try {
-      // 🚀 RESOLVE LOCAL FILES BEFORE PLAYING
+      // RESOLVE LOCAL FILES BEFORE PLAYING
       final playlists = ref.read(playlistProvider);
       final playlist = playlists.firstWhere((p) => p.id == widget.playlistId);
 
@@ -207,7 +207,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
           ? resolvedQueue[index]
           : song;
 
-      // 🚀 SPOTIFY METADATA ENRICHMENT FOR NON-LOCAL TRACKS
+      // SPOTIFY METADATA ENRICHMENT FOR NON-LOCAL TRACKS
       // Only enrich if it's a stream (not downloaded) AND if it's from YT Music import (sourceUrl is YT)
       final isStream = !await File(resolvedSong.filePath).exists();
       final fromYtImport = resolvedSong.sourceUrl != null &&
@@ -597,7 +597,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
 
     final library = p.Provider.of<LibraryProvider>(context);
 
-    // 🚀 OPTIMIZATION: Create HashMap for O(1) lookup instead of O(n) firstWhere
+    // OPTIMIZATION: Create HashMap for O(1) lookup instead of O(n) firstWhere
     final Map<String, SongModel> libraryMap = {
       for (var song in library.songs) song.filePath: song
     };
@@ -610,7 +610,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
 
     for (var i = 0; i < playlist.entries.length; i++) {
       var entry = playlist.entries[i];
-      // 🚀 O(1) LOOKUP instead of O(n) firstWhere
+      // O(1) LOOKUP instead of O(n) firstWhere
       final librarySong = libraryMap[entry.path];
 
       if (librarySong != null) {
@@ -621,7 +621,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
           headerArtUrls.add(librarySong.onlineArtUrl);
         }
       } else {
-        // 🚀 FALLBACK: USE METADATA FROM ENTRY (For Spotify/YTMusic imports)
+        // FALLBACK: USE METADATA FROM ENTRY (For Spotify/YTMusic imports)
         final title = entry.title ??
             (entry.path.isNotEmpty
                 ? entry.path.split('/').last
@@ -647,7 +647,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       }
     }
 
-    // 🚀 APPLY SORTING
+    // APPLY SORTING
     if (_currentSortColumn != PlaylistSortColumn.none) {
       rowData.sort((a, b) {
         int result = 0;
@@ -671,10 +671,10 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       });
     }
 
-    // 🚀 CACHE song list once — avoid re-creating per tile
+    // CACHE song list once — avoid re-creating per tile
     final List<SongModel> songList = rowData.map((r) => r.song).toList();
 
-    // 🚀 CALCULATE PLAYLIST STATS
+    // CALCULATE PLAYLIST STATS
     final totalDurationSeconds =
         rowData.fold<double>(0, (sum, item) => sum + item.song.duration);
     final songCount = rowData.length;
@@ -684,10 +684,10 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     final textColor = isDark ? Colors.white : Colors.black;
     final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
-    // 🚀 Use Spotify cover if available
+    // Use Spotify cover if available
     final hasCover = playlist.coverUrl != null && playlist.coverUrl!.isNotEmpty;
 
-    // 🚀 RESPONSIVENESS: Adjust sizes for mobile
+    // RESPONSIVENESS: Adjust sizes for mobile
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
 
@@ -717,7 +717,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                   leading: IconButton(
                     icon: Icon(Icons.arrow_back, color: textColor),
                     onPressed: () {
-                      // 🚀 POP FROM STACK
+                      // POP FROM STACK
                       ref.read(navigationStackProvider.notifier).pop();
                     },
                   ),
@@ -845,9 +845,9 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                     ),
                   ),
                   actions: [
-                    // 🚀 DOWNLOAD ALL BUTTON
+                    // DOWNLOAD ALL BUTTON
                     IconButton(
-                      // 🚀 SHOW CHECKLIST IF ALL DOWNLOADED
+                      // SHOW CHECKLIST IF ALL DOWNLOADED
                       icon: (rowData.isNotEmpty &&
                               rowData.every((r) =>
                                   _downloadStatus[r.song.filePath] == true))
@@ -864,7 +864,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                                 _downloadStatus[r.song.filePath] == true);
 
                         if (allDownloaded) {
-                          // 🚀 DELETE MODE
+                          // DELETE MODE
                           final l10n = AppLocalizations.of(context)!;
                           final messenger = ScaffoldMessenger.of(context);
                           final confirm = await showDialog<bool>(
@@ -895,6 +895,9 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                                 .getAlbumDownloadDirectory(playlist.name);
                             if (baseDir != null && await baseDir.exists()) {
                               await baseDir.delete(recursive: true);
+                              if (mounted) {
+                                ref.read(libraryProvider.notifier).removeFolderByPath(baseDir.path);
+                              }
 
                               // Reset status
                               if (mounted) {
@@ -915,12 +918,12 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                             }
                           }
                         } else {
-                          // 🚀 DOWNLOAD MODE
+                          // DOWNLOAD MODE
                           // Convert RowData back to SongModel list
                           final songsToDownload =
                               rowData.map((r) => r.song).toList();
 
-                          // 🚀 Just trigger logic, service handles checking duplicates
+                          // Just trigger logic, service handles checking duplicates
                           BulkDownloadService()
                               .downloadAlbum(playlist.name, songsToDownload);
 
@@ -930,7 +933,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                             duration: const Duration(seconds: 2),
                           ));
 
-                          // 🚀 Wait and check status (Poor man's refresh, better to listen to service in future)
+                          // Wait and check status (Poor man's refresh, better to listen to service in future)
                           await Future.delayed(const Duration(seconds: 2));
                           _checkDownloadStatus();
                         }
@@ -1098,7 +1101,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                                                   .value ==
                                               data.song.filePath)
                                           ? Center(
-                                              // 🚀 DOWNLOADING SPINNER
+                                              // DOWNLOADING SPINNER
                                               child: SizedBox(
                                                   width: 16,
                                                   height: 16,
@@ -1152,7 +1155,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                                             color: subtitleColor,
                                             fontSize: 12)),
                                   ),
-                                  // 🚀 DOWNLOAD INDICATOR
+                                  // DOWNLOAD INDICATOR
                                   if (_downloadStatus[data.song.filePath] ==
                                       true)
                                     Padding(

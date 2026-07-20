@@ -153,7 +153,7 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
                           const SizedBox(height: 16),
 
                           // File Path Section
-                          // 🚀 POLISH: Mask sensitive URLs and update labels for streaming
+                          // POLISH: Mask sensitive URLs and update labels for streaming
                           _buildSectionHeader(
                               widget.song.filePath.startsWith('http')
                                   ? 'Audio Source'
@@ -169,9 +169,14 @@ class _SongInfoDialogState extends State<SongInfoDialog> {
                             ),
                             child: SelectableText(
                               widget.song.filePath.startsWith('http')
-                                  ? (widget.song.filePath.contains('apm-api') || widget.song.sourceUrl?.contains('apple') == true
-                                      ? 'Apple Music Stream Server'
-                                      : 'Tidal Server Stream')
+                                  ? (widget.song.filePath.contains('googlevideo.com') ||
+                                          widget.song.filePath.contains('youtube') ||
+                                          widget.song.sourceUrl?.contains('youtube') == true
+                                      ? 'YouTube Server Stream'
+                                      : (widget.song.filePath.contains('apm-api') ||
+                                              widget.song.sourceUrl?.contains('apple') == true
+                                          ? 'Apple Music Stream Server'
+                                          : 'Tidal Server Stream'))
                                   : widget.song.filePath,
                               style: TextStyle(
                                 color: subtitleColor,

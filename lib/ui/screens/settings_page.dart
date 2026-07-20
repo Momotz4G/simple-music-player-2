@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import '../../services/metrics_service.dart';
 import '../../services/android_audio_service.dart'; // NEW
 import '../../services/usb_audio_service.dart'; // USB Audio for Android <14
 import '../../services/db_service.dart'; // ADDED
+import '../../services/canvas_service.dart';
 import '../../utils/layout_engine.dart';
 import '../components/smart_art.dart';
 import 'admin_stats_page.dart';
@@ -100,7 +102,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _checkAndroidSupport();
     }
 
-    // 🚀 Check for initial navigation signals
+    // Check for initial navigation signals
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final section = ref.read(settingsNavigationProvider);
@@ -163,13 +165,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _scrollToOffline() {
-    // 🚀 Increased delay to ensure the ListView has fully rendered the target child
+    // Increased delay to ensure the ListView has fully rendered the target child
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!mounted) return;
-      final context = _offlineModeKey.currentContext;
-      if (context != null) {
+      final targetContext = _offlineModeKey.currentContext;
+      if (targetContext != null && targetContext.mounted) {
         Scrollable.ensureVisible(
-          context,
+          targetContext,
           duration: const Duration(milliseconds: 800),
           curve: Curves.fastOutSlowIn,
           alignment: 0.1, // Scroll to near the top of the viewport
@@ -437,7 +439,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (!settings.enableOnlineSearch) disabledCount++;
     if (!settings.enableRemoteControl) disabledCount++;
 
-    // 🚀 LISTEN FOR NAVIGATION SIGNALS (e.g. from MainShell reminder)
+    // LISTEN FOR NAVIGATION SIGNALS (e.g. from MainShell reminder)
     ref.listen<SettingsSection>(settingsNavigationProvider, (prev, next) {
       if (next == SettingsSection.offlineMode) {
         _scrollToOffline();
@@ -1098,7 +1100,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         const SizedBox(height: 30),
 
         // SEARCH ENGINE
-        // TODO: Use AppLocalizations.of(context)!.searchEngine once regenerated
         Container(
           key: useDetailKeys ? _categoryKeys[3] : null,
           child: Text(AppLocalizations.of(context)!.searchEngine.toUpperCase(),
@@ -1162,7 +1163,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 try {
                   String? result = await FolderPicker.pickDirectory();
                   if (result != null) {
-                    // 🚀 Fire-and-forget: don't await so settings UI stays responsive
+                    // Fire-and-forget: don't await so settings UI stays responsive
                     library.setFolder(result);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -1328,7 +1329,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
                       Text(AppLocalizations.of(context)!.unsavedChanges,
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: Colors.amber,
                               fontSize: 12,
                               fontWeight: FontWeight.bold)),
@@ -1372,7 +1373,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
                       Text(AppLocalizations.of(context)!.unsavedChanges,
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: Colors.amber,
                               fontSize: 12,
                               fontWeight: FontWeight.bold)),
@@ -1411,24 +1412,56 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               highlightColor: Colors.transparent,
             ),
             child: DropdownButton<String>(
-              value: settings.audioFormat,
+              value: settings.searchEngine == SearchEngine.appleMusic
+                  ? (['alac', 'm4a', 'flac'].contains(settings.audioFormat)
+                      ? settings.audioFormat
+                      : 'alac')
+                  : settings.searchEngine == SearchEngine.youtube
+                      ? (['mp3', 'm4a', 'aac', 'opus']
+                              .contains(settings.audioFormat)
+                          ? settings.audioFormat
+                          : 'mp3')
+                      : (['mp3', 'm4a', 'aac', 'flac']
+                              .contains(settings.audioFormat)
+                          ? settings.audioFormat
+                          : 'mp3'),
               dropdownColor: Theme.of(context).cardColor,
               style: TextStyle(
                   color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
               underline: Container(),
               icon: Icon(Icons.keyboard_arrow_down_rounded, color: accentColor),
               focusColor: Colors.transparent,
-              items: [
-                DropdownMenuItem(
-                    value: 'mp3',
-                    child: Text(AppLocalizations.of(context)!.standardQuality)),
-                DropdownMenuItem(
-                    value: 'm4a',
-                    child: Text(AppLocalizations.of(context)!.highQuality)),
-                DropdownMenuItem(value: 'aac', child: Text("AAC (Raw)")),
-                const DropdownMenuItem(
-                    value: 'flac', child: Text("FLAC (Lossless)")),
-              ],
+              items: settings.searchEngine == SearchEngine.appleMusic
+                  ? const [
+                      DropdownMenuItem(
+                          value: 'alac', child: Text("ALAC (Apple Lossless)")),
+                      DropdownMenuItem(
+                          value: 'm4a', child: Text("AAC (Standard Quality)")),
+                      DropdownMenuItem(
+                          value: 'flac', child: Text("FLAC (Lossless)")),
+                    ]
+                  : settings.searchEngine == SearchEngine.youtube
+                      ? const [
+                          DropdownMenuItem(
+                              value: 'mp3', child: Text("MP3 (128kbps)")),
+                          DropdownMenuItem(
+                              value: 'm4a', child: Text("M4A/AAC (128kbps)")),
+                          DropdownMenuItem(
+                              value: 'aac', child: Text("AAC (Raw)")),
+                          DropdownMenuItem(
+                              value: 'opus', child: Text("Opus (160kbps, Best)")),
+                        ]
+                      : [
+                          DropdownMenuItem(
+                              value: 'mp3',
+                              child: Text(AppLocalizations.of(context)!.standardQuality)),
+                          DropdownMenuItem(
+                              value: 'm4a',
+                              child: Text(AppLocalizations.of(context)!.highQuality)),
+                          const DropdownMenuItem(value: 'aac', child: Text("AAC (Raw)")),
+                          const DropdownMenuItem(
+                              value: 'flac', child: Text("FLAC (Lossless)")),
+                        ],
               onChanged: (String? newFormat) {
                 if (newFormat != null) {
                   settingsNotifier.setAudioFormat(newFormat);
@@ -1536,7 +1569,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               highlightColor: Colors.transparent,
             ),
             child: DropdownButton<String>(
-              value: settings.streamingQuality,
+              value: (settings.searchEngine == SearchEngine.youtube &&
+                      settings.streamingQuality == 'lossless')
+                  ? 'high'
+                  : settings.streamingQuality,
               dropdownColor: Theme.of(context).cardColor,
               style: TextStyle(
                   color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
@@ -1550,9 +1586,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 DropdownMenuItem(
                     value: 'high',
                     child: Text(AppLocalizations.of(context)!.highQuality)),
-                DropdownMenuItem(
-                    value: 'lossless',
-                    child: Text(AppLocalizations.of(context)!.losslessQuality)),
+                if (settings.searchEngine != SearchEngine.youtube)
+                  DropdownMenuItem(
+                      value: 'lossless',
+                      child: Text(AppLocalizations.of(context)!.losslessQuality)),
               ],
               onChanged: (String? newQuality) {
                 if (newQuality != null) {
@@ -1564,7 +1601,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ),
 
         // Lossless Note (only shown when lossless is selected)
-        if (settings.streamingQuality == 'lossless') ...[
+        if (settings.streamingQuality == 'lossless' && settings.searchEngine != SearchEngine.youtube) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Container(
@@ -1670,6 +1707,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ),
                   ),
                 ),
+                SwitchListTile(
+                  title: Text(AppLocalizations.of(context)!.automaticGainControl,
+                      style: TextStyle(color: textColor)),
+                  subtitle: Text(
+                      AppLocalizations.of(context)!.automaticGainControlDesc,
+                      style: TextStyle(color: subtitleColor)),
+                  value: settings.enableReplayGain,
+                  activeThumbColor: accentColor,
+                  onChanged: (val) =>
+                      settingsNotifier.toggleReplayGain(val),
+                ),
               ],
             );
           },
@@ -1754,14 +1802,54 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
         ),
-        SwitchListTile(
-          title: Text(AppLocalizations.of(context)!.disableCanvas,
+        ListTile(
+          title: Text(AppLocalizations.of(context)!.canvasSourcePreferenceTitle,
               style: TextStyle(color: textColor)),
-          subtitle: Text(AppLocalizations.of(context)!.hideCanvas,
+          subtitle: Text(AppLocalizations.of(context)!.canvasSourcePreferenceSubtitle,
               style: TextStyle(color: subtitleColor)),
-          value: settings.disableCanvas,
-          activeThumbColor: accentColor,
-          onChanged: (val) => settingsNotifier.toggleDisableCanvas(val),
+          trailing: Theme(
+            data: Theme.of(context).copyWith(
+              hoverColor: Colors.transparent,
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+            ),
+            child: DropdownButton<String>(
+              value: settings.canvasSourcePreference,
+              dropdownColor: Theme.of(context).cardColor,
+              style: TextStyle(
+                  color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
+              underline: Container(),
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: accentColor),
+              focusColor: Colors.transparent,
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  settingsNotifier.updateCanvasSourcePreference(newValue);
+                }
+              },
+              items: [
+                DropdownMenuItem(
+                  value: 'apple_first',
+                  child: Text(AppLocalizations.of(context)!.preferAppleMusic),
+                ),
+                DropdownMenuItem(
+                  value: 'spotify_first',
+                  child: Text(AppLocalizations.of(context)!.preferSpotify),
+                ),
+                DropdownMenuItem(
+                  value: 'apple_only',
+                  child: Text(AppLocalizations.of(context)!.onlyAppleMusic),
+                ),
+                DropdownMenuItem(
+                  value: 'spotify_only',
+                  child: Text(AppLocalizations.of(context)!.onlySpotify),
+                ),
+                DropdownMenuItem(
+                  value: 'disabled',
+                  child: Text(AppLocalizations.of(context)!.disabled),
+                ),
+              ],
+            ),
+          ),
         ),
 
         // WASAPI Exclusive Mode (Windows Only)
@@ -1783,37 +1871,45 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             },
           ),
 
-        // Android Bit-Perfect Mode (Android 14+)
+        // Android Bit-Perfect Mode / Custom C++ Bypass
         if (Platform.isAndroid)
-          SwitchListTile(
-            title: Text(AppLocalizations.of(context)!.androidBitPerfect,
-                style: TextStyle(color: textColor)),
-            subtitle: Text(
-              _isAndroidBitPerfectSupported
-                  ? AppLocalizations.of(context)!.bypassSystemMixer
-                  : AppLocalizations.of(context)!.requiresAndroid14,
-              style: TextStyle(color: subtitleColor),
-            ),
-            value: settings.androidBitPerfect,
-            activeThumbColor: accentColor,
-            onChanged: _isAndroidBitPerfectSupported
-                ? (val) {
-                    settingsNotifier.toggleAndroidBitPerfect(val);
-                    if (val) {
+          Consumer(
+            builder: (context, ref, _) {
+              final titleText = AppLocalizations.of(context)!.bitPerfectBypassTitle;
+              final subtitleText = _isAndroidBitPerfectSupported
+                  ? AppLocalizations.of(context)!.bitPerfectBypassSub14
+                  : AppLocalizations.of(context)!.bitPerfectBypassSubLegacy;
+              
+              return SwitchListTile(
+                title: Text(titleText, style: TextStyle(color: textColor)),
+                subtitle: Text(
+                  subtitleText,
+                  style: TextStyle(color: subtitleColor),
+                ),
+                value: settings.androidBitPerfect,
+                activeThumbColor: accentColor,
+                onChanged: (val) async {
+                  final success = await settingsNotifier.toggleAndroidBitPerfect(val);
+                  if (val) {
+                    if (success) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                            content: Text(AppLocalizations.of(context)!
-                                .bitPerfectEnabled)),
+                          content: Text(AppLocalizations.of(context)!.bitPerfectBypassSuccess),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context)!.bitPerfectBypassWarning),
+                          backgroundColor: Colors.red,
+                        ),
                       );
                     }
                   }
-                : null, // Disable if not supported
+                },
+              );
+            },
           ),
-
-        // USB Audio Bypass for Android < 14 (NEW)
-        if (Platform.isAndroid && !_isAndroidBitPerfectSupported)
-          _buildUsbAudioBypassSection(context, settings, settingsNotifier,
-              isDark, textColor, subtitleColor, accentColor),
 
         if (Platform.isWindows) ...[
           // Audio Device Selector
@@ -1892,7 +1988,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
+                  const Icon(Icons.warning_amber_rounded,
                       color: Colors.amber, size: 16),
                   const SizedBox(width: 8),
                   Expanded(
@@ -2197,7 +2293,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         Navigator.pop(context);
                       },
                       child: Text(AppLocalizations.of(context)!.reset,
-                          style: TextStyle(color: Colors.red)),
+                          style: const TextStyle(color: Colors.red)),
                     ),
                   ],
                 ),
@@ -2233,10 +2329,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           subtitle: Text("$_metadataCacheCount items • $_metadataCacheSize",
               style: TextStyle(color: subtitleColor)),
           onTap: () async {
+            ref.read(canvasCacheInvalidationProvider.notifier).state++;
+            await Future.delayed(const Duration(milliseconds: 100));
+
             await DBService().clearMetadataCache();
             SmartArt.clearAllMemoryCaches();
 
-            // 🚀 Trigger full library rescan
+            // Trigger full library rescan
             ref.read(libraryProvider.notifier).refreshLibrary();
 
             if (context.mounted) {
@@ -2369,7 +2468,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         borderRadius: BorderRadius.circular(16)),
                     title: Row(
                       children: [
-                        Icon(Icons.wifi_off_rounded,
+                        const Icon(Icons.wifi_off_rounded,
                             color: Colors.orange, size: 24),
                         const SizedBox(width: 10),
                         Text(
@@ -2448,7 +2547,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.info_outline_rounded,
+                                const Icon(Icons.info_outline_rounded,
                                     color: Colors.blue, size: 16),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -2731,7 +2830,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             child: Text(
               _versionText,
               style: TextStyle(
-                  color: subtitleColor?.withValues(alpha: 0.5), fontSize: 12),
+                  color: subtitleColor.withValues(alpha: 0.5), fontSize: 12),
             ),
           ),
         ),
@@ -2740,149 +2839,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  // ============ USB Audio Bypass for Android <14 ============
 
-  Widget _buildUsbAudioBypassSection(
-    BuildContext context,
-    dynamic settings,
-    dynamic settingsNotifier,
-    bool isDark,
-    Color textColor,
-    Color? subtitleColor,
-    Color accentColor,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-
-        // USB Audio Bypass Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.usb_rounded, color: accentColor, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    AppLocalizations.of(context)!.usbAudioBypassBeta,
-                    style: TextStyle(
-                      color: accentColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Enable/Disable USB Audio (Temporarily Disabled - Coming Soon)
-        SwitchListTile(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  AppLocalizations.of(context)!.usbAudioBypass,
-                  style: TextStyle(color: textColor.withValues(alpha: 0.5)),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: Colors.orange.withValues(alpha: 0.5)),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.comingSoon,
-                  style: const TextStyle(
-                    color: Colors.orange,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          subtitle: Text(
-            AppLocalizations.of(context)!.underDevelopment,
-            style: TextStyle(color: subtitleColor?.withAlpha(128)),
-          ),
-          value: false,
-          activeThumbColor: accentColor,
-          onChanged: null, // Disabled
-        ),
-        const SizedBox(height: 8),
-
-        // DAC List
-        if (_usbDacs.isEmpty && !_loadingUsbDacs)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: subtitleColor, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.noUsbDacDetected,
-                      style: TextStyle(color: subtitleColor, fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          ...List.generate(_usbDacs.length, (index) {
-            final dac = _usbDacs[index];
-
-            return ListTile(
-              leading: Icon(
-                Icons.speaker_rounded,
-                color: accentColor,
-              ),
-              title: Text(
-                dac.deviceName,
-                style: TextStyle(color: textColor),
-              ),
-              subtitle: Text(
-                "VID:${dac.vendorId.toRadixString(16).toUpperCase()} PID:${dac.productId.toRadixString(16).toUpperCase()}",
-                style: TextStyle(color: subtitleColor, fontSize: 11),
-              ),
-              trailing: TextButton(
-                onPressed: () {},
-                child: Text(AppLocalizations.of(context)!.connect,
-                    style: TextStyle(color: accentColor)),
-              ),
-            );
-          }),
-
-        const SizedBox(height: 8),
-      ],
-    );
-  }
 
   // Admin Tap Logic
   int _adminTapCount = 0;
@@ -3136,7 +3093,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               style: TextStyle(color: subtitleColor, fontSize: 11)),
           value: isOfflineMode ? false : value,
           onChanged: onChanged,
-          activeColor: activeColor,
+          activeThumbColor: activeColor,
           dense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         ),

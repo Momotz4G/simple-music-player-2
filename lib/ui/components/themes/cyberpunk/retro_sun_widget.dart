@@ -35,12 +35,12 @@ class _RetroSunPainter extends CustomPainter {
 
     // 2. Draw the Sun Disk with Stripes
     final sunPaint = Paint()
-      ..shader = LinearGradient(
+      ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFFFFD700), // Gold
-          const Color(0xFFFF007F), // Pink
+          Color(0xFFFFD700), // Gold
+          Color(0xFFFF007F), // Pink
         ],
       ).createShader(
           Rect.fromCircle(center: Offset(centerX, centerY), radius: radius));

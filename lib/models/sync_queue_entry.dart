@@ -7,4 +7,4 @@
 /// Validates: Requirements 4.1, 4.4
 library sync_queue_entry;
 
-export 'package:simple_music_player_2/data/schemas.dart' show SyncQueueEntry;
+// export 'package:simple_music_player_2/data/schemas.dart' show SyncQueueEntry;

@@ -25,6 +25,10 @@ class TabletFullPlayer extends ConsumerStatefulWidget {
 }
 
 class _TabletFullPlayerState extends ConsumerState<TabletFullPlayer> {
+  // SEEKBAR DRAG STATE
+  bool _isDraggingSlider = false;
+  double _sliderDragValue = 0.0;
+
   String _formatTime(double seconds) {
     if (seconds.isNaN || seconds.isInfinite) return '0:00';
     final duration = Duration(seconds: seconds.round());
@@ -66,8 +70,10 @@ class _TabletFullPlayerState extends ConsumerState<TabletFullPlayer> {
     double sliderMax = totalDur;
     if (sliderMax < currentPos) sliderMax = currentPos;
     if (sliderMax <= 0) sliderMax = 1.0;
-    double sliderValue = currentPos;
+    
+    double sliderValue = _isDraggingSlider ? _sliderDragValue : currentPos;
     if (sliderValue > sliderMax) sliderValue = sliderMax;
+    if (sliderValue < 0) sliderValue = 0;
 
     final isLandscape = LayoutEngine.isLandscape(context);
 
@@ -318,7 +324,28 @@ class _TabletFullPlayerState extends ConsumerState<TabletFullPlayer> {
         value: sliderValue,
         min: 0.0,
         max: sliderMax,
-        onChanged: (val) => notifier.seek(val),
+        onChangeStart: (val) {
+          setState(() {
+            _isDraggingSlider = true;
+            _sliderDragValue = val;
+          });
+        },
+        onChanged: (val) {
+          setState(() {
+            _sliderDragValue = val;
+          });
+        },
+        onChangeEnd: (val) async {
+          // Wait for the backend engine to fully process the seek
+          // before releasing the slider back to the data stream.
+          // This completely eliminates the "snap back" visual bug.
+          await notifier.seek(val);
+          if (mounted) {
+            setState(() {
+              _isDraggingSlider = false;
+            });
+          }
+        },
       ),
     );
   }

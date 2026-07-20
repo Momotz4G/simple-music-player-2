@@ -52,7 +52,7 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
       if (_discCtrl.text != widget.state.discNumber) _discCtrl.text = widget.state.discNumber;
       if (_genreCtrl.text != widget.state.genre) _genreCtrl.text = widget.state.genre;
       
-      // 🚀 FORCE DIALOGUE ART REPAINT
+      // FORCE DIALOGUE ART REPAINT
       setState(() {});
     }
   }
@@ -89,7 +89,7 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
         child: widget.state.coverUrl != null
             ? Image.network(
                 widget.state.coverUrl!,
-                key: ValueKey(widget.state.coverUrl), // 🚀 Force refresh
+                key: ValueKey(widget.state.coverUrl), // Force refresh
                 fit: BoxFit.cover,
               )
             : (widget.state.selectedSong?.albumArtBytes != null
@@ -104,7 +104,7 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
                         path: widget.state.selectedSong!.filePath,
                         size: 140,
                         borderRadius: 8,
-                        onlineArtUrl: widget.state.coverUrl ?? widget.state.selectedSong!.onlineArtUrl, // 🚀 Updated
+                        onlineArtUrl: widget.state.coverUrl ?? widget.state.selectedSong!.onlineArtUrl, // Updated
                       )
                     : const Icon(Icons.music_note, size: 50, color: Colors.white24))),
       ),
@@ -225,7 +225,7 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
                   ? null
                   : () async {
                       final success = await widget.notifier.saveChanges();
-                      if (!mounted) return;
+                      if (!context.mounted) return;
 
                       if (success) {
                         showCenterNotification(
@@ -298,10 +298,12 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
                   try {
                     final results =
                         await HybridService.searchMetadata(searchCtrl.text);
-                    if (!mounted) return;
+                    if (!ctx.mounted) return;
                     Navigator.pop(ctx);
+                    if (!context.mounted) return;
                     _showResultsDialog(context, results);
                   } catch (e) {
+                    if (!context.mounted) return;
                     showCenterNotification(
                       context,
                       label: "Error",
@@ -318,11 +320,12 @@ class _MetadataEditorPanelState extends State<MetadataEditorPanel> {
              onSubmitted: (val) async {
               try {
                 final results = await HybridService.searchMetadata(val);
-                if (!mounted) return;
+                if (!ctx.mounted) return;
                 Navigator.pop(ctx);
+                if (!context.mounted) return;
                 _showResultsDialog(context, results);
               } catch (e) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 showCenterNotification(
                   context,
                   label: "Error",

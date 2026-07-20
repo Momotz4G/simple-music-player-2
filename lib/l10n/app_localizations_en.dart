@@ -38,6 +38,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountLinkedSuccessfully => 'Account linked successfully!';
 
   @override
+  String get accountTiers => 'Account Tiers';
+
+  @override
   String get achievementsUnlocked => 'Achievements Unlocked';
 
   @override
@@ -54,6 +57,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addFoldersScan => 'Add more folders to scan';
+
+  @override
+  String get addLineToEnd => 'Add to End';
+
+  @override
+  String get addLineToTop => 'Add to Top';
 
   @override
   String get addToFavorite => 'Add to Favorite';
@@ -77,6 +86,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addedToQueue => 'Added to Queue';
+
+  @override
+  String get aiGenerate => 'AI Generate';
+
+  @override
+  String get aiLyricsComplete => 'Complete!';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsGenerationTitle => 'AI Lyrics Generation';
+
+  @override
+  String get aiLyricsInitializing => 'Initializing...';
+
+  @override
+  String get aiLyricsLocalFileMissing => 'Error: Local audio file not found.';
+
+  @override
+  String get aiLyricsParsing => 'Parsing Lyrics...';
+
+  @override
+  String get aiLyricsPolling => 'Getting Lyrics... Please be patient!';
+
+  @override
+  String get aiLyricsReceiving => 'Lyrics Received';
+
+  @override
+  String get aiLyricsStatusOk => 'Status code 200 OK!';
+
+  @override
+  String get aiLyricsSuccess => 'Lyrics generated successful!';
+
+  @override
+  String get aiLyricsUploadFailed => 'Error: Upload failed.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'Upload completed!';
+
+  @override
+  String get aiLyricsUploading => 'Uploading song to server...';
+
+  @override
+  String get aiLyricsVerifying => 'Verify status server...';
+
+  @override
+  String alacDownloadsPerDay(int count) {
+    return '$count ALAC Downloads / day';
+  }
+
+  @override
+  String get alacHighResDownloads => 'ALAC High-Res Downloads';
 
   @override
   String get album => 'Album';
@@ -106,6 +174,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alreadyInLikedSongs => 'ALREADY IN LIKED SONGS';
 
   @override
+  String get alreadyPaidCheckStatus => 'Already Paid? Check Status';
+
+  @override
   String get android14BitPerfect => 'Android 14+ Bit-Perfect';
 
   @override
@@ -123,6 +194,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appearance => 'Appearance';
+
+  @override
+  String get applyBtn => 'Apply';
 
   @override
   String get applyOnRestart => 'Changes will apply on next restart.';
@@ -204,6 +278,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get automatic => 'Automatic';
 
   @override
+  String get automaticGainControl => 'Automatic Gain Control';
+
+  @override
+  String get automaticGainControlDesc =>
+      'Normalize volume across songs so nothing is too loud or too quiet.';
+
+  @override
   String automaticTitleLabel(String title) {
     return 'Automatic: $title';
   }
@@ -215,14 +296,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avatarPickerDesc => 'Select a template or import your own photo';
 
   @override
-  String get beFirstToClaim => 'Be the first to claim the top spot!';
-
-  @override
   String get backgroundCacheFlacStreams => 'Background Cache FLAC Streams';
 
   @override
   String get backgroundCacheFlacStreamsSubtitle =>
       'Silently downloads streamed lossless tracks to your local disk so replay is instantaneous and uses zero data.';
+
+  @override
+  String get beFirstToClaim => 'Be the first to claim the top spot!';
 
   @override
   String get behavioralHeader => 'BEHAVIORAL ACHIEVEMENTS';
@@ -235,6 +316,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bitDepthLabel => 'Bit Depth';
+
+  @override
+  String get bitPerfectBypassSub14 =>
+      'Bypass system mixer using Android 14+ Bit-Perfect API';
+
+  @override
+  String get bitPerfectBypassSubLegacy =>
+      'Bypass system mixer using C++ Audio Engine (Android 13 and below)';
+
+  @override
+  String get bitPerfectBypassSuccess => 'Bit-Perfect playback enabled.';
+
+  @override
+  String get bitPerfectBypassTitle => 'Bit-Perfect / USB Audio Bypass';
+
+  @override
+  String get bitPerfectBypassWarning => 'You must plug your USB DAC first.';
 
   @override
   String get bitPerfectEnabled =>
@@ -270,6 +368,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get cancelAllBtn => 'Cancel All';
+
+  @override
+  String get canvasSourcePreferenceSubtitle =>
+      'Choose where to load background animated loops from';
+
+  @override
+  String get canvasSourcePreferenceTitle => 'Canvas / Animated Artwork Source';
 
   @override
   String get championChampionTooltip =>
@@ -326,6 +434,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseAvatar => 'Choose Avatar';
 
   @override
+  String get chooseFormat => 'Choose your preferred format:';
+
+  @override
   String get chooseYourTitle => 'Choose Your Title';
 
   @override
@@ -333,6 +444,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearAll => 'Clear All';
+
+  @override
+  String get clearAllDesc =>
+      'This will clear the current editor state. It will NOT delete your local files unless you Save afterwards.';
+
+  @override
+  String get clearAllQuestion => 'Clear All?';
+
+  @override
+  String get clearBtn => 'Clear';
 
   @override
   String get clearHistory => 'Clear History';
@@ -354,6 +475,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloud => 'Cloud';
+
+  @override
+  String get cloudStatsAndRankings => 'Cloud Stats & Rankings';
 
   @override
   String get codeCopied => 'Code copied to clipboard!';
@@ -412,7 +536,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contentRegion => 'Content Region';
 
   @override
+  String get continueToSociabuzz => 'Continue to Sociabuzz';
+
+  @override
   String get copyCode => 'Copy Code';
+
+  @override
+  String get copyLink => 'Copy Link';
 
   @override
   String get couldNotDownloadFlac => 'Could not download FLAC.';
@@ -446,6 +576,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get crownedChampionTitlesHeader => 'CROWNED CHAMPION TITLES';
+
+  @override
+  String get currentTierLabel => 'Current';
 
   @override
   String get customDevice => 'Custom Device';
@@ -532,6 +665,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get disableRomanization => 'Disable Romanization';
 
   @override
+  String get disableServicesTitle => 'Disable Services';
+
+  @override
+  String get disabled => 'Disabled';
+
+  @override
   String get disablingSharingWarning =>
       'Disabling sharing will permanently delete the code and the data from the server to save space.';
 
@@ -549,6 +688,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get donate => 'Donate';
+
+  @override
+  String get donateMinToObtain => 'Donate min 10,000 IDR to obtain (Permanent)';
 
   @override
   String get download => 'Download';
@@ -611,6 +753,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dspLabel => 'DSP';
 
   @override
+  String get editLyricsTooltip => 'Edit Lyrics';
+
+  @override
   String get editMetadata => 'Edit Metadata';
 
   @override
@@ -643,6 +788,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enableBarVisualizer => 'Enable Bar Visualizer';
+
+  @override
+  String get enableOfflineModeBtn => 'Enable Offline Mode';
+
+  @override
+  String get enableOfflineModeQuestion => 'Enable Offline Mode?';
+
+  @override
+  String get endLabel => 'End: ';
 
   @override
   String get endlessQueue => 'Endless Queue';
@@ -702,6 +856,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Warning: Exclusive Mode works best when a specific device is selected above, rather than System Default.';
 
   @override
+  String get exclusiveSupporterTitle =>
+      'Exclusive Supporter title and Discord role';
+
+  @override
   String get exclusiveTitles => 'EXCLUSIVE';
 
   @override
@@ -718,7 +876,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expand => 'Expand';
 
   @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
   String get externalFiles => 'External Files';
+
+  @override
+  String get externalLinkDetected => 'External Link Detected';
 
   @override
   String get fadingAtEnd => 'Sleep Timer: Fading out at end of track...';
@@ -742,6 +906,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to generate share code. Check your connection.';
 
   @override
+  String get failedToSave => 'Failed to save lyrics file.';
+
+  @override
   String get failedToSetAvatar => 'Failed to set avatar template';
 
   @override
@@ -749,6 +916,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get favoriteTrack => 'Favorite Track';
+
+  @override
+  String get featureAiLyrics => 'AI Lyrics Generator';
+
+  @override
+  String get featureAiLyricsDesc => 'Automatic synchronized lyrics disabled';
+
+  @override
+  String get featureAiLyricsLongDesc => 'Generate synchronized lyrics via AI';
+
+  @override
+  String get featureCloudSync => 'Cloud Stats Sync';
+
+  @override
+  String get featureCloudSyncDesc => 'Listening stats saved locally only';
+
+  @override
+  String get featureCloudSyncLongDesc =>
+      'Sync listening metrics with PocketBase';
+
+  @override
+  String get featureConnectDevice => 'Connect to a Device';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'Remote control & Listening parties disabled';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'Remote control and listening parties';
+
+  @override
+  String get featureLeaderboard => 'Global Leaderboard';
+
+  @override
+  String get featureLeaderboardDesc => 'Rank updates paused';
+
+  @override
+  String get featureLeaderboardLongDesc => 'Show and update your rank publicly';
+
+  @override
+  String get featureOnlineLyrics => 'Online Lyrics Search';
+
+  @override
+  String get featureOnlineLyricsDesc => 'Only local .lrc/.ttml files';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'Fetch lyrics from LRCLIB/Spotify';
+
+  @override
+  String get featureOnlineSearch => 'Online Search';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube search disabled';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'Spotify and YouTube remote search';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'Background videos disabled';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'Background videos for tracks';
+
+  @override
+  String get fetchingAlacAppleMusic =>
+      'Fetching ALAC Lossless from Apple Music...';
 
   @override
   String get fetchingCanvas => 'Fetching Canvas...';
@@ -893,7 +1130,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get general => 'General';
 
   @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
   String get generatingShareCode => 'Generating share code...';
+
+  @override
+  String get generationFailed => 'Generation Failed';
 
   @override
   String get genre => 'Genre';
@@ -925,6 +1168,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Go to \'Local Library\' to select your music folder.';
 
   @override
+  String get gofileDownloadFailedPrompt =>
+      'Automatic download failed due to strict network or server restrictions.\\n\\nWould you like to open the Gofile download page in your system browser, or copy the link to download manually?';
+
+  @override
   String get goodAfternoon => 'Good Afternoon';
 
   @override
@@ -941,6 +1188,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get grantPermission => 'Grant Permission';
+
+  @override
+  String get guestTier => 'Guest';
 
   @override
   String get hallOfFameHeader => 'HALL OF FAME ACHIEVEMENTS';
@@ -1011,6 +1261,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importFromGallery => 'Import from Gallery';
 
   @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
   String get importFromSpotify => 'Import from Spotify';
 
   @override
@@ -1031,6 +1287,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importLyricsTooltip => 'Import Lyrics';
+
+  @override
+  String get localFile => 'Local File';
+
+  @override
+  String get importLocalFileSubtitle => 'Import .lrc, .ttml, or .txt';
+
+  @override
+  String get searchFromAppleMusic => 'Search from Apple Music';
+
+  @override
+  String get searchAppleMusicSubtitle => 'Downloads LRC/TTML automatically';
+
+  @override
+  String get searchFromSpotifyLyrics => 'Search from Spotify';
+
+  @override
+  String get searchSpotifyLyricsSubtitle =>
+      'Downloads synced lyrics from Spotify';
+
+  @override
+  String get searchFromMusixmatch => 'Search from Musixmatch';
+
+  @override
+  String get searchMusixmatchSubtitle =>
+      'Downloads synced lyrics from Musixmatch';
+
+  @override
+  String get searchingAppleMusic => 'Searching Apple Music...';
+
+  @override
+  String get findingMatches => 'Finding matches...';
+
+  @override
+  String get noResultsAppleMusic => 'No results found on Apple Music.';
+
+  @override
+  String get selectSong => 'Select Song';
+
+  @override
+  String get downloadingLyrics => 'Downloading Lyrics...';
+
+  @override
+  String get fetchingLyricsFromServer => 'Fetching TTML/LRC from server...';
+
+  @override
+  String get failedDownloadAppleMusic =>
+      'Failed to download lyrics. They might not exist on Apple Music.';
+
+  @override
+  String get lyricsImportedSuccess =>
+      'Lyrics imported successfully! Press Save to keep them.';
+
+  @override
+  String get receivedEmptyLyrics => 'Received empty lyrics from server.';
+
+  @override
+  String get downloadingFromSpotify => 'Downloading from Spotify...';
+
+  @override
+  String get fetchingLyrics => 'Fetching lyrics...';
+
+  @override
+  String get lyricsImportedSpotify => 'Lyrics imported from Spotify!';
+
+  @override
+  String get noLyricsSpotify => 'No lyrics found on Spotify.';
+
+  @override
+  String get downloadingFromMusixmatch => 'Downloading from Musixmatch...';
+
+  @override
+  String get lyricsImportedMusixmatch => 'Lyrics imported from Musixmatch!';
+
+  @override
+  String get noLyricsMusixmatch => 'No lyrics found on Musixmatch.';
 
   @override
   String get importSpotifyPlaylist => 'Import Spotify Playlist';
@@ -1064,6 +1396,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inputLabel => 'Input';
 
   @override
+  String get insertAfter => 'Insert After';
+
+  @override
   String get installNow => 'Install Now';
 
   @override
@@ -1074,6 +1409,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invalidCode => 'Invalid Access Code';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
 
   @override
   String get invalidSpotifyUrl => 'Invalid Spotify playlist URL';
@@ -1137,6 +1475,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkAccountDesc => 'Sync and restore your progress with Google';
 
   @override
+  String get linkAccountToUpgrade =>
+      'You need to link your account first to upgrade. Please use the same email on Sociabuzz!';
+
+  @override
+  String get linkCopied => 'Link copied to clipboard!';
+
+  @override
   String listenMinutesTooltip(String minutes) {
     return 'Listen to $minutes minutes of music';
   }
@@ -1180,10 +1525,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get losslessQuality => 'Lossless (Auto)';
 
   @override
+  String get lrcFormat => 'LRC (Standard Synced)';
+
+  @override
+  String get lrcFormatDesc => 'Universal format, works everywhere.';
+
+  @override
   String get lunarNewYear => 'Lunar New Year';
 
   @override
+  String get lyricTextHint => 'Lyric text...';
+
+  @override
+  String get lyricsApplied => 'Lyrics applied to panel!';
+
+  @override
   String get lyricsByLRCLIB => 'Lyrics by LRCLIB';
+
+  @override
+  String get lyricsEditorTitle => 'Lyrics Editor';
 
   @override
   String get lyricsSaveError => 'Failed to save lyrics';
@@ -1196,6 +1556,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get madeForYou => 'Made For You';
+
+  @override
+  String get manageIndividualFeatures => 'Manage individual online features';
 
   @override
   String get manualSearch => 'Manual Search';
@@ -1432,6 +1795,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offline => 'Offline';
 
   @override
+  String get offlineModeActive => 'ACTIVE';
+
+  @override
+  String get offlineModeAllEnabledStatus => 'All Enabled';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'This will completely disable all network communication. The following features will be turned off:';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'Disabled ($count)';
+  }
+
+  @override
+  String get offlineModeEnabledStatus => 'Offline Mode Enabled';
+
+  @override
+  String get offlineModeHeader => 'OFFLINE MODE';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'Network lockdown active. Stats are saved locally.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'Disable all network services and play local library only.';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'Your stats will sync automatically when you turn this off.';
+
+  @override
+  String get offlineModeTitle => 'Offline Mode';
+
+  @override
   String get offlineStatus => 'Offline';
 
   @override
@@ -1441,7 +1840,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get online => 'Online';
 
   @override
+  String get onlineModeRestored => 'Online mode restored. Syncing stats...';
+
+  @override
+  String get onlyAppleMusic => 'Only Apple Music';
+
+  @override
   String get onlyScanSelected => 'Only scan selected folder (Default: On)';
+
+  @override
+  String get onlySpotify => 'Only Spotify';
 
   @override
   String get opacity => 'Opacity';
@@ -1450,6 +1858,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String opacityLabel(int percent) {
     return 'Opacity: $percent%';
   }
+
+  @override
+  String get openBrowser => 'Open Browser';
 
   @override
   String get openProfile => 'Open Profile';
@@ -1468,7 +1879,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'This song already has a local .lrc file.\nDo you want to overwrite it?';
 
   @override
+  String get owned => 'Owned';
+
+  @override
   String get parsingPlaylistData => 'Parsing playlist data...';
+
+  @override
+  String get pasteLyricsHint => 'Paste your lyrics here...';
 
   @override
   String get pathLabel => 'Path';
@@ -1481,12 +1898,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'To edit tags, we need \'All Files Access\' permission. This allows us to modify your music files directly.';
 
   @override
+  String get plainMode => 'Plain';
+
+  @override
   String get play => 'play';
 
   @override
   String playCountLabel(int count) {
     return '$count plays';
   }
+
+  @override
+  String get playFromLine => 'Play from this line';
 
   @override
   String get playNext => 'Play Next';
@@ -1543,7 +1966,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portuguese => 'Portuguese';
 
   @override
+  String get preferAppleMusic => 'Prefer Apple Music';
+
+  @override
+  String get preferSpotify => 'Prefer Spotify';
+
+  @override
   String get preferredOutputFormat => 'Preferred output format for downloads';
+
+  @override
+  String get premiumMemberDesc =>
+      'You have Unlimited ALAC Downloads and Priority Queue access!';
+
+  @override
+  String get premiumMemberTitle => 'Premium Member';
 
   @override
   String get preparingDownload => 'PREPARING DOWNLOAD';
@@ -1564,6 +2000,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get previousTrack => 'Previous Track';
+
+  @override
+  String get priorityVipServerQueue => 'Priority VIP Server Queue';
+
+  @override
+  String get processingOnServer => 'Processing on server...';
 
   @override
   String get profileSettings => 'Profile Settings';
@@ -1587,6 +2029,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get queueIsEmpty => 'Queue is empty';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'Queue $position... please wait';
+  }
 
   @override
   String get queueTooltip => 'Queue';
@@ -1667,10 +2114,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refreshLyricsTooltip => 'Refresh Lyrics';
 
   @override
+  String get registeredLinkedTier => 'Registered (Linked)';
+
+  @override
   String get removeAvatar => 'Remove Current Avatar';
 
   @override
   String get removeFromPlaylist => 'Remove from Playlist';
+
+  @override
+  String get removeLine => 'Remove Line';
 
   @override
   String removedFolder(Object folder) {
@@ -1685,6 +2138,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get repeats => 'repeats';
+
+  @override
+  String get reportTrouble => 'Report trouble';
 
   @override
   String get requiresAndroid14 => 'Requires Android 14+ and USB DAC';
@@ -1760,6 +2216,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get revert => 'Revert';
 
   @override
+  String get romajiHint => 'Romaji / Transliteration (Optional)...';
+
+  @override
   String get russian => 'Russian';
 
   @override
@@ -1784,7 +2243,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveLabel => 'Save';
 
   @override
+  String get saveLocallyBtn => 'Save Locally';
+
+  @override
   String get saveLrcPrompt => 'Save current lyrics next to the audio file?';
+
+  @override
+  String get saveLyricsTitle => 'Save Lyrics';
 
   @override
   String get saveLyricsTooltip => 'Save Lyrics';
@@ -1809,6 +2274,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String savedAsFormat(String format) {
     return 'Saved as $format';
+  }
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'Saved to $extension file successfully!';
   }
 
   @override
@@ -1894,6 +2364,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seeAll => 'See all';
 
   @override
+  String get seeBenefitsBtn => 'See benefits';
+
+  @override
+  String get seePremiumBenefits => 'See Premium Benefits';
+
+  @override
   String get selectDifferentFolder => 'Select Different Folder';
 
   @override
@@ -1924,6 +2400,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setCustomTimer => 'Set Custom Timer';
+
+  @override
+  String get setEndTooltip => 'Set End to Current Position';
+
+  @override
+  String get setStartTooltip => 'Set Start to Current Position';
 
   @override
   String get settings => 'Settings';
@@ -2005,6 +2487,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songLabelUpper => 'SONG';
 
   @override
+  String get songQueueTitle => 'Song Queue';
+
+  @override
   String get songTitleKeyword => 'Song Title or Keyword';
 
   @override
@@ -2041,6 +2526,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get standardDesc => 'MP3 - Smaller files, faster buffering';
 
   @override
+  String get standardDownloadQueue => 'Standard Download Queue';
+
+  @override
   String get standardQuality => 'Standard (MP3)';
 
   @override
@@ -2048,6 +2536,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startBulkProcess => 'Start Bulk Process';
+
+  @override
+  String get startLabel => 'Start: ';
 
   @override
   String get startedDownloadingAll => 'Started downloading all songs...';
@@ -2109,6 +2600,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncThemeAlbumArt => 'Sync Theme with Album Art';
+
+  @override
+  String get syncedMode => 'Synced';
 
   @override
   String get system => 'System';
@@ -2224,6 +2718,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get translationLanguage => 'Translation Language';
 
   @override
+  String get ttmlFormat => 'TTML (High Precision)';
+
+  @override
+  String get ttmlFormatDesc => 'Better for AI generation & detailed sync.';
+
+  @override
   String get turnOffTimer => 'Turn Off Timer';
 
   @override
@@ -2251,6 +2751,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownDevice => 'Unknown Device';
 
   @override
+  String get unlimitedAlacDownloads => 'Unlimited ALAC Downloads';
+
+  @override
   String get unlink => 'Unlink';
 
   @override
@@ -2268,6 +2771,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unlinkFolderClear => 'Unlink folder and clear song list';
+
+  @override
+  String get unlockUnlimitedPremium => 'Unlock Unlimited Premium';
 
   @override
   String unlockedCountLabel(int unlocked, int total) {
@@ -2328,6 +2834,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useMixedColors => 'Use mixed colors (Overrides sync)';
 
   @override
+  String get useSameEmailCheckStatus =>
+      'Use the same email as in-app to automatically check status.';
+
+  @override
+  String usedToday(int used, int max) {
+    return '$used / $max Used Today';
+  }
+
+  @override
   String get verifiedDeveloper => 'Verified Developer';
 
   @override
@@ -2349,6 +2864,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get visualizerStyle => 'Visualizer Style';
+
+  @override
+  String get waitingForServerResponse => 'Waiting for server response...';
 
   @override
   String get wasapiExclusive => 'WASAPI Exclusive Mode';
@@ -2385,310 +2903,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'A new version of yt-dlp is available.';
-
-  @override
-  String get importFromM3u => 'Import from M3U';
-
-  @override
-  String get importFromM3uSubtitle => 'Import an M3U playlist file';
-
-  @override
-  String get exportToM3u => 'Export to M3U';
-
-  @override
-  String get invalidM3uFile => 'Invalid M3U File';
-
-  @override
-  String get generateAiLyrics => 'Generate AI Lyrics';
-
-  @override
-  String get aiLyricsGenerating => 'Generating AI Lyrics...';
-
-  @override
-  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
-
-  @override
-  String get aiLyricsError => 'Error generating AI lyrics.';
-
-  @override
-  String get offlineModeHeader => 'OFFLINE MODE';
-
-  @override
-  String get offlineModeTitle => 'Offline Mode';
-
-  @override
-  String get offlineModeActive => 'ACTIVE';
-
-  @override
-  String get offlineModeEnabledStatus => 'Offline Mode Enabled';
-
-  @override
-  String offlineModeDisabledStatus(int count) {
-    return 'Disabled ($count)';
-  }
-
-  @override
-  String get offlineModeAllEnabledStatus => 'All Enabled';
-
-  @override
-  String get offlineModeLockdownDesc =>
-      'Network lockdown active. Stats are saved locally.';
-
-  @override
-  String get offlineModeMainDesc =>
-      'Disable all network services and play local library only.';
-
-  @override
-  String get enableOfflineModeQuestion => 'Enable Offline Mode?';
-
-  @override
-  String get offlineModeConfirmationDesc =>
-      'This will completely disable all network communication. The following features will be turned off:';
-
-  @override
-  String get offlineModeSyncRestoreNote =>
-      'Your stats will sync automatically when you turn this off.';
-
-  @override
-  String get enableOfflineModeBtn => 'Enable Offline Mode';
-
-  @override
-  String get onlineModeRestored => 'Online mode restored. Syncing stats...';
-
-  @override
-  String get disableServicesTitle => 'Disable Services';
-
-  @override
-  String get manageIndividualFeatures => 'Manage individual online features';
-
-  @override
-  String get featureCloudSync => 'Cloud Stats Sync';
-
-  @override
-  String get featureCloudSyncDesc => 'Listening stats saved locally only';
-
-  @override
-  String get featureCloudSyncLongDesc =>
-      'Sync listening metrics with PocketBase';
-
-  @override
-  String get featureLeaderboard => 'Global Leaderboard';
-
-  @override
-  String get featureLeaderboardDesc => 'Rank updates paused';
-
-  @override
-  String get featureLeaderboardLongDesc => 'Show and update your rank publicly';
-
-  @override
-  String get featureOnlineLyrics => 'Online Lyrics Search';
-
-  @override
-  String get featureOnlineLyricsDesc => 'Only local .lrc/.ttml files';
-
-  @override
-  String get featureOnlineLyricsLongDesc => 'Fetch lyrics from LRCLIB/Spotify';
-
-  @override
-  String get featureAiLyrics => 'AI Lyrics Generator';
-
-  @override
-  String get featureAiLyricsDesc => 'Automatic synchronized lyrics disabled';
-
-  @override
-  String get featureAiLyricsLongDesc => 'Generate synchronized lyrics via AI';
-
-  @override
-  String get featureSpotifyCanvas => 'Spotify Canvas';
-
-  @override
-  String get featureSpotifyCanvasDesc => 'Background videos disabled';
-
-  @override
-  String get featureSpotifyCanvasLongDesc => 'Background videos for tracks';
-
-  @override
-  String get featureOnlineSearch => 'Online Search';
-
-  @override
-  String get featureOnlineSearchDesc => 'Spotify/YouTube search disabled';
-
-  @override
-  String get featureOnlineSearchLongDesc => 'Spotify and YouTube remote search';
-
-  @override
-  String get featureConnectDevice => 'Connect to a Device';
-
-  @override
-  String get featureConnectDeviceDesc =>
-      'Remote control & Listening parties disabled';
-
-  @override
-  String get featureConnectDeviceLongDesc =>
-      'Remote control and listening parties';
-
-  @override
-  String get lyricsEditorTitle => 'Lyrics Editor';
-
-  @override
-  String get clearAllQuestion => 'Clear All?';
-
-  @override
-  String get clearAllDesc =>
-      'This will clear the current editor state. It will NOT delete your local files unless you Save afterwards.';
-
-  @override
-  String get clearBtn => 'Clear';
-
-  @override
-  String get lyricsApplied => 'Lyrics applied to panel!';
-
-  @override
-  String get chooseFormat => 'Choose your preferred format:';
-
-  @override
-  String get lrcFormat => 'LRC (Standard Synced)';
-
-  @override
-  String get lrcFormatDesc => 'Universal format, works everywhere.';
-
-  @override
-  String get ttmlFormat => 'TTML (High Precision)';
-
-  @override
-  String get ttmlFormatDesc => 'Better for AI generation & detailed sync.';
-
-  @override
-  String savedSuccessfully(String extension) {
-    return 'Saved to $extension file successfully!';
-  }
-
-  @override
-  String get failedToSave => 'Failed to save lyrics file.';
-
-  @override
-  String get generationFailed => 'Generation Failed';
-
-  @override
-  String get aiLyricsGenerationTitle => 'AI Lyrics Generation';
-
-  @override
-  String get syncedMode => 'Synced';
-
-  @override
-  String get plainMode => 'Plain';
-
-  @override
-  String get addLineToTop => 'Add to Top';
-
-  @override
-  String get addLineToEnd => 'Add to End';
-
-  @override
-  String get lyricTextHint => 'Lyric text...';
-
-  @override
-  String get insertAfter => 'Insert After';
-
-  @override
-  String get removeLine => 'Remove Line';
-
-  @override
-  String get romajiHint => 'Romaji / Transliteration (Optional)...';
-
-  @override
-  String get startLabel => 'Start: ';
-
-  @override
-  String get setStartTooltip => 'Set Start to Current Position';
-
-  @override
-  String get endLabel => 'End: ';
-
-  @override
-  String get setEndTooltip => 'Set End to Current Position';
-
-  @override
-  String get playFromLine => 'Play from this line';
-
-  @override
-  String get pasteLyricsHint => 'Paste your lyrics here...';
-
-  @override
-  String get applyBtn => 'Apply';
-
-  @override
-  String get saveLocallyBtn => 'Save Locally';
-
-  @override
-  String get editLyricsTooltip => 'Edit Lyrics';
-
-  @override
-  String get saveLyricsTitle => 'Save Lyrics';
-
-  @override
-  String get aiGenerate => 'AI Generate';
-
-  @override
-  String get aiLyricsInitializing => 'Initializing...';
-
-  @override
-  String get aiLyricsUploading => 'Uploading song to server...';
-
-  @override
-  String get aiLyricsUploadFailed => 'Error: Upload failed.';
-
-  @override
-  String get aiLyricsUploadSuccess => 'Upload completed!';
-
-  @override
-  String get aiLyricsVerifying => 'Verify status server...';
-
-  @override
-  String get aiLyricsStatusOk => 'Status code 200 OK!';
-
-  @override
-  String get aiLyricsPolling => 'Getting Lyrics... Please be patient!';
-
-  @override
-  String get aiLyricsReceiving => 'Lyrics Received';
-
-  @override
-  String get aiLyricsParsing => 'Parsing Lyrics...';
-
-  @override
-  String get aiLyricsSuccess => 'Lyrics generated successful!';
-
-  @override
-  String get aiLyricsLocalFileMissing => 'Error: Local audio file not found.';
-
-  @override
-  String get aiLyricsComplete => 'Complete!';
-
-  @override
-  String get externalLinkDetected => 'External Link Detected';
-
-  @override
-  String get gofileDownloadFailedPrompt =>
-      'Automatic download failed due to strict network or server restrictions.\\n\\nWould you like to open the Gofile download page in your system browser, or copy the link to download manually?';
-
-  @override
-  String get copyLink => 'Copy Link';
-
-  @override
-  String get openBrowser => 'Open Browser';
-
-  @override
-  String get linkCopied => 'Link copied to clipboard!';
-
-  @override
-  String get waitingForServerResponse => 'Waiting for server response...';
-
-  @override
-  String queuePositionPleaseWait(int position) {
-    return 'Queue $position... please wait';
-  }
-
-  @override
-  String get processingOnServer => 'Processing on server...';
 }

@@ -48,13 +48,13 @@ class ArtCacheService {
     await init();
     final cachePath = _getCachePath(songPath);
     final file = File(cachePath);
-    // 🚀 Always overwrite to update with newest data
+    // Always overwrite to update with newest data
     await file.writeAsBytes(bytes);
-    // 🚀 Clear any stale .noart flag since we now have art
+    // Clear any stale .noart flag since we now have art
     await clearNoArtFlag(songPath);
   }
 
-  /// 🚀 PERSISTENT NEGATIVE CACHE: Check if a song is known to have no art.
+  /// PERSISTENT NEGATIVE CACHE: Check if a song is known to have no art.
   /// Survives app restarts — prevents hundreds of FFI/disk scans on cold scroll.
   Future<bool> hasNoArtFlag(String songPath) async {
     await init();
@@ -71,7 +71,7 @@ class ArtCacheService {
     return File(flagPath).exists();
   }
 
-  /// 🚀 Mark a song as having no album art (persistent across restarts).
+  /// Mark a song as having no album art (persistent across restarts).
   Future<void> setNoArtFlag(String songPath) async {
     await init();
     final flagPath = _getNoArtFlagPath(songPath);
@@ -80,7 +80,7 @@ class ArtCacheService {
     } catch (_) {}
   }
 
-  /// 🚀 Remove the no-art flag (e.g. when user edits metadata and adds art).
+  /// Remove the no-art flag (e.g. when user edits metadata and adds art).
   Future<void> clearNoArtFlag(String songPath) async {
     await init();
     final flagPath = _getNoArtFlagPath(songPath);

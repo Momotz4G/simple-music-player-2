@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import '../models/song_metadata.dart';
 import '../models/album_model.dart';
 
 import '../models/artist_model.dart';
 import '../services/spotify_service.dart';
 import '../services/deezer_service.dart';
+import '../services/itunes_api_service.dart';
+import '../providers/settings_provider.dart';
 
 class HybridService {
   /// Search for songs. Tries Spotify first, falls back to Deezer.
@@ -31,10 +34,10 @@ class HybridService {
     } catch (e) {
       if (e.toString().contains("rate_limit_429") ||
           e.toString().contains("Auth Failed")) {
-        print("⚠️ Spotify Rate Limit Hit! Falling back to Deezer...");
+        debugPrint("⚠️ Spotify Rate Limit Hit! Falling back to Deezer...");
         return await DeezerService.searchSongs(query, limit: limit);
       }
-      print(
+      debugPrint(
           "HybridService: Spotify Error $e. (Not Rate Limit). Falling back anyway for robustness.");
       return await DeezerService.searchSongs(query, limit: limit);
     }
@@ -45,7 +48,7 @@ class HybridService {
     try {
       return await SpotifyService.searchMetadata(query);
     } catch (e) {
-      print("HybridService: Spotify Metadata Search Error $e. Falling back to Deezer...");
+      debugPrint("HybridService: Spotify Metadata Search Error $e. Falling back to Deezer...");
       final songs = await DeezerService.searchSongs(query, limit: limit);
       return songs.map((s) => {
         'title': s.title,
@@ -70,12 +73,12 @@ class HybridService {
       return await SpotifyService.searchAll(query, limit: limit);
     } catch (e) {
       if (e.toString().contains("rate_limit_429")) {
-        print(
+        debugPrint(
             "HybridService: Spotify SearchAll Rate Limit! Falling back to Deezer...");
         return await DeezerService.searchAll(query, limit: limit);
       }
       // Optional: fallback on other errors too?
-      print("HybridService: Spotify SearchAll Error $e. Falling back...");
+      debugPrint("HybridService: Spotify SearchAll Error $e. Falling back...");
       return await DeezerService.searchAll(query, limit: limit);
     }
   }
@@ -119,7 +122,7 @@ class HybridService {
             id: artistId, name: artistName ?? "Unknown", imageUrl: image);
       }
     } catch (e) {
-      print("HybridService: Spotify Artist Error $e");
+      debugPrint("HybridService: Spotify Artist Error $e");
     }
 
     // Fallback to Deezer Search by Name
@@ -131,9 +134,20 @@ class HybridService {
   }
 
   static Future<List<SongMetadata>> getArtistTopTracks(
-      String artistName) async {
+      String artistName, {SearchEngine? engine}) async {
     // Strategy: Try to find artist ID on Spotify via Name, then get Top Tracks.
     // If fail, search Artist on Deezer, get ID, then Top Tracks.
+
+    if (engine == SearchEngine.appleMusic) {
+      try {
+        final itunesId = await ITunesApiService.getArtistId(artistName);
+        if (itunesId != null) {
+          return await ITunesApiService.getArtistTopTracks(itunesId);
+        }
+      } catch (e) {
+        debugPrint("HybridTopTracks: iTunes failed ($e), falling back to Spotify...");
+      }
+    }
 
     try {
       final spotifyId =
@@ -142,7 +156,7 @@ class HybridService {
         return await SpotifyService.getArtistTopTracks(spotifyId);
       }
     } catch (e) {
-      print("HybridTopTracks: Spotify failed ($e), trying Deezer...");
+      debugPrint("HybridTopTracks: Spotify failed ($e), trying Deezer...");
     }
 
     // Fallback
@@ -186,9 +200,9 @@ class HybridService {
       return await SpotifyService.getAlbumTracks(albumId);
     } catch (e) {
       if (e.toString().contains("rate_limit_429")) {
-        print(
+        debugPrint(
             "Hybrid: Spotify Album Tracks 429. Cannot easily fallback without Album Name. Returning empty.");
-        // TODO: Real solution requires passing Album Name or having a cross-reference.
+        // Note: Real solution requires passing Album Name or having a cross-reference.
       }
     }
     return <SongMetadata>[];
@@ -200,7 +214,7 @@ class HybridService {
     try {
       return await SpotifyService.getAlbumTracks(albumId);
     } catch (e) {
-      print("Hybrid: Spotify Album Tracks Error $e. Searching Deezer for '$albumName'...");
+      debugPrint("Hybrid: Spotify Album Tracks Error $e. Searching Deezer for '$albumName'...");
       // Fallback: Search Album on Deezer by Name + Artist
       final deezerAlbums =
           await DeezerService.searchAlbums("$albumName $artistName");
@@ -211,7 +225,18 @@ class HybridService {
     return <SongMetadata>[];
   }
 
-  static Future<List<AlbumModel>> getArtistAlbums(String artistName) async {
+  static Future<List<AlbumModel>> getArtistAlbums(String artistName, {SearchEngine? engine}) async {
+    if (engine == SearchEngine.appleMusic) {
+      try {
+        final itunesId = await ITunesApiService.getArtistId(artistName);
+        if (itunesId != null) {
+          return await ITunesApiService.getArtistAlbums(itunesId);
+        }
+      } catch (e) {
+        debugPrint("HybridArtistAlbums: iTunes failed ($e), falling back to Spotify...");
+      }
+    }
+
     try {
       final spotifyId =
           await SpotifyService.getArtistId(artistName: artistName);

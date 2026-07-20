@@ -87,7 +87,7 @@ class UserProfileOverlay extends ConsumerWidget {
 
     final avatarUrl = PocketBaseService().getAvatarUrl(userData);
 
-    // 🚀 LIVE STATS: If viewing own profile, use local calculated stats (real-time)
+    // LIVE STATS: If viewing own profile, use local calculated stats (real-time)
     final bool isSelf = _isCurrentUser();
 
     String topArtist;
@@ -106,7 +106,7 @@ class UserProfileOverlay extends ConsumerWidget {
       final profile = ref.watch(profileProvider);
       final calculated = StatsUtils.calculate(statsState);
 
-      // 🚀 MERGE CLOUD AND LOCAL: Take the higher value to handle cross-device inconsistencies
+      // MERGE CLOUD AND LOCAL: Take the higher value to handle cross-device inconsistencies
       final cloudPlays = userData['play_count'] ?? 0;
       final cloudMinutes = userData['total_minutes'] ?? 0;
 
@@ -117,7 +117,7 @@ class UserProfileOverlay extends ConsumerWidget {
           ? calculated.totalMinutes
           : cloudMinutes;
 
-      // 🚀 CLOUD PRIORITIZATION: Prefer official lifetime stats from PocketBase/PC sync
+      // CLOUD PRIORITIZATION: Prefer official lifetime stats from PocketBase/PC sync
       topArtist = profile.cloudTopArtist ??
           userData['top_artist'] as String? ??
           calculated.topArtist?.key ??
@@ -583,7 +583,7 @@ class _AchievementGalleryState extends ConsumerState<_AchievementGallery> {
         .where((t) {
             if (t.name == "Developer") return false;
             
-            // 🚀 COMPETITIVE GUARD: Never force-show "Top X Global" from selected_title
+            // COMPETITIVE GUARD: Never force-show "Top X Global" from selected_title
             // — must be validated by actual rank via isTitleUnlocked
             final isForceEquipped = t.name == widget.selectedTitle && 
                                     t.category != TitleCategory.competitive;

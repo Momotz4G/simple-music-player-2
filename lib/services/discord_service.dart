@@ -12,9 +12,8 @@ class DiscordService {
   DiscordService._internal();
 
   // Use the official fallback ID only if Env is absolutely empty
-  final String _applicationId = Env.discordAppId.isNotEmpty 
-      ? Env.discordAppId 
-      : '1439993466267369492';
+  final String _applicationId =
+      Env.discordAppId.isNotEmpty ? Env.discordAppId : '1439993466267369492';
 
   bool _isConnected = false;
   bool _isConnecting = false;
@@ -22,10 +21,9 @@ class DiscordService {
   // CRITICAL: Static flag to ensure we NEVER initialize the native library twice.
   static bool _isLibraryInitialized = false;
 
-  // Stability Guard: Wait for 6 consecutive sightings (30 seconds)
-  // before attempting to touch the native IPC pipe.
-  static const int _requiredStability = 6;
-  int _stabilityCount = 0; 
+  // Stability Guard: Try connection as soon as Discord process is detected.
+  static const int _requiredStability = 1;
+  int _stabilityCount = 0;
   Timer? _monitorTimer;
 
   // Cache state for auto-sync
@@ -34,14 +32,26 @@ class DiscordService {
   Duration _lastPosition = Duration.zero;
   Duration _lastTotal = Duration.zero;
   String? _lastImageUrl;
+  DateTime _lastPositionTimestamp = DateTime.now();
 
   Timer? _pauseTimer;
   bool _isClearedDueToPause = false;
+  bool _isPausedState = false;
 
   bool _isEnabled = true;
 
+  // Periodic timer to re-sync seek bar every 15 seconds & auto-reconnect if disconnected
+  Timer? _heartbeatTimer;
+
+  // SONG CHANGE DETECTION: Track filePath to detect song transitions
+  String? _currentSongPath;
+  DateTime? _songStartTime;
+
+  bool get isConnected => _isConnected;
+
   /// Entry point: Called once when app starts
   void init() {
+    if (Platform.isAndroid || Platform.isIOS) return;
     DebugLogService().info("[Discord] init() called. Monitoring process...");
     _startMonitor();
   }
@@ -60,8 +70,11 @@ class DiscordService {
   }
 
   void setEnabled(bool enabled) {
+    if (Platform.isAndroid || Platform.isIOS) return;
+    
     _isEnabled = enabled;
     if (!enabled) {
+      _stopHeartbeat();
       clearPresence(clearCache: false);
     } else {
       // Try to re-sync immediately
@@ -70,14 +83,40 @@ class DiscordService {
         _tryConnect(fast: true);
       } else if (_lastSong != null) {
         _performUpdate();
+        _startHeartbeat();
       }
     }
   }
 
-  /// Checks if Discord is running every 5 seconds and tries to connect
+  /// Start a 15-second heartbeat to re-sync seek bar and attempt reconnection if client was opened after app
+  void _startHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (_) async {
+      if (!_isEnabled) return;
+
+      if (!_isConnected) {
+        // Heartbeat update check: if disconnected, try reconnecting if Discord is running
+        if (!_isConnecting && await _isDiscordProcessRunning()) {
+          DebugLogService().info(
+              "[Discord] 💓 Heartbeat: Reconnecting to Discord client...");
+          await _tryConnect(fast: true);
+        }
+      } else if (_lastIsPlaying && !_isClearedDueToPause) {
+        DebugLogService().info("[Discord] 💓 Heartbeat: Re-syncing seek bar");
+        await _performUpdate();
+      }
+    });
+  }
+
+  void _stopHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
+  }
+
+  /// Checks if Discord is running every 3 seconds and tries to connect
   void _startMonitor() {
     _monitorTimer?.cancel();
-    _monitorTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _monitorTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (!_isEnabled) return;
       if (_isConnecting) return;
 
@@ -85,39 +124,29 @@ class DiscordService {
       final isRunning = await _isDiscordProcessRunning();
 
       if (isRunning) {
-        _stabilityCount++;
-        
-        // Ensure we don't spam the connection if we are already connected
-        if (_isConnected) return;
-
-        // --- STABILITY GUARD ---
-        // Only attempt connection after 30 seconds of stable process detection.
-        if (_stabilityCount >= _requiredStability) {
-          DebugLogService().info(
-              "[Discord] Stability achieved ($_stabilityCount). Attempting connection...");
-          await _tryConnect();
-        } else {
-          DebugLogService().info(
-              "[Discord] Found. Stability: ($_stabilityCount/$_requiredStability)");
+        if (!_isConnected) {
+          _stabilityCount++;
+          if (_stabilityCount >= _requiredStability) {
+            DebugLogService().info(
+                "[Discord] Discord process detected. Attempting connection...");
+            await _tryConnect(fast: true);
+          }
         }
       } else {
         // Reset count if Discord is not running
-        if (_stabilityCount > 0) {
-          DebugLogService().info("[Discord] Discord process not found. Resetting stability count.");
-          _stabilityCount = 0;
-        }
-
+        _stabilityCount = 0;
         if (_isConnected) {
           DebugLogService().info(
               "[Discord] Connection lost (Process closed). Marking disconnected.");
           _isConnected = false;
+          _stopHeartbeat();
         }
       }
     });
   }
 
   Future<void> _tryConnect({bool fast = false}) async {
-    if (_isConnecting) return;
+    if (_isConnecting || _isConnected) return;
     _isConnecting = true;
 
     try {
@@ -127,27 +156,31 @@ class DiscordService {
       }
 
       if (!fast) {
-        // Final Buffer: Wait 10 more seconds after stability achieved
-        await Future.delayed(const Duration(seconds: 10));
+        await Future.delayed(const Duration(seconds: 2));
       }
 
-      // Connect 
+      // Connect
       try {
-        rpc.FlutterDiscordRPC.instance.connect();
+        await rpc.FlutterDiscordRPC.instance.connect();
         _isConnected = true;
         DebugLogService().info("[Discord] ✅ Connection Successful");
       } catch (connErr) {
         DebugLogService().error("[Discord] ❌ Handshake Failed: $connErr");
         _isConnected = false;
+        _stabilityCount = 0;
       }
-      
-      if (fast && _isConnected && _lastSong != null) {
-        _performUpdate();
-      } else {
-        DebugLogService().info("[Discord] Handshake successful. Waiting for next player pulse.");
+
+      if (_isConnected) {
+        _startHeartbeat();
+        if (_lastSong != null && !_isClearedDueToPause) {
+          DebugLogService().info(
+              "[Discord] Handshake successful. Immediately syncing presence.");
+          await _performUpdate();
+        }
       }
     } catch (e) {
       _isConnected = false;
+      _stabilityCount = 0;
       DebugLogService().error("[Discord] ⚠️ Global Handshake Error: $e");
     } finally {
       _isConnecting = false;
@@ -159,80 +192,129 @@ class DiscordService {
     try {
       final result = await Process.run('tasklist', []);
       final output = result.stdout.toString().toLowerCase();
-      
+
       return output.contains('discord.exe') ||
-             output.contains('discordcanary.exe') ||
-             output.contains('discordptb.exe');
+          output.contains('discordcanary.exe') ||
+          output.contains('discordptb.exe');
     } catch (e) {
       return false;
     }
   }
 
-  void updatePresence(
+  Future<void> updatePresence(
       SongModel song, bool isPlaying, Duration position, Duration total,
-      {String? imageUrl}) {
+      {String? imageUrl}) async {
+    if (Platform.isAndroid || Platform.isIOS) return;
+
     // Cache latest state
     _lastSong = song;
     _lastIsPlaying = isPlaying;
     _lastPosition = position;
     _lastTotal = total;
     _lastImageUrl = imageUrl;
+    _lastPositionTimestamp = DateTime.now();
+
+    // SONG CHANGE OR MANUAL SEEK: Re-anchor stable _songStartTime
+    final bool isSongChange = song.filePath != _currentSongPath;
+    final now = DateTime.now();
+    final bool isManualSeek = _songStartTime != null &&
+        (position.inSeconds - now.difference(_songStartTime!).inSeconds).abs() > 2;
+
+    if (isSongChange || isManualSeek || _songStartTime == null) {
+      _currentSongPath = song.filePath;
+      _songStartTime = now.subtract(position);
+      if (isSongChange) {
+        DebugLogService().info(
+            "[Discord] 🎵 Song changed: ${song.title} (${total.inSeconds}s)");
+      }
+    }
 
     if (isPlaying) {
       _pauseTimer?.cancel();
       _pauseTimer = null;
       _isClearedDueToPause = false;
+      _isPausedState = false;
+      _startHeartbeat();
+      if (!_isConnected && _isEnabled && !_isConnecting) {
+        _tryConnect(fast: true);
+      } else if (_isConnected && _isEnabled) {
+        _performUpdate();
+      }
     } else {
-      if (_pauseTimer == null && !_isClearedDueToPause) {
-        _pauseTimer = Timer(const Duration(seconds: 30), () {
+      _stopHeartbeat();
+
+      // Guard: Only send paused state once, not on every repeated call
+      if (!_isPausedState && !_isClearedDueToPause) {
+        _isPausedState = true;
+
+        // Immediately show paused state (no seek bar)
+        if (_isConnected && _isEnabled) {
+          _performUpdate();
+        }
+
+        // After 30 seconds of pause, fully clear the Discord status
+        _pauseTimer?.cancel();
+        _pauseTimer = Timer(const Duration(seconds: 30), () async {
           _isClearedDueToPause = true;
+          _isPausedState = false;
           if (_isConnected) {
             try {
-              rpc.FlutterDiscordRPC.instance.clearActivity();
+              await rpc.FlutterDiscordRPC.instance.clearActivity();
+              DebugLogService().info(
+                  "[Discord] ⏹️ Paused for 30s. Status cleared.");
             } catch (e) {
               _isConnected = false;
             }
           }
         });
       }
-    }
-
-    // Only send if connected and enabled, and NOT cleared due to prolonged pause
-    if (_isConnected && _isEnabled && !_isClearedDueToPause) {
-      _performUpdate();
+      // If already paused or cleared, do nothing — prevent endless calls
     }
   }
 
-  void _performUpdate() {
+  Future<void> _performUpdate() async {
     if (!_isEnabled || !_isConnected || _lastSong == null) return;
 
-    // 🔒 OFFLINE MODE: Clear activity instead of updating
+    // OFFLINE MODE: Clear activity instead of updating
     if (PocketBaseService.isOffline) {
       try {
-        rpc.FlutterDiscordRPC.instance.clearActivity();
+        await rpc.FlutterDiscordRPC.instance.clearActivity();
       } catch (e) {
         _isConnected = false;
+        _stopHeartbeat();
       }
       return;
     }
 
     try {
-      final int startTimestamp =
-          DateTime.now().millisecondsSinceEpoch - _lastPosition.inMilliseconds;
+      // Extrapolate current position: if playing, add elapsed time since last cache
+      final now = DateTime.now();
+      final elapsed = _lastIsPlaying
+          ? now.difference(_lastPositionTimestamp)
+          : Duration.zero;
+      final currentPosition = _lastPosition + elapsed;
+      // Clamp to total duration to prevent overshoot
+      final clampedPosition = currentPosition > _lastTotal
+          ? _lastTotal
+          : currentPosition;
+
+      final int startTimestamp = _songStartTime != null
+          ? _songStartTime!.millisecondsSinceEpoch
+          : (now.millisecondsSinceEpoch - clampedPosition.inMilliseconds);
       final int endTimestamp = startTimestamp + _lastTotal.inMilliseconds;
 
       // TRUNCATION GUARD: Discord Max 128 chars
       final String title = _lastSong!.title.length > 128
-          ? _lastSong!.title.substring(0, 125) + "..."
+          ? '${_lastSong!.title.substring(0, 125)}...'
           : _lastSong!.title;
       final String artist = _lastSong!.artist.length > 128
-          ? _lastSong!.artist.substring(0, 125) + "..."
+          ? '${_lastSong!.artist.substring(0, 125)}...'
           : _lastSong!.artist;
       final String album = _lastSong!.album.length > 128
-          ? _lastSong!.album.substring(0, 125) + "..."
+          ? '${_lastSong!.album.substring(0, 125)}...'
           : _lastSong!.album;
 
-      rpc.FlutterDiscordRPC.instance.setActivity(
+      await rpc.FlutterDiscordRPC.instance.setActivity(
         activity: rpc.RPCActivity(
           details: title,
           state: "by $artist${_lastIsPlaying ? "" : " (Paused)"}",
@@ -240,26 +322,46 @@ class DiscordService {
             largeImage: _lastImageUrl ?? 'app_icon',
             largeText: album.isNotEmpty ? album : 'Simple Music Player',
           ),
-          timestamps: rpc.RPCTimestamps(
-            start: _lastIsPlaying ? startTimestamp : null,
-            end: _lastIsPlaying ? endTimestamp : null,
-          ),
+          timestamps: _lastIsPlaying
+              ? rpc.RPCTimestamps(
+                  start: startTimestamp,
+                  end: endTimestamp,
+                )
+              : null,
+          activityType: rpc.ActivityType.listening,
         ),
       );
     } catch (e) {
-      DebugLogService().error("[Discord] ⚠️ Update Failed: $e. Marking disconnected.");
+      DebugLogService()
+          .error("[Discord] ⚠️ Update Failed: $e. Marking disconnected.");
       _isConnected = false;
+      _stopHeartbeat();
     }
   }
 
-  void clearPresence({bool clearCache = true}) {
-    if (clearCache) _lastSong = null;
+  /// Update ONLY the cover art image without touching position or timestamps.
+  /// Used by async art fetch callbacks to prevent seekbar jumps.
+  Future<void> updateImage(String imageUrl) async {
+    _lastImageUrl = imageUrl;
+    if (_isConnected && _isEnabled && _lastSong != null && !_isClearedDueToPause) {
+      await _performUpdate();
+    }
+  }
+
+  Future<void> clearPresence({bool clearCache = true}) async {
+    if (Platform.isAndroid || Platform.isIOS) return;
+    
+    if (clearCache) {
+      _lastSong = null;
+      _currentSongPath = null;
+    }
     _pauseTimer?.cancel();
     _pauseTimer = null;
     _isClearedDueToPause = false;
+    _stopHeartbeat();
     if (!_isConnected) return;
     try {
-      rpc.FlutterDiscordRPC.instance.clearActivity();
+      await rpc.FlutterDiscordRPC.instance.clearActivity();
     } catch (e) {
       _isConnected = false;
     }

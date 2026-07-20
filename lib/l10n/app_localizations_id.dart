@@ -38,6 +38,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get accountLinkedSuccessfully => 'Akun berhasil ditautkan!';
 
   @override
+  String get accountTiers => 'Tingkat Akun';
+
+  @override
   String get achievementsUnlocked => 'Pencapaian Dibuka';
 
   @override
@@ -54,6 +57,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get addFoldersScan => 'Tambahkan lebih banyak folder untuk dipindai';
+
+  @override
+  String get addLineToEnd => 'Tambah ke Akhir';
+
+  @override
+  String get addLineToTop => 'Tambah ke Atas';
 
   @override
   String get addToFavorite => 'Tambah ke Favorit';
@@ -77,6 +86,66 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get addedToQueue => 'Ditambahkan ke Antrean';
+
+  @override
+  String get aiGenerate => 'Buat AI';
+
+  @override
+  String get aiLyricsComplete => 'Selesai!';
+
+  @override
+  String get aiLyricsError => 'Kesalahan saat membuat lirik AI.';
+
+  @override
+  String get aiLyricsFailed => 'Gagal membuat lirik AI.';
+
+  @override
+  String get aiLyricsGenerating => 'Membuat Lirik AI...';
+
+  @override
+  String get aiLyricsGenerationTitle => 'Pembuatan Lirik AI';
+
+  @override
+  String get aiLyricsInitializing => 'Menginisialisasi...';
+
+  @override
+  String get aiLyricsLocalFileMissing =>
+      'Kesalahan: File audio lokal tidak ditemukan.';
+
+  @override
+  String get aiLyricsParsing => 'Mengurai Lirik...';
+
+  @override
+  String get aiLyricsPolling => 'Mendapatkan Lirik... Harap bersabar!';
+
+  @override
+  String get aiLyricsReceiving => 'Lirik Diterima';
+
+  @override
+  String get aiLyricsStatusOk => 'Kode status 200 OK!';
+
+  @override
+  String get aiLyricsSuccess => 'Lirik berhasil dibuat!';
+
+  @override
+  String get aiLyricsUploadFailed => 'Kesalahan: Unggahan gagal.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'Unggahan selesai!';
+
+  @override
+  String get aiLyricsUploading => 'Mengunggah lagu ke server...';
+
+  @override
+  String get aiLyricsVerifying => 'Memverifikasi status server...';
+
+  @override
+  String alacDownloadsPerDay(int count) {
+    return '$count Unduhan ALAC / hari';
+  }
+
+  @override
+  String get alacHighResDownloads => 'Unduhan ALAC Resolusi Tinggi';
 
   @override
   String get album => 'Album';
@@ -106,6 +175,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get alreadyInLikedSongs => 'SUDAH DI LAGU DISUKAI';
 
   @override
+  String get alreadyPaidCheckStatus => 'Sudah Bayar? Cek Status';
+
+  @override
   String get android14BitPerfect => 'Bit-Perfect Android 14+';
 
   @override
@@ -123,6 +195,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appearance => 'Tampilan';
+
+  @override
+  String get applyBtn => 'Terapkan';
 
   @override
   String get applyOnRestart =>
@@ -205,6 +280,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get automatic => 'Otomatis';
 
   @override
+  String get automaticGainControl => 'Kontrol Gain Otomatis';
+
+  @override
+  String get automaticGainControlDesc =>
+      'Menormalkan volume di seluruh lagu agar tidak ada yang terlalu keras atau terlalu sunyi.';
+
+  @override
   String automaticTitleLabel(String title) {
     return 'Otomatis: $title';
   }
@@ -216,15 +298,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get avatarPickerDesc => 'Pilih template atau impor foto Anda sendiri';
 
   @override
-  String get beFirstToClaim => 'Jadilah yang pertama mengklaim posisi teratas!';
-
-  @override
   String get backgroundCacheFlacStreams =>
       'Cache Stream FLAC di Latar Belakang';
 
   @override
   String get backgroundCacheFlacStreamsSubtitle =>
       'Mengunduh trek lossless yang di-streaming secara diam-diam ke disk lokal Anda agar pemutaran ulang instan dan tidak menggunakan data.';
+
+  @override
+  String get beFirstToClaim => 'Jadilah yang pertama mengklaim posisi teratas!';
 
   @override
   String get behavioralHeader => 'PENCAPAIAN PERILAKU';
@@ -237,6 +319,24 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bitDepthLabel => 'Bit Depth';
+
+  @override
+  String get bitPerfectBypassSub14 =>
+      'Bypass mixer sistem menggunakan API Android 14+ Bit-Perfect';
+
+  @override
+  String get bitPerfectBypassSubLegacy =>
+      'Bypass mixer sistem menggunakan C++ Audio Engine (Android 13 ke bawah)';
+
+  @override
+  String get bitPerfectBypassSuccess => 'Pemutaran Bit-Perfect diaktifkan.';
+
+  @override
+  String get bitPerfectBypassTitle => 'Audio Bit-Perfect / Bypass USB';
+
+  @override
+  String get bitPerfectBypassWarning =>
+      'Anda harus mencolokkan USB DAC terlebih dahulu.';
 
   @override
   String get bitPerfectEnabled =>
@@ -272,6 +372,16 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get cancel => 'Batal';
+
+  @override
+  String get cancelAllBtn => 'Batalkan Semua';
+
+  @override
+  String get canvasSourcePreferenceSubtitle =>
+      'Pilih dari mana memuat video latar belakang animasi';
+
+  @override
+  String get canvasSourcePreferenceTitle => 'Sumber Canvas / Sampul Animasi';
 
   @override
   String get championChampionTooltip =>
@@ -330,6 +440,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get chooseAvatar => 'Pilih Avatar';
 
   @override
+  String get chooseFormat => 'Pilih format pilihan Anda:';
+
+  @override
   String get chooseYourTitle => 'Pilih Gelar Anda';
 
   @override
@@ -337,6 +450,16 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get clearAll => 'Hapus Semua';
+
+  @override
+  String get clearAllDesc =>
+      'Ini akan membersihkan status editor saat ini. Ini TIDAK akan menghapus file lokal Anda kecuali Anda menyimpannya setelahnya.';
+
+  @override
+  String get clearAllQuestion => 'Bersihkan Semua?';
+
+  @override
+  String get clearBtn => 'Bersihkan';
 
   @override
   String get clearHistory => 'Hapus Riwayat';
@@ -358,6 +481,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get cloud => 'Cloud';
+
+  @override
+  String get cloudStatsAndRankings => 'Statistik Awan & Peringkat';
 
   @override
   String get codeCopied => 'Kode disalin ke clipboard!';
@@ -416,7 +542,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get contentRegion => 'Wilayah Konten';
 
   @override
+  String get continueToSociabuzz => 'Lanjut ke Sociabuzz';
+
+  @override
   String get copyCode => 'Salin Kode';
+
+  @override
+  String get copyLink => 'Salin Tautan';
 
   @override
   String get couldNotDownloadFlac => 'Tidak dapat mengunduh FLAC.';
@@ -444,6 +576,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get crownedChampionTitlesHeader => 'GELAR JUARA BERMAHKOTA';
+
+  @override
+  String get currentTierLabel => 'Saat Ini';
 
   @override
   String get customDevice => 'Perangkat Kustom';
@@ -530,6 +665,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get disableRomanization => 'Nonaktifkan Romanisasi';
 
   @override
+  String get disableServicesTitle => 'Matikan Layanan';
+
+  @override
+  String get disabled => 'Nonaktif';
+
+  @override
   String get disablingSharingWarning =>
       'Menonaktifkan berbagi akan menghapus kode dan data dari server secara permanen untuk menghemat ruang.';
 
@@ -547,6 +688,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get donate => 'Donasi';
+
+  @override
+  String get donateMinToObtain =>
+      'Donasi min 10.000 IDR untuk mendapatkan (Permanen)';
 
   @override
   String get download => 'Unduh';
@@ -609,6 +754,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get dspLabel => 'DSP';
 
   @override
+  String get editLyricsTooltip => 'Edit Lirik';
+
+  @override
   String get editMetadata => 'Ubah Metadata';
 
   @override
@@ -642,6 +790,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get enableBarVisualizer => 'Aktifkan Bar Visualizer';
+
+  @override
+  String get enableOfflineModeBtn => 'Aktifkan Mode Offline';
+
+  @override
+  String get enableOfflineModeQuestion => 'Aktifkan Mode Offline?';
+
+  @override
+  String get endLabel => 'Selesai: ';
 
   @override
   String get endlessQueue => 'Antrean Tanpa Akhir';
@@ -702,6 +859,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Peringatan: Mode Eksklusif berfungsi paling baik saat perangkat tertentu dipilih di atas, bukan Default Sistem.';
 
   @override
+  String get exclusiveSupporterTitle =>
+      'Gelar Pendukung Eksklusif dan Peran Discord';
+
+  @override
   String get exclusiveTitles => 'EKSKLUSIF';
 
   @override
@@ -718,7 +879,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get expand => 'Perluas';
 
   @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
   String get externalFiles => 'File Eksternal';
+
+  @override
+  String get externalLinkDetected => 'Tautan Eksternal Terdeteksi';
 
   @override
   String get fadingAtEnd => 'Timer Tidur: Memudar di akhir trek...';
@@ -742,6 +909,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Gagal membuat kode berbagi. Periksa koneksi.';
 
   @override
+  String get failedToSave => 'Gagal menyimpan file lirik.';
+
+  @override
   String get failedToSetAvatar => 'Gagal menyetel templat avatar';
 
   @override
@@ -749,6 +919,80 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get favoriteTrack => 'Lagu Favorit';
+
+  @override
+  String get featureAiLyrics => 'Generator Lirik AI';
+
+  @override
+  String get featureAiLyricsDesc => 'Lirik sinkron otomatis dinonaktifkan';
+
+  @override
+  String get featureAiLyricsLongDesc => 'Buat lirik sinkron melalui AI';
+
+  @override
+  String get featureCloudSync => 'Sinkronisasi Statistik Cloud';
+
+  @override
+  String get featureCloudSyncDesc =>
+      'Statistik mendengarkan hanya disimpan secara lokal';
+
+  @override
+  String get featureCloudSyncLongDesc =>
+      'Sinkronkan metrik mendengarkan dengan PocketBase';
+
+  @override
+  String get featureConnectDevice => 'Sambungkan ke Perangkat';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'Remote control & Listening party dinonaktifkan';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'Remote control dan listening party';
+
+  @override
+  String get featureLeaderboard => 'Papan Peringkat Global';
+
+  @override
+  String get featureLeaderboardDesc => 'Pembaruan peringkat dijeda';
+
+  @override
+  String get featureLeaderboardLongDesc =>
+      'Tampilkan dan perbarui peringkat Anda secara publik';
+
+  @override
+  String get featureOnlineLyrics => 'Pencarian Lirik Online';
+
+  @override
+  String get featureOnlineLyricsDesc => 'Hanya file .lrc/.ttml lokal';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'Ambil lirik dari LRCLIB/Spotify';
+
+  @override
+  String get featureOnlineSearch => 'Pencarian Online';
+
+  @override
+  String get featureOnlineSearchDesc =>
+      'Pencarian Spotify/YouTube dinonaktifkan';
+
+  @override
+  String get featureOnlineSearchLongDesc =>
+      'Pencarian jarak jauh Spotify dan YouTube';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'Video latar belakang dinonaktifkan';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'Video latar belakang untuk trek';
+
+  @override
+  String get fetchingAlacAppleMusic =>
+      'Mengambil ALAC Lossless dari Apple Music...';
 
   @override
   String get fetchingCanvas => 'Mengambil Canvas...';
@@ -895,7 +1139,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get general => 'Umum';
 
   @override
+  String get generateAiLyrics => 'Buat Lirik AI';
+
+  @override
   String get generatingShareCode => 'Membuat kode berbagi...';
+
+  @override
+  String get generationFailed => 'Pembuatan Gagal';
 
   @override
   String get genre => 'Genre';
@@ -927,6 +1177,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Buka \'Pustaka Lokal\' untuk memilih folder musik Anda.';
 
   @override
+  String get gofileDownloadFailedPrompt =>
+      'Unduhan otomatis gagal karena pembatasan jaringan atau server yang ketat.\\n\\nApakah Anda ingin membuka halaman unduhan Gofile di browser sistem Anda, atau menyalin tautan untuk mengunduh secara manual?';
+
+  @override
   String get goodAfternoon => 'Selamat Siang';
 
   @override
@@ -943,6 +1197,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get grantPermission => 'Izinkan';
+
+  @override
+  String get guestTier => 'Tamu';
 
   @override
   String get hallOfFameHeader => 'PENCAPAIAN HALL OF FAME';
@@ -1014,6 +1271,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get importFromGallery => 'Impor dari Galeri';
 
   @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
   String get importFromSpotify => 'Impor dari Spotify';
 
   @override
@@ -1034,6 +1297,82 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get importLyricsTooltip => 'Impor Lirik';
+
+  @override
+  String get localFile => 'File Lokal';
+
+  @override
+  String get importLocalFileSubtitle => 'Impor .lrc, .ttml, atau .txt';
+
+  @override
+  String get searchFromAppleMusic => 'Cari dari Apple Music';
+
+  @override
+  String get searchAppleMusicSubtitle => 'Mengunduh LRC/TTML secara otomatis';
+
+  @override
+  String get searchFromSpotifyLyrics => 'Cari dari Spotify';
+
+  @override
+  String get searchSpotifyLyricsSubtitle =>
+      'Mengunduh lirik tersinkronisasi dari Spotify';
+
+  @override
+  String get searchFromMusixmatch => 'Cari dari Musixmatch';
+
+  @override
+  String get searchMusixmatchSubtitle =>
+      'Mengunduh lirik tersinkronisasi dari Musixmatch';
+
+  @override
+  String get searchingAppleMusic => 'Mencari di Apple Music...';
+
+  @override
+  String get findingMatches => 'Mencari kecocokan...';
+
+  @override
+  String get noResultsAppleMusic => 'Tidak ada hasil ditemukan di Apple Music.';
+
+  @override
+  String get selectSong => 'Pilih Lagu';
+
+  @override
+  String get downloadingLyrics => 'Mengunduh Lirik...';
+
+  @override
+  String get fetchingLyricsFromServer => 'Mengambil TTML/LRC dari server...';
+
+  @override
+  String get failedDownloadAppleMusic =>
+      'Gagal mengunduh lirik. Lirik mungkin tidak ada di Apple Music.';
+
+  @override
+  String get lyricsImportedSuccess =>
+      'Lirik berhasil diimpor! Tekan Simpan untuk menyimpannya.';
+
+  @override
+  String get receivedEmptyLyrics => 'Menerima lirik kosong dari server.';
+
+  @override
+  String get downloadingFromSpotify => 'Mengunduh dari Spotify...';
+
+  @override
+  String get fetchingLyrics => 'Mengambil lirik...';
+
+  @override
+  String get lyricsImportedSpotify => 'Lirik diimpor dari Spotify!';
+
+  @override
+  String get noLyricsSpotify => 'Tidak ada lirik ditemukan di Spotify.';
+
+  @override
+  String get downloadingFromMusixmatch => 'Mengunduh dari Musixmatch...';
+
+  @override
+  String get lyricsImportedMusixmatch => 'Lirik diimpor dari Musixmatch!';
+
+  @override
+  String get noLyricsMusixmatch => 'Tidak ada lirik ditemukan di Musixmatch.';
 
   @override
   String get importSpotifyPlaylist => 'Impor Daftar Putar Spotify';
@@ -1068,6 +1407,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get inputLabel => 'Input';
 
   @override
+  String get insertAfter => 'Sisipkan Setelah';
+
+  @override
   String get installNow => 'Pasang Sekarang';
 
   @override
@@ -1078,6 +1420,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get invalidCode => 'Kode Akses Tidak Valid';
+
+  @override
+  String get invalidM3uFile => 'File M3U tidak valid';
 
   @override
   String get invalidSpotifyUrl => 'URL daftar putar Spotify tidak valid';
@@ -1143,6 +1488,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Sinkronkan dan pulihkan progres Anda dengan Google';
 
   @override
+  String get linkAccountToUpgrade =>
+      'Anda harus menautkan akun terlebih dahulu untuk meningkatkan. Harap gunakan email yang sama di Sociabuzz!';
+
+  @override
+  String get linkCopied => 'Tautan disalin ke papan klip!';
+
+  @override
   String listenMinutesTooltip(String minutes) {
     return 'Dengarkan $minutes menit musik';
   }
@@ -1186,10 +1538,25 @@ class AppLocalizationsId extends AppLocalizations {
   String get losslessQuality => 'Lossless (Auto)';
 
   @override
+  String get lrcFormat => 'LRC (Sinkronisasi Standar)';
+
+  @override
+  String get lrcFormatDesc => 'Format universal, berfungsi di mana saja.';
+
+  @override
   String get lunarNewYear => 'Tahun Baru Imlek';
 
   @override
+  String get lyricTextHint => 'Teks lirik...';
+
+  @override
+  String get lyricsApplied => 'Lirik diterapkan ke panel!';
+
+  @override
   String get lyricsByLRCLIB => 'Lirik oleh LRCLIB';
+
+  @override
+  String get lyricsEditorTitle => 'Editor Lirik';
 
   @override
   String get lyricsSaveError => 'Gagal menyimpan lirik';
@@ -1202,6 +1569,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get madeForYou => 'Dibuat Untuk Anda';
+
+  @override
+  String get manageIndividualFeatures => 'Kelola fitur online individu';
 
   @override
   String get manualSearch => 'Pencarian Manual';
@@ -1438,6 +1808,42 @@ class AppLocalizationsId extends AppLocalizations {
   String get offline => 'Offline';
 
   @override
+  String get offlineModeActive => 'AKTIF';
+
+  @override
+  String get offlineModeAllEnabledStatus => 'Semua Diaktifkan';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'Ini akan mematikan semua komunikasi jaringan sepenuhnya. Fitur-fitur berikut akan dimatikan:';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'Dinonaktifkan ($count)';
+  }
+
+  @override
+  String get offlineModeEnabledStatus => 'Mode Offline Diaktifkan';
+
+  @override
+  String get offlineModeHeader => 'MODE OFFLINE';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'Lockdown jaringan aktif. Statistik disimpan secara lokal.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'Matikan semua layanan jaringan dan putar perpustakaan lokal saja.';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'Statistik Anda akan disinkronkan secara otomatis saat Anda mematikan ini.';
+
+  @override
+  String get offlineModeTitle => 'Mode Offline';
+
+  @override
   String get offlineStatus => 'Offline';
 
   @override
@@ -1447,8 +1853,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get online => 'Online';
 
   @override
+  String get onlineModeRestored =>
+      'Mode online dipulihkan. Menyinkronkan statistik...';
+
+  @override
+  String get onlyAppleMusic => 'Hanya Apple Music';
+
+  @override
   String get onlyScanSelected =>
       'Hanya pindai folder yang dipilih (Default: Aktif)';
+
+  @override
+  String get onlySpotify => 'Hanya Spotify';
 
   @override
   String get opacity => 'Opasitas';
@@ -1457,6 +1873,9 @@ class AppLocalizationsId extends AppLocalizations {
   String opacityLabel(int percent) {
     return 'Opasitas: $percent%';
   }
+
+  @override
+  String get openBrowser => 'Buka Browser';
 
   @override
   String get openProfile => 'Buka Profil';
@@ -1475,7 +1894,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Lagu ini sudah memiliki file .lrc lokal.\nApakah Anda ingin menimpanya?';
 
   @override
+  String get owned => 'Dimiliki';
+
+  @override
   String get parsingPlaylistData => 'Mengurai data daftar putar...';
+
+  @override
+  String get pasteLyricsHint => 'Tempel lirik Anda di sini...';
 
   @override
   String get pathLabel => 'Path';
@@ -1488,12 +1913,18 @@ class AppLocalizationsId extends AppLocalizations {
       'Untuk mengedit tag, kami memerlukan izin \'Akses Semua File\'. Ini memungkinkan kami mengubah file musik Anda secara langsung.';
 
   @override
+  String get plainMode => 'Teks Biasa';
+
+  @override
   String get play => 'kali diputar';
 
   @override
   String playCountLabel(int count) {
     return '$count pemutaran';
   }
+
+  @override
+  String get playFromLine => 'Putar dari baris ini';
 
   @override
   String get playNext => 'Putar Berikutnya';
@@ -1551,7 +1982,20 @@ class AppLocalizationsId extends AppLocalizations {
   String get portuguese => 'Portugis';
 
   @override
+  String get preferAppleMusic => 'Utamakan Apple Music';
+
+  @override
+  String get preferSpotify => 'Utamakan Spotify';
+
+  @override
   String get preferredOutputFormat => 'Format output pilihan untuk unduhan';
+
+  @override
+  String get premiumMemberDesc =>
+      'Anda memiliki Unduhan ALAC Tanpa Batas dan akses Antrean Prioritas!';
+
+  @override
+  String get premiumMemberTitle => 'Member Premium';
 
   @override
   String get preparingDownload => 'MENYIAPKAN UNDUHAN';
@@ -1572,6 +2016,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get previousTrack => 'Trek Sebelumnya';
+
+  @override
+  String get priorityVipServerQueue => 'Antrean Server VIP Prioritas';
+
+  @override
+  String get processingOnServer => 'Memproses di server...';
 
   @override
   String get profileSettings => 'Pengaturan Profil';
@@ -1595,6 +2045,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get queueIsEmpty => 'Antrean kosong';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'Antrean $position... mohon tunggu';
+  }
 
   @override
   String get queueTooltip => 'Antrean';
@@ -1675,10 +2130,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get refreshLyricsTooltip => 'Segarkan Lirik';
 
   @override
+  String get registeredLinkedTier => 'Terdaftar (Ditautkan)';
+
+  @override
   String get removeAvatar => 'Hapus Avatar Saat Ini';
 
   @override
   String get removeFromPlaylist => 'Hapus dari Daftar Putar';
+
+  @override
+  String get removeLine => 'Hapus Baris';
 
   @override
   String removedFolder(Object folder) {
@@ -1693,6 +2154,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get repeats => 'pengulangan';
+
+  @override
+  String get reportTrouble => 'Laporkan masalah';
 
   @override
   String get requiresAndroid14 => 'Membutuhkan Android 14+ dan DAC USB';
@@ -1768,6 +2232,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get revert => 'Kembalikan';
 
   @override
+  String get romajiHint => 'Romaji / Transliterasi (Opsional)...';
+
+  @override
   String get russian => 'Rusia';
 
   @override
@@ -1792,7 +2259,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get saveLabel => 'Simpan';
 
   @override
+  String get saveLocallyBtn => 'Simpan Lokal';
+
+  @override
   String get saveLrcPrompt => 'Simpan lirik saat ini di samping file audio?';
+
+  @override
+  String get saveLyricsTitle => 'Simpan Lirik';
 
   @override
   String get saveLyricsTooltip => 'Simpan Lirik';
@@ -1817,6 +2290,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String savedAsFormat(String format) {
     return 'Disimpan sebagai $format';
+  }
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'Berhasil disimpan ke file $extension!';
   }
 
   @override
@@ -1902,6 +2380,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get seeAll => 'Lihat semua';
 
   @override
+  String get seeBenefitsBtn => 'Lihat manfaat';
+
+  @override
+  String get seePremiumBenefits => 'Lihat Keuntungan Premium';
+
+  @override
   String get selectDifferentFolder => 'Pilih Folder Lain';
 
   @override
@@ -1932,6 +2416,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get setCustomTimer => 'Atur Pengatur Waktu Kustom';
+
+  @override
+  String get setEndTooltip => 'Atur Selesai ke Posisi Sekarang';
+
+  @override
+  String get setStartTooltip => 'Atur Mulai ke Posisi Sekarang';
 
   @override
   String get settings => 'Pengaturan';
@@ -2014,6 +2504,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get songLabelUpper => 'LAGU';
 
   @override
+  String get songQueueTitle => 'Antrean Lagu';
+
+  @override
   String get songTitleKeyword => 'Judul Lagu atau Kata Kunci';
 
   @override
@@ -2050,6 +2543,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get standardDesc => 'MP3 - File lebih kecil, buffering lebih cepat';
 
   @override
+  String get standardDownloadQueue => 'Antrean Unduhan Standar';
+
+  @override
   String get standardQuality => 'Standar (MP3)';
 
   @override
@@ -2057,6 +2553,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get startBulkProcess => 'Mulai Proses Massal';
+
+  @override
+  String get startLabel => 'Mulai: ';
 
   @override
   String get startedDownloadingAll => 'Mulai mengunduh semua lagu...';
@@ -2118,6 +2617,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get syncThemeAlbumArt => 'Sinkronkan Tema dengan Sampul Album';
+
+  @override
+  String get syncedMode => 'Sinkron';
 
   @override
   String get system => 'Sistem';
@@ -2232,6 +2734,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get translationLanguage => 'Bahasa Terjemahan';
 
   @override
+  String get ttmlFormat => 'TTML (Presisi Tinggi)';
+
+  @override
+  String get ttmlFormatDesc =>
+      'Lebih baik untuk pembuatan AI & sinkronisasi mendetail.';
+
+  @override
   String get turnOffTimer => 'Matikan Pengatur Waktu';
 
   @override
@@ -2259,6 +2768,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get unknownDevice => 'Perangkat Tidak Dikenal';
 
   @override
+  String get unlimitedAlacDownloads => 'Unduhan ALAC Tanpa Batas';
+
+  @override
   String get unlink => 'Putuskan Tautan';
 
   @override
@@ -2277,6 +2789,9 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get unlinkFolderClear =>
       'Putuskan tautan folder dan hapus daftar lagu';
+
+  @override
+  String get unlockUnlimitedPremium => 'Buka Premium Tanpa Batas';
 
   @override
   String unlockedCountLabel(int unlocked, int total) {
@@ -2339,6 +2854,15 @@ class AppLocalizationsId extends AppLocalizations {
       'Gunakan warna campuran (Mengambil alih sinkronisasi)';
 
   @override
+  String get useSameEmailCheckStatus =>
+      'Gunakan email yang sama dengan di aplikasi untuk memeriksa status secara otomatis.';
+
+  @override
+  String usedToday(int used, int max) {
+    return '$used / $max Digunakan Hari Ini';
+  }
+
+  @override
   String get verifiedDeveloper => 'Pengembang Terverifikasi';
 
   @override
@@ -2360,6 +2884,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get visualizerStyle => 'Gaya Visualizer';
+
+  @override
+  String get waitingForServerResponse => 'Menunggu respons server...';
 
   @override
   String get wasapiExclusive => 'Mode Eksklusif WASAPI';
@@ -2396,317 +2923,4 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlp versi baru telah tersedia.';
-
-  @override
-  String get importFromM3u => 'Import from M3U';
-
-  @override
-  String get importFromM3uSubtitle => 'Import an M3U playlist file';
-
-  @override
-  String get exportToM3u => 'Export to M3U';
-
-  @override
-  String get invalidM3uFile => 'File M3U tidak valid';
-
-  @override
-  String get generateAiLyrics => 'Buat Lirik AI';
-
-  @override
-  String get aiLyricsGenerating => 'Membuat Lirik AI...';
-
-  @override
-  String get aiLyricsFailed => 'Gagal membuat lirik AI.';
-
-  @override
-  String get aiLyricsError => 'Kesalahan saat membuat lirik AI.';
-
-  @override
-  String get offlineModeHeader => 'MODE OFFLINE';
-
-  @override
-  String get offlineModeTitle => 'Mode Offline';
-
-  @override
-  String get offlineModeActive => 'AKTIF';
-
-  @override
-  String get offlineModeEnabledStatus => 'Mode Offline Diaktifkan';
-
-  @override
-  String offlineModeDisabledStatus(int count) {
-    return 'Dinonaktifkan ($count)';
-  }
-
-  @override
-  String get offlineModeAllEnabledStatus => 'Semua Diaktifkan';
-
-  @override
-  String get offlineModeLockdownDesc =>
-      'Lockdown jaringan aktif. Statistik disimpan secara lokal.';
-
-  @override
-  String get offlineModeMainDesc =>
-      'Matikan semua layanan jaringan dan putar perpustakaan lokal saja.';
-
-  @override
-  String get enableOfflineModeQuestion => 'Aktifkan Mode Offline?';
-
-  @override
-  String get offlineModeConfirmationDesc =>
-      'Ini akan mematikan semua komunikasi jaringan sepenuhnya. Fitur-fitur berikut akan dimatikan:';
-
-  @override
-  String get offlineModeSyncRestoreNote =>
-      'Statistik Anda akan disinkronkan secara otomatis saat Anda mematikan ini.';
-
-  @override
-  String get enableOfflineModeBtn => 'Aktifkan Mode Offline';
-
-  @override
-  String get onlineModeRestored =>
-      'Mode online dipulihkan. Menyinkronkan statistik...';
-
-  @override
-  String get disableServicesTitle => 'Matikan Layanan';
-
-  @override
-  String get manageIndividualFeatures => 'Kelola fitur online individu';
-
-  @override
-  String get featureCloudSync => 'Sinkronisasi Statistik Cloud';
-
-  @override
-  String get featureCloudSyncDesc =>
-      'Statistik mendengarkan hanya disimpan secara lokal';
-
-  @override
-  String get featureCloudSyncLongDesc =>
-      'Sinkronkan metrik mendengarkan dengan PocketBase';
-
-  @override
-  String get featureLeaderboard => 'Papan Peringkat Global';
-
-  @override
-  String get featureLeaderboardDesc => 'Pembaruan peringkat dijeda';
-
-  @override
-  String get featureLeaderboardLongDesc =>
-      'Tampilkan dan perbarui peringkat Anda secara publik';
-
-  @override
-  String get featureOnlineLyrics => 'Pencarian Lirik Online';
-
-  @override
-  String get featureOnlineLyricsDesc => 'Hanya file .lrc/.ttml lokal';
-
-  @override
-  String get featureOnlineLyricsLongDesc => 'Ambil lirik dari LRCLIB/Spotify';
-
-  @override
-  String get featureAiLyrics => 'Generator Lirik AI';
-
-  @override
-  String get featureAiLyricsDesc => 'Lirik sinkron otomatis dinonaktifkan';
-
-  @override
-  String get featureAiLyricsLongDesc => 'Buat lirik sinkron melalui AI';
-
-  @override
-  String get featureSpotifyCanvas => 'Spotify Canvas';
-
-  @override
-  String get featureSpotifyCanvasDesc => 'Video latar belakang dinonaktifkan';
-
-  @override
-  String get featureSpotifyCanvasLongDesc => 'Video latar belakang untuk trek';
-
-  @override
-  String get featureOnlineSearch => 'Pencarian Online';
-
-  @override
-  String get featureOnlineSearchDesc =>
-      'Pencarian Spotify/YouTube dinonaktifkan';
-
-  @override
-  String get featureOnlineSearchLongDesc =>
-      'Pencarian jarak jauh Spotify dan YouTube';
-
-  @override
-  String get featureConnectDevice => 'Sambungkan ke Perangkat';
-
-  @override
-  String get featureConnectDeviceDesc =>
-      'Remote control & Listening party dinonaktifkan';
-
-  @override
-  String get featureConnectDeviceLongDesc =>
-      'Remote control dan listening party';
-
-  @override
-  String get lyricsEditorTitle => 'Editor Lirik';
-
-  @override
-  String get clearAllQuestion => 'Bersihkan Semua?';
-
-  @override
-  String get clearAllDesc =>
-      'Ini akan membersihkan status editor saat ini. Ini TIDAK akan menghapus file lokal Anda kecuali Anda menyimpannya setelahnya.';
-
-  @override
-  String get clearBtn => 'Bersihkan';
-
-  @override
-  String get lyricsApplied => 'Lirik diterapkan ke panel!';
-
-  @override
-  String get chooseFormat => 'Pilih format pilihan Anda:';
-
-  @override
-  String get lrcFormat => 'LRC (Sinkronisasi Standar)';
-
-  @override
-  String get lrcFormatDesc => 'Format universal, berfungsi di mana saja.';
-
-  @override
-  String get ttmlFormat => 'TTML (Presisi Tinggi)';
-
-  @override
-  String get ttmlFormatDesc =>
-      'Lebih baik untuk pembuatan AI & sinkronisasi mendetail.';
-
-  @override
-  String savedSuccessfully(String extension) {
-    return 'Berhasil disimpan ke file $extension!';
-  }
-
-  @override
-  String get failedToSave => 'Gagal menyimpan file lirik.';
-
-  @override
-  String get generationFailed => 'Pembuatan Gagal';
-
-  @override
-  String get aiLyricsGenerationTitle => 'Pembuatan Lirik AI';
-
-  @override
-  String get syncedMode => 'Sinkron';
-
-  @override
-  String get plainMode => 'Teks Biasa';
-
-  @override
-  String get addLineToTop => 'Tambah ke Atas';
-
-  @override
-  String get addLineToEnd => 'Tambah ke Akhir';
-
-  @override
-  String get lyricTextHint => 'Teks lirik...';
-
-  @override
-  String get insertAfter => 'Sisipkan Setelah';
-
-  @override
-  String get removeLine => 'Hapus Baris';
-
-  @override
-  String get romajiHint => 'Romaji / Transliterasi (Opsional)...';
-
-  @override
-  String get startLabel => 'Mulai: ';
-
-  @override
-  String get setStartTooltip => 'Atur Mulai ke Posisi Sekarang';
-
-  @override
-  String get endLabel => 'Selesai: ';
-
-  @override
-  String get setEndTooltip => 'Atur Selesai ke Posisi Sekarang';
-
-  @override
-  String get playFromLine => 'Putar dari baris ini';
-
-  @override
-  String get pasteLyricsHint => 'Tempel lirik Anda di sini...';
-
-  @override
-  String get applyBtn => 'Terapkan';
-
-  @override
-  String get saveLocallyBtn => 'Simpan Lokal';
-
-  @override
-  String get editLyricsTooltip => 'Edit Lirik';
-
-  @override
-  String get saveLyricsTitle => 'Simpan Lirik';
-
-  @override
-  String get aiGenerate => 'Buat AI';
-
-  @override
-  String get aiLyricsInitializing => 'Menginisialisasi...';
-
-  @override
-  String get aiLyricsUploading => 'Mengunggah lagu ke server...';
-
-  @override
-  String get aiLyricsUploadFailed => 'Kesalahan: Unggahan gagal.';
-
-  @override
-  String get aiLyricsUploadSuccess => 'Unggahan selesai!';
-
-  @override
-  String get aiLyricsVerifying => 'Memverifikasi status server...';
-
-  @override
-  String get aiLyricsStatusOk => 'Kode status 200 OK!';
-
-  @override
-  String get aiLyricsPolling => 'Mendapatkan Lirik... Harap bersabar!';
-
-  @override
-  String get aiLyricsReceiving => 'Lirik Diterima';
-
-  @override
-  String get aiLyricsParsing => 'Mengurai Lirik...';
-
-  @override
-  String get aiLyricsSuccess => 'Lirik berhasil dibuat!';
-
-  @override
-  String get aiLyricsLocalFileMissing =>
-      'Kesalahan: File audio lokal tidak ditemukan.';
-
-  @override
-  String get aiLyricsComplete => 'Selesai!';
-
-  @override
-  String get externalLinkDetected => 'Tautan Eksternal Terdeteksi';
-
-  @override
-  String get gofileDownloadFailedPrompt =>
-      'Unduhan otomatis gagal karena pembatasan jaringan atau server yang ketat.\\n\\nApakah Anda ingin membuka halaman unduhan Gofile di browser sistem Anda, atau menyalin tautan untuk mengunduh secara manual?';
-
-  @override
-  String get copyLink => 'Salin Tautan';
-
-  @override
-  String get openBrowser => 'Buka Browser';
-
-  @override
-  String get linkCopied => 'Tautan disalin ke papan klip!';
-
-  @override
-  String get waitingForServerResponse => 'Menunggu respons server...';
-
-  @override
-  String queuePositionPleaseWait(int position) {
-    return 'Antrean $position... mohon tunggu';
-  }
-
-  @override
-  String get processingOnServer => 'Memproses di server...';
 }

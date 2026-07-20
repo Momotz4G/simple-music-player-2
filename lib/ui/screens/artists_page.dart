@@ -7,7 +7,7 @@ import '../../services/spotify_service.dart';
 import '../../services/deezer_service.dart';
 import '../../services/db_service.dart';
 import '../../l10n/app_localizations.dart';
-import '../../utils/layout_engine.dart';
+
 
 class ArtistsPage extends ConsumerWidget {
   const ArtistsPage({super.key});
@@ -49,7 +49,7 @@ class ArtistsPage extends ConsumerWidget {
     }
 
     // 3. The Grid
-    // 🚀 Note: Sorting is now handled synchronously for instant feedback
+    // Note: Sorting is now handled synchronously for instant feedback
     final artists = groupedArtists.keys.toList();
 
     return Padding(
@@ -150,7 +150,7 @@ class _ArtistAvatarState extends ConsumerState<ArtistAvatar> {
 
   @override
   Widget build(BuildContext context) {
-    // 🚀 Check Spotify then Deezer for artist art if local is missing
+    // Check Spotify then Deezer for artist art if local is missing
     final spotifyArt = ref.watch(spotifyArtistArtProvider(widget.artistName));
     final deezerArt = ref.watch(deezerArtistArtProvider(widget.artistName));
 

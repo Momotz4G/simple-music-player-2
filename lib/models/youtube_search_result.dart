@@ -2,8 +2,8 @@ class YoutubeSearchResult {
   final String title;
   final String artist;
   final String duration;
-  final String url; // The confirmed YouTube URL for download
-  final String thumbnailUrl; // URL for the thumbnail image
+  final String url;
+  final String thumbnailUrl;
 
   YoutubeSearchResult({
     required this.title,

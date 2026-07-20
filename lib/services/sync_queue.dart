@@ -2,7 +2,7 @@ import '../models/stat_delta.dart';
 
 /// In-memory queue for offline stat changes.
 ///
-/// TODO: Switch back to Isar-based persistence once build_runner
+/// Note: Switch back to Isar-based persistence once build_runner
 /// regenerates schemas.g.dart with SyncQueueEntry support.
 ///
 /// Validates: Requirements 4.1, 4.2, 4.3, 4.4

@@ -24,7 +24,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
       final newRemaining = state.remaining - const Duration(seconds: 1);
 
       if (newRemaining.inSeconds <= 0) {
-        // --- TIME'S UP LOGIC ---
+        // TIME'S UP LOGIC
 
         // 1. Mark player as sleep pending so it will fade out at end of track
         _ref.read(playerProvider.notifier).setSleepPending(true);

@@ -67,7 +67,7 @@ class _SantaPainter extends CustomPainter {
     // Sine wave bobbing flight path
     // The sleigh bobs up and down smoothly based on horizontal position
     final double flyHeight = h * 0.3; // Flies roughly at upper 30% of screen
-    final double bobAmount = 30.0;
+    const double bobAmount = 30.0;
     // Faster sine wave based on X so it bobs multiple times across the screen
     final double currentY =
         flyHeight + sin(animationValue * pi * 8) * bobAmount;
@@ -78,10 +78,10 @@ class _SantaPainter extends CustomPainter {
     // Common Colors
     final isDark = brightness == Brightness.dark;
     final Color sleighRed = Colors.red.shade700;
-    final Color sleighGold = Colors.amber;
+    const Color sleighGold = Colors.amber;
     final Color reindeerBrown =
         isDark ? const Color(0xFFC48A5A) : const Color(0xFF8B5A2B);
-    final Color darkBrown = const Color(0xFF5C4033);
+    const Color darkBrown = Color(0xFF5C4033);
     final Color reinsColor = isDark
         ? Colors.redAccent.withValues(alpha: 0.5)
         : Colors.red.withValues(alpha: 0.8);
@@ -91,7 +91,7 @@ class _SantaPainter extends CustomPainter {
     canvas.translate(currentX, currentY);
 
     // The scale of the entire team
-    final double scale = 0.5; // Roughly half scale for elegance
+    const double scale = 0.5; // Roughly half scale for elegance
     canvas.scale(scale);
 
     // DRAW REINDEER
@@ -127,8 +127,8 @@ class _SantaPainter extends CustomPainter {
       // - Back legs angle
       final double angleB = -sin(gallopCycle) * 0.8;
 
-      final Offset frontHip = const Offset(-20, 10);
-      final Offset backHip = const Offset(20, 10);
+      const Offset frontHip = Offset(-20, 10);
+      const Offset backHip = Offset(20, 10);
 
       // Back legs
       canvas.drawLine(
@@ -213,7 +213,7 @@ class _SantaPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
-    final Offset sleighReinsAttach = const Offset(0, 10);
+    const Offset sleighReinsAttach = Offset(0, 10);
     // Draw wavy lines connecting them
     Path reinsPath = Path()..moveTo(sleighReinsAttach.dx, sleighReinsAttach.dy);
     for (var pos in reindeerPositions) {
@@ -246,7 +246,7 @@ class _SantaPainter extends CustomPainter {
     canvas.drawLine(const Offset(-60, 45), const Offset(40, 45), runnerPaint);
     // Curl at the front (left side)
     canvas.drawArc(
-        Rect.fromLTWH(-75, 25, 30, 40), pi / 2, pi, false, runnerPaint);
+        const Rect.fromLTWH(-75, 25, 30, 40), pi / 2, pi, false, runnerPaint);
 
     // Ski supports
     canvas.drawLine(const Offset(-40, 25), const Offset(-40, 45), runnerPaint);

@@ -13,6 +13,10 @@
 #include <windows.h>
 #endif
 
+#ifdef __ANDROID__
+#include "mediacodec_decoder.h"
+#endif
+
 // WMF custom backend table — used by both decoder init calls
 #ifdef _WIN32
 static ma_decoding_backend_vtable* g_pCustomBackends[] = { &g_ma_vtable_wmf };
@@ -31,10 +35,28 @@ typedef struct {
     bool is_completed;
     bool has_device;      // true after a file has been successfully loaded
     bool has_context;     // true if context was explicitly initialized
+    bool has_raw_sink;    // true while raw-sink decoder is active (no ma_device)
     bool bit_perfect;     // true = bypass all DSP, use native format for WASAPI exclusive
     float volume;
     char custom_device_id[256]; // Store explicit Windows MMDevice string
     ma_mutex engine_lock;
+
+    // Raw-sink negotiated format (used by Engine_GetRawFormat).
+    int raw_sample_rate;
+    int raw_channels;
+    int raw_bit_depth;
+
+    void* custom_user_data;
+    EngineReadCallback on_read;
+    EngineSeekCallback on_seek;
+    EngineGetSizeCallback on_get_size;
+
+#ifdef __ANDROID__
+    // When non-NULL the raw sink is decoding via Android NDK MediaCodec
+    // instead of miniaudio (used for .m4a / .mp4 / .aac files where
+    // miniaudio has no AAC/ALAC decoder).
+    mc_decoder_t *mc_dec;
+#endif
 } AudioEngine;
 
 static void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
@@ -167,6 +189,20 @@ ENGINE_API void Engine_Dispose(AudioHandle handle) {
         ma_device_uninit(&pEngine->device);
         ma_decoder_uninit(&pEngine->decoder);
         pEngine->has_device = false;
+    }
+
+    if (pEngine->has_raw_sink) {
+#ifdef __ANDROID__
+        if (pEngine->mc_dec != NULL) {
+            mc_decoder_close(pEngine->mc_dec);
+            pEngine->mc_dec = NULL;
+        } else {
+            ma_decoder_uninit(&pEngine->decoder);
+        }
+#else
+        ma_decoder_uninit(&pEngine->decoder);
+#endif
+        pEngine->has_raw_sink = false;
     }
     
     if (pEngine->has_context) {
@@ -513,9 +549,22 @@ ENGINE_API bool Engine_PlayFile(AudioHandle handle, const char* filepath, bool b
 }
 
 static void reinit_band(AudioEngine* pEngine, int index, float freq, float gain, float q) {
-    if (pEngine == NULL || !pEngine->has_device) return;
-    
-    double sr = (double)pEngine->device.sampleRate;
+    if (pEngine == NULL) return;
+    if (!pEngine->has_device && !pEngine->has_raw_sink) return;
+
+    // Pull sample rate + channels from whichever path is active so the EQ
+    // stays consistent for both Windows (device) and Android (raw sink).
+    double sr;
+    int channels;
+    if (pEngine->has_device) {
+        sr = (double)pEngine->device.sampleRate;
+        channels = (int)pEngine->device.playback.channels;
+    } else {
+        sr = (double)pEngine->raw_sample_rate;
+        channels = pEngine->raw_channels;
+    }
+    if (sr <= 0.0 || channels <= 0) return;
+
     double f0 = (double)freq;
     
     // Safety: Frequency must be less than Nyquist frequency (sr/2)
@@ -551,7 +600,7 @@ static void reinit_band(AudioEngine* pEngine, int index, float freq, float gain,
     
     ma_biquad_config config = ma_biquad_config_init(
         ma_format_f32,
-        pEngine->device.playback.channels,
+        channels,
         fb0, fb1, fb2,
         1.0f, fa1, fa2
     );
@@ -605,30 +654,54 @@ ENGINE_API void Engine_SetVolume(AudioHandle handle, float volume) {
 ENGINE_API float Engine_GetPosition(AudioHandle handle) {
     AudioEngine* pEngine = (AudioEngine*)handle;
     if (pEngine == NULL) return 0.0f;
+    if (!pEngine->has_device && !pEngine->has_raw_sink) return 0.0f;
+#ifdef __ANDROID__
+    if (pEngine->mc_dec != NULL) {
+        return mc_decoder_get_position(pEngine->mc_dec);
+    }
+#endif
     ma_uint64 pos = 0;
     ma_mutex_lock(&pEngine->engine_lock);
     ma_decoder_get_cursor_in_pcm_frames(&pEngine->decoder, &pos);
-    float position = (float)pos / (float)pEngine->decoder.outputSampleRate;
+    float position = pEngine->decoder.outputSampleRate > 0
+        ? (float)pos / (float)pEngine->decoder.outputSampleRate
+        : 0.0f;
     ma_mutex_unlock(&pEngine->engine_lock);
     return position;
 }
 
 ENGINE_API void Engine_SetPosition(AudioHandle handle, float position_seconds) {
     AudioEngine* pEngine = (AudioEngine*)handle;
-    if (pEngine != NULL) {
-        ma_mutex_lock(&pEngine->engine_lock);
-        ma_decoder_seek_to_pcm_frame(&pEngine->decoder, (ma_uint64)(position_seconds * pEngine->decoder.outputSampleRate));
-        ma_mutex_unlock(&pEngine->engine_lock);
+    if (pEngine == NULL) return;
+    if (!pEngine->has_device && !pEngine->has_raw_sink) return;
+#ifdef __ANDROID__
+    if (pEngine->mc_dec != NULL) {
+        mc_decoder_seek(pEngine->mc_dec, position_seconds);
+        return;
     }
+#endif
+    ma_mutex_lock(&pEngine->engine_lock);
+    ma_decoder_seek_to_pcm_frame(
+        &pEngine->decoder,
+        (ma_uint64)(position_seconds * pEngine->decoder.outputSampleRate));
+    ma_mutex_unlock(&pEngine->engine_lock);
 }
 
 ENGINE_API float Engine_GetDuration(AudioHandle handle) {
     AudioEngine* pEngine = (AudioEngine*)handle;
     if (pEngine == NULL) return 0.0f;
+    if (!pEngine->has_device && !pEngine->has_raw_sink) return 0.0f;
+#ifdef __ANDROID__
+    if (pEngine->mc_dec != NULL) {
+        return mc_decoder_get_duration(pEngine->mc_dec);
+    }
+#endif
     ma_uint64 len = 0;
     ma_mutex_lock(&pEngine->engine_lock);
     ma_decoder_get_length_in_pcm_frames(&pEngine->decoder, &len);
-    float duration = (float)len / (float)pEngine->decoder.outputSampleRate;
+    float duration = pEngine->decoder.outputSampleRate > 0
+        ? (float)len / (float)pEngine->decoder.outputSampleRate
+        : 0.0f;
     ma_mutex_unlock(&pEngine->engine_lock);
     return duration;
 }
@@ -641,4 +714,583 @@ ENGINE_API bool Engine_IsPlaying(AudioHandle handle) {
 ENGINE_API bool Engine_IsCompleted(AudioHandle handle) {
     AudioEngine* pEngine = (AudioEngine*)handle;
     return pEngine != NULL && pEngine->is_completed;
+}
+
+// ============================================================================
+// Raw output sink — used by the Android USB DAC bypass and any caller that
+// needs decoded PCM frames without miniaudio opening a ma_device.
+// EQ + volume application logic mirrors data_callback() so behavior is
+// consistent between the device-driven path and the pull-driven path.
+// ============================================================================
+
+static ma_format format_from_bit_depth(int bit_depth) {
+    switch (bit_depth) {
+        case 16: return ma_format_s16;
+        case 24: return ma_format_s24;
+        case 32: return ma_format_s32;
+        default: return ma_format_f32;
+    }
+}
+
+static int bit_depth_from_format(ma_format fmt) {
+    switch (fmt) {
+        case ma_format_u8:  return 8;
+        case ma_format_s16: return 16;
+        case ma_format_s24: return 24;
+        case ma_format_s32: return 32;
+        case ma_format_f32: return 32; // float, but report 32 for downstream compatibility
+        default: return 0;
+    }
+}
+
+ENGINE_API bool Engine_PrepareRawSink(AudioHandle handle, const char* filepath,
+                                      int sample_rate_hint,
+                                      int channels_hint,
+                                      int bit_depth_hint,
+                                      bool bit_perfect) {
+    AudioEngine* pEngine = (AudioEngine*)handle;
+    if (pEngine == NULL || filepath == NULL) return false;
+
+    // Tear down whatever is active so raw-sink and device-sink stay mutually exclusive.
+    if (pEngine->has_device) {
+        ma_mutex_lock(&pEngine->engine_lock);
+        ma_device_uninit(&pEngine->device);
+        ma_decoder_uninit(&pEngine->decoder);
+        pEngine->is_playing = false;
+        pEngine->has_device = false;
+        ma_mutex_unlock(&pEngine->engine_lock);
+    }
+    if (pEngine->has_context) {
+        ma_context_uninit(&pEngine->context);
+        pEngine->has_context = false;
+    }
+    if (pEngine->has_raw_sink) {
+        ma_mutex_lock(&pEngine->engine_lock);
+#ifdef __ANDROID__
+        if (pEngine->mc_dec != NULL) {
+            mc_decoder_close(pEngine->mc_dec);
+            pEngine->mc_dec = NULL;
+        } else {
+            ma_decoder_uninit(&pEngine->decoder);
+        }
+#else
+        ma_decoder_uninit(&pEngine->decoder);
+#endif
+        pEngine->has_raw_sink = false;
+        ma_mutex_unlock(&pEngine->engine_lock);
+    }
+
+    pEngine->custom_user_data = NULL;
+    pEngine->on_read = NULL;
+    pEngine->on_seek = NULL;
+    pEngine->on_get_size = NULL;
+
+    pEngine->bit_perfect = bit_perfect;
+
+#ifdef __ANDROID__
+    // Android: route MP4-family files to the NDK MediaCodec backend.
+    // miniaudio doesn't ship an AAC/ALAC decoder, so .m4a etc. fail
+    // there. MediaCodec gives us AAC universally and ALAC on Android 12+.
+    if (mc_decoder_path_looks_like_mp4(filepath)) {
+        mc_decoder_t *mc = mc_decoder_open(filepath, pEngine->bit_perfect);
+        if (mc == NULL) {
+            // Soft failure — could be ALAC on pre-12 device, or a corrupt
+            // container. Caller (UsbAudioPlayer) reports an error to the user.
+            return false;
+        }
+        int sr = 0, ch = 0, bd = 0;
+        mc_decoder_get_format(mc, &sr, &ch, &bd);
+        if (sr <= 0 || ch <= 0) {
+            mc_decoder_close(mc);
+            return false;
+        }
+        pEngine->mc_dec = mc;
+        pEngine->has_raw_sink = true;
+        pEngine->raw_sample_rate = sr;
+        pEngine->raw_channels    = ch;
+        pEngine->raw_bit_depth   = bd;
+
+        // EQ bands at the negotiated rate (still s16 path; biquad runs on
+        // f32 only, so EQ is effectively bypassed for MP4 unless we add
+        // s16↔f32 conversion — kept off for now to preserve bit-perfect).
+        ma_mutex_lock(&pEngine->engine_lock);
+        for (int i = 0; i < 10; ++i) {
+            ma_biquad_config config = ma_biquad_config_init(
+                ma_format_f32, ch,
+                1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+            config.format = ma_format_f32;
+            ma_biquad_init(&config, NULL, &pEngine->eq_bands[i]);
+        }
+        pEngine->is_completed = false;
+        ma_mutex_unlock(&pEngine->engine_lock);
+
+        // Hint suppression: caller may have asked for a specific sr/ch/bd
+        // but MediaCodec dictates what comes out. The sr/ch/bd above are
+        // already authoritative.
+        (void)sample_rate_hint;
+        (void)channels_hint;
+        (void)bit_depth_hint;
+        return true;
+    }
+#endif
+
+    // Resolve target format. Hints of 0 mean "use the file's native value",
+    // so we first probe with format_unknown then re-init with concrete values.
+    ma_format target_format = (bit_depth_hint > 0)
+        ? format_from_bit_depth(bit_depth_hint)
+        : ma_format_unknown;
+    ma_uint32 target_sr = (sample_rate_hint > 0) ? (ma_uint32)sample_rate_hint : 0;
+    ma_uint32 target_ch = (channels_hint > 0) ? (ma_uint32)channels_hint : 0;
+
+    ma_decoder_config decoderConfig = ma_decoder_config_init(target_format, target_ch, target_sr);
+#ifdef _WIN32
+    decoderConfig.ppCustomBackendVTables = g_pCustomBackends;
+    decoderConfig.customBackendCount     = 1;
+#endif
+
+    ma_result result;
+#ifdef _WIN32
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, filepath, -1, NULL, 0);
+    if (wlen > 0) {
+        wchar_t* wpath = (wchar_t*)malloc(wlen * sizeof(wchar_t));
+        MultiByteToWideChar(CP_UTF8, 0, filepath, -1, wpath, wlen);
+        result = ma_decoder_init_file_w(wpath, &decoderConfig, &pEngine->decoder);
+        free(wpath);
+    } else {
+        result = MA_ERROR;
+    }
+#else
+    result = ma_decoder_init_file(filepath, &decoderConfig, &pEngine->decoder);
+#endif
+
+    if (result != MA_SUCCESS) return false;
+
+    pEngine->has_raw_sink = true;
+    pEngine->raw_sample_rate = (int)pEngine->decoder.outputSampleRate;
+    pEngine->raw_channels    = (int)pEngine->decoder.outputChannels;
+    pEngine->raw_bit_depth   = bit_depth_from_format(pEngine->decoder.outputFormat);
+
+    // Initialize EQ bands to flat at the negotiated sample rate. The host can
+    // tweak per-band gains with Engine_SetEQBand.
+    ma_mutex_lock(&pEngine->engine_lock);
+    for (int i = 0; i < 10; ++i) {
+        ma_biquad_config config = ma_biquad_config_init(
+            ma_format_f32, pEngine->decoder.outputChannels,
+            1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        config.format = ma_format_f32;
+        ma_biquad_init(&config, NULL, &pEngine->eq_bands[i]);
+    }
+    pEngine->is_completed = false;
+    ma_mutex_unlock(&pEngine->engine_lock);
+
+    return true;
+}
+
+static ma_result custom_ma_read(ma_decoder* pDecoder, void* pBufferOut, size_t bytesToRead, size_t* pBytesRead) {
+    AudioEngine* pEngine = (AudioEngine*)pDecoder->pUserData;
+    if (pEngine && pEngine->on_read) {
+        size_t read = pEngine->on_read(pEngine->custom_user_data, pBufferOut, bytesToRead);
+        if (pBytesRead) *pBytesRead = read;
+        return (read > 0 || bytesToRead == 0) ? MA_SUCCESS : MA_AT_END;
+    }
+    return MA_ERROR;
+}
+
+static ma_result custom_ma_seek(ma_decoder* pDecoder, ma_int64 byteOffset, ma_seek_origin origin) {
+    AudioEngine* pEngine = (AudioEngine*)pDecoder->pUserData;
+    if (pEngine && pEngine->on_seek && pEngine->on_get_size) {
+        long long target = byteOffset;
+        if (origin == ma_seek_origin_current) {
+            // Not easily supported without keeping track of current offset
+            return MA_NOT_IMPLEMENTED; 
+        } else if (origin == ma_seek_origin_end) {
+            long long size = pEngine->on_get_size(pEngine->custom_user_data);
+            if (size < 0) return MA_ERROR;
+            target = size + byteOffset;
+        }
+        return pEngine->on_seek(pEngine->custom_user_data, target) ? MA_SUCCESS : MA_ERROR;
+    }
+    return MA_ERROR;
+}
+
+static ma_result custom_ma_tell(ma_decoder* pDecoder, ma_int64* pCursor) {
+    // We'd have to track the cursor, but miniaudio often works without seek/tell for basic streaming,
+    // or we can just return MA_NOT_IMPLEMENTED if miniaudio can handle it.
+    // However, if seeking is requested, miniaudio needs tell. But for internet streams it's tricky.
+    // Since we don't have a tell callback, let's just fail it and see if miniaudio falls back.
+    return MA_NOT_IMPLEMENTED;
+}
+
+ENGINE_API bool Engine_PrepareRawSinkCustom(AudioHandle handle,
+                                            EngineReadCallback on_read,
+                                            EngineSeekCallback on_seek,
+                                            EngineGetSizeCallback on_get_size,
+                                            void* user_data,
+                                            int sample_rate_hint,
+                                            int channels_hint,
+                                            int bit_depth_hint,
+                                            bool bit_perfect) {
+    AudioEngine* pEngine = (AudioEngine*)handle;
+    if (pEngine == NULL) return false;
+
+    // Tear down whatever is active
+    if (pEngine->has_device) {
+        ma_mutex_lock(&pEngine->engine_lock);
+        ma_device_uninit(&pEngine->device);
+        ma_decoder_uninit(&pEngine->decoder);
+        pEngine->is_playing = false;
+        pEngine->has_device = false;
+        ma_mutex_unlock(&pEngine->engine_lock);
+    }
+    if (pEngine->has_context) {
+        ma_context_uninit(&pEngine->context);
+        pEngine->has_context = false;
+    }
+    if (pEngine->has_raw_sink) {
+        ma_mutex_lock(&pEngine->engine_lock);
+#ifdef __ANDROID__
+        if (pEngine->mc_dec != NULL) {
+            mc_decoder_close(pEngine->mc_dec);
+            pEngine->mc_dec = NULL;
+        } else {
+            ma_decoder_uninit(&pEngine->decoder);
+        }
+#else
+        ma_decoder_uninit(&pEngine->decoder);
+#endif
+        pEngine->has_raw_sink = false;
+        ma_mutex_unlock(&pEngine->engine_lock);
+    }
+
+    pEngine->bit_perfect = bit_perfect;
+    pEngine->custom_user_data = user_data;
+    pEngine->on_read = on_read;
+    pEngine->on_seek = on_seek;
+    pEngine->on_get_size = on_get_size;
+
+    ma_format target_format = (bit_depth_hint > 0)
+        ? format_from_bit_depth(bit_depth_hint)
+        : ma_format_unknown;
+    ma_uint32 target_sr = (sample_rate_hint > 0) ? (ma_uint32)sample_rate_hint : 0;
+    ma_uint32 target_ch = (channels_hint > 0) ? (ma_uint32)channels_hint : 0;
+
+    ma_decoder_config decoderConfig = ma_decoder_config_init(target_format, target_ch, target_sr);
+    
+    ma_result result = ma_decoder_init(custom_ma_read, custom_ma_seek, pEngine, &decoderConfig, &pEngine->decoder);
+    
+    if (result != MA_SUCCESS) {
+        return false;
+    }
+
+    pEngine->has_raw_sink = true;
+    pEngine->raw_sample_rate = (int)pEngine->decoder.outputSampleRate;
+    pEngine->raw_channels    = (int)pEngine->decoder.outputChannels;
+    pEngine->raw_bit_depth   = bit_depth_from_format(pEngine->decoder.outputFormat);
+
+    ma_mutex_lock(&pEngine->engine_lock);
+    for (int i = 0; i < 10; ++i) {
+        ma_biquad_config config = ma_biquad_config_init(
+            ma_format_f32, pEngine->decoder.outputChannels,
+            1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        config.format = ma_format_f32;
+        ma_biquad_init(&config, NULL, &pEngine->eq_bands[i]);
+    }
+    pEngine->is_completed = false;
+    ma_mutex_unlock(&pEngine->engine_lock);
+
+    return true;
+}
+
+ENGINE_API void* Engine_GetRawSinkUserData(AudioHandle handle) {
+    AudioEngine* pEngine = (AudioEngine*)handle;
+    if (pEngine == NULL) return NULL;
+    return pEngine->custom_user_data;
+}
+
+ENGINE_API long long Engine_ReadRawFrames(AudioHandle handle,
+                                          void* output_buffer,
+                                          unsigned int frame_count) {
+    AudioEngine* pEngine = (AudioEngine*)handle;
+    if (pEngine == NULL || output_buffer == NULL) return -1;
+    if (!pEngine->has_raw_sink) return -1;
+
+#ifdef __ANDROID__
+    // Android MediaCodec / ALAC fallback path.
+    //
+    // Two sub-paths depending on the decoder backend:
+    //
+    //   1. MediaCodec (Android 12+ ALAC, all AAC): emits f32 PCM. We apply
+    //      EQ + volume in float domain, then convert to the target bit depth.
+    //
+    //   2. Apple ALAC fallback (Android 7-11): emits interleaved integer PCM
+    //      at the source bit depth (s16 or s24 packed). We write directly to
+    //      the output buffer and apply volume in the integer domain. This
+    //      avoids the lossy int→f32→int round-trip and preserves bit-perfect
+    //      quality for the fallback path.
+    if (pEngine->mc_dec != NULL) {
+        ma_mutex_lock(&pEngine->engine_lock);
+
+        ma_uint32 channels = (ma_uint32)pEngine->raw_channels;
+        ma_uint32 bd = (ma_uint32)pEngine->raw_bit_depth;
+        if (bd != 16 && bd != 24 && bd != 32) bd = 16;
+
+        // Cap chunk size so scratch stays bounded.
+        if (frame_count > 4096) frame_count = 4096;
+
+        // ────────────────────────────────────────────────────────────────────
+        // PATH A: ALAC fallback — integer PCM direct to output
+        // ────────────────────────────────────────────────────────────────────
+        if (mc_decoder_is_integer_output(pEngine->mc_dec)) {
+            // The fallback decoder writes interleaved integer PCM at the
+            // source bit depth directly into output_buffer.
+            long long framesRead = mc_decoder_read_frames(
+                pEngine->mc_dec, output_buffer, frame_count);
+            if (framesRead == 0) {
+                pEngine->is_completed = true;
+                ma_mutex_unlock(&pEngine->engine_lock);
+                return -1;
+            }
+            if (framesRead < 0) {
+                ma_mutex_unlock(&pEngine->engine_lock);
+                return -1;
+            }
+
+            // Apply volume in the integer domain (EQ is bypassed for integer
+            // output — biquad requires f32. This matches the bit-perfect
+            // Windows WASAPI path behavior).
+            if (pEngine->volume < 0.999f) {
+                double vol = (double)pEngine->volume;
+                size_t total_samples = (size_t)(framesRead * channels);
+
+                if (bd == 24) {
+                    ma_uint8 *p = (ma_uint8 *)output_buffer;
+                    for (size_t i = 0; i < total_samples; ++i) {
+                        // Reconstruct 24-bit signed integer (little-endian packed)
+                        int32_t s24 = (p[i*3] | (p[i*3+1] << 8) | (p[i*3+2] << 16));
+                        if (s24 & 0x00800000) s24 |= (int32_t)0xFF000000; // sign-extend
+                        double s = (double)s24 * vol;
+                        if (s > 8388607.0) s = 8388607.0;
+                        if (s < -8388608.0) s = -8388608.0;
+                        int32_t r = (int32_t)s;
+                        p[i*3]   = (ma_uint8)(r & 0xFF);
+                        p[i*3+1] = (ma_uint8)((r >> 8) & 0xFF);
+                        p[i*3+2] = (ma_uint8)((r >> 16) & 0xFF);
+                    }
+                } else if (bd == 32) {
+                    int32_t *p = (int32_t *)output_buffer;
+                    for (size_t i = 0; i < total_samples; ++i) {
+                        double s = (double)p[i] * vol;
+                        if (s > 2147483647.0) s = 2147483647.0;
+                        if (s < -2147483648.0) s = -2147483648.0;
+                        p[i] = (int32_t)s;
+                    }
+                } else {
+                    int16_t *p = (int16_t *)output_buffer;
+                    for (size_t i = 0; i < total_samples; ++i) {
+                        double s = (double)p[i] * vol;
+                        if (s > 32767.0) s = 32767.0;
+                        if (s < -32768.0) s = -32768.0;
+                        p[i] = (int16_t)s;
+                    }
+                }
+            }
+
+            ma_mutex_unlock(&pEngine->engine_lock);
+            return framesRead;
+        }
+
+        // ────────────────────────────────────────────────────────────────────
+        // PATH B: MediaCodec f32 — scratch buffer + convert
+        // ────────────────────────────────────────────────────────────────────
+        size_t scratch_floats = (size_t)frame_count * channels;
+        float *scratch = (float *)malloc(scratch_floats * sizeof(float));
+        if (scratch == NULL) {
+            ma_mutex_unlock(&pEngine->engine_lock);
+            return -1;
+        }
+
+        long long framesRead = mc_decoder_read_frames(
+            pEngine->mc_dec, scratch, frame_count);
+        if (framesRead == 0) {
+            free(scratch);
+            pEngine->is_completed = true;
+            ma_mutex_unlock(&pEngine->engine_lock);
+            return -1;
+        }
+        if (framesRead < 0) {
+            free(scratch);
+            ma_mutex_unlock(&pEngine->engine_lock);
+            return -1;
+        }
+
+        // Apply EQ in float domain when not bit-perfect (preserves
+        // precision). Skipped in bit-perfect mode for true bypass.
+        if (!pEngine->bit_perfect) {
+            for (int i = 0; i < 10; ++i) {
+                ma_biquad_process_pcm_frames(&pEngine->eq_bands[i],
+                                             scratch, scratch, framesRead);
+            }
+        }
+
+        // Apply volume in float domain (always — non-destructive in f32).
+        if (pEngine->volume < 0.999f) {
+            float vol = pEngine->volume;
+            for (size_t i = 0; i < (size_t)(framesRead * channels); ++i) {
+                scratch[i] *= vol;
+            }
+        }
+
+        // Convert f32 → output bit depth.
+        //
+        // Use lrintf() for rounding (not truncation). The C cast (int32_t)
+        // truncates toward zero, creating correlated quantization distortion
+        // that sensitive IEMs can pick up as a subtle noise floor. lrintf()
+        // rounds to nearest even, distributing the error symmetrically.
+        //
+        // Scale factor matches MediaCodec's normalization: the system
+        // divides by 2^(bits-1), so we multiply by the same value.
+        size_t total_samples = (size_t)(framesRead * channels);
+        if (bd == 24) {
+            ma_uint8 *p = (ma_uint8 *)output_buffer;
+            const float scale = 8388608.0f; // 2^23
+            for (size_t i = 0; i < total_samples; ++i) {
+                float s = scratch[i];
+                if (s > 1.0f) s = 1.0f;
+                if (s < -1.0f) s = -1.0f;
+                int32_t sample24 = (int32_t)lrintf(s * scale);
+                if (sample24 > 8388607) sample24 = 8388607;
+                if (sample24 < -8388608) sample24 = -8388608;
+                p[i*3]   = (ma_uint8)(sample24 & 0xFF);
+                p[i*3+1] = (ma_uint8)((sample24 >> 8) & 0xFF);
+                p[i*3+2] = (ma_uint8)((sample24 >> 16) & 0xFF);
+            }
+        } else {
+            int16_t *p = (int16_t *)output_buffer;
+            const float scale = 32768.0f; // 2^15
+            for (size_t i = 0; i < total_samples; ++i) {
+                float s = scratch[i];
+                if (s > 1.0f) s = 1.0f;
+                if (s < -1.0f) s = -1.0f;
+                int32_t sample16 = (int32_t)lrintf(s * scale);
+                if (sample16 > 32767) sample16 = 32767;
+                if (sample16 < -32768) sample16 = -32768;
+                p[i] = (int16_t)sample16;
+            }
+        }
+
+        free(scratch);
+        ma_mutex_unlock(&pEngine->engine_lock);
+        return framesRead;
+    }
+#endif
+
+    ma_mutex_lock(&pEngine->engine_lock);
+    ma_uint64 framesRead = 0;
+    ma_result result = ma_decoder_read_pcm_frames(
+        &pEngine->decoder, output_buffer, frame_count, &framesRead);
+
+    if (result == MA_AT_END || framesRead == 0) {
+        pEngine->is_completed = true;
+        ma_mutex_unlock(&pEngine->engine_lock);
+        return framesRead == 0 ? -1 : (long long)framesRead;
+    }
+
+    // EQ + volume only make sense for f32 frames (biquad is f32 here).
+    // For non-f32 (s16/s24/s32) we currently apply only volume to keep parity
+    // with the WASAPI bit-perfect Windows path.
+    ma_format fmt = pEngine->decoder.outputFormat;
+    ma_uint32 channels = pEngine->decoder.outputChannels;
+
+    if (pEngine->bit_perfect) {
+        // Volume only — same per-format scaling as data_callback().
+        if (pEngine->volume < 0.999f) {
+            double vol = (double)pEngine->volume;
+            if (fmt == ma_format_s16) {
+                ma_int16* p = (ma_int16*)output_buffer;
+                for (ma_uint64 i = 0; i < framesRead * channels; ++i) {
+                    double s = (double)p[i] * vol;
+                    if (s > 32767.0) s = 32767.0;
+                    if (s < -32768.0) s = -32768.0;
+                    p[i] = (ma_int16)s;
+                }
+            } else if (fmt == ma_format_s24) {
+                ma_uint8* p = (ma_uint8*)output_buffer;
+                for (ma_uint64 i = 0; i < framesRead * channels; ++i) {
+                    ma_int32 s24 = (p[i*3] | (p[i*3+1] << 8) | (p[i*3+2] << 16));
+                    if (s24 & 0x00800000) s24 |= 0xFF000000;
+                    double s = (double)s24 * vol;
+                    if (s > 8388607.0) s = 8388607.0;
+                    if (s < -8388608.0) s = -8388608.0;
+                    ma_int32 r = (ma_int32)s;
+                    p[i*3]   = (ma_uint8)(r & 0xFF);
+                    p[i*3+1] = (ma_uint8)((r >> 8) & 0xFF);
+                    p[i*3+2] = (ma_uint8)((r >> 16) & 0xFF);
+                }
+            } else if (fmt == ma_format_s32) {
+                ma_int32* p = (ma_int32*)output_buffer;
+                for (ma_uint64 i = 0; i < framesRead * channels; ++i) {
+                    double s = (double)p[i] * vol;
+                    if (s > 2147483647.0) s = 2147483647.0;
+                    if (s < -2147483648.0) s = -2147483648.0;
+                    p[i] = (ma_int32)s;
+                }
+            } else if (fmt == ma_format_f32) {
+                float* p = (float*)output_buffer;
+                for (ma_uint64 i = 0; i < framesRead * channels; ++i) {
+                    p[i] *= (float)vol;
+                }
+            }
+        }
+    } else if (fmt == ma_format_f32) {
+        // Full DSP: EQ chain + volume (only when f32).
+        for (int i = 0; i < 10; ++i) {
+            ma_biquad_process_pcm_frames(&pEngine->eq_bands[i],
+                                         output_buffer, output_buffer, framesRead);
+        }
+        float* p = (float*)output_buffer;
+        for (ma_uint64 i = 0; i < framesRead * channels; ++i) {
+            p[i] *= pEngine->volume;
+        }
+    }
+    // Non-bitperfect with non-f32 format: leave PCM untouched. The host should
+    // request f32 (bit_depth_hint=0) when EQ is desired.
+
+    ma_mutex_unlock(&pEngine->engine_lock);
+    return (long long)framesRead;
+}
+
+ENGINE_API int Engine_GetRawFormat(AudioHandle handle,
+                                   int* out_sample_rate,
+                                   int* out_channels,
+                                   int* out_bit_depth) {
+    AudioEngine* pEngine = (AudioEngine*)handle;
+    if (pEngine == NULL || !pEngine->has_raw_sink) return -1;
+
+    if (out_sample_rate) *out_sample_rate = pEngine->raw_sample_rate;
+    if (out_channels)    *out_channels    = pEngine->raw_channels;
+    if (out_bit_depth)   *out_bit_depth   = pEngine->raw_bit_depth;
+    return 0;
+}
+
+ENGINE_API void Engine_ReleaseRawSink(AudioHandle handle) {
+    AudioEngine* pEngine = (AudioEngine*)handle;
+    if (pEngine == NULL || !pEngine->has_raw_sink) return;
+
+    ma_mutex_lock(&pEngine->engine_lock);
+#ifdef __ANDROID__
+    if (pEngine->mc_dec != NULL) {
+        mc_decoder_close(pEngine->mc_dec);
+        pEngine->mc_dec = NULL;
+    } else {
+        ma_decoder_uninit(&pEngine->decoder);
+    }
+#else
+    ma_decoder_uninit(&pEngine->decoder);
+#endif
+    pEngine->has_raw_sink = false;
+    pEngine->is_completed = false;
+    pEngine->raw_sample_rate = 0;
+    pEngine->raw_channels = 0;
+    pEngine->raw_bit_depth = 0;
+    ma_mutex_unlock(&pEngine->engine_lock);
 }

@@ -70,7 +70,7 @@ class _LanternPainter extends CustomPainter {
   void _drawLantern(Canvas canvas, Offset pos, int seed) {
     final double flicker = 0.8 + (sin(animationValue * pi * 2 + seed) * 0.2);
 
-    final lanternColor = const Color(0xFFFFB7C5); // Pink
+    const lanternColor = Color(0xFFFFB7C5); // Pink
 
     // Lantern Body
     final bodyPaint = Paint()

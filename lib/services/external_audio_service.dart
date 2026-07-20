@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 // This service mimics the function of specialized sites like 9xbuddy.
@@ -36,9 +37,9 @@ class ExternalAudioService {
           return data['result']['url'];
         }
       }
-      print('⚠️ External API failed (Status: ${response.statusCode})');
+      debugPrint('⚠️ External API failed (Status: ${response.statusCode})');
     } catch (e) {
-      print('❌ Error contacting external API: $e');
+      debugPrint('❌ Error contacting external API: $e');
     }
     return null;
   }

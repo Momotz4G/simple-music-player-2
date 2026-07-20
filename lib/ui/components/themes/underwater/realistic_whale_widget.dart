@@ -67,10 +67,10 @@ class _WhalePainter extends CustomPainter {
     }
 
     // Colors for the "Real" whale
-    final Color topColor =
-        const Color(0xFF4A6B8A); // Lighter blue-gray for the back
-    final Color bottomColor =
-        const Color(0xFF23395B); // Darker navy for the belly
+    const Color topColor =
+        Color(0xFF4A6B8A); // Lighter blue-gray for the back
+    const Color bottomColor =
+        Color(0xFF23395B); // Darker navy for the belly
     final Color highlightColor = Colors.white.withValues(alpha: 0.1);
 
     // DRAW WHALE BODY
@@ -83,7 +83,7 @@ class _WhalePainter extends CustomPainter {
         0, scale * 0.4, -scale * 0.5, scale * 0.05); // Bottom
     bodyPath.close();
 
-    final bodyGradient = LinearGradient(
+    final bodyGradient = const LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [topColor, bottomColor],

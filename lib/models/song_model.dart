@@ -1,4 +1,19 @@
 import 'dart:typed_data';
+import 'dart:convert';
+
+String _fixMojibake(String input) {
+  try {
+    if (input.contains('Ã') ||
+        input.contains('ì') ||
+        input.contains('ë') ||
+        input.contains('ê') ||
+        input.contains('í')) {
+      final bytes = latin1.encode(input);
+      return utf8.decode(bytes);
+    }
+  } catch (_) {}
+  return input;
+}
 
 class SongModel {
   final String title;
@@ -7,35 +22,31 @@ class SongModel {
   final String filePath;
   final String fileExtension;
   final double duration;
-  final Uint8List? albumArtBytes; // Kept for legacy support if needed
+  final Uint8List? albumArtBytes;
 
-  // NEW FIELDS FOR HYBRID HISTORY
   final String? sourceUrl; // Stores the YouTube URL (for re-streaming)
   final String?
       onlineArtUrl; // Stores the Spotify Image URL (for display when file is missing)
   final String? isrc; // Stores ISRC for accurate matching
-
-  // NEW METADATA FIELDS
   final int? trackNumber;
   final int? discNumber;
   final String? year;
   final String? genre;
 
-  // 🚀 FAST SEARCH OPTIMIZATION
   // Pre-lowercased string for instant O(1) search filtering without reallocation
   final String searchKey;
 
   // SPOTIFY IDS FOR ENDLESS QUEUE
   final String? spotifyId; // Spotify track ID for recommendations
   final String? spotifyArtistId; // Spotify artist ID for recommendations
-  final String? deezerId; // 🚀 Deezer track ID for direct FLAC match
-  final DateTime? dateAdded; // 🚀 Follows Isar 'Song' dateAdded
-  final double? replayGain; // 🚀 REPLAYGAIN_TRACK_GAIN in dB
+  final String? deezerId; // Deezer track ID for direct FLAC match
+  final DateTime? dateAdded; // Follows Isar 'Song' dateAdded
+  final double? replayGain; // REPLAYGAIN_TRACK_GAIN in dB
 
   SongModel({
-    required this.title,
-    required this.artist,
-    required this.album,
+    required String title,
+    required String artist,
+    required String album,
     required this.filePath,
     required this.fileExtension,
     required this.duration,
@@ -53,7 +64,11 @@ class SongModel {
     this.dateAdded,
     this.replayGain,
     String? searchKey,
-  }) : searchKey = searchKey ?? "${title.toLowerCase()} ${artist.toLowerCase()} ${album.toLowerCase()}";
+  })  : title = _fixMojibake(title),
+        artist = _fixMojibake(artist),
+        album = _fixMojibake(album),
+        searchKey = searchKey ??
+            "${_fixMojibake(title).toLowerCase()} ${_fixMojibake(artist).toLowerCase()} ${_fixMojibake(album).toLowerCase()}";
 
   // Factory constructor for creating from file scan
   factory SongModel.fromFile(
@@ -88,7 +103,8 @@ class SongModel {
       genre: genre,
       dateAdded: dateAdded,
       replayGain: replayGain,
-      searchKey: "${title.toLowerCase()} ${artist.toLowerCase()} ${album.toLowerCase()}",
+      searchKey:
+          "${title.toLowerCase()} ${artist.toLowerCase()} ${album.toLowerCase()}",
     );
   }
 
@@ -133,7 +149,7 @@ class SongModel {
       deezerId: deezerId ?? this.deezerId,
       dateAdded: dateAdded ?? this.dateAdded,
       replayGain: replayGain ?? this.replayGain,
-      searchKey: this.searchKey, // Keep the optimized cache
+      searchKey: searchKey, // Keep the optimized cache
     );
   }
 
@@ -181,9 +197,8 @@ class SongModel {
       fileExtension: json['fileExtension'] ?? "mp3",
       duration: parsedDuration,
       sourceUrl: json['sourceUrl'] ?? json['youtubeUrl'],
-      onlineArtUrl: json['onlineArtUrl'] ??
-          json['albumArtUrl'], // Fallback for SongMetadata
-      albumArtBytes: null, // Will be loaded lazily if needed
+      onlineArtUrl: json['onlineArtUrl'] ?? json['albumArtUrl'],
+      albumArtBytes: null,
       isrc: json['isrc'],
       trackNumber: json['trackNumber'],
       discNumber: json['discNumber'],
@@ -195,8 +210,11 @@ class SongModel {
       dateAdded: json['dateAdded'] != null
           ? DateTime.tryParse(json['dateAdded'])
           : null,
-      replayGain: json['replayGain'] != null ? (json['replayGain'] as num).toDouble() : null,
-      searchKey: "${json['title']?.toString().toLowerCase() ?? ''} ${json['artist']?.toString().toLowerCase() ?? ''} ${json['album']?.toString().toLowerCase() ?? ''}",
+      replayGain: json['replayGain'] != null
+          ? (json['replayGain'] as num).toDouble()
+          : null,
+      searchKey:
+          "${json['title']?.toString().toLowerCase() ?? ''} ${json['artist']?.toString().toLowerCase() ?? ''} ${json['album']?.toString().toLowerCase() ?? ''}",
     );
   }
 

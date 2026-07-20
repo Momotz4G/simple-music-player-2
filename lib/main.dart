@@ -27,10 +27,12 @@ import 'l10n/app_localizations.dart';
 
 // late final Future<void> dotEnvFuture;
 
+final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🚀 Lock orientation to portrait on phones only (tablets can rotate)
+  // Lock orientation to portrait on phones only (tablets can rotate)
   if (Platform.isAndroid || Platform.isIOS) {
     final data = WidgetsBinding.instance.platformDispatcher.views.first;
     final shortestSide = data.physicalSize.shortestSide / data.devicePixelRatio;
@@ -96,24 +98,24 @@ Future<void> main() async {
       }
     }
 
-    // 🚀 Optimize for DSD/Hi-Res streaming (Desktop only - media_kit backend)
+    // Optimize for DSD/Hi-Res streaming (Desktop only - media_kit backend)
     // Hi-Res FLAC at 192kHz/24-bit = ~1.15MB per second.
     // Buffer must be large enough to absorb SOCKS5 proxy latency between DASH chunks.
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       JustAudioMediaKit.bufferSize =
-          256 * 1024 * 1024; // 🚀 256MB — holds ~3.5 minutes of Hi-Res FLAC
+          256 * 1024 * 1024; // 256MB — holds ~3.5 minutes of Hi-Res FLAC
       JustAudioMediaKit.demuxerMaxBackBytes =
           8 * 1024 * 1024; // 8MB back buffer
-      JustAudioMediaKit.demuxerReadaheadSecs = 3600.0; // 🚀 Aggressive readahead to combat proxy stalls
+      JustAudioMediaKit.demuxerReadaheadSecs =
+          3600.0; // Aggressive readahead to combat proxy stalls
       JustAudioMediaKit.audioBuffer =
           4.0; // 4s of decoded audio buffer (was 1.0)
       JustAudioMediaKit.audioPitchCorrection = false;
       JustAudioMediaKit.audioResampleMaxOutputSampleRate = 192000;
     }
 
-    // Do NOT pass android: true — native ExoPlayer handles Android playback.
-    // DSD on Android is handled via USB Audio bypass separately.
-    JustAudioMediaKit.ensureInitialized(macOS: true);
+    // Enable android: true — MediaKit (libmpv) handles playback on Android (same engine as Desktop).
+    JustAudioMediaKit.ensureInitialized(macOS: true, android: true);
   } catch (e) {
     debugPrint("⚠️ Audio Backend failed: $e");
   }
@@ -148,7 +150,7 @@ Future<void> main() async {
     }
   }
 
-  // 🚀 LOGGING SYSTEM BRIDGE
+  // LOGGING SYSTEM BRIDGE
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) {
     final service = DebugLogService();
@@ -238,7 +240,7 @@ Future<void> main() async {
       appWindow.alignment = Alignment.center;
       appWindow.title = "Simple Music Player";
       appWindow.show();
-      debugPrint("🚀 [Main] BitsDojo Window Shown");
+      debugPrint("[Main] BitsDojo Window Shown");
     });
   }
 }
@@ -259,6 +261,7 @@ class MyApp extends ConsumerWidget {
         ref.read(dataUsageProvider);
 
         return MaterialApp(
+          navigatorKey: globalNavigatorKey,
           title: 'Music Player',
           debugShowCheckedModeBanner: false,
           themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
@@ -267,11 +270,6 @@ class MyApp extends ConsumerWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: Locale(settings.appLocale),
-          // 🚀 FIX: Use ref.read() instead of ref.watch() for the legacy provider bridge.
-          // ref.watch() here was rebuilding the ENTIRE MainShell (2000+ line widget)
-          // on every libraryProvider.notifyListeners() — including every search keystroke.
-          // The legacy bridge only needs the instance reference; reactive updates
-          // are handled by Riverpod's own ref.watch() in individual widgets.
           home: Consumer(
             builder: (context, dynamicRef, _) {
               final libInstance = dynamicRef.read(libraryProvider);

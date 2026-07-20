@@ -26,6 +26,9 @@ class FlacDownloaderService {
 
   static Ref? globalRef; // Added for Data Usage tracking
 
+  static double? currentDownloadReceivedMB;
+  static double? currentDownloadTotalMB;
+
   factory FlacDownloaderService() => _instance;
 
   FlacDownloaderService._internal();
@@ -41,7 +44,7 @@ class FlacDownloaderService {
   // Default service priority order
   static const List<String> defaultServiceOrder = ['deezer', 'tidal', 'qobuz'];
 
-  // 🚀 SONG.LINK CACHE & REQUEST COALESCING
+  // SONG.LINK CACHE & REQUEST COALESCING
   static final Map<String, StreamingUrls> _songLinkCache = {};
   static final Map<String, String> _tidalSearchCache = {};
   static final Map<String, Future<StreamingUrls?>> _pendingSongLinkRequests = {};
@@ -59,7 +62,7 @@ class FlacDownloaderService {
       String resourceUrl, {int maxRetries = 2}) async {
     // 1. Check Cache
     if (_songLinkCache.containsKey(resourceUrl)) {
-      debugPrint('🚀 song.link: Using cached URLs for $resourceUrl');
+      debugPrint('song.link: Using cached URLs for $resourceUrl');
       return _songLinkCache[resourceUrl];
     }
 
@@ -159,7 +162,7 @@ class FlacDownloaderService {
     return platformData?['url'] as String?;
   }
 
-  /// 🚀 Direct Tidal Track Lookup: ISRC-first, text search fallback
+  /// Direct Tidal Track Lookup: ISRC-first, text search fallback
   /// ISRC is a unique recording identifier — far more accurate than text search.
   Future<String?> getTidalTrackIdBySearch(String title, String artist, {String? isrc, int retries = 1}) async {
     final logger = DebugLogService();
@@ -172,7 +175,7 @@ class FlacDownloaderService {
     }
 
     // ============================================================
-    // 🚀 STAGE 0: ISRC Lookup (PRIMARY — most accurate)
+    // STAGE 0: ISRC Lookup (PRIMARY — most accurate)
     // ============================================================
     if (isrc != null && isrc.isNotEmpty) {
       logger.info('🔍 [Tidal] ISRC Lookup: $isrc');
@@ -235,7 +238,7 @@ class FlacDownloaderService {
     }
 
     // ============================================================
-    // 🚀 STAGE 1: Text Search Fallback
+    // STAGE 1: Text Search Fallback
     // ============================================================
     final queries = ["$title $artist", title];
 
@@ -472,7 +475,7 @@ class FlacDownloaderService {
     logger.info("DEEZER: Got FLAC URL, starting download...");
 
     // Download to temp file first, then re-encode to fix bitstream
-    final tempPath = outputPath + ".tmp";
+    final tempPath = '$outputPath.tmp';
     final tempFile = await _downloadFile(
       url: flacUrl,
       outputPath: tempPath,
@@ -485,7 +488,7 @@ class FlacDownloaderService {
       final convertedFile = await _convertToFlac(
         inputPath: tempPath,
         outputPath: outputPath,
-        forceReencode: true, // 🚀 FORCE
+        forceReencode: true, // FORCE
       );
 
       // Cleanup
@@ -521,7 +524,7 @@ class FlacDownloaderService {
   Future<List<String>> _getTidalApiServers() async {
     final logger = DebugLogService();
 
-    // 🚀 NEW: Standardized public hifi-api servers
+    // NEW: Standardized public hifi-api servers
     final fallbackServers = [
       Env.tidalApiUrl, // VPS (Primary)
       'https://triton.squid.wtf', // Priority Fallback
@@ -537,7 +540,7 @@ class FlacDownloaderService {
     return fallbackServers;
   }
 
-  /// 🚀 FAST-PATH STREAMING: Returns direct VPS stream URL for instant playback
+  /// FAST-PATH STREAMING: Returns direct VPS stream URL for instant playback
   Future<String?> getTidalStreamUrl(String tidalId, {String quality = 'HI_RES_LOSSLESS'}) async {
     final servers = await _getTidalApiServers();
     if (servers.isEmpty) return null;
@@ -603,7 +606,7 @@ class FlacDownloaderService {
             break; // Try next quality level
           }
 
-          // 🚀 FIX: Check if response is raw binary FLAC data (self-hosted server returns raw bytes)
+          // FIX: Check if response is raw binary FLAC data (self-hosted server returns raw bytes)
           // FLAC files start with the magic bytes "fLaC"
           if (response.bodyBytes.length > 4 &&
               response.bodyBytes[0] == 0x66 && // 'f'
@@ -611,7 +614,7 @@ class FlacDownloaderService {
               response.bodyBytes[2] == 0x61 && // 'a'
               response.bodyBytes[3] == 0x43) { // 'C'
             debugPrint('🎧 Received raw FLAC binary from $server ($quality). Saving directly...');
-            final tempPath = outputPath + ".tmp";
+            final tempPath = '$outputPath.tmp';
             final tempFile = File(tempPath);
             await tempFile.writeAsBytes(response.bodyBytes);
 
@@ -654,7 +657,7 @@ class FlacDownloaderService {
 
           // Download the file
           debugPrint('📥 Downloading at $quality quality...');
-          final tempPath = outputPath + ".tmp";
+          final tempPath = '$outputPath.tmp';
           final file = await _downloadFile(
             url: downloadUrl,
             outputPath: tempPath,
@@ -667,7 +670,7 @@ class FlacDownloaderService {
             final convertedFile = await _convertToFlac(
               inputPath: tempPath,
               outputPath: outputPath,
-              forceReencode: true, // 🚀 FORCE
+              forceReencode: true, // FORCE
             );
 
             // Cleanup
@@ -739,7 +742,7 @@ class FlacDownloaderService {
     // Get streaming URLs from song.link
     final urls = await getStreamingUrls(spotifyTrackId);
     
-    // 🚀 NEW: DIRECT TIDAL SEARCH FALLBACK
+    // NEW: DIRECT TIDAL SEARCH FALLBACK
     String? fallbackTidalId;
     if (urls == null || urls.tidalUrl == null) {
       logger.info('⚠️ song.link didn\'t find Tidal URL for $trackName. Trying Direct Search...');
@@ -918,6 +921,9 @@ class FlacDownloaderService {
               // If using assumed total, cap at 99% until fully done
               if (contentLength <= 0 && progress > 0.99) progress = 0.99;
               
+              FlacDownloaderService.currentDownloadReceivedMB = downloadedBytes / (1024 * 1024);
+              FlacDownloaderService.currentDownloadTotalMB = total / (1024 * 1024);
+
               onProgress(progress.clamp(0.0, 1.0));
             }
           }
@@ -1003,15 +1009,24 @@ class FlacDownloaderService {
                 if (statusResp.statusCode == 200) {
                   final statusData = json.decode(statusResp.body);
                   jobStatus = statusData['status'] as String? ?? 'processing';
-                  if (jobStatus == 'done') {
-                    totalChunks = statusData['totalChunks'] as int? ?? 1;
-                    totalSize = statusData['size'] as int? ?? 0;
-                    logger.info(
-                        'TIDAL: Job $jobId done! $totalChunks chunks, ${(totalSize / 1024 / 1024).toStringAsFixed(1)} MB');
+                  
+                  if (jobStatus == 'error') {
+                    logger.warning('TIDAL: Job $jobId failed: ${statusData['error']}');
                     break;
-                  } else if (jobStatus == 'error') {
-                    logger.warning(
-                        'TIDAL: Job $jobId failed: ${statusData['error']}');
+                  }
+
+                  if (statusData.containsKey('totalChunks') && statusData['totalChunks'] != null) {
+                    totalChunks = statusData['totalChunks'] as int;
+                    totalSize = statusData['size'] as int? ?? 0;
+                  }
+
+                  // 🚀 Backend Pipe Support: Break early if totalChunks is known!
+                  if (totalChunks > 0) {
+                    logger.info('TIDAL: Job $jobId ready to pipe! $totalChunks chunks, ${(totalSize / 1024 / 1024).toStringAsFixed(1)} MB');
+                    break;
+                  } else if (jobStatus == 'done') {
+                    totalChunks = 1; // Fallback
+                    logger.info('TIDAL: Job $jobId done without chunk info, assuming 1 chunk.');
                     break;
                   }
                 }
@@ -1020,76 +1035,64 @@ class FlacDownloaderService {
               }
             }
 
-            if (jobStatus != 'done') {
-              logger.warning(
-                  'TIDAL: Job $jobId did not complete (status=$jobStatus)');
+            if (totalChunks <= 0 && jobStatus != 'done') {
+              logger.warning('TIDAL: Job $jobId did not complete or provide chunks (status=$jobStatus)');
               continue;
             }
 
             // Download in chunks (5 MB each, Cloudflare-safe)
-            final tempPath = outputPath + ".tmp";
+            final tempPath = '$outputPath.tmp';
             final file = File(tempPath);
             bool downloadOk = true;
 
-            final isSelfHosted = server.contains(Uri.parse(Env.tidalApiUrl).host);
+            final sink = file.openWrite();
+            for (int c = 0; c < totalChunks; c++) {
+              try {
+                logger.info('TIDAL: Downloading chunk ${c + 1}/$totalChunks...');
+                String chunkUrl = '$server/download/?jobId=$jobId&chunk=$c';
+                
+                // Add key parameter if self-hosted (middleware checks header and query)
+                if (server.contains(Uri.parse(Env.tidalApiUrl).host)) {
+                  chunkUrl += '&key=${Env.tidalApiKey}';
+                }
 
-            if (isSelfHosted) {
-              logger.info('TIDAL: Server is self-hosted. Downloading full buffer directly (streamed)...');
-              String downloadUrl = '$server/track/?id=$trackId&quality=$quality&key=${Env.tidalApiKey}';
-              final downloadedFile = await _downloadFile(
-                url: downloadUrl,
-                outputPath: tempPath,
-                headers: requestHeaders,
-                onProgress: onProgress,
-              );
-              
-              if (downloadedFile != null) {
-                downloadOk = true;
-              } else {
-                logger.warning('TIDAL: Full buffer streamed download failed or returned invalid file');
-                downloadOk = false;
-              }
-            } else {
-              final sink = file.openWrite();
-              for (int c = 0; c < totalChunks; c++) {
-                try {
-                  logger.info('TIDAL: Downloading chunk ${c + 1}/$totalChunks...');
-                  String chunkUrl = '$server/download/?jobId=$jobId&chunk=$c';
-                  final chunkResp = await _client
-                      .get(Uri.parse(chunkUrl), headers: requestHeaders)
-                      .timeout(const Duration(seconds: 30));
+                final chunkResp = await _client
+                    .get(Uri.parse(chunkUrl), headers: requestHeaders)
+                    .timeout(const Duration(seconds: 30));
 
-                  if (chunkResp.statusCode == 200 && chunkResp.bodyBytes.isNotEmpty) {
-                    sink.add(chunkResp.bodyBytes);
-                    
-                    // Increment Data Usage
-                    final activeRef = FlacDownloaderService.globalRef;
-                    if (activeRef != null) {
-                      activeRef.read(dataUsageProvider.notifier).addBytes(chunkResp.bodyBytes.length);
-                    }
-                    if (onProgress != null) {
-                      onProgress((c + 1) / totalChunks);
-                    }
-                  } else {
-                    logger.warning('TIDAL: Chunk $c failed: ${chunkResp.statusCode}');
-                    downloadOk = false;
-                    break;
+                if (chunkResp.statusCode == 200 && chunkResp.bodyBytes.isNotEmpty) {
+                  sink.add(chunkResp.bodyBytes);
+                  
+                  // Increment Data Usage
+                  final activeRef = FlacDownloaderService.globalRef;
+                  if (activeRef != null) {
+                    activeRef.read(dataUsageProvider.notifier).addBytes(chunkResp.bodyBytes.length);
                   }
-                } catch (chunkErr) {
-                  logger.warning('TIDAL: Chunk $c error: $chunkErr');
+                  if (onProgress != null) {
+                    FlacDownloaderService.currentDownloadTotalMB = totalSize / (1024 * 1024);
+                    // Approximate received MB based on chunks downloaded (5MB per chunk)
+                    FlacDownloaderService.currentDownloadReceivedMB = ((c + 1) * 5242880).clamp(0, totalSize) / (1024 * 1024);
+                    onProgress((c + 1) / totalChunks);
+                  }
+                } else {
+                  logger.warning('TIDAL: Chunk $c failed: ${chunkResp.statusCode}');
                   downloadOk = false;
                   break;
                 }
+              } catch (chunkErr) {
+                logger.warning('TIDAL: Chunk $c error: $chunkErr');
+                downloadOk = false;
+                break;
               }
-              await sink.close();
             }
+            await sink.close();
 
             if (downloadOk) {
               final fileSize = await file.length();
               if (fileSize > 1024 * 1024) {
                 logger.info('TIDAL: Chunked download success! Re-encoding to fix bitstream (MANDATORY)...');
                 
-                // 🚀 FIX: FORCE Re-encode to reconstructions sync codes and remove fMP4 headers
+                // FIX: FORCE Re-encode to reconstructions sync codes and remove fMP4 headers
                 final convertedFile = await _convertToFlac(
                   inputPath: tempPath,
                   outputPath: outputPath,
@@ -1163,7 +1166,7 @@ class FlacDownloaderService {
             continue;
           }
 
-          final tempPath = outputPath + ".tmp";
+          final tempPath = '$outputPath.tmp';
           final file = File(tempPath);
           final sink = file.openWrite();
           int downloadedBytes = 0;
@@ -1204,14 +1207,14 @@ class FlacDownloaderService {
 
           final fileSize = await file.length();
           if (fileSize < 1024 * 1024) {
-            logger.warning('TIDAL: Direct FLAC too small (${fileSize} bytes), likely preview');
+            logger.warning('TIDAL: Direct FLAC too small ($fileSize bytes), likely preview');
             try { await file.delete(); } catch (_) {}
             continue;
           }
 
           logger.info('TIDAL: Direct download success! Re-encoding to fix bitstream...');
           
-          // 🚀 FIX: FORCE Re-encode to avoid sync issues
+          // FIX: FORCE Re-encode to avoid sync issues
           final convertedFile = await _convertToFlac(
             inputPath: tempPath,
             outputPath: outputPath,
@@ -1321,7 +1324,7 @@ class FlacDownloaderService {
           final convertedFile = await _convertToFlac(
             inputPath: tempPath,
             outputPath: outputPath,
-            forceReencode: true, // 🚀 FORCE
+            forceReencode: true, // FORCE
           );
 
           // Cleanup temp file
@@ -1419,7 +1422,7 @@ class FlacDownloaderService {
         logger.info('QOBUZ: Got download URL, downloading...');
 
         // Download to temp file first
-        final tempPath = outputPath + ".tmp";
+        final tempPath = '$outputPath.tmp';
         final file = await _downloadFile(
           url: downloadUrl,
           outputPath: tempPath,
@@ -1433,7 +1436,7 @@ class FlacDownloaderService {
           final convertedFile = await _convertToFlac(
             inputPath: tempPath,
             outputPath: outputPath,
-            forceReencode: true, // 🚀 FORCE
+            forceReencode: true, // FORCE
           );
 
           // Cleanup
@@ -1733,8 +1736,9 @@ class FlacDownloaderService {
               activeRef.read(dataUsageProvider.notifier).addBytes(resp.bodyBytes.length);
             }
             downloadedCount++;
-            if (onProgress != null)
+            if (onProgress != null) {
               onProgress(downloadedCount / segmentUrls.length);
+            }
           } catch (e) {
             logger.error('⚠️ DASH: Error downloading segment: $e. ABORTING.');
             downloadedCount = 0; // Trigger failure
@@ -1828,7 +1832,7 @@ class FlacDownloaderService {
   Future<File?> _convertToFlac({
     required String inputPath,
     required String outputPath,
-    bool forceReencode = false, // 🚀 Added
+    bool forceReencode = false, // Added
   }) async {
     final logger = DebugLogService();
     bool conversionSuccess = false;
@@ -1837,11 +1841,12 @@ class FlacDownloaderService {
       // Mobile FFmpeg
       logger.info('Converting to FLAC: $inputPath -> $outputPath (forceReencode: $forceReencode)');
       try {
-        String command = forceReencode 
-            ? '-y -i "$inputPath" -c:a flac "$outputPath"'
-            : '-y -i "$inputPath" -c:a copy "$outputPath"';
-            
-        var session = await FFmpegKit.execute(command);
+        // -vn strips embedded album art (MJPEG) which FFmpegKit audio build can't re-encode as PNG
+        final args = forceReencode
+            ? ['-y', '-i', inputPath, '-vn', '-c:a', 'flac', '-sample_fmt', 's16', outputPath]
+            : ['-y', '-i', inputPath, '-vn', '-c:a', 'copy', outputPath];
+
+        var session = await FFmpegKit.executeWithArguments(args);
         var returnCode = await session.getReturnCode();
 
         if (ReturnCode.isSuccess(returnCode)) {
@@ -1850,7 +1855,17 @@ class FlacDownloaderService {
         } else if (!forceReencode) {
           // Fallback to re-encode if copy failed
           logger.warning('FFmpeg copy failed, trying re-encode...');
-          session = await FFmpegKit.execute('-y -i "$inputPath" -c:a flac "$outputPath"');
+          session = await FFmpegKit.executeWithArguments([
+            '-y',
+            '-i',
+            inputPath,
+            '-vn',
+            '-c:a',
+            'flac',
+            '-sample_fmt',
+            's16',
+            outputPath,
+          ]);
           returnCode = await session.getReturnCode();
           if (ReturnCode.isSuccess(returnCode)) {
             conversionSuccess = true;
@@ -1943,7 +1958,7 @@ class FlacDownloaderService {
           chunkAccumulator = 0;
         }
 
-        // 🚀 Improved Progress Handling: fallback to assumed 50MB if length unknown
+        // Improved Progress Handling: fallback to assumed 50MB if length unknown
         if (onProgress != null) {
           final total = contentLength > 0 ? contentLength : 50 * 1024 * 1024;
           double progress = receivedBytes / total;
@@ -1951,6 +1966,9 @@ class FlacDownloaderService {
           // If using assumed total, cap at 99% until fully done
           if (contentLength <= 0 && progress > 0.99) progress = 0.99;
           
+          FlacDownloaderService.currentDownloadReceivedMB = receivedBytes / (1024 * 1024);
+          FlacDownloaderService.currentDownloadTotalMB = total / (1024 * 1024);
+
           onProgress(progress.clamp(0.0, 1.0));
         }
       }
@@ -1966,11 +1984,11 @@ class FlacDownloaderService {
       // 1. Reject suspiciously small files (< 1MB = likely a preview/fragment)
       if (fileSize < 1024 * 1024) {
         debugPrint(
-            '⚠️ File too small (${fileSize} bytes), likely a preview/fragment. Rejecting.');
+            '⚠️ File too small ($fileSize bytes), likely a preview/fragment. Rejecting.');
         throw Exception("File too small");
       }
 
-      // 2. 🚀 VALIDATE FLAC HEADER
+      // 2. VALIDATE FLAC HEADER
       if (!await FlacDownloaderService.isFlacFileValid(outputPath)) {
         debugPrint('❌ FLAC Validation Failed: Invalid sync code or header');
         throw Exception("Invalid FLAC header");
@@ -2008,7 +2026,7 @@ class FlacDownloaderService {
     }
   }
 
-  /// 🚀 STATIC HELPER: Check if a file is a valid FLAC by reading headers and optionally probing bitstream
+  /// STATIC HELPER: Check if a file is a valid FLAC by reading headers and optionally probing bitstream
   static Future<bool> isFlacFileValid(String filePath) async {
     try {
       final file = File(filePath);
@@ -2111,7 +2129,7 @@ class FlacDownloaderService {
       }
     }
 
-    // 🚀 Use public Download directory on Android
+    // Use public Download directory on Android
     String? basePath;
 
     if (Platform.isAndroid) {

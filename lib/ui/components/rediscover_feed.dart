@@ -180,7 +180,7 @@ class _RediscoverFeedState extends ConsumerState<RediscoverFeed> {
                 // We use opacity + color blend to darken it for text readability
                 ImageFiltered(
                   imageFilter:
-                      ColorFilter.mode(Colors.black54, BlendMode.darken),
+                      const ColorFilter.mode(Colors.black54, BlendMode.darken),
                   child: SmartArt(
                     path: song.filePath,
                     size: 400, // Load a reasonably large image

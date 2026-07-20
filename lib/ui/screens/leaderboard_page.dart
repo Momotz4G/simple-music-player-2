@@ -30,7 +30,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
   @override
   void initState() {
     super.initState();
-    // 🚀 Sync local stats to cloud FIRST, then fetch leaderboard
+    // Sync local stats to cloud FIRST, then fetch leaderboard
     _syncThenFetch();
     _startCountdown();
   }
@@ -53,7 +53,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
   }
 
   Future<String?> _getArtistImageWithFallback(String artist) async {
-    // 🚀 NEW: Use the unified service which handles Cache, Spotify, and VPS correctly with logs!
+    // NEW: Use the unified service which handles Cache, Spotify, and VPS correctly with logs!
     return await SpotifyService.getArtistImage(
         artistName: artist, highQuality: true);
   }
@@ -92,7 +92,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
           ? '$filter && last_play_date >= "${StatsUtils.getStartOfWeekGMT7()}"'
           : 'last_play_date >= "${StatsUtils.getStartOfWeekGMT7()}"';
     } else if (_selectedTab == 2 && !_isArtistView) {
-      // 🚀 FIX: For All-Time, filter to only users with total_minutes > 0
+      // FIX: For All-Time, filter to only users with total_minutes > 0
       // This ensures we don't waste the fetch limit on inactive/empty records
       filter = '$filter && total_minutes > 0';
     }
@@ -112,7 +112,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
         final mergedRecords = <String, Map<String, dynamic>>{};
 
         for (final r in records) {
-          final count = r[sortBy] ?? 0;
+          final count = (r[sortBy] as num?)?.toInt() ?? 0;
           if (count > 0 && r['name'] != null) {
             String rawName = r['name'] as String;
 
@@ -133,18 +133,22 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
             if (mergedRecords.containsKey(matchKey)) {
               // Merge play counts
               final existing = mergedRecords[matchKey]!;
-              existing[sortBy] = (existing[sortBy] ?? 0) + count;
 
-              if (r['daily_play_count'] != null)
+              if (r['daily_play_count'] != null) {
                 existing['daily_play_count'] =
-                    (existing['daily_play_count'] ?? 0) + r['daily_play_count'];
-              if (r['weekly_play_count'] != null)
+                    ((existing['daily_play_count'] ?? 0) as num).toInt() +
+                        (r['daily_play_count'] as num).toInt();
+              }
+              if (r['weekly_play_count'] != null) {
                 existing['weekly_play_count'] =
-                    (existing['weekly_play_count'] ?? 0) +
-                        r['weekly_play_count'];
-              if (r['play_count'] != null)
+                    ((existing['weekly_play_count'] ?? 0) as num).toInt() +
+                        (r['weekly_play_count'] as num).toInt();
+              }
+              if (r['play_count'] != null) {
                 existing['play_count'] =
-                    (existing['play_count'] ?? 0) + r['play_count'];
+                    ((existing['play_count'] ?? 0) as num).toInt() +
+                        (r['play_count'] as num).toInt();
+              }
             } else {
               // New record
               final newRecord = Map<String, dynamic>.from(r);
@@ -173,11 +177,11 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
           sortBy: sortBy,
           limit: _selectedTab == 2
               ? 200
-              : 100, // 🚀 FIX: Fetch more for All-Time to ensure 50 unique users after dedup
+              : 100, // FIX: Fetch more for All-Time to ensure 50 unique users after dedup
           filter: filter,
         );
 
-        // 🚀 RANK INJECTION: Fetch Top 3 All-Time if viewing Daily/Weekly to show correct badges
+        // RANK INJECTION: Fetch Top 3 All-Time if viewing Daily/Weekly to show correct badges
         List<Map<String, dynamic>> top3AllTime = [];
         if (_selectedTab != 2) {
           top3AllTime = await PocketBaseService().fetchLeaderboard(
@@ -193,10 +197,10 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
         final seenNicknames =
             <String, int>{}; // nickname -> index in filtered list
         final seenHighScores =
-            <String>{}; // 🚀 Detect clones by identical high scores (minutes + plays)
+            <String>{}; // Detect clones by identical high scores (minutes + plays)
         final filtered = <Map<String, dynamic>>[];
         for (final r in records) {
-          // 🚀 Inject rank if they are in Top 3 All-Time
+          // Inject rank if they are in Top 3 All-Time
           if (_selectedTab != 2) {
             for (int i = 0; i < top3AllTime.length; i++) {
               final isMatch = (r['user_id'] != null &&
@@ -218,13 +222,14 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
 
           // Skip if we've already seen this user_id
           final uId = r['user_id'] as String?;
-          if (uId != null && uId.isNotEmpty && seenUserIds.contains(uId))
+          if (uId != null && uId.isNotEmpty && seenUserIds.contains(uId)) {
             continue;
+          }
 
-          // 🚀 BULLETPROOF CLONE GUARD
+          // BULLETPROOF CLONE GUARD
           // If an account has exactly the same total_minutes AND play_count as an account we've already processed,
           // it is mathematically guaranteed to be a cloned duplicate (exploiting the unlink bug).
-          // 🚀 FIX: Only apply clone guard for Daily/Weekly where duplicates are more likely exploits.
+          // FIX: Only apply clone guard for Daily/Weekly where duplicates are more likely exploits.
           // For All-Time, the nickname + user_id dedup is sufficient.
           final totalMins = (r['total_minutes'] as num?)?.toInt() ?? 0;
           final totalPlays = (r['play_count'] as num?)?.toInt() ?? 0;
@@ -257,7 +262,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
           filtered.add(r);
         }
 
-        // 🚀 FIX: Cap All-Time at 50 users, Daily/Weekly at 25
+        // FIX: Cap All-Time at 50 users, Daily/Weekly at 25
         final int maxDisplay = _selectedTab == 2 ? 50 : 25;
         final cappedList = filtered.length > maxDisplay
             ? filtered.sublist(0, maxDisplay)
@@ -299,7 +304,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
   }
 
   void _showUserProfile(Map<String, dynamic> userData) async {
-    // 🚀 RANK INJECTION: If clicking from Daily/Weekly, check if they are a Top 3 All-Time champion
+    // RANK INJECTION: If clicking from Daily/Weekly, check if they are a Top 3 All-Time champion
     if (userData['leaderboard_rank'] == null) {
       try {
         final top3 = await PocketBaseService().fetchLeaderboard(
@@ -335,7 +340,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
     final accentColor = Theme.of(context).colorScheme.primary;
 
     final screenWidth = MediaQuery.of(context).size.width;
-    // 🚀 Let it "fullfill" the screen by using small fixed padding on PC
+    // Let it "fullfill" the screen by using small fixed padding on PC
     final double horizPadding = screenWidth > 900 ? 40.0 : 20.0;
     final double itemWidth = screenWidth > 900
         ? (screenWidth -
@@ -590,7 +595,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                                                     size: 14,
                                                     color: accentColor),
                                               ],
-                                              // 🚀 Add extra spacing for titles with wings
+                                              // Add extra spacing for titles with wings
                                               SizedBox(
                                                   width: hasWings ? 22 : 8),
                                               SupremeTitleBadge.fromDefinition(

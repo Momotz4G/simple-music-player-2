@@ -10,7 +10,7 @@ import '../components/metadata_editor_panel.dart';
 
 import 'package:permission_handler/permission_handler.dart';
 
-import 'package:device_info_plus/device_info_plus.dart'; // 🚀 IMPORT
+import 'package:device_info_plus/device_info_plus.dart'; // IMPORT
 import '../../l10n/app_localizations.dart';
 
 class ToolsPage extends ConsumerStatefulWidget {
@@ -22,7 +22,7 @@ class ToolsPage extends ConsumerStatefulWidget {
 
 class _ToolsPageState extends ConsumerState<ToolsPage>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  // 🚀 ADD MIXIN
+  // ADD MIXIN
   bool _isLibraryExpanded = false;
   bool _isExternalExpanded = true;
   bool _hasPermission = true;
@@ -33,19 +33,19 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this); // 🚀 REGISTER OBSERVER
+    WidgetsBinding.instance.addObserver(this); // REGISTER OBSERVER
     _tabController = TabController(length: 2, vsync: this);
     _checkPermission();
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this); // 🚀 REMOVE OBSERVER
+    WidgetsBinding.instance.removeObserver(this); // REMOVE OBSERVER
     _tabController.dispose();
     super.dispose();
   }
 
-  // 🚀 RE-CHECK ON RESUME
+  // RE-CHECK ON RESUME
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -198,7 +198,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        // 🚀 Reserve space for the floating hamburger menu (MainShell)
+        // Reserve space for the floating hamburger menu (MainShell)
         leading: const SizedBox(width: 56),
         title: Text(AppLocalizations.of(context)!.metadata_editor,
             style: const TextStyle(fontSize: 18)),
@@ -520,7 +520,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage>
                 SizedBox(
                   height: 24,
                   child: FilledButton.icon(
-                    onPressed: null, // 🚀 DISABLED AS REQUESTED
+                    onPressed: null, // DISABLED AS REQUESTED
                     style: FilledButton.styleFrom(
                         backgroundColor: Colors.grey,
                         disabledBackgroundColor: Colors.grey,

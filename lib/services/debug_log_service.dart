@@ -13,7 +13,7 @@ class DebugLogService {
 
   final List<DebugLogEntry> _logs = [];
   final List<VoidCallback> _listeners = [];
-  final List<String> _fileBuffer = []; // 🚀 LOG BUFFER FOR BATCH RECORDING
+  final List<String> _fileBuffer = []; // LOG BUFFER FOR BATCH RECORDING
   Timer? _flushTimer;
   String? _logsDirPath;
 

@@ -4,8 +4,7 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:http/http.dart' as http;
 import '../env/env.dart';
-import 'package:metadata_god/metadata_god.dart' show Metadata;
-import 'package:metadata_god/metadata_god.dart' show Metadata;
+import 'package:flutter/foundation.dart';
 import 'metadata_service.dart';
 import 'pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
@@ -27,7 +26,7 @@ class AcoustIdService {
   GetFingerprintDart? _getFingerprintWrapper;
 
   AcoustIdService() {
-    // 🚀 DEFERRED LOADING: Do not load DLLs on construction 
+    // DEFERRED LOADING: Do not load DLLs on construction 
     // to prevent COM mode conflicts at app startup.
   }
 
@@ -48,10 +47,10 @@ class AcoustIdService {
                 'get_fingerprint_from_file');
 
         _isNativeLoaded = true;
-        print("✅ Native Chromaprint wrapper loaded.");
+        debugPrint("✅ Native Chromaprint wrapper loaded.");
       }
     } catch (e) {
-      print("ℹ️ FFI Error: $e. Using Metadata Fallback.");
+      debugPrint("ℹ️ FFI Error: $e. Using Metadata Fallback.");
     }
   }
 
@@ -62,7 +61,7 @@ class AcoustIdService {
   Future<List<MusicBrainzRecord>> identifyFile(String filePath) async {
     // 🔒 OFFLINE MODE: Skip native fingerprinting & API lookup, fallback to local tags
     if (PocketBaseService.isOffline) {
-      print("🔒 Offline Mode: Skipping AcoustID fingerprinting.");
+      debugPrint("🔒 Offline Mode: Skipping AcoustID fingerprinting.");
       return _localMetadataFallback(filePath);
     }
 
@@ -78,7 +77,7 @@ class AcoustIdService {
           return await _lookupFingerprint(fingerprint, 0);
         }
       } catch (e) {
-        print("Fingerprint failed: $e");
+        debugPrint("Fingerprint failed: $e");
       }
     }
 
@@ -87,10 +86,10 @@ class AcoustIdService {
   }
 
   Future<List<MusicBrainzRecord>> _localMetadataFallback(String filePath) async {
-    print("⚠️ Using Metadata Fallback...");
-    final Metadata? metadata = await MetadataService().readMetadata(filePath);
-    final title = metadata?.title ?? "";
-    final artist = metadata?.artist ?? "";
+    debugPrint("⚠️ Using Metadata Fallback...");
+    final metadata = await MetadataService().readMetadata(filePath);
+    final title = metadata.title ?? "";
+    final artist = metadata.artist ?? "";
 
     if (title.isNotEmpty) {
       // Create a "Fake" MusicBrainz record from the file tags

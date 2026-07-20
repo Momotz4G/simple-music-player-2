@@ -49,12 +49,16 @@ class DownloadProgressWidget extends StatelessWidget {
               const SizedBox(width: 8),
               if (onCancel != null) ...[
                 SizedBox(
-                  height: 24,
-                  width: 24,
+                  height: 26,
+                  width: 26,
                   child: IconButton(
                     padding: EdgeInsets.zero,
-                    iconSize: 16,
-                    icon: Icon(Icons.close, color: textColor),
+                    iconSize: 14,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.red.withValues(alpha: 0.12),
+                      foregroundColor: Colors.red,
+                    ),
+                    icon: const Icon(Icons.close),
                     onPressed: onCancel,
                     tooltip: "Cancel Download",
                   ),
@@ -91,7 +95,7 @@ class DownloadProgressWidget extends StatelessWidget {
                   color: textColor?.withValues(alpha: 0.7),
                 ),
               ),
-              // 🚀 Speed display
+              // Speed display
               if (progress.speedMBps != null && progress.speedMBps! > 0)
                 Text(
                   "${progress.speedMBps!.toStringAsFixed(1)} MB/s",

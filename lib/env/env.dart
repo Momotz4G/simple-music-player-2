@@ -10,7 +10,7 @@ abstract class Env {
   @EnviedField(varName: 'SPOTIFY_CLIENT_SECRET', obfuscate: true)
   static final String spotifyClientSecret = _Env.spotifyClientSecret;
 
-  // 🚀 Secondary Spotify App (for high-volume search operations)
+  // Secondary Spotify App (for high-volume search operations)
   @EnviedField(
       varName: 'SPOTIFY_CLIENT_ID_2', obfuscate: true, defaultValue: '')
   static final String spotifyClientId2 = _Env.spotifyClientId2;
@@ -22,7 +22,7 @@ abstract class Env {
   @EnviedField(varName: 'DISCORD_APP_ID', obfuscate: true)
   static final String discordAppId = _Env.discordAppId;
 
-  // 🚀 Firebase Config
+  // Firebase Config
   @EnviedField(varName: 'FIREBASE_API_KEY', obfuscate: true)
   static final String firebaseApiKey = _Env.firebaseApiKey;
 
@@ -55,7 +55,7 @@ abstract class Env {
   @EnviedField(varName: 'FIREBASE_MEASUREMENT_ID', obfuscate: true)
   static final String firebaseMeasurementId = _Env.firebaseMeasurementId;
 
-  // 🚀 PocketBase Config
+  // PocketBase Config
   @EnviedField(varName: 'POCKETBASE_URL', obfuscate: true)
   static final String pocketbaseUrl = _Env.pocketbaseUrl;
 
@@ -65,46 +65,64 @@ abstract class Env {
   @EnviedField(varName: 'POCKETBASE_ADMIN_PASSWORD', obfuscate: true)
   static final String pocketbaseAdminPassword = _Env.pocketbaseAdminPassword;
 
-  // 🚀 Qobuz Config
+  // Qobuz Config
   @EnviedField(
       varName: 'QOBUZ_APP_ID', obfuscate: true, defaultValue: '798273057')
   static final String qobuzAppId = _Env.qobuzAppId;
 
-  // 🚀 Remote Control Config
+  // Remote Control Config
   @EnviedField(varName: 'REMOTE_CONTROL_URL', obfuscate: true)
   static final String remoteControlUrl = _Env.remoteControlUrl;
 
-  // 🚀 Romaji API Config
+  // Romaji API Config
   @EnviedField(varName: 'ROMAJI_API_URL', obfuscate: true)
   static final String romajiApiUrl = _Env.romajiApiUrl;
 
-  // 🚀 Tidal API Config (Private Server)
+  // Tidal API Config (Private Server)
   @EnviedField(varName: 'TIDAL_API_KEY', obfuscate: true, defaultValue: '')
   static final String tidalApiKey = _Env.tidalApiKey;
 
-  // 🚀 Tidal API URL (Primary Server)
-  @EnviedField(
-      varName: 'TIDAL_API_URL',
-      obfuscate: true,
-      defaultValue: '')
+  // Tidal API URL (Primary Server)
+  @EnviedField(varName: 'TIDAL_API_URL', obfuscate: true, defaultValue: '')
   static final String tidalApiUrl = _Env.tidalApiUrl;
 
   @EnviedField(varName: 'SPOTIFY_BANNER_URL', obfuscate: true, defaultValue: '')
   static final String spotifyBannerUrl = _Env.spotifyBannerUrl;
 
-  // 🍎 Apple Music API Config
+  // Apple Music API Config
   @EnviedField(varName: 'APPLE_MUSIC_API_URL', obfuscate: true)
   static final String appleMusicApiUrl = _Env.appleMusicApiUrl;
 
-  // 🚀 AI Lyrics Config
-  @EnviedField(varName: 'AI_LYRICS_API_URL', obfuscate: true, defaultValue: 'http://localhost:3007/api/generate')
+  // AI Lyrics Config
+  @EnviedField(
+      varName: 'AI_LYRICS_API_URL',
+      obfuscate: true,
+      defaultValue: 'http://localhost:3007/api/generate')
   static final String aiLyricsApiUrl = _Env.aiLyricsApiUrl;
 
-  // 🚀 AcoustID Config
+  // AcoustID Config
   @EnviedField(varName: 'ACOUSTID_API_KEY', obfuscate: true, defaultValue: '')
   static final String acoustidApiKey = _Env.acoustidApiKey;
 
-  // 🚀 VPS Scraper Config
+  // VPS Scraper Config
   @EnviedField(varName: 'VPS_SCRAPER_URL', obfuscate: true, defaultValue: '')
   static final String vpsScraperUrl = _Env.vpsScraperUrl;
+
+  // ALAC Stream URL
+  @EnviedField(varName: 'ALAC_STREAM_URL', obfuscate: true, defaultValue: '')
+  static final String alacStreamUrl = _Env.alacStreamUrl;
+
+  // External Lyrics URL
+  @EnviedField(
+      varName: 'EXTERNAL_LYRICS_URL', obfuscate: true, defaultValue: '')
+  static final String externalLyricsUrl = _Env.externalLyricsUrl;
+
+  // Purge Cache Endpoint Path
+  @EnviedField(
+      varName: 'PURGE_CACHE_PATH', obfuscate: true, defaultValue: '/purge-cache')
+  static final String purgeCachePath = _Env.purgeCachePath;
+
+  // YT Music API
+  @EnviedField(varName: 'YT_MUSIC_API_URL', obfuscate: true, defaultValue: 'https://ytmusic-api.stephanus-dev.online')
+  static final String ytMusicApiUrl = _Env.ytMusicApiUrl;
 }

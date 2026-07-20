@@ -96,7 +96,7 @@ class _AudioWaveVisualizerState extends State<AudioWaveVisualizer>
             isRainbow: widget.isRainbow);
         break;
       case VisualizerStyle.spectrum:
-      default:
+
         painter = _SpectrumPainter(
             barHeights: _barHeights,
             color: widget.color,

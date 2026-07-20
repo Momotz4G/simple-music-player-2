@@ -109,12 +109,12 @@ class _LodgePainter extends CustomPainter {
 
     // Main base
     canvas.drawRect(
-        Rect.fromLTWH(-scale * 0.5, -scale * 0.5, scale, scale * 0.5),
+        const Rect.fromLTWH(-scale * 0.5, -scale * 0.5, scale, scale * 0.5),
         woodPaint);
 
     // Left wing
     canvas.drawRect(
-        Rect.fromLTWH(-scale * 0.8, -scale * 0.4, scale * 0.4, scale * 0.4),
+        const Rect.fromLTWH(-scale * 0.8, -scale * 0.4, scale * 0.4, scale * 0.4),
         secondaryWood);
 
     // Roofs
@@ -136,7 +136,7 @@ class _LodgePainter extends CustomPainter {
 
     // Chimney
     canvas.drawRect(
-        Rect.fromLTWH(-scale * 0.35, -scale * 0.85, scale * 0.1, scale * 0.2),
+        const Rect.fromLTWH(-scale * 0.35, -scale * 0.85, scale * 0.1, scale * 0.2),
         woodPaint);
 
     // 3. WINDOWS GOW
@@ -150,7 +150,7 @@ class _LodgePainter extends CustomPainter {
 
     // Main window
     final Rect mainWindow = Rect.fromCenter(
-        center: Offset(0, -scale * 0.25),
+        center: const Offset(0, -scale * 0.25),
         width: scale * 0.25,
         height: scale * 0.2);
     canvas.drawRect(mainWindow, glowPaint);
@@ -158,8 +158,8 @@ class _LodgePainter extends CustomPainter {
 
     // Small side windows
     final List<Offset> sideWindows = [
-      Offset(-scale * 0.6, -scale * 0.2),
-      Offset(scale * 0.35, -scale * 0.25),
+      const Offset(-scale * 0.6, -scale * 0.2),
+      const Offset(scale * 0.35, -scale * 0.25),
     ];
 
     for (final offset in sideWindows) {

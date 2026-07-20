@@ -38,6 +38,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get accountLinkedSuccessfully => 'खाता सफलतापूर्वक लिंक किया गया!';
 
   @override
+  String get accountTiers => 'खाता स्तर';
+
+  @override
   String get achievementsUnlocked => 'अनलॉक की गई उपलब्धियां';
 
   @override
@@ -54,6 +57,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get addFoldersScan => 'स्कैन के लिए फ़ोल्डर जोड़ें';
+
+  @override
+  String get addLineToEnd => 'अंत में जोड़ें';
+
+  @override
+  String get addLineToTop => 'शीर्ष पर जोड़ें';
 
   @override
   String get addToFavorite => 'पसंदीदा में जोड़ें';
@@ -77,6 +86,67 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get addedToQueue => 'कतार में जोड़ा गया';
+
+  @override
+  String get aiGenerate => 'एआई जनरेट';
+
+  @override
+  String get aiLyricsComplete => 'पूरा हुआ!';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsGenerationTitle => 'एआई लिरिक्स जनरेशन';
+
+  @override
+  String get aiLyricsInitializing => 'आरंभ किया जा रहा है...';
+
+  @override
+  String get aiLyricsLocalFileMissing =>
+      'त्रुटि: स्थानीय ऑडियो फ़ाइल नहीं मिली।';
+
+  @override
+  String get aiLyricsParsing => 'लिरिक्स का विश्लेषण किया जा रहा है...';
+
+  @override
+  String get aiLyricsPolling =>
+      'लिरिक्स प्राप्त किए जा रहे हैं... कृपया धैर्य रखें!';
+
+  @override
+  String get aiLyricsReceiving => 'लिरिक्स प्राप्त हुए';
+
+  @override
+  String get aiLyricsStatusOk => 'स्थिति कोड 200 OK!';
+
+  @override
+  String get aiLyricsSuccess => 'लिरिक्स सफलतापूर्वक जनरेट हुए!';
+
+  @override
+  String get aiLyricsUploadFailed => 'त्रुटि: अपलोड विफल।';
+
+  @override
+  String get aiLyricsUploadSuccess => 'अपलोड पूरा हुआ!';
+
+  @override
+  String get aiLyricsUploading => 'गाना सर्वर पर अपलोड किया जा रहा है...';
+
+  @override
+  String get aiLyricsVerifying => 'सर्वर स्थिति की पुष्टि की जा रही है...';
+
+  @override
+  String alacDownloadsPerDay(int count) {
+    return '$count ALAC डाउनलोड / दिन';
+  }
+
+  @override
+  String get alacHighResDownloads => 'ALAC उच्च-रिज़ॉल्यूशन डाउनलोड';
 
   @override
   String get album => 'एल्बम';
@@ -106,6 +176,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get alreadyInLikedSongs => 'पहले से ही पसंद किए गए गानों में है';
 
   @override
+  String get alreadyPaidCheckStatus => 'पहले ही भुगतान कर दिया? स्थिति जांचें';
+
+  @override
   String get android14BitPerfect => 'Android 14+ बिट-परफेक्ट';
 
   @override
@@ -123,6 +196,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get appearance => 'दिखावट';
+
+  @override
+  String get applyBtn => 'लागू करें';
 
   @override
   String get applyOnRestart => 'अगली बार ऐप शुरू होने पर परिवर्तन लागू होंगे।';
@@ -204,6 +280,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get automatic => 'स्वचालित';
 
   @override
+  String get automaticGainControl => 'स्वचालित गेन नियंत्रण';
+
+  @override
+  String get automaticGainControlDesc =>
+      'गाने के वॉल्यूम को सामान्य करें ताकि कोई भी गाना बहुत तेज़ या बहुत धीमा न हो।';
+
+  @override
   String automaticTitleLabel(String title) {
     return 'स्वचालित: $title';
   }
@@ -215,15 +298,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get avatarPickerDesc => 'एक टेम्पलेट चुनें या अपनी फोटो आयात करें';
 
   @override
-  String get beFirstToClaim => 'शीर्ष स्थान पाने वाले पहले व्यक्ति बनें!';
-
-  @override
   String get backgroundCacheFlacStreams =>
       'बैकग्राउंड में FLAC स्ट्रीम कैश करें';
 
   @override
   String get backgroundCacheFlacStreamsSubtitle =>
       'स्ट्रीम किए गए लॉसलेस ट्रैक को चुपचाप आपकी लोकल डिस्क पर डाउनलोड करता है ताकि रिप्ले तुरंत हो और कोई डेटा उपयोग न हो।';
+
+  @override
+  String get beFirstToClaim => 'शीर्ष स्थान पाने वाले पहले व्यक्ति बनें!';
 
   @override
   String get behavioralHeader => 'व्यवहार संबंधी उपलब्धियां';
@@ -236,6 +319,24 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bitDepthLabel => 'बिट डेप्थ';
+
+  @override
+  String get bitPerfectBypassSub14 =>
+      'Android 14+ बिट-परफेक्ट API का उपयोग करके सिस्टम मिक्सर को बायपास करें';
+
+  @override
+  String get bitPerfectBypassSubLegacy =>
+      'C++ ऑडियो इंजन (Android 13 और उससे नीचे) का उपयोग करके सिस्टम मिक्सर को बायपास करें';
+
+  @override
+  String get bitPerfectBypassSuccess => 'बिट-परफेक्ट प्लेबैक सक्षम।';
+
+  @override
+  String get bitPerfectBypassTitle => 'बिट-परफेक्ट / USB ऑडियो बायपास';
+
+  @override
+  String get bitPerfectBypassWarning =>
+      'आपको पहले अपना USB DAC प्लग करना होगा।';
 
   @override
   String get bitPerfectEnabled =>
@@ -271,6 +372,16 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get cancel => 'रद्द करें';
+
+  @override
+  String get cancelAllBtn => 'सभी रद्द करें';
+
+  @override
+  String get canvasSourcePreferenceSubtitle =>
+      'चुनें कि पृष्ठभूमि एनिमेटेड लूप कहाँ से लोड किए जाएं';
+
+  @override
+  String get canvasSourcePreferenceTitle => 'कैनवास / एनिमेटेड कलाकृति स्रोत';
 
   @override
   String get championChampionTooltip =>
@@ -328,6 +439,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chooseAvatar => 'अवातार चुनें';
 
   @override
+  String get chooseFormat => 'अपना पसंदीदा प्रारूप चुनें:';
+
+  @override
   String get chooseYourTitle => 'अपना शीर्षक चुनें';
 
   @override
@@ -335,6 +449,16 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get clearAll => 'सभी साफ करें';
+
+  @override
+  String get clearAllDesc =>
+      'यह वर्तमान संपादक स्थिति को साफ़ कर देगा। जब तक आप बाद में सहेजते नहीं हैं, यह आपकी स्थानीय फ़ाइलों को नहीं हटाएगा।';
+
+  @override
+  String get clearAllQuestion => 'सब साफ़ करें?';
+
+  @override
+  String get clearBtn => 'साफ़ करें';
 
   @override
   String get clearHistory => 'इतिहास साफ़ करें';
@@ -356,6 +480,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get cloud => 'क्लाउड';
+
+  @override
+  String get cloudStatsAndRankings => 'क्लाउड आँकड़े और रैंकिंग';
 
   @override
   String get codeCopied => 'कोड क्लिपबोर्ड पर कॉपी किया गया!';
@@ -414,7 +541,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get contentRegion => 'कंटेंट क्षेत्र';
 
   @override
+  String get continueToSociabuzz => 'Sociabuzz पर जारी रखें';
+
+  @override
   String get copyCode => 'कोड कॉपी करें';
+
+  @override
+  String get copyLink => 'लिंक कॉपी करें';
 
   @override
   String get couldNotDownloadFlac => 'FLAC डाउनलोड नहीं किया जा सका।';
@@ -448,6 +581,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get crownedChampionTitlesHeader => 'ताज पहनाया चैंपियन शीर्षक';
+
+  @override
+  String get currentTierLabel => 'वर्तमान';
 
   @override
   String get customDevice => 'कस्टम डिवाइस';
@@ -534,6 +670,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get disableRomanization => 'रोमानाइज़ेशन अक्षम करें';
 
   @override
+  String get disableServicesTitle => 'सेवाएं अक्षम करें';
+
+  @override
+  String get disabled => 'अक्षम';
+
+  @override
   String get disablingSharingWarning =>
       'साझाकरण अक्षम करने से स्थान बचाने के लिए सर्वर से कोड और डेटा स्थायी रूप से हटा दिया जाएगा।';
 
@@ -551,6 +693,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get donate => 'दान करें';
+
+  @override
+  String get donateMinToObtain =>
+      'प्राप्त करने के लिए कम से कम 10,000 IDR दान करें (स्थायी)';
 
   @override
   String get download => 'डाउनलोड';
@@ -613,6 +759,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get dspLabel => 'DSP';
 
   @override
+  String get editLyricsTooltip => 'लिरिक्स संपादित करें';
+
+  @override
   String get editMetadata => 'मेटाडेटा संपादित करें';
 
   @override
@@ -645,6 +794,15 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get enableBarVisualizer => 'बार विज़ुअलाइज़र सक्षम करें';
+
+  @override
+  String get enableOfflineModeBtn => 'ऑफ़लाइन मोड सक्षम करें';
+
+  @override
+  String get enableOfflineModeQuestion => 'ऑफ़लाइन मोड सक्षम करें?';
+
+  @override
+  String get endLabel => 'अंत: ';
 
   @override
   String get endlessQueue => 'अंतहीन कतार';
@@ -704,6 +862,9 @@ class AppLocalizationsHi extends AppLocalizations {
       'चेतावनी: एक्सक्लूसिव मोड बेहतर काम करता है यदि आप सिस्टम डिफ़ॉल्ट के बजाय ऊपर एक विशिष्ट डिवाइस चुनते हैं।';
 
   @override
+  String get exclusiveSupporterTitle => 'विशेष समर्थक शीर्षक और Discord भूमिका';
+
+  @override
   String get exclusiveTitles => 'अनन्य';
 
   @override
@@ -720,7 +881,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get expand => 'विस्तार करें';
 
   @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
   String get externalFiles => 'बाहरी फ़ाइलें';
+
+  @override
+  String get externalLinkDetected => 'बाहरी लिंक का पता चला';
 
   @override
   String get fadingAtEnd =>
@@ -746,6 +913,9 @@ class AppLocalizationsHi extends AppLocalizations {
       'साझाकरण कोड तैयार करने में विफल। कनेक्शन की जांच करें।';
 
   @override
+  String get failedToSave => 'लिरिक्स फ़ाइल सहेजने में विफल।';
+
+  @override
   String get failedToSetAvatar => 'एवतार टेम्पलेट सेट करने में विफल';
 
   @override
@@ -753,6 +923,80 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get favoriteTrack => 'पसंदीदा ट्रैक';
+
+  @override
+  String get featureAiLyrics => 'एआई गीत जनरेटर';
+
+  @override
+  String get featureAiLyricsDesc => 'स्वचालित सिंक्रनाइज़ गीत अक्षम';
+
+  @override
+  String get featureAiLyricsLongDesc =>
+      'एआई के माध्यम से सिंक्रनाइज़ गीत उत्पन्न करें';
+
+  @override
+  String get featureCloudSync => 'क्लाउड आँकड़े सिंक';
+
+  @override
+  String get featureCloudSyncDesc =>
+      'सुनने के आँकड़े केवल स्थानीय रूप से सहेजे गए';
+
+  @override
+  String get featureCloudSyncLongDesc =>
+      'PocketBase के साथ सुनने के मेट्रिक्स सिंक करें';
+
+  @override
+  String get featureConnectDevice => 'किसी डिवाइस से कनेक्ट करें';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'रिमोट कंट्रोल और लिसनिंग पार्टियां अक्षम';
+
+  @override
+  String get featureConnectDeviceLongDesc =>
+      'रिमोट कंट्रोल और लिसनिंग पार्टियां';
+
+  @override
+  String get featureLeaderboard => 'वैश्विक लीडरबोर्ड';
+
+  @override
+  String get featureLeaderboardDesc => 'रैंक अपडेट रोक दिए गए';
+
+  @override
+  String get featureLeaderboardLongDesc =>
+      'सार्वजनिक रूप से अपनी रैंक दिखाएं और अपडेट करें';
+
+  @override
+  String get featureOnlineLyrics => 'ऑनलाइन गीत खोज';
+
+  @override
+  String get featureOnlineLyricsDesc => 'केवल स्थानीय .lrc/.ttml फ़ाइलें';
+
+  @override
+  String get featureOnlineLyricsLongDesc =>
+      'LRCLIB/Spotify से गीत प्राप्त करें';
+
+  @override
+  String get featureOnlineSearch => 'ऑनलाइन खोज';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube खोज अक्षम';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'Spotify और YouTube रिमोट खोज';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'पृष्ठभूमि वीडियो अक्षम';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'ट्रैक के लिए पृष्ठभूमि वीडियो';
+
+  @override
+  String get fetchingAlacAppleMusic =>
+      'Apple Music से ALAC Lossless प्राप्त किया जा रहा है...';
 
   @override
   String get fetchingCanvas => 'कैनवास लिया जा रहा है...';
@@ -899,7 +1143,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get general => 'सामान्य';
 
   @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
   String get generatingShareCode => 'साझाकरण कोड तैयार किया जा रहा है...';
+
+  @override
+  String get generationFailed => 'जनरेशन विफल';
 
   @override
   String get genre => 'शैली';
@@ -931,6 +1181,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'फ़ोल्डर चुनने के लिए स्थानीय लाइब्रेरी पर जाएं।';
 
   @override
+  String get gofileDownloadFailedPrompt =>
+      'सख्त नेटवर्क या सर्वर प्रतिबंधों के कारण स्वचालित डाउनलोड विफल रहा।\\n\\nक्या आप अपने सिस्टम ब्राउज़र में Gofile डाउनलोड पेज खोलना चाहेंगे, या मैन्युअल रूप से डाउनलोड करने के लिए लिंक कॉपी करना चाहेंगे?';
+
+  @override
   String get goodAfternoon => 'दोपहर का नमस्कार';
 
   @override
@@ -947,6 +1201,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get grantPermission => 'अनुमति दें';
+
+  @override
+  String get guestTier => 'अतिथि';
 
   @override
   String get hallOfFameHeader => 'हॉल ऑफ फेम उपलब्धियां';
@@ -1018,6 +1275,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get importFromGallery => 'गैलरी से आयात करें';
 
   @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
   String get importFromSpotify => 'Spotify से आयात करें';
 
   @override
@@ -1038,6 +1301,85 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get importLyricsTooltip => 'लिरिक्स आयात करें';
+
+  @override
+  String get localFile => 'स्थानीय फ़ाइल';
+
+  @override
+  String get importLocalFileSubtitle => '.lrc, .ttml, या .txt आयात करें';
+
+  @override
+  String get searchFromAppleMusic => 'Apple Music से खोजें';
+
+  @override
+  String get searchAppleMusicSubtitle =>
+      'LRC/TTML स्वचालित रूप से डाउनलोड करता है';
+
+  @override
+  String get searchFromSpotifyLyrics => 'Spotify से खोजें';
+
+  @override
+  String get searchSpotifyLyricsSubtitle =>
+      'Spotify से सिंक किए गए लिरिक्स डाउनलोड करता है';
+
+  @override
+  String get searchFromMusixmatch => 'Musixmatch से खोजें';
+
+  @override
+  String get searchMusixmatchSubtitle =>
+      'Musixmatch से सिंक किए गए लिरिक्स डाउनलोड करता है';
+
+  @override
+  String get searchingAppleMusic => 'Apple Music में खोजा जा रहा है...';
+
+  @override
+  String get findingMatches => 'परिणाम खोजे जा रहे हैं...';
+
+  @override
+  String get noResultsAppleMusic => 'Apple Music पर कोई परिणाम नहीं मिला।';
+
+  @override
+  String get selectSong => 'गीत चुनें';
+
+  @override
+  String get downloadingLyrics => 'लिरिक्स डाउनलोड हो रहे हैं...';
+
+  @override
+  String get fetchingLyricsFromServer =>
+      'सर्वर से TTML/LRC प्राप्त किया जा रहा है...';
+
+  @override
+  String get failedDownloadAppleMusic =>
+      'लिरिक्स डाउनलोड करने में विफल। वे Apple Music पर मौजूद नहीं हो सकते हैं।';
+
+  @override
+  String get lyricsImportedSuccess =>
+      'लिरिक्स सफलतापूर्वक आयात किए गए! उन्हें रखने के लिए सहेजें दबाएं।';
+
+  @override
+  String get receivedEmptyLyrics => 'सर्वर से खाली लिरिक्स प्राप्त हुए।';
+
+  @override
+  String get downloadingFromSpotify => 'Spotify से डाउनलोड किया जा रहा है...';
+
+  @override
+  String get fetchingLyrics => 'लिरिक्स प्राप्त किए जा रहे हैं...';
+
+  @override
+  String get lyricsImportedSpotify => 'Spotify से लिरिक्स आयात किए गए!';
+
+  @override
+  String get noLyricsSpotify => 'Spotify पर कोई लिरिक्स नहीं मिले।';
+
+  @override
+  String get downloadingFromMusixmatch =>
+      'Musixmatch से डाउनलोड किया जा रहा है...';
+
+  @override
+  String get lyricsImportedMusixmatch => 'Musixmatch से लिरिक्स आयात किए गए!';
+
+  @override
+  String get noLyricsMusixmatch => 'Musixmatch पर कोई लिरिक्स नहीं मिले।';
 
   @override
   String get importSpotifyPlaylist => 'Spotify प्लेलिस्ट आयात करें';
@@ -1072,6 +1414,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get inputLabel => 'इनपुट';
 
   @override
+  String get insertAfter => 'बाद में डालें';
+
+  @override
   String get installNow => 'अभी इंस्टॉल करें';
 
   @override
@@ -1082,6 +1427,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get invalidCode => 'अमान्य एक्सेस कोड';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
 
   @override
   String get invalidSpotifyUrl => 'अमान्य Spotify प्लेलिस्ट URL';
@@ -1146,6 +1494,13 @@ class AppLocalizationsHi extends AppLocalizations {
       'Google के साथ अपनी प्रगति को सिंक और रिस्टोर करें';
 
   @override
+  String get linkAccountToUpgrade =>
+      'अपग्रेड करने के लिए आपको पहले अपना खाता लिंक करना होगा। कृपया Sociabuzz पर उसी ईमेल का उपयोग करें!';
+
+  @override
+  String get linkCopied => 'लिंक क्लिपबोर्ड पर कॉपी किया गया!';
+
+  @override
   String listenMinutesTooltip(String minutes) {
     return '$minutes मिनट संगीत सुनें';
   }
@@ -1189,10 +1544,25 @@ class AppLocalizationsHi extends AppLocalizations {
   String get losslessQuality => 'लॉसलेस (ऑटो)';
 
   @override
+  String get lrcFormat => 'LRC (मानक सिंक)';
+
+  @override
+  String get lrcFormatDesc => 'यूनिवर्सल प्रारूप, हर जगह काम करता है।';
+
+  @override
   String get lunarNewYear => 'चंद्र नव वर्ष';
 
   @override
+  String get lyricTextHint => 'लिरिक्स टेक्स्ट...';
+
+  @override
+  String get lyricsApplied => 'लिरिक्स पैनल पर लागू किए गए!';
+
+  @override
   String get lyricsByLRCLIB => 'LRCLIB द्वारा लिरिक्स';
+
+  @override
+  String get lyricsEditorTitle => 'लिरिक्स संपादक';
 
   @override
   String get lyricsSaveError => 'लिरिक्स सहेजते समय त्रुटि';
@@ -1205,6 +1575,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get madeForYou => 'आपके लिए बनाया गया';
+
+  @override
+  String get manageIndividualFeatures =>
+      'व्यक्तिगत ऑनलाइन सुविधाओं का प्रबंधन करें';
 
   @override
   String get manualSearch => 'मैन्युअल खोज';
@@ -1441,6 +1815,42 @@ class AppLocalizationsHi extends AppLocalizations {
   String get offline => 'ऑफ़लाइन';
 
   @override
+  String get offlineModeActive => 'सक्रिय';
+
+  @override
+  String get offlineModeAllEnabledStatus => 'सभी सक्षम';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'यह सभी नेटवर्क संचार को पूरी तरह से अक्षम कर देगा। निम्नलिखित सुविधाएं बंद कर दी जाएंगी:';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'अक्षम ($count)';
+  }
+
+  @override
+  String get offlineModeEnabledStatus => 'ऑफ़लाइन मोड सक्षम है';
+
+  @override
+  String get offlineModeHeader => 'ऑफ़लाइन मोड';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'नेटवर्क लॉकडाउन सक्रिय है। आंकड़े स्थानीय रूप से सहेजे जाते हैं।';
+
+  @override
+  String get offlineModeMainDesc =>
+      'सभी नेटवर्क सेवाओं को अक्षम करें और केवल स्थानीय लाइब्रेरी चलाएं।';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'जब आप इसे बंद करेंगे तो आपके आंकड़े स्वचालित रूप से सिंक हो जाएंगे।';
+
+  @override
+  String get offlineModeTitle => 'ऑफ़लाइन मोड';
+
+  @override
   String get offlineStatus => 'ऑफ़लाइन';
 
   @override
@@ -1450,8 +1860,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get online => 'ऑनलाइन';
 
   @override
+  String get onlineModeRestored => 'ऑनलाइन मोड बहाल। आंकड़े सिंक हो रहे हैं...';
+
+  @override
+  String get onlyAppleMusic => 'केवल Apple Music';
+
+  @override
   String get onlyScanSelected =>
       'केवल चयनित फ़ोल्डरों को स्कैन करें (डिफ़ॉल्ट रूप से चालू)';
+
+  @override
+  String get onlySpotify => 'केवल Spotify';
 
   @override
   String get opacity => 'अपारदर्शिता';
@@ -1460,6 +1879,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String opacityLabel(int percent) {
     return 'अस्पष्टता: $percent%';
   }
+
+  @override
+  String get openBrowser => 'ब्राउज़र खोलें';
 
   @override
   String get openProfile => 'प्रोफाइल खोलें';
@@ -1478,8 +1900,14 @@ class AppLocalizationsHi extends AppLocalizations {
       'इस गाने के लिए एक स्थानीय .lrc फ़ाइल पहले से मौजूद है।\\nक्या आप ओवरराइट करना चाहते हैं?';
 
   @override
+  String get owned => 'स्वामित्व';
+
+  @override
   String get parsingPlaylistData =>
       'प्लेलिस्ट डेटा का विश्लेषण किया जा रहा है...';
+
+  @override
+  String get pasteLyricsHint => 'अपने लिरिक्स यहाँ पेस्ट करें...';
 
   @override
   String get pathLabel => 'पथ';
@@ -1492,12 +1920,18 @@ class AppLocalizationsHi extends AppLocalizations {
       'टैग संपादित करने के लिए \'सभी फ़ाइलों तक पहुँच\' अनुमति की आवश्यकता है। यह आपकी संगीत फ़ाइलों को सीधे संशोधित करने की अनुमति देता है।';
 
   @override
+  String get plainMode => 'सादा';
+
+  @override
   String get play => 'चलाएं';
 
   @override
   String playCountLabel(int count) {
     return '$count नाटक';
   }
+
+  @override
+  String get playFromLine => 'इस पंक्ति से चलाएं';
 
   @override
   String get playNext => 'अगला चलाएं';
@@ -1554,7 +1988,20 @@ class AppLocalizationsHi extends AppLocalizations {
   String get portuguese => 'पुर्तगाली (ब्राजील)';
 
   @override
+  String get preferAppleMusic => 'Apple Music को प्राथमिकता दें';
+
+  @override
+  String get preferSpotify => 'Spotify को प्राथमिकता दें';
+
+  @override
   String get preferredOutputFormat => 'डाउनलोड के लिए पसंदीदा आउटपुट प्रारूप';
+
+  @override
+  String get premiumMemberDesc =>
+      'आपके पास असीमित ALAC डाउनलोड और प्राथमिकता कतार पहुंच है!';
+
+  @override
+  String get premiumMemberTitle => 'प्रीमियम सदस्य';
 
   @override
   String get preparingDownload => 'डाउनलोड की तैयारी की जा रही है';
@@ -1575,6 +2022,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get previousTrack => 'पिछला ट्रैक';
+
+  @override
+  String get priorityVipServerQueue => 'प्राथमिकता VIP सर्वर कतार';
+
+  @override
+  String get processingOnServer => 'सर्वर पर प्रोसेसिंग हो रही है...';
 
   @override
   String get profileSettings => 'प्रोफ़ाइल सेटिंग्स';
@@ -1598,6 +2051,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get queueIsEmpty => 'कतार खाली है';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'कतार $position... कृपया प्रतीक्षा करें';
+  }
 
   @override
   String get queueTooltip => 'कतार';
@@ -1678,10 +2136,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get refreshLyricsTooltip => 'लिरिक्स रीफ्रेश करें';
 
   @override
+  String get registeredLinkedTier => 'पंजीकृत (लिंक किया गया)';
+
+  @override
   String get removeAvatar => 'वर्तमान अवातार हटाएँ';
 
   @override
   String get removeFromPlaylist => 'प्लेलिस्ट से हटाएं';
+
+  @override
+  String get removeLine => 'पंक्ति हटाएं';
 
   @override
   String removedFolder(Object folder) {
@@ -1696,6 +2160,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get repeats => 'दोहराव';
+
+  @override
+  String get reportTrouble => 'समस्या की रिपोर्ट करें';
 
   @override
   String get requiresAndroid14 => 'Android 14+ और USB DAC की आवश्यकता है';
@@ -1771,6 +2238,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get revert => 'वापस लाएं';
 
   @override
+  String get romajiHint => 'रोमाजी / लिप्यंतरण (वैकल्पिक)...';
+
+  @override
   String get russian => 'रूसी';
 
   @override
@@ -1795,8 +2265,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get saveLabel => 'सहेजें';
 
   @override
+  String get saveLocallyBtn => 'स्थानीय रूप से सहेजें';
+
+  @override
   String get saveLrcPrompt =>
       'क्या आप वर्तमान लिरिक्स को ऑडियो फ़ाइल के बगल में .lrc फ़ाइल के रूप में सहेजना चाहते हैं?';
+
+  @override
+  String get saveLyricsTitle => 'लिरिक्स सहेजें';
 
   @override
   String get saveLyricsTooltip => 'लिरिक्स सहेजें';
@@ -1821,6 +2297,11 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String savedAsFormat(String format) {
     return '$format के रूप में सहेजा गया';
+  }
+
+  @override
+  String savedSuccessfully(String extension) {
+    return '$extension फ़ाइल में सफलतापूर्वक सहेजा गया!';
   }
 
   @override
@@ -1906,6 +2387,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get seeAll => 'सभी देखें';
 
   @override
+  String get seeBenefitsBtn => 'लाभ देखें';
+
+  @override
+  String get seePremiumBenefits => 'प्रीमियम लाभ देखें';
+
+  @override
   String get selectDifferentFolder => 'अलग फ़ोल्डर चुनें';
 
   @override
@@ -1936,6 +2423,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get setCustomTimer => 'कस्टम टाइमर सेट करें';
+
+  @override
+  String get setEndTooltip => 'अंत को वर्तमान स्थिति पर सेट करें';
+
+  @override
+  String get setStartTooltip => 'आरंभ को वर्तमान स्थिति पर सेट करें';
 
   @override
   String get settings => 'सेटिंग्स';
@@ -2017,6 +2510,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get songLabelUpper => 'गाना';
 
   @override
+  String get songQueueTitle => 'गीत कतार';
+
+  @override
   String get songTitleKeyword => 'शीर्षक या कीवर्ड';
 
   @override
@@ -2065,6 +2561,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get standardDesc => 'MP3 - छोटी फ़ाइल, तेज़ लोडिंग';
 
   @override
+  String get standardDownloadQueue => 'मानक डाउनलोड कतार';
+
+  @override
   String get standardQuality => 'मानक (MP3)';
 
   @override
@@ -2072,6 +2571,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get startBulkProcess => 'बल्क प्रक्रिया शुरू करें';
+
+  @override
+  String get startLabel => 'आरंभ: ';
 
   @override
   String get startedDownloadingAll => 'सभी गाने डाउनलोड होना शुरू हुए...';
@@ -2133,6 +2635,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get syncThemeAlbumArt => 'एल्बम आर्ट के साथ थीम सिंक करें';
+
+  @override
+  String get syncedMode => 'सिंक किया गया';
 
   @override
   String get system => 'सिस्टम';
@@ -2247,6 +2752,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get translationLanguage => 'अनुवाद भाषा';
 
   @override
+  String get ttmlFormat => 'TTML (उच्च परिशुद्धता)';
+
+  @override
+  String get ttmlFormatDesc => 'एआई जनरेशन और विस्तृत सिंक के लिए बेहतर।';
+
+  @override
   String get turnOffTimer => 'टाइमर बंद करें';
 
   @override
@@ -2274,6 +2785,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get unknownDevice => 'अज्ञात डिवाइस';
 
   @override
+  String get unlimitedAlacDownloads => 'असीमित ALAC डाउनलोड';
+
+  @override
   String get unlink => 'अनलिंक करें';
 
   @override
@@ -2293,6 +2807,9 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get unlinkFolderClear =>
       'फ़ोल्डर को अनलिंक करें और गानों की सूची साफ़ करें';
+
+  @override
+  String get unlockUnlimitedPremium => 'असीमित प्रीमियम अनलॉक करें';
 
   @override
   String unlockedCountLabel(int unlocked, int total) {
@@ -2354,6 +2871,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get useMixedColors => 'मिश्रित रंगों का उपयोग करें (सिंक प्राथमिकता)';
 
   @override
+  String get useSameEmailCheckStatus =>
+      'स्थिति की स्वचालित रूप से जांच करने के लिए इन-ऐप वाले ईमेल का ही उपयोग करें।';
+
+  @override
+  String usedToday(int used, int max) {
+    return 'आज $used / $max उपयोग किया गया';
+  }
+
+  @override
   String get verifiedDeveloper => 'सत्यापित डेवलपर';
 
   @override
@@ -2375,6 +2901,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get visualizerStyle => 'विज़ुअलाइज़र शैली';
+
+  @override
+  String get waitingForServerResponse =>
+      'सर्वर की प्रतिक्रिया की प्रतीक्षा में...';
 
   @override
   String get wasapiExclusive => 'WASAPI एक्सक्लूसिव मोड';
@@ -2411,318 +2941,4 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlp का नया संस्करण उपलब्ध है.';
-
-  @override
-  String get importFromM3u => 'Import from M3U';
-
-  @override
-  String get importFromM3uSubtitle => 'Import an M3U playlist file';
-
-  @override
-  String get exportToM3u => 'Export to M3U';
-
-  @override
-  String get invalidM3uFile => 'Invalid M3U File';
-
-  @override
-  String get generateAiLyrics => 'Generate AI Lyrics';
-
-  @override
-  String get aiLyricsGenerating => 'Generating AI Lyrics...';
-
-  @override
-  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
-
-  @override
-  String get aiLyricsError => 'Error generating AI lyrics.';
-
-  @override
-  String get offlineModeHeader => 'ऑफ़लाइन मोड';
-
-  @override
-  String get offlineModeTitle => 'ऑफ़लाइन मोड';
-
-  @override
-  String get offlineModeActive => 'सक्रिय';
-
-  @override
-  String get offlineModeEnabledStatus => 'ऑफ़लाइन मोड सक्षम है';
-
-  @override
-  String offlineModeDisabledStatus(int count) {
-    return 'अक्षम ($count)';
-  }
-
-  @override
-  String get offlineModeAllEnabledStatus => 'सभी सक्षम';
-
-  @override
-  String get offlineModeLockdownDesc =>
-      'नेटवर्क लॉकडाउन सक्रिय है। आंकड़े स्थानीय रूप से सहेजे जाते हैं।';
-
-  @override
-  String get offlineModeMainDesc =>
-      'सभी नेटवर्क सेवाओं को अक्षम करें और केवल स्थानीय लाइब्रेरी चलाएं।';
-
-  @override
-  String get enableOfflineModeQuestion => 'ऑफ़लाइन मोड सक्षम करें?';
-
-  @override
-  String get offlineModeConfirmationDesc =>
-      'यह सभी नेटवर्क संचार को पूरी तरह से अक्षम कर देगा। निम्नलिखित सुविधाएं बंद कर दी जाएंगी:';
-
-  @override
-  String get offlineModeSyncRestoreNote =>
-      'जब आप इसे बंद करेंगे तो आपके आंकड़े स्वचालित रूप से सिंक हो जाएंगे।';
-
-  @override
-  String get enableOfflineModeBtn => 'ऑफ़लाइन मोड सक्षम करें';
-
-  @override
-  String get onlineModeRestored => 'ऑनलाइन मोड बहाल। आंकड़े सिंक हो रहे हैं...';
-
-  @override
-  String get disableServicesTitle => 'सेवाएं अक्षम करें';
-
-  @override
-  String get manageIndividualFeatures =>
-      'व्यक्तिगत ऑनलाइन सुविधाओं का प्रबंधन करें';
-
-  @override
-  String get featureCloudSync => 'क्लाउड आँकड़े सिंक';
-
-  @override
-  String get featureCloudSyncDesc =>
-      'सुनने के आँकड़े केवल स्थानीय रूप से सहेजे गए';
-
-  @override
-  String get featureCloudSyncLongDesc =>
-      'PocketBase के साथ सुनने के मेट्रिक्स सिंक करें';
-
-  @override
-  String get featureLeaderboard => 'वैश्विक लीडरबोर्ड';
-
-  @override
-  String get featureLeaderboardDesc => 'रैंक अपडेट रोक दिए गए';
-
-  @override
-  String get featureLeaderboardLongDesc =>
-      'सार्वजनिक रूप से अपनी रैंक दिखाएं और अपडेट करें';
-
-  @override
-  String get featureOnlineLyrics => 'ऑनलाइन गीत खोज';
-
-  @override
-  String get featureOnlineLyricsDesc => 'केवल स्थानीय .lrc/.ttml फ़ाइलें';
-
-  @override
-  String get featureOnlineLyricsLongDesc =>
-      'LRCLIB/Spotify से गीत प्राप्त करें';
-
-  @override
-  String get featureAiLyrics => 'एआई गीत जनरेटर';
-
-  @override
-  String get featureAiLyricsDesc => 'स्वचालित सिंक्रनाइज़ गीत अक्षम';
-
-  @override
-  String get featureAiLyricsLongDesc =>
-      'एआई के माध्यम से सिंक्रनाइज़ गीत उत्पन्न करें';
-
-  @override
-  String get featureSpotifyCanvas => 'Spotify Canvas';
-
-  @override
-  String get featureSpotifyCanvasDesc => 'पृष्ठभूमि वीडियो अक्षम';
-
-  @override
-  String get featureSpotifyCanvasLongDesc => 'ट्रैक के लिए पृष्ठभूमि वीडियो';
-
-  @override
-  String get featureOnlineSearch => 'ऑनलाइन खोज';
-
-  @override
-  String get featureOnlineSearchDesc => 'Spotify/YouTube खोज अक्षम';
-
-  @override
-  String get featureOnlineSearchLongDesc => 'Spotify और YouTube रिमोट खोज';
-
-  @override
-  String get featureConnectDevice => 'किसी डिवाइस से कनेक्ट करें';
-
-  @override
-  String get featureConnectDeviceDesc =>
-      'रिमोट कंट्रोल और लिसनिंग पार्टियां अक्षम';
-
-  @override
-  String get featureConnectDeviceLongDesc =>
-      'रिमोट कंट्रोल और लिसनिंग पार्टियां';
-
-  @override
-  String get lyricsEditorTitle => 'लिरिक्स संपादक';
-
-  @override
-  String get clearAllQuestion => 'सब साफ़ करें?';
-
-  @override
-  String get clearAllDesc =>
-      'यह वर्तमान संपादक स्थिति को साफ़ कर देगा। जब तक आप बाद में सहेजते नहीं हैं, यह आपकी स्थानीय फ़ाइलों को नहीं हटाएगा।';
-
-  @override
-  String get clearBtn => 'साफ़ करें';
-
-  @override
-  String get lyricsApplied => 'लिरिक्स पैनल पर लागू किए गए!';
-
-  @override
-  String get chooseFormat => 'अपना पसंदीदा प्रारूप चुनें:';
-
-  @override
-  String get lrcFormat => 'LRC (मानक सिंक)';
-
-  @override
-  String get lrcFormatDesc => 'यूनिवर्सल प्रारूप, हर जगह काम करता है।';
-
-  @override
-  String get ttmlFormat => 'TTML (उच्च परिशुद्धता)';
-
-  @override
-  String get ttmlFormatDesc => 'एआई जनरेशन और विस्तृत सिंक के लिए बेहतर।';
-
-  @override
-  String savedSuccessfully(String extension) {
-    return '$extension फ़ाइल में सफलतापूर्वक सहेजा गया!';
-  }
-
-  @override
-  String get failedToSave => 'लिरिक्स फ़ाइल सहेजने में विफल।';
-
-  @override
-  String get generationFailed => 'जनरेशन विफल';
-
-  @override
-  String get aiLyricsGenerationTitle => 'एआई लिरिक्स जनरेशन';
-
-  @override
-  String get syncedMode => 'सिंक किया गया';
-
-  @override
-  String get plainMode => 'सादा';
-
-  @override
-  String get addLineToTop => 'शीर्ष पर जोड़ें';
-
-  @override
-  String get addLineToEnd => 'अंत में जोड़ें';
-
-  @override
-  String get lyricTextHint => 'लिरिक्स टेक्स्ट...';
-
-  @override
-  String get insertAfter => 'बाद में डालें';
-
-  @override
-  String get removeLine => 'पंक्ति हटाएं';
-
-  @override
-  String get romajiHint => 'रोमाजी / लिप्यंतरण (वैकल्पिक)...';
-
-  @override
-  String get startLabel => 'आरंभ: ';
-
-  @override
-  String get setStartTooltip => 'आरंभ को वर्तमान स्थिति पर सेट करें';
-
-  @override
-  String get endLabel => 'अंत: ';
-
-  @override
-  String get setEndTooltip => 'अंत को वर्तमान स्थिति पर सेट करें';
-
-  @override
-  String get playFromLine => 'इस पंक्ति से चलाएं';
-
-  @override
-  String get pasteLyricsHint => 'अपने लिरिक्स यहाँ पेस्ट करें...';
-
-  @override
-  String get applyBtn => 'लागू करें';
-
-  @override
-  String get saveLocallyBtn => 'स्थानीय रूप से सहेजें';
-
-  @override
-  String get editLyricsTooltip => 'लिरिक्स संपादित करें';
-
-  @override
-  String get saveLyricsTitle => 'लिरिक्स सहेजें';
-
-  @override
-  String get aiGenerate => 'एआई जनरेट';
-
-  @override
-  String get aiLyricsInitializing => 'आरंभ किया जा रहा है...';
-
-  @override
-  String get aiLyricsUploading => 'गाना सर्वर पर अपलोड किया जा रहा है...';
-
-  @override
-  String get aiLyricsUploadFailed => 'त्रुटि: अपलोड विफल।';
-
-  @override
-  String get aiLyricsUploadSuccess => 'अपलोड पूरा हुआ!';
-
-  @override
-  String get aiLyricsVerifying => 'सर्वर स्थिति की पुष्टि की जा रही है...';
-
-  @override
-  String get aiLyricsStatusOk => 'स्थिति कोड 200 OK!';
-
-  @override
-  String get aiLyricsPolling =>
-      'लिरिक्स प्राप्त किए जा रहे हैं... कृपया धैर्य रखें!';
-
-  @override
-  String get aiLyricsReceiving => 'लिरिक्स प्राप्त हुए';
-
-  @override
-  String get aiLyricsParsing => 'लिरिक्स का विश्लेषण किया जा रहा है...';
-
-  @override
-  String get aiLyricsSuccess => 'लिरिक्स सफलतापूर्वक जनरेट हुए!';
-
-  @override
-  String get aiLyricsLocalFileMissing =>
-      'त्रुटि: स्थानीय ऑडियो फ़ाइल नहीं मिली।';
-
-  @override
-  String get aiLyricsComplete => 'पूरा हुआ!';
-
-  @override
-  String get externalLinkDetected => 'बाहरी लिंक का पता चला';
-
-  @override
-  String get gofileDownloadFailedPrompt =>
-      'सख्त नेटवर्क या सर्वर प्रतिबंधों के कारण स्वचालित डाउनलोड विफल रहा।\\n\\nक्या आप अपने सिस्टम ब्राउज़र में Gofile डाउनलोड पेज खोलना चाहेंगे, या मैन्युअल रूप से डाउनलोड करने के लिए लिंक कॉपी करना चाहेंगे?';
-
-  @override
-  String get copyLink => 'लिंक कॉपी करें';
-
-  @override
-  String get openBrowser => 'ब्राउज़र खोलें';
-
-  @override
-  String get linkCopied => 'लिंक क्लिपबोर्ड पर कॉपी किया गया!';
-
-  @override
-  String get waitingForServerResponse =>
-      'सर्वर की प्रतिक्रिया की प्रतीक्षा में...';
-
-  @override
-  String queuePositionPleaseWait(int position) {
-    return 'कतार $position... कृपया प्रतीक्षा करें';
-  }
-
-  @override
-  String get processingOnServer => 'सर्वर पर प्रोसेसिंग हो रही है...';
 }

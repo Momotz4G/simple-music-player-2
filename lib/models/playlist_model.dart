@@ -3,15 +3,14 @@ import 'dart:convert';
 class PlaylistEntry {
   final String path;
   final DateTime dateAdded;
-  // METADATA CACHE (For streamed/missing songs)
   final String? title;
   final String? artist;
   final String? album;
   final String? artUrl;
   final String? sourceUrl;
-  final String? isrc; // 🚀 ADD ISRC
-  final int? duration; // 🚀 ADD DURATION (Seconds)
-  final String? spotifyId; // 🚀 ADD SPOTIFY ID
+  final String? isrc;
+  final int? duration;
+  final String? spotifyId;
 
   PlaylistEntry({
     required this.path,
@@ -58,9 +57,9 @@ class PlaylistEntry {
 class PlaylistModel {
   final String id;
   final String name;
-  final List<PlaylistEntry> entries; // Changed from List<String>
+  final List<PlaylistEntry> entries;
   final DateTime createdAt;
-  final String? coverUrl; // 🚀 For Spotify imported playlists
+  final String? coverUrl;
 
   PlaylistModel({
     required this.id,

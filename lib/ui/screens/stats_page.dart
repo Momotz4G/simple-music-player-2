@@ -49,7 +49,7 @@ class _SlideData {
   });
 }
 
-// 🚀 Persist selected tab across widget rebuilds (survives navigation stack push/pop)
+// Persist selected tab across widget rebuilds (survives navigation stack push/pop)
 final statsTabProvider =
     StateProvider<int>((ref) => 0); // 0 = Songs, 1 = Artists
 
@@ -79,7 +79,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     // Reset tab to Songs whenever stats page is freshly opened
     Future.microtask(() => ref.read(statsTabProvider.notifier).state = 0);
 
-    // 🚀 Refresh cloud stats on page load
+    // Refresh cloud stats on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(profileProvider.notifier).refreshAvatarFromCloud();
@@ -161,7 +161,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       onPressed: () async {
                         try {
-                          final Uint8List? image =
+                          final Uint8List image =
                               await _screenshotController.captureFromWidget(
                             Material(
                               child: Container(
@@ -177,7 +177,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                             context: context,
                           );
 
-                          if (image != null) {
+                          if (image.isNotEmpty) {
                             final dir =
                                 await getApplicationDocumentsDirectory();
                             final timestamp =
@@ -188,7 +188,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                             final file = File(filePath);
                             await file.writeAsBytes(image, flush: true);
 
-                            if (mounted && image != null) {
+                            if (context.mounted) {
                               final l10n = AppLocalizations.of(context)!;
                               final messenger = ScaffoldMessenger.of(context);
                               final navigator = Navigator.of(context);
@@ -219,9 +219,9 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 🚀 Refresh stats whenever navigating back to this tab (handles IndexedStack caching)
+    // Refresh stats whenever navigating back to this tab (handles IndexedStack caching)
     ref.listen(libraryPresentationProvider, (previous, next) {
-      if (next == LibraryView.stats && previous != LibraryView.stats) {
+      if (next.currentView == LibraryView.stats && previous?.currentView != LibraryView.stats) {
         ref.read(profileProvider.notifier).refreshAvatarFromCloud();
       }
     });
@@ -230,7 +230,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     final profileState = ref.watch(profileProvider);
     final calculated = StatsUtils.calculate(statsState);
 
-    // 🚀 UNIFIED CLOUD COMBINATION
+    // UNIFIED CLOUD COMBINATION
     final totalMinutes =
         calculated.totalMinutes > (profileState.cloudTotalMinutes ?? 0)
             ? calculated.totalMinutes
@@ -240,7 +240,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             ? calculated.totalPlays
             : (profileState.cloudTotalPlays ?? 0);
 
-    final cloudTotalPlays = profileState.cloudTotalPlays ?? 0;
+
     final topArtistName = profileState.cloudTopArtist != null &&
             profileState.cloudTopArtist!.isNotEmpty
         ? profileState.cloudTopArtist!
@@ -256,7 +256,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
     if (topArtistName != null) {
       final artist = topArtistName;
-      // 🚀 BETTER LOOKUP: Try to find local plays for this specific artist
+      // BETTER LOOKUP: Try to find local plays for this specific artist
       final localPlays = statsState.entries.values
           .where((e) => e.artist == artist)
           .fold(0, (sum, e) => sum + e.playCount);
@@ -272,7 +272,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
               duration: 0,
               fileExtension: ""));
 
-      // 🚀 PRIORITIZE CLOUD: Compare local plays vs cloud top item plays
+      // PRIORITIZE CLOUD: Compare local plays vs cloud top item plays
       final cloudPlays = profileState.cloudTopArtistPlays ?? 0;
       final finalPlays = (cloudPlays > localPlays)
           ? cloudPlays
@@ -293,12 +293,12 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
     if (topTrackName != null) {
       final trackName = topTrackName;
-      // 🚀 BETTER LOOKUP: Try to find local plays for this specific track
+      // BETTER LOOKUP: Try to find local plays for this specific track
       final localCount = statsState.entries.values
           .where((e) => e.title == trackName)
           .fold(0, (sum, e) => sum + e.playCount);
 
-      // 🚀 PRIORITIZE CLOUD: Compare local plays vs cloud top item plays
+      // PRIORITIZE CLOUD: Compare local plays vs cloud top item plays
       final cloudCount = profileState.cloudMostListenedPlays ?? 0;
       final finalCount = (cloudCount > localCount)
           ? cloudCount
@@ -332,19 +332,19 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
     _slides = newSlides;
 
-    // 🚀 RESTORE: Trigger metadata backfill for songs being displayed
+    // RESTORE: Trigger metadata backfill for songs being displayed
     // This happens after the frame to avoid build-phase side effects
     if (statsState.entries.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
 
-        // 🚀 Priority 1: Slide metadata (Top Artist / Top Track images)
+        // Priority 1: Slide metadata (Top Artist / Top Track images)
         final slideSongs = newSlides
             .where((s) => s.sourceSong != null)
             .map((s) => s.sourceSong!)
             .toList();
 
-        // 🚀 Priority 2: Fetch Top Artist Image specifically
+        // Priority 2: Fetch Top Artist Image specifically
         if (topArtistName != null) {
           _fetchArtistImageSafely(topArtistName);
         }
@@ -352,7 +352,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         // Start background backfill
         _backfillMetadata(slideSongs);
 
-        // 🚀 NEW: Artist Tab Backfill
+        // NEW: Artist Tab Backfill
         if (ref.read(statsTabProvider) == 1 &&
             calculated.sortedArtists.isNotEmpty) {
           final topArtists =
@@ -566,7 +566,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                                                   currentSlide
                                                       .sourceSong?.onlineArtUrl;
 
-                                              // 🚀 SMART FALLBACK: If art is missing OR the local file was deleted (cache cleared)
+                                              // SMART FALLBACK: If art is missing OR the local file was deleted (cache cleared)
                                               bool needsArt =
                                                   fetchedArtUrl == null ||
                                                       fetchedArtUrl.isEmpty;
@@ -601,7 +601,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
                                               ImageProvider? shareImage;
                                               if (isArtist) {
-                                                // 🚀 ALWAYS use the square profile image for the share card
+                                                // ALWAYS use the square profile image for the share card
                                                 String? profileUrl =
                                                     await DBService().getArtCache(
                                                         "profile:${currentSlide.artistName}");
@@ -680,14 +680,14 @@ class _StatsPageState extends ConsumerState<StatsPage> {
               ),
             ),
           ),
-          // 🚀 TAB SWITCHER (Songs / Artists) - Unified n-shape design
+          // TAB SWITCHER (Songs / Artists) - Unified n-shape design
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               child: _buildUnifiedTabs(accentColor),
             ),
           ),
-          // 🚀 CONDITIONAL CONTENT: Songs tab vs Artists tab
+          // CONDITIONAL CONTENT: Songs tab vs Artists tab
           if (ref.watch(statsTabProvider) == 0) ...[
             // --- SONGS TAB ---
             Builder(builder: (context) {
@@ -901,7 +901,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     );
   }
 
-  // 🚀 UNIFIED TAB SWITCHER (animated)
+  // UNIFIED TAB SWITCHER (animated)
   Widget _buildUnifiedTabs(Color accentColor) {
     final selectedTab = ref.watch(statsTabProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1024,7 +1024,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
   final Set<String> _processedBackfill = {};
 
-  // 🚀 Global lock to prevent overlapping backfill floods
+  // Global lock to prevent overlapping backfill floods
   static bool _isBackfilling = false;
 
   static DateTime? _rateLimitExpiry;
@@ -1062,7 +1062,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
   Future<void> _backfillMetadata(List<SongModel> songs) async {
     if (_isBackfilling) return;
 
-    // 🚀 Global API Cooldown (5 Minutes Hard Lock)
+    // Global API Cooldown (5 Minutes Hard Lock)
     if (_rateLimitExpiry != null) {
       if (DateTime.now().isBefore(_rateLimitExpiry!)) {
         return; // Still cooling down, don't even try.
@@ -1076,23 +1076,25 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     _isRateLimited = false;
 
     try {
-      // 🚀 PHASE 1: Priority Backfill for slides (Top Artist / Top Track)
+      // PHASE 1: Priority Backfill for slides (Top Artist / Top Track)
       for (final song in songs) {
         if (!mounted || _isRateLimited) break;
 
         final id = StatEntry.generateId(song.title, song.artist, song.album);
-        if (_processedBackfill.contains(id) || _pendingFetches.contains(id))
+        if (_processedBackfill.contains(id) || _pendingFetches.contains(id)) {
           continue;
+        }
 
         // Skip if already has art
-        if (song.onlineArtUrl != null && song.onlineArtUrl!.isNotEmpty)
+        if (song.onlineArtUrl != null && song.onlineArtUrl!.isNotEmpty) {
           continue;
+        }
 
         _processedBackfill.add(id);
         _pendingFetches.add(id);
 
         try {
-          debugPrint("🚀 Priority backfill for top item: ${song.title}");
+          debugPrint("Priority backfill for top item: ${song.title}");
           String? artUrl = await SpotifyService.getTrackImage(
               song.title, song.artist,
               preferPrimary: _preferPrimarySpotify);
@@ -1136,15 +1138,16 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         await Future.delayed(const Duration(milliseconds: 1000));
       }
 
-      // 🚀 PHASE 2: Standard backfill for the rest of the list
+      // PHASE 2: Standard backfill for the rest of the list
       final fullList = ref.read(statsProvider).entries.values.toList();
       for (final entry in fullList) {
         if (!mounted || _isRateLimited) break;
 
         final id =
-            StatEntry.generateId(entry.title, entry.artist, entry.album ?? "");
-        if (_processedBackfill.contains(id) || _pendingFetches.contains(id))
+            StatEntry.generateId(entry.title, entry.artist, entry.album);
+        if (_processedBackfill.contains(id) || _pendingFetches.contains(id)) {
           continue;
+        }
 
         // If already fully backfilled, skip
         if (entry.onlineArtUrl != null && entry.youtubeUrl != null) {
@@ -1213,10 +1216,11 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     if (_isBackfilling) return;
 
     // Reuse the same rate limit check from the main backfill
-    if (_rateLimitExpiry != null && DateTime.now().isBefore(_rateLimitExpiry!))
+    if (_rateLimitExpiry != null && DateTime.now().isBefore(_rateLimitExpiry!)) {
       return;
+    }
 
-    // 🚀 STEP 1: Identify "Newcomers" (Artists in Top 100 but missing from Cache)
+    // STEP 1: Identify "Newcomers" (Artists in Top 100 but missing from Cache)
     final List<String> newcomers = [];
     for (final artist in artistNames) {
       if (_processedArtistBackfill.contains(artist)) continue;
@@ -1244,7 +1248,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         _processedArtistBackfill.add(artist);
 
         try {
-          debugPrint("🚀 Fetching profile for newcomer: $artist");
+          debugPrint("Fetching profile for newcomer: $artist");
           final img = await SpotifyService.getArtistImage(
               artistName: artist,
               highQuality: true,
@@ -1274,14 +1278,16 @@ class _StatsPageState extends ConsumerState<StatsPage> {
   Future<void> _fetchArtistImageSafely(String artist,
       {String? trackTitle}) async {
     final cacheKey =
-        "banner:$artist"; // 🚀 Use the same key as Artist Detail Page
+        "banner:$artist"; // Use the same key as Artist Detail Page
     if (_isRateLimited ||
         _pendingFetches.contains(cacheKey) ||
-        _imageCache.containsKey(artist)) return;
+        _imageCache.containsKey(artist)) {
+      return;
+    }
 
     _pendingFetches.add(cacheKey);
     try {
-      // 🚀 STEP 1: Check Local Cache First (Instant)
+      // STEP 1: Check Local Cache First (Instant)
       final cached = await DBService().getArtCache(cacheKey);
       if (cached != null && cached.isNotEmpty) {
         if (mounted) {
@@ -1294,16 +1300,19 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         return;
       }
 
-      // 🚀 STEP 2: Fetch High-Res Banner from VPS
+      // STEP 2: Fetch High-Res Banner from VPS
       final spotifyId = await SpotifyService.getArtistId(
           artistName: artist,
           trackTitle: trackTitle,
           preferPrimary: _preferPrimarySpotify);
       if (spotifyId != null) {
         final bannerData = await VpsScraperService.getArtistBanner(spotifyId);
-        final bannerUrl = bannerData['banner'] ??
+        var bannerUrl = bannerData['banner'] ??
             bannerData['gallery'] ??
             bannerData['profile'];
+
+        // Fallback 1: Client-side scrape
+        bannerUrl ??= await SpotifyService.getFreshBannerUrl(spotifyId);
 
         if (bannerUrl != null) {
           // Save to Isar for all pages to use
@@ -1318,7 +1327,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         }
       }
 
-      // 🚀 STEP 3: Fallback to official Spotify API (Profile Pic)
+      // STEP 3: Fallback to official Spotify API (Profile Pic)
       final img = await SpotifyService.getArtistImage(
           artistName: artist,
           trackTitle: trackTitle,

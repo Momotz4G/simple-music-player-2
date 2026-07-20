@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_music_player_2/services/android_audio_service.dart';
-import 'package:simple_music_player_2/services/pocketbase_service.dart'; // 🔒 OFFLINE MODE
-import 'package:simple_music_player_2/services/sync_engine.dart'; // 🔄 Cloud Stats Sync
+import 'package:simple_music_player_2/services/pocketbase_service.dart';
+import 'package:simple_music_player_2/services/sync_engine.dart';
 
 // NEW ENUMS
 enum VisualizerStyle { spectrum, wave, pulse }
@@ -38,7 +38,7 @@ enum SettingsSection {
 final settingsNavigationProvider =
     StateProvider<SettingsSection>((ref) => SettingsSection.none);
 
-// --- STATE DEFINITION ---
+// STATE DEFINITION
 class SettingsState {
   final bool isDarkMode;
   final Color accentColor;
@@ -54,28 +54,27 @@ class SettingsState {
   final String spotifyMarket;
   final String streamingQuality; // standard, high, lossless
   final bool showDebugButton;
-  final bool ignoreSubfolders; // NEW: Default true
-  final bool disableCanvas; // Disable Spotify Canvas video loading
-  final List<String> additionalMusicFolders; // Additional import paths
-  final bool
-      wasapiExclusive; // Windows: WASAPI exclusive mode for bit-perfect audio
+  final bool ignoreSubfolders;
+  final String canvasSourcePreference; // 'apple_first', 'spotify_first', 'apple_only', 'spotify_only', 'disabled'
+  final List<String> additionalMusicFolders;
+  final bool wasapiExclusive;
   final String? audioDeviceId; // Selected MPV audio device ID
-  final bool androidBitPerfect; // Android 14+: Bit-perfect audio mode
+  final bool androidBitPerfect;
   final bool disableRomanization; // Disable romanization display for lyrics
   final String translationLanguage; // Target language for lyrics translation
-  final bool enableSnowEffect; // DEPRECATED: use atmosphereTheme
-  final AtmosphereTheme atmosphereTheme; // Active seasonal atmosphere theme
-  final String appLocale; // NEW: Application UI language (e.g., 'en', 'id')
+  final bool enableSnowEffect;
+  final AtmosphereTheme atmosphereTheme;
+  final String appLocale; // Application UI language (e.g., 'en', 'id')
   final String
       autoClearCache; // 'disabled', 'on_close', 'after_24h', 'after_7d'
-  final bool gaplessPlayback; // Enable gapless transitions
+  final bool gaplessPlayback;
   final double crossfadeDuration; // Crossfade duration in seconds (0.0-12.0)
-  final bool
-      enableAlphabetIndexer; // NEW: Enable side Alphabet scroll indexer on mobile
+  final bool enableReplayGain; // Automatic Gain Control
+  final bool enableAlphabetIndexer;
   final bool minimizeToTrayOnClose;
-  final SearchEngine searchEngine; // NEW: Spotify vs YouTube
-  final bool isOfflineMode; // 🔒 Offline Mode: Disables all network services
-  final bool cacheStreamedSongs; // NEW: Cache streamed FLACs in background
+  final SearchEngine searchEngine;
+  final bool isOfflineMode;
+  final bool cacheStreamedSongs;
 
   // Granular Service Controls
   final bool enableCloudSync;
@@ -97,27 +96,28 @@ class SettingsState {
     this.visualizerStyle = VisualizerStyle.spectrum,
     this.audioFormat = 'mp3',
     this.spotifyMarket = 'KR',
-    this.streamingQuality = 'high', // Default to high (M4A)
+    this.streamingQuality = 'high',
     this.showDebugButton = false,
     this.ignoreSubfolders = true,
-    this.disableCanvas = true,
+    this.canvasSourcePreference = 'spotify_only',
     this.additionalMusicFolders = const [],
     this.wasapiExclusive = false, // Default OFF - exclusive locks audio device
     this.audioDeviceId,
     this.androidBitPerfect = false,
-    this.disableRomanization = false, // Default: romanization enabled
-    this.translationLanguage = 'en', // Default: translate to English
-    this.enableSnowEffect = false, // DEPRECATED
+    this.disableRomanization = false,
+    this.translationLanguage = 'en',
+    this.enableSnowEffect = false,
     this.atmosphereTheme = AtmosphereTheme.none,
     this.appLocale = 'en',
     this.autoClearCache = 'disabled',
     this.gaplessPlayback = true,
-    this.crossfadeDuration = 0.0, // Default: No crossfade
-    this.enableAlphabetIndexer = false, // Default: Off
+    this.crossfadeDuration = 0.0,
+    this.enableReplayGain = true,
+    this.enableAlphabetIndexer = false,
     this.minimizeToTrayOnClose = true,
-    this.searchEngine = SearchEngine.spotify, // Default: Spotify
-    this.isOfflineMode = false, // Default: Online
-    this.cacheStreamedSongs = false, // Default: Off
+    this.searchEngine = SearchEngine.spotify,
+    this.isOfflineMode = false,
+    this.cacheStreamedSongs = false,
     this.enableCloudSync = true,
     this.enableLeaderboard = true,
     this.enableOnlineLyrics = true,
@@ -141,7 +141,7 @@ class SettingsState {
     String? streamingQuality,
     bool? showDebugButton,
     bool? ignoreSubfolders,
-    bool? disableCanvas,
+    String? canvasSourcePreference,
     List<String>? additionalMusicFolders,
     bool? wasapiExclusive,
     String? audioDeviceId,
@@ -154,6 +154,7 @@ class SettingsState {
     String? autoClearCache,
     bool? gaplessPlayback,
     double? crossfadeDuration,
+    bool? enableReplayGain,
     bool? enableAlphabetIndexer,
     bool? minimizeToTrayOnClose,
     SearchEngine? searchEngine,
@@ -182,7 +183,8 @@ class SettingsState {
       streamingQuality: streamingQuality ?? this.streamingQuality,
       showDebugButton: showDebugButton ?? this.showDebugButton,
       ignoreSubfolders: ignoreSubfolders ?? this.ignoreSubfolders,
-      disableCanvas: disableCanvas ?? this.disableCanvas,
+      canvasSourcePreference:
+          canvasSourcePreference ?? this.canvasSourcePreference,
       additionalMusicFolders:
           additionalMusicFolders ?? this.additionalMusicFolders,
       wasapiExclusive: wasapiExclusive ?? this.wasapiExclusive,
@@ -196,6 +198,7 @@ class SettingsState {
       autoClearCache: autoClearCache ?? this.autoClearCache,
       gaplessPlayback: gaplessPlayback ?? this.gaplessPlayback,
       crossfadeDuration: crossfadeDuration ?? this.crossfadeDuration,
+      enableReplayGain: enableReplayGain ?? this.enableReplayGain,
       enableAlphabetIndexer:
           enableAlphabetIndexer ?? this.enableAlphabetIndexer,
       minimizeToTrayOnClose:
@@ -214,7 +217,7 @@ class SettingsState {
   }
 }
 
-// --- NOTIFIER CLASS ---
+// NOTIFIER CLASS
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final SharedPreferences _prefs;
 
@@ -236,12 +239,33 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final styleIndex = _prefs.getInt('visualizerStyle') ?? 0;
     final style = VisualizerStyle.values[styleIndex];
 
-    final format = _prefs.getString('audioFormat') ?? 'mp3';
+    final searchEngineIndex = _prefs.getInt('searchEngine') ?? SearchEngine.spotify.index;
+    final searchEngine = SearchEngine.values[searchEngineIndex];
+
+    String format = _prefs.getString('audioFormat_${searchEngine.name}') ?? _prefs.getString('audioFormat') ?? 'mp3';
+    if (searchEngine == SearchEngine.appleMusic && !['alac', 'm4a', 'flac'].contains(format)) format = 'alac';
+    else if (searchEngine == SearchEngine.youtube && !['mp3', 'm4a', 'aac', 'opus'].contains(format)) format = 'mp3';
+    else if (searchEngine == SearchEngine.spotify && !['mp3', 'm4a', 'aac', 'flac'].contains(format)) format = 'mp3';
+
     final market = _prefs.getString('spotifyMarket') ?? 'KR';
-    final streaming = _prefs.getString('streamingQuality') ?? 'high';
+    
+    String streaming = _prefs.getString('streamingQuality_${searchEngine.name}') ?? _prefs.getString('streamingQuality') ?? 'high';
+    if (searchEngine == SearchEngine.youtube && streaming == 'lossless') streaming = 'high';
+
     final showDebug = _prefs.getBool('showDebugButton') ?? false;
     final ignoreSub = _prefs.getBool('ignoreSubfolders') ?? true;
-    final disableCanvas = _prefs.getBool('disableCanvas') ?? false;
+    
+    String canvasSourcePreference = 'spotify_only';
+    final oldDisableCanvas = _prefs.get('disableCanvas');
+    if (oldDisableCanvas is bool) {
+      canvasSourcePreference = oldDisableCanvas ? 'disabled' : 'spotify_only';
+      _prefs.setString('canvasSourcePreference', canvasSourcePreference);
+      _prefs.remove('disableCanvas');
+    } else {
+      canvasSourcePreference =
+          _prefs.getString('canvasSourcePreference') ?? 'spotify_only';
+    }
+
     final additionalFolders =
         _prefs.getStringList('additionalMusicFolders') ?? [];
     final wasapiExclusive = _prefs.getBool('wasapiExclusive') ?? false;
@@ -254,13 +278,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final autoClearCache = _prefs.getString('autoClearCache') ?? 'disabled';
     final gaplessPlayback = _prefs.getBool('gaplessPlayback') ?? true;
     final crossfadeDuration = _prefs.getDouble('crossfadeDuration') ?? 0.0;
+    final enableReplayGain = _prefs.getBool('enableReplayGain') ?? true;
     final enableAlphabetIndexer =
         _prefs.getBool('enableAlphabetIndexer') ?? false;
     final minimizeToTrayOnClose =
         _prefs.getBool('minimizeToTrayOnClose') ?? true;
-    final searchEngineIndex =
-        _prefs.getInt('searchEngine') ?? SearchEngine.spotify.index;
-    final searchEngine = SearchEngine.values[searchEngineIndex];
     final isOfflineMode = _prefs.getBool('isOfflineMode') ?? false;
     final cacheStreamedSongs =
         _prefs.getBool('cacheStreamedSongs') ?? false; // NEW
@@ -301,7 +323,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       streamingQuality: streaming,
       showDebugButton: showDebug,
       ignoreSubfolders: ignoreSub,
-      disableCanvas: disableCanvas,
+      canvasSourcePreference: canvasSourcePreference,
       additionalMusicFolders: additionalFolders,
       wasapiExclusive: wasapiExclusive,
       audioDeviceId: audioDeviceId,
@@ -314,6 +336,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       autoClearCache: autoClearCache,
       gaplessPlayback: gaplessPlayback,
       crossfadeDuration: crossfadeDuration,
+      enableReplayGain: enableReplayGain,
       enableAlphabetIndexer: enableAlphabetIndexer,
       minimizeToTrayOnClose: minimizeToTrayOnClose,
       searchEngine: searchEngine,
@@ -370,7 +393,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   void setAudioFormat(String format) {
-    _prefs.setString('audioFormat', format);
+    _prefs.setString('audioFormat_${state.searchEngine.name}', format);
+    _prefs.setString('audioFormat', format); // fallback
     state = state.copyWith(audioFormat: format);
   }
 
@@ -380,7 +404,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   void setStreamingQuality(String quality) {
-    _prefs.setString('streamingQuality', quality);
+    _prefs.setString('streamingQuality_${state.searchEngine.name}', quality);
+    _prefs.setString('streamingQuality', quality); // fallback
     state = state.copyWith(streamingQuality: quality);
   }
 
@@ -394,9 +419,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(ignoreSubfolders: ignore);
   }
 
-  void toggleDisableCanvas(bool disable) {
-    _prefs.setBool('disableCanvas', disable);
-    state = state.copyWith(disableCanvas: disable);
+  void updateCanvasSourcePreference(String preference) {
+    _prefs.setString('canvasSourcePreference', preference);
+    state = state.copyWith(canvasSourcePreference: preference);
   }
 
   Future<void> addMusicFolder(String path) async {
@@ -437,18 +462,22 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   /// Toggle Android 14+ Bit-Perfect Mode
-  Future<void> toggleAndroidBitPerfect(bool enabled) async {
+  Future<bool> toggleAndroidBitPerfect(bool enabled) async {
     if (Platform.isAndroid) {
-      // Attempt to set mode via native MethodChannel
-      final success = await AndroidAudioService.setBitPerfectMode(enabled);
-      if (!success) {
-        // If native call failed (e.g. no USB device), do not update state to true
-        // But if we were trying to disable, allow it.
-        if (enabled) return;
+      final isSupported = await AndroidAudioService.isBitPerfectSupported();
+      if (isSupported) {
+        // Attempt to set mode via native MethodChannel
+        final success = await AndroidAudioService.setBitPerfectMode(enabled);
+        if (!success) {
+          // If native call failed (e.g. no USB device), do not update state to true
+          // But if we were trying to disable, allow it.
+          if (enabled) return false;
+        }
       }
     }
     await _prefs.setBool('androidBitPerfect', enabled);
     state = state.copyWith(androidBitPerfect: enabled);
+    return true;
   }
 
   void toggleRomanization(bool disabled) {
@@ -486,6 +515,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(crossfadeDuration: duration);
   }
 
+  Future<void> toggleReplayGain(bool enabled) async {
+    await _prefs.setBool('enableReplayGain', enabled);
+    state = state.copyWith(enableReplayGain: enabled);
+  }
+
   Future<void> toggleAlphabetIndexer(bool enabled) async {
     await _prefs.setBool('enableAlphabetIndexer', enabled);
     state = state.copyWith(enableAlphabetIndexer: enabled);
@@ -498,7 +532,20 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   Future<void> setSearchEngine(SearchEngine engine) async {
     await _prefs.setInt('searchEngine', engine.index);
-    state = state.copyWith(searchEngine: engine);
+
+    String format = _prefs.getString('audioFormat_${engine.name}') ?? _prefs.getString('audioFormat') ?? 'mp3';
+    if (engine == SearchEngine.appleMusic && !['alac', 'm4a', 'flac'].contains(format)) format = 'alac';
+    else if (engine == SearchEngine.youtube && !['mp3', 'm4a', 'aac', 'opus'].contains(format)) format = 'mp3';
+    else if (engine == SearchEngine.spotify && !['mp3', 'm4a', 'aac', 'flac'].contains(format)) format = 'mp3';
+
+    String streaming = _prefs.getString('streamingQuality_${engine.name}') ?? _prefs.getString('streamingQuality') ?? 'high';
+    if (engine == SearchEngine.youtube && streaming == 'lossless') streaming = 'high';
+
+    state = state.copyWith(
+        searchEngine: engine,
+        audioFormat: format,
+        streamingQuality: streaming
+    );
   }
 
   Future<void> toggleCacheStreamedSongs(bool enabled) async {
@@ -506,10 +553,10 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(cacheStreamedSongs: enabled);
   }
 
-  /// 🔒 Toggle Offline Mode (Network Lockdown)
+  // Toggle Offline Mode (Network Lockdown)
   Future<void> toggleOfflineMode(bool enabled) async {
     await _prefs.setBool('isOfflineMode', enabled);
-    PocketBaseService.isOffline = enabled; // Sync static flag
+    PocketBaseService.isOffline = enabled;
 
     if (enabled) {
       // Explicitly turn off all services
@@ -534,7 +581,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       await _prefs.remove('disabledServicesBeforeOffline');
     }
 
-    // 🔄 Notify SyncEngine of Offline Mode change (Requirement 4.6, 4.7)
+    // Notify SyncEngine of Offline Mode change (Requirement 4.6, 4.7)
     SyncEngine().onOfflineModeChanged(enabled);
 
     state = state.copyWith(isOfflineMode: enabled);
@@ -547,7 +594,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     PocketBaseService.enableCloudSync = enabled;
     state = state.copyWith(enableCloudSync: enabled);
 
-    // 🔄 Notify SyncEngine of Cloud Stats Sync toggle change (Requirement 9.5, 9.6)
+    // Notify SyncEngine of Cloud Stats Sync toggle change (Requirement 9.5, 9.6)
     SyncEngine().onSyncToggleChanged(enabled);
   }
 

@@ -37,6 +37,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get accountLinkedSuccessfully => 'アカウントが正常にリンクされました！';
 
   @override
+  String get accountTiers => 'アカウントの階層';
+
+  @override
   String get achievementsUnlocked => 'アンロックされた実績';
 
   @override
@@ -53,6 +56,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get addFoldersScan => 'スキャンするフォルダを追加する';
+
+  @override
+  String get addLineToEnd => '末尾に追加';
+
+  @override
+  String get addLineToTop => '先頭に追加';
 
   @override
   String get addToFavorite => 'お気に入りに追加する';
@@ -76,6 +85,65 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get addedToQueue => 'キューに追加しました';
+
+  @override
+  String get aiGenerate => 'AI生成';
+
+  @override
+  String get aiLyricsComplete => '完了！';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsGenerationTitle => 'AI歌詞生成';
+
+  @override
+  String get aiLyricsInitializing => '初期化中...';
+
+  @override
+  String get aiLyricsLocalFileMissing => 'エラー: ローカルオーディオファイルが見つかりません。';
+
+  @override
+  String get aiLyricsParsing => '歌詞を解析中...';
+
+  @override
+  String get aiLyricsPolling => '歌詞を取得中... 少々お待ちください！';
+
+  @override
+  String get aiLyricsReceiving => '歌詞を受信しました';
+
+  @override
+  String get aiLyricsStatusOk => 'ステータスコード 200 OK!';
+
+  @override
+  String get aiLyricsSuccess => '歌詞の生成に成功しました！';
+
+  @override
+  String get aiLyricsUploadFailed => 'エラー: アップロードに失敗しました。';
+
+  @override
+  String get aiLyricsUploadSuccess => 'アップロード完了！';
+
+  @override
+  String get aiLyricsUploading => '曲をサーバーにアップロード中...';
+
+  @override
+  String get aiLyricsVerifying => 'サーバーのステータスを確認中...';
+
+  @override
+  String alacDownloadsPerDay(int count) {
+    return '$count ALAC ダウンロード / 日';
+  }
+
+  @override
+  String get alacHighResDownloads => 'ALAC ハイレゾダウンロード';
 
   @override
   String get album => 'アルバム';
@@ -105,6 +173,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get alreadyInLikedSongs => '既にお気に入りの曲にあります';
 
   @override
+  String get alreadyPaidCheckStatus => '支払い済みですか？ステータスを確認';
+
+  @override
   String get android14BitPerfect => 'Android 14+ ビットパーフェクト';
 
   @override
@@ -121,6 +192,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get appearance => '外観';
+
+  @override
+  String get applyBtn => '適用';
 
   @override
   String get applyOnRestart => '変更は次回の再起動時に適用されます。';
@@ -199,6 +273,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get automatic => '自動';
 
   @override
+  String get automaticGainControl => '自動ゲインコントロール';
+
+  @override
+  String get automaticGainControlDesc => '曲間の音量を均一化し、音が大きすぎたり小さすぎたりしないようにします。';
+
+  @override
   String automaticTitleLabel(String title) {
     return '自動: $title';
   }
@@ -210,14 +290,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get avatarPickerDesc => 'テンプレートを選択するか、自分の写真をインポートします';
 
   @override
-  String get beFirstToClaim => '1位を誰よりも早く獲得しましょう！';
-
-  @override
   String get backgroundCacheFlacStreams => 'バックグラウンドでFLACストリームをキャッシュ';
 
   @override
   String get backgroundCacheFlacStreamsSubtitle =>
       'ストリーミングされたロスレストラックをローカルディスクに静かにダウンロードし、再生を即座にしてデータを使用しません。';
+
+  @override
+  String get beFirstToClaim => '1位を誰よりも早く獲得しましょう！';
 
   @override
   String get behavioralHeader => '行動実績';
@@ -230,6 +310,23 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get bitDepthLabel => 'ビット深度';
+
+  @override
+  String get bitPerfectBypassSub14 =>
+      'Android 14以降のビットパーフェクトAPIを使用してシステムミキサーをバイパスする';
+
+  @override
+  String get bitPerfectBypassSubLegacy =>
+      'C++オーディオエンジンを使用してシステムミキサーをバイパスする（Android 13以下）';
+
+  @override
+  String get bitPerfectBypassSuccess => 'ビットパーフェクト再生が有効になりました。';
+
+  @override
+  String get bitPerfectBypassTitle => 'ビットパーフェクト / USBオーディオバイパス';
+
+  @override
+  String get bitPerfectBypassWarning => '先にUSB DACを接続してください。';
 
   @override
   String get bitPerfectEnabled => 'ビットパーフェクトモードが有効です。音量調節が無効になる場合があります。';
@@ -263,6 +360,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get cancel => 'キャンセル';
+
+  @override
+  String get cancelAllBtn => 'すべてキャンセル';
+
+  @override
+  String get canvasSourcePreferenceSubtitle => '背景のループ動画をどこから読み込むか選択します';
+
+  @override
+  String get canvasSourcePreferenceTitle => 'Canvas / アニメーションアートワークのソース';
 
   @override
   String get championChampionTooltip => '5週間にわたって世界トップ1に到達';
@@ -317,6 +423,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chooseAvatar => 'アバターを選択';
 
   @override
+  String get chooseFormat => '優先する形式を選択してください：';
+
+  @override
   String get chooseYourTitle => '称号を選択';
 
   @override
@@ -324,6 +433,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get clearAll => 'すべて消去';
+
+  @override
+  String get clearAllDesc => '現在のエディタの状態をクリアします。保存しない限り、ローカルファイルは削除されません。';
+
+  @override
+  String get clearAllQuestion => 'すべてクリアしますか？';
+
+  @override
+  String get clearBtn => 'クリア';
 
   @override
   String get clearHistory => '履歴をクリアする';
@@ -345,6 +463,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get cloud => 'クラウド';
+
+  @override
+  String get cloudStatsAndRankings => 'クラウドの統計とランキング';
 
   @override
   String get codeCopied => 'コードがクリップボードにコピーされました！';
@@ -403,7 +524,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contentRegion => 'コンテンツ地域';
 
   @override
+  String get continueToSociabuzz => 'Sociabuzz へ進む';
+
+  @override
   String get copyCode => 'コードをコピー';
+
+  @override
+  String get copyLink => 'リンクをコピー';
 
   @override
   String get couldNotDownloadFlac => 'FLACをダウンロードできませんでした。';
@@ -437,6 +564,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get crownedChampionTitlesHeader => '戴冠したチャンピオン称号';
+
+  @override
+  String get currentTierLabel => '現在';
 
   @override
   String get customDevice => 'カスタムデバイス';
@@ -522,6 +652,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get disableRomanization => 'ローマ字表記を無効にする';
 
   @override
+  String get disableServicesTitle => 'サービスを無効にする';
+
+  @override
+  String get disabled => '無効';
+
+  @override
   String get disablingSharingWarning =>
       '共有を無効にすると、容量を節約するためにサーバーからコードとデータが永久に削除されます。';
 
@@ -539,6 +675,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get donate => '寄付する';
+
+  @override
+  String get donateMinToObtain => '10,000 IDR 以上の寄付で獲得 (永久)';
 
   @override
   String get download => 'ダウンロード';
@@ -601,6 +740,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get dspLabel => 'DSP';
 
   @override
+  String get editLyricsTooltip => '歌詞を編集';
+
+  @override
   String get editMetadata => 'メタデータを編集';
 
   @override
@@ -633,6 +775,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get enableBarVisualizer => 'バービジュアライザーを有効にする';
+
+  @override
+  String get enableOfflineModeBtn => 'オフラインモードを有効にする';
+
+  @override
+  String get enableOfflineModeQuestion => 'オフラインモードを有効にしますか？';
+
+  @override
+  String get endLabel => '終了: ';
 
   @override
   String get endlessQueue => 'エンドレスキュー';
@@ -692,6 +843,9 @@ class AppLocalizationsJa extends AppLocalizations {
       '警告: 排他モードは、システムデフォルトではなく、特定のデバイスを上記で選択した場合に最適に動作します。';
 
   @override
+  String get exclusiveSupporterTitle => '限定サポーター称号と Discord ロール';
+
+  @override
   String get exclusiveTitles => '限定';
 
   @override
@@ -708,7 +862,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get expand => '拡大';
 
   @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
   String get externalFiles => '外部ファイル';
+
+  @override
+  String get externalLinkDetected => '外部リンクが検出されました';
 
   @override
   String get fadingAtEnd => 'スリープタイマー: トラックの最後にフェードアウト中...';
@@ -729,6 +889,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get failedToGenerateCode => '共有コードの生成に失敗しました。接続を確認してください。';
 
   @override
+  String get failedToSave => '歌詞ファイルの保存に失敗しました。';
+
+  @override
   String get failedToSetAvatar => 'アバターテンプレートの設定に失敗しました';
 
   @override
@@ -736,6 +899,72 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get favoriteTrack => 'お気に入りの曲';
+
+  @override
+  String get featureAiLyrics => 'AI歌詞ジェネレーター';
+
+  @override
+  String get featureAiLyricsDesc => '自動同期歌詞を無効化';
+
+  @override
+  String get featureAiLyricsLongDesc => 'AIで同期歌詞を生成する';
+
+  @override
+  String get featureCloudSync => 'クラウド統計同期';
+
+  @override
+  String get featureCloudSyncDesc => '再生統計はローカルのみに保存されます';
+
+  @override
+  String get featureCloudSyncLongDesc => '再生メトリクスをPocketBaseと同期する';
+
+  @override
+  String get featureConnectDevice => 'デバイスに接続';
+
+  @override
+  String get featureConnectDeviceDesc => 'リモート制御・リスニングパーティを無効化';
+
+  @override
+  String get featureConnectDeviceLongDesc => 'リモート制御とリスニングパーティ';
+
+  @override
+  String get featureLeaderboard => 'グローバルリーダーボード';
+
+  @override
+  String get featureLeaderboardDesc => 'ランク更新を停止中';
+
+  @override
+  String get featureLeaderboardLongDesc => 'ランクを公開・更新する';
+
+  @override
+  String get featureOnlineLyrics => 'オンライン歌詞検索';
+
+  @override
+  String get featureOnlineLyricsDesc => 'ローカルの .lrc/.ttml ファイルのみ';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'LRCLIB/Spotify から歌詞を取得する';
+
+  @override
+  String get featureOnlineSearch => 'オンライン検索';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube検索を無効化';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'SpotifyとYouTubeのリモート検索';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => '背景ビデオを無効化';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'トラックの背景ビデオ';
+
+  @override
+  String get fetchingAlacAppleMusic => 'Apple MusicからALAC Losslessを取得中...';
 
   @override
   String get fetchingCanvas => 'Canvasを取得中...';
@@ -880,7 +1109,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get general => '一般';
 
   @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
   String get generatingShareCode => '共有コードを生成中...';
+
+  @override
+  String get generationFailed => '生成失敗';
 
   @override
   String get genre => 'ジャンル';
@@ -910,6 +1145,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get goToLocalLibraryToSelect => '「ローカルライブラリ」から音楽フォルダを選択してください。';
 
   @override
+  String get gofileDownloadFailedPrompt =>
+      '厳しいネットワークまたはサーバーの制限により、自動ダウンロードに失敗しました。\\n\\nシステムブラウザでGofileダウンロードページを開きますか？それともリンクをコピーして手動でダウンロードしますか？';
+
+  @override
   String get goodAfternoon => 'こんにちは';
 
   @override
@@ -926,6 +1165,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get grantPermission => '権限を許可する';
+
+  @override
+  String get guestTier => 'ゲスト';
 
   @override
   String get hallOfFameHeader => '殿堂入り実績';
@@ -995,6 +1237,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get importFromGallery => 'ギャラリーからインポート';
 
   @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
   String get importFromSpotify => 'Spotifyからインポート';
 
   @override
@@ -1014,6 +1262,79 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get importLyricsTooltip => '歌詞をインポート';
+
+  @override
+  String get localFile => 'ローカルファイル';
+
+  @override
+  String get importLocalFileSubtitle => '.lrc、.ttml、または .txt をインポート';
+
+  @override
+  String get searchFromAppleMusic => 'Apple Music から検索';
+
+  @override
+  String get searchAppleMusicSubtitle => 'LRC/TTMLを自動でダウンロード';
+
+  @override
+  String get searchFromSpotifyLyrics => 'Spotify から検索';
+
+  @override
+  String get searchSpotifyLyricsSubtitle => 'Spotifyから同期歌詞をダウンロード';
+
+  @override
+  String get searchFromMusixmatch => 'Musixmatch から検索';
+
+  @override
+  String get searchMusixmatchSubtitle => 'Musixmatchから同期歌詞をダウンロード';
+
+  @override
+  String get searchingAppleMusic => 'Apple Music を検索中...';
+
+  @override
+  String get findingMatches => '一致する曲を検索中...';
+
+  @override
+  String get noResultsAppleMusic => 'Apple Music で結果が見つかりませんでした。';
+
+  @override
+  String get selectSong => '曲を選択';
+
+  @override
+  String get downloadingLyrics => '歌詞をダウンロード中...';
+
+  @override
+  String get fetchingLyricsFromServer => 'サーバーから TTML/LRC を取得中...';
+
+  @override
+  String get failedDownloadAppleMusic =>
+      '歌詞のダウンロードに失敗しました。Apple Music に存在しない可能性があります。';
+
+  @override
+  String get lyricsImportedSuccess => '歌詞のインポートに成功しました！「保存」を押して保存してください。';
+
+  @override
+  String get receivedEmptyLyrics => 'サーバーから空の歌詞を受信しました。';
+
+  @override
+  String get downloadingFromSpotify => 'Spotify からダウンロード中...';
+
+  @override
+  String get fetchingLyrics => '歌詞を取得中...';
+
+  @override
+  String get lyricsImportedSpotify => 'Spotifyから歌詞をインポートしました！';
+
+  @override
+  String get noLyricsSpotify => 'Spotify で歌詞が見つかりませんでした。';
+
+  @override
+  String get downloadingFromMusixmatch => 'Musixmatch からダウンロード中...';
+
+  @override
+  String get lyricsImportedMusixmatch => 'Musixmatchから歌詞をインポートしました！';
+
+  @override
+  String get noLyricsMusixmatch => 'Musixmatch で歌詞が見つかりませんでした。';
 
   @override
   String get importSpotifyPlaylist => 'Spotifyプレイリストをインポートする';
@@ -1047,6 +1368,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get inputLabel => '入力';
 
   @override
+  String get insertAfter => '後ろに挿入';
+
+  @override
   String get installNow => '今すぐインストール';
 
   @override
@@ -1057,6 +1381,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get invalidCode => '無効なアクセスコードです';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
 
   @override
   String get invalidSpotifyUrl => '無効なSpotifyプレイリストURL';
@@ -1120,6 +1447,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get linkAccountDesc => 'Googleで進捗状況を同期・復元する';
 
   @override
+  String get linkAccountToUpgrade =>
+      'アップグレードするには、まずアカウントを連携する必要があります。Sociabuzz と同じメールアドレスを使用してください！';
+
+  @override
+  String get linkCopied => 'リンクがクリップボードにコピーされました！';
+
+  @override
   String listenMinutesTooltip(String minutes) {
     return '$minutes 分間音楽を聴く';
   }
@@ -1162,10 +1496,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get losslessQuality => 'ロスレス (自動)';
 
   @override
+  String get lrcFormat => 'LRC (標準同期)';
+
+  @override
+  String get lrcFormatDesc => 'ユニバーサル形式、どこでも動作します。';
+
+  @override
   String get lunarNewYear => '旧正月';
 
   @override
+  String get lyricTextHint => '歌詞テキスト...';
+
+  @override
+  String get lyricsApplied => '歌詞をパネルに適用しました！';
+
+  @override
   String get lyricsByLRCLIB => 'Lyrics by LRCLIB';
+
+  @override
+  String get lyricsEditorTitle => '歌詞エディタ';
 
   @override
   String get lyricsSaveError => '歌詞の保存に失敗しました';
@@ -1178,6 +1527,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get madeForYou => 'あなたにおすすめ';
+
+  @override
+  String get manageIndividualFeatures => '個別のオンライン機能を管理する';
 
   @override
   String get manualSearch => '手動検索';
@@ -1410,6 +1762,39 @@ class AppLocalizationsJa extends AppLocalizations {
   String get offline => 'オフライン';
 
   @override
+  String get offlineModeActive => 'アクティブ';
+
+  @override
+  String get offlineModeAllEnabledStatus => 'すべて有効';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'すべてのネットワーク通信が完全に切断されます。以下の機能がオフになります：';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return '無効 ($count)';
+  }
+
+  @override
+  String get offlineModeEnabledStatus => 'オフラインモード有効';
+
+  @override
+  String get offlineModeHeader => 'オフラインモード';
+
+  @override
+  String get offlineModeLockdownDesc => 'ネットワーク制限中。統計はローカルに保存されます。';
+
+  @override
+  String get offlineModeMainDesc => 'すべてのネットワークサービスを無効にし、ローカルライブラリのみ再生します。';
+
+  @override
+  String get offlineModeSyncRestoreNote => 'これをオフにすると、統計が自動的に同期されます。';
+
+  @override
+  String get offlineModeTitle => 'オフラインモード';
+
+  @override
   String get offlineStatus => 'オフライン';
 
   @override
@@ -1419,7 +1804,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get online => 'オンライン';
 
   @override
+  String get onlineModeRestored => 'オンラインモードが復旧しました。統計を同期中...';
+
+  @override
+  String get onlyAppleMusic => 'Apple Musicのみ';
+
+  @override
   String get onlyScanSelected => '選択したフォルダのみをスキャンする（デフォルト：オン）';
+
+  @override
+  String get onlySpotify => 'Spotifyのみ';
 
   @override
   String get opacity => '不透明度';
@@ -1428,6 +1822,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String opacityLabel(int percent) {
     return '不透明度: $percent%';
   }
+
+  @override
+  String get openBrowser => 'ブラウザを開く';
 
   @override
   String get openProfile => 'プロフィールを開く';
@@ -1445,7 +1842,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get overwriteLrcWarning => 'この曲には既にローカルの.lrcファイルがあります。\\n上書きしますか？';
 
   @override
+  String get owned => '所有済み';
+
+  @override
   String get parsingPlaylistData => 'プレイリストデータを解析中...';
+
+  @override
+  String get pasteLyricsHint => 'ここに歌詞を貼り付けてください...';
 
   @override
   String get pathLabel => 'パス';
@@ -1458,12 +1861,18 @@ class AppLocalizationsJa extends AppLocalizations {
       'タグを編集するには、「全ファイルへのアクセス」権限が必要です。これにより、音楽ファイルを直接修正できるようになります。';
 
   @override
+  String get plainMode => 'プレーン';
+
+  @override
   String get play => '再生';
 
   @override
   String playCountLabel(int count) {
     return '$count 回再生';
   }
+
+  @override
+  String get playFromLine => 'この行から再生';
 
   @override
   String get playNext => '次に再生';
@@ -1520,7 +1929,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get portuguese => 'ポルトガル語';
 
   @override
+  String get preferAppleMusic => 'Apple Musicを優先';
+
+  @override
+  String get preferSpotify => 'Spotifyを優先';
+
+  @override
   String get preferredOutputFormat => 'ダウンロードの優先出力形式';
+
+  @override
+  String get premiumMemberDesc => '無制限のALACダウンロードと優先キューアクセスがあります！';
+
+  @override
+  String get premiumMemberTitle => 'プレミアムメンバー';
 
   @override
   String get preparingDownload => 'ダウンロードを準備中';
@@ -1543,6 +1964,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get previousTrack => '前のトラック';
 
   @override
+  String get priorityVipServerQueue => '優先 VIP サーバーキュー';
+
+  @override
+  String get processingOnServer => 'サーバーで処理中...';
+
+  @override
   String get profileSettings => 'プロフィール設定';
 
   @override
@@ -1562,6 +1989,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get queueIsEmpty => 'キューが空です';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'キュー $position... お待ちください';
+  }
 
   @override
   String get queueTooltip => 'キュー';
@@ -1642,10 +2074,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get refreshLyricsTooltip => '歌詞を更新';
 
   @override
+  String get registeredLinkedTier => '登録済み (連携済み)';
+
+  @override
   String get removeAvatar => '現在のアバターを削除';
 
   @override
   String get removeFromPlaylist => 'プレイリストから削除する';
+
+  @override
+  String get removeLine => '行を削除';
 
   @override
   String removedFolder(Object folder) {
@@ -1660,6 +2098,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get repeats => '繰り返し';
+
+  @override
+  String get reportTrouble => '問題を報告';
 
   @override
   String get requiresAndroid14 => 'Android 14以降とUSB DACが必要です';
@@ -1734,6 +2175,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get revert => '元に戻す';
 
   @override
+  String get romajiHint => 'ローマ字 / 音訳 (任意)...';
+
+  @override
   String get russian => 'ロシア語';
 
   @override
@@ -1758,7 +2202,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get saveLabel => '保存';
 
   @override
+  String get saveLocallyBtn => 'ローカルに保存';
+
+  @override
   String get saveLrcPrompt => '現在の歌詞をオーディオファイルの隣に保存しますか？';
+
+  @override
+  String get saveLyricsTitle => '歌詞を保存';
 
   @override
   String get saveLyricsTooltip => '歌詞を保存';
@@ -1782,6 +2232,11 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String savedAsFormat(String format) {
     return '$format として保存しました';
+  }
+
+  @override
+  String savedSuccessfully(String extension) {
+    return '$extension ファイルの保存に成功しました！';
   }
 
   @override
@@ -1865,6 +2320,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get seeAll => 'すべて表示';
 
   @override
+  String get seeBenefitsBtn => '特典を見る';
+
+  @override
+  String get seePremiumBenefits => 'プレミアムの特典を見る';
+
+  @override
   String get selectDifferentFolder => '別のフォルダを選択する';
 
   @override
@@ -1895,6 +2356,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get setCustomTimer => 'カスタムタイマーを設定する';
+
+  @override
+  String get setEndTooltip => '終了時間を現在位置に設定';
+
+  @override
+  String get setStartTooltip => '開始時間を現在位置に設定';
 
   @override
   String get settings => '設定';
@@ -1975,6 +2442,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get songLabelUpper => '曲';
 
   @override
+  String get songQueueTitle => '曲のキュー';
+
+  @override
   String get songTitleKeyword => '曲名またはキーワード';
 
   @override
@@ -2011,6 +2481,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get standardDesc => 'MP3 - ファイルサイズが小さく、バッファリングが速い';
 
   @override
+  String get standardDownloadQueue => '標準ダウンロードキュー';
+
+  @override
   String get standardQuality => '標準 (MP3)';
 
   @override
@@ -2018,6 +2491,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get startBulkProcess => '一括処理を開始する';
+
+  @override
+  String get startLabel => '開始: ';
 
   @override
   String get startedDownloadingAll => 'すべての曲のダウンロードを開始しました...';
@@ -2078,6 +2554,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get syncThemeAlbumArt => 'アルバムアートとテーマを同期する';
+
+  @override
+  String get syncedMode => '同期済み';
 
   @override
   String get system => 'システム';
@@ -2191,6 +2670,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get translationLanguage => '翻訳言語';
 
   @override
+  String get ttmlFormat => 'TTML (高精度)';
+
+  @override
+  String get ttmlFormatDesc => 'AI生成や詳細な同期に適しています。';
+
+  @override
   String get turnOffTimer => 'タイマーをオフにする';
 
   @override
@@ -2218,6 +2703,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get unknownDevice => '不明なデバイス';
 
   @override
+  String get unlimitedAlacDownloads => '無制限の ALAC ダウンロード';
+
+  @override
   String get unlink => '解除する';
 
   @override
@@ -2234,6 +2722,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get unlinkFolderClear => 'フォルダのリンクを解除し、曲リストをクリアする';
+
+  @override
+  String get unlockUnlimitedPremium => '無制限プレミアムを解放';
 
   @override
   String unlockedCountLabel(int unlocked, int total) {
@@ -2292,6 +2783,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get useMixedColors => 'ミックスカラーを使用する（同期を優先）';
 
   @override
+  String get useSameEmailCheckStatus =>
+      'ステータスを自動確認するために、アプリ内と同じメールアドレスを使用してください。';
+
+  @override
+  String usedToday(int used, int max) {
+    return '$used / $max 本日使用済み';
+  }
+
+  @override
   String get verifiedDeveloper => '認証済み開発者';
 
   @override
@@ -2313,6 +2813,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get visualizerStyle => 'ビジュアライザースタイル';
+
+  @override
+  String get waitingForServerResponse => 'サーバーの応答を待っています...';
 
   @override
   String get wasapiExclusive => 'WASAPI排他モード';
@@ -2349,303 +2852,4 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlpの新しいバージョンが利用可能です。';
-
-  @override
-  String get importFromM3u => 'Import from M3U';
-
-  @override
-  String get importFromM3uSubtitle => 'Import an M3U playlist file';
-
-  @override
-  String get exportToM3u => 'Export to M3U';
-
-  @override
-  String get invalidM3uFile => 'Invalid M3U File';
-
-  @override
-  String get generateAiLyrics => 'Generate AI Lyrics';
-
-  @override
-  String get aiLyricsGenerating => 'Generating AI Lyrics...';
-
-  @override
-  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
-
-  @override
-  String get aiLyricsError => 'Error generating AI lyrics.';
-
-  @override
-  String get offlineModeHeader => 'オフラインモード';
-
-  @override
-  String get offlineModeTitle => 'オフラインモード';
-
-  @override
-  String get offlineModeActive => 'アクティブ';
-
-  @override
-  String get offlineModeEnabledStatus => 'オフラインモード有効';
-
-  @override
-  String offlineModeDisabledStatus(int count) {
-    return '無効 ($count)';
-  }
-
-  @override
-  String get offlineModeAllEnabledStatus => 'すべて有効';
-
-  @override
-  String get offlineModeLockdownDesc => 'ネットワーク制限中。統計はローカルに保存されます。';
-
-  @override
-  String get offlineModeMainDesc => 'すべてのネットワークサービスを無効にし、ローカルライブラリのみ再生します。';
-
-  @override
-  String get enableOfflineModeQuestion => 'オフラインモードを有効にしますか？';
-
-  @override
-  String get offlineModeConfirmationDesc =>
-      'すべてのネットワーク通信が完全に切断されます。以下の機能がオフになります：';
-
-  @override
-  String get offlineModeSyncRestoreNote => 'これをオフにすると、統計が自動的に同期されます。';
-
-  @override
-  String get enableOfflineModeBtn => 'オフラインモードを有効にする';
-
-  @override
-  String get onlineModeRestored => 'オンラインモードが復旧しました。統計を同期中...';
-
-  @override
-  String get disableServicesTitle => 'サービスを無効にする';
-
-  @override
-  String get manageIndividualFeatures => '個別のオンライン機能を管理する';
-
-  @override
-  String get featureCloudSync => 'クラウド統計同期';
-
-  @override
-  String get featureCloudSyncDesc => '再生統計はローカルのみに保存されます';
-
-  @override
-  String get featureCloudSyncLongDesc => '再生メトリクスをPocketBaseと同期する';
-
-  @override
-  String get featureLeaderboard => 'グローバルリーダーボード';
-
-  @override
-  String get featureLeaderboardDesc => 'ランク更新を停止中';
-
-  @override
-  String get featureLeaderboardLongDesc => 'ランクを公開・更新する';
-
-  @override
-  String get featureOnlineLyrics => 'オンライン歌詞検索';
-
-  @override
-  String get featureOnlineLyricsDesc => 'ローカルの .lrc/.ttml ファイルのみ';
-
-  @override
-  String get featureOnlineLyricsLongDesc => 'LRCLIB/Spotify から歌詞を取得する';
-
-  @override
-  String get featureAiLyrics => 'AI歌詞ジェネレーター';
-
-  @override
-  String get featureAiLyricsDesc => '自動同期歌詞を無効化';
-
-  @override
-  String get featureAiLyricsLongDesc => 'AIで同期歌詞を生成する';
-
-  @override
-  String get featureSpotifyCanvas => 'Spotify Canvas';
-
-  @override
-  String get featureSpotifyCanvasDesc => '背景ビデオを無効化';
-
-  @override
-  String get featureSpotifyCanvasLongDesc => 'トラックの背景ビデオ';
-
-  @override
-  String get featureOnlineSearch => 'オンライン検索';
-
-  @override
-  String get featureOnlineSearchDesc => 'Spotify/YouTube検索を無効化';
-
-  @override
-  String get featureOnlineSearchLongDesc => 'SpotifyとYouTubeのリモート検索';
-
-  @override
-  String get featureConnectDevice => 'デバイスに接続';
-
-  @override
-  String get featureConnectDeviceDesc => 'リモート制御・リスニングパーティを無効化';
-
-  @override
-  String get featureConnectDeviceLongDesc => 'リモート制御とリスニングパーティ';
-
-  @override
-  String get lyricsEditorTitle => '歌詞エディタ';
-
-  @override
-  String get clearAllQuestion => 'すべてクリアしますか？';
-
-  @override
-  String get clearAllDesc => '現在のエディタの状態をクリアします。保存しない限り、ローカルファイルは削除されません。';
-
-  @override
-  String get clearBtn => 'クリア';
-
-  @override
-  String get lyricsApplied => '歌詞をパネルに適用しました！';
-
-  @override
-  String get chooseFormat => '優先する形式を選択してください：';
-
-  @override
-  String get lrcFormat => 'LRC (標準同期)';
-
-  @override
-  String get lrcFormatDesc => 'ユニバーサル形式、どこでも動作します。';
-
-  @override
-  String get ttmlFormat => 'TTML (高精度)';
-
-  @override
-  String get ttmlFormatDesc => 'AI生成や詳細な同期に適しています。';
-
-  @override
-  String savedSuccessfully(String extension) {
-    return '$extension ファイルの保存に成功しました！';
-  }
-
-  @override
-  String get failedToSave => '歌詞ファイルの保存に失敗しました。';
-
-  @override
-  String get generationFailed => '生成失敗';
-
-  @override
-  String get aiLyricsGenerationTitle => 'AI歌詞生成';
-
-  @override
-  String get syncedMode => '同期済み';
-
-  @override
-  String get plainMode => 'プレーン';
-
-  @override
-  String get addLineToTop => '先頭に追加';
-
-  @override
-  String get addLineToEnd => '末尾に追加';
-
-  @override
-  String get lyricTextHint => '歌詞テキスト...';
-
-  @override
-  String get insertAfter => '後ろに挿入';
-
-  @override
-  String get removeLine => '行を削除';
-
-  @override
-  String get romajiHint => 'ローマ字 / 音訳 (任意)...';
-
-  @override
-  String get startLabel => '開始: ';
-
-  @override
-  String get setStartTooltip => '開始時間を現在位置に設定';
-
-  @override
-  String get endLabel => '終了: ';
-
-  @override
-  String get setEndTooltip => '終了時間を現在位置に設定';
-
-  @override
-  String get playFromLine => 'この行から再生';
-
-  @override
-  String get pasteLyricsHint => 'ここに歌詞を貼り付けてください...';
-
-  @override
-  String get applyBtn => '適用';
-
-  @override
-  String get saveLocallyBtn => 'ローカルに保存';
-
-  @override
-  String get editLyricsTooltip => '歌詞を編集';
-
-  @override
-  String get saveLyricsTitle => '歌詞を保存';
-
-  @override
-  String get aiGenerate => 'AI生成';
-
-  @override
-  String get aiLyricsInitializing => '初期化中...';
-
-  @override
-  String get aiLyricsUploading => '曲をサーバーにアップロード中...';
-
-  @override
-  String get aiLyricsUploadFailed => 'エラー: アップロードに失敗しました。';
-
-  @override
-  String get aiLyricsUploadSuccess => 'アップロード完了！';
-
-  @override
-  String get aiLyricsVerifying => 'サーバーのステータスを確認中...';
-
-  @override
-  String get aiLyricsStatusOk => 'ステータスコード 200 OK!';
-
-  @override
-  String get aiLyricsPolling => '歌詞を取得中... 少々お待ちください！';
-
-  @override
-  String get aiLyricsReceiving => '歌詞を受信しました';
-
-  @override
-  String get aiLyricsParsing => '歌詞を解析中...';
-
-  @override
-  String get aiLyricsSuccess => '歌詞の生成に成功しました！';
-
-  @override
-  String get aiLyricsLocalFileMissing => 'エラー: ローカルオーディオファイルが見つかりません。';
-
-  @override
-  String get aiLyricsComplete => '完了！';
-
-  @override
-  String get externalLinkDetected => '外部リンクが検出されました';
-
-  @override
-  String get gofileDownloadFailedPrompt =>
-      '厳しいネットワークまたはサーバーの制限により、自動ダウンロードに失敗しました。\\n\\nシステムブラウザでGofileダウンロードページを開きますか？それともリンクをコピーして手動でダウンロードしますか？';
-
-  @override
-  String get copyLink => 'リンクをコピー';
-
-  @override
-  String get openBrowser => 'ブラウザを開く';
-
-  @override
-  String get linkCopied => 'リンクがクリップボードにコピーされました！';
-
-  @override
-  String get waitingForServerResponse => 'サーバーの応答を待っています...';
-
-  @override
-  String queuePositionPleaseWait(int position) {
-    return 'キュー $position... お待ちください';
-  }
-
-  @override
-  String get processingOnServer => 'サーバーで処理中...';
 }

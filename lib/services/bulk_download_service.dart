@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:permission_handler/permission_handler.dart'; // 🚀 IMPORT
+import 'package:permission_handler/permission_handler.dart'; // IMPORT
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -12,8 +12,10 @@ import 'youtube_downloader_service.dart';
 import 'metrics_service.dart';
 import 'spotify_service.dart';
 import 'deezer_service.dart';
-import 'notification_service.dart'; // 🚀 IMPORT
+import 'notification_service.dart'; // IMPORT
+import 'apple_music_backend_service.dart';
 import '../utils/filename_helper.dart';
+import '../providers/settings_provider.dart';
 
 class BulkDownloadService {
   static final BulkDownloadService _instance = BulkDownloadService._internal();
@@ -33,21 +35,21 @@ class BulkDownloadService {
   // Error notifier for ban/limit messages
   final ValueNotifier<String?> errorNotifier = ValueNotifier(null);
 
-  // 🚀 Real-time status for UI
+  // Real-time status for UI
   final ValueNotifier<String?> currentSongNotifier = ValueNotifier(null);
   final StreamController<String> _songCompleteController =
       StreamController.broadcast();
   Stream<String> get songCompleteStream => _songCompleteController.stream;
 
   bool _isDownloading = false;
-  bool _isCancelled = false; // 🚀 ADDED
+  bool _isCancelled = false; // ADDED
 
   void cancelDownload() {
     if (_isDownloading) {
       _isCancelled = true;
-      print("⚠️ Bulk download cancel requested.");
+      debugPrint("⚠️ Bulk download cancel requested.");
 
-      // 🚀 IMMEDIATE UI FEEDBACK
+      // IMMEDIATE UI FEEDBACK
       if (progressNotifier.value != null) {
         final current = progressNotifier.value!;
         progressNotifier.value = DownloadProgress(
@@ -64,7 +66,7 @@ class BulkDownloadService {
   Future<void> downloadAlbum(String albumTitle, List<SongModel> songs,
       {String? coverUrl}) async {
     if (_isDownloading) {
-      print("⚠️ Bulk Download already in progress");
+      debugPrint("⚠️ Bulk Download already in progress");
       return;
     }
 
@@ -72,7 +74,7 @@ class BulkDownloadService {
     int total = songs.length;
     int completed = 0;
 
-    // 🚀 INIT NOTIFICATIONS
+    // INIT NOTIFICATIONS
     final notif = NotificationService();
     // Unique ID based on time
     final notifId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -81,7 +83,7 @@ class BulkDownloadService {
       // 0. ENSURE YOUTUBE DOWNLOADER IS INITIALIZED
       await _ytService.initialize();
 
-      // 🚀 REQUEST PERMISSIONS (ANDROID)
+      // REQUEST PERMISSIONS (ANDROID)
       if (Platform.isAndroid) {
         // Request Storage (Android < 13)
         var status = await Permission.storage.request();
@@ -94,7 +96,7 @@ class BulkDownloadService {
         // Final Check
         if (!status.isGranted &&
             !await Permission.manageExternalStorage.isGranted) {
-          print("⛔ Permission Denied");
+          debugPrint("⛔ Permission Denied");
           errorNotifier.value = "Storage permission required to download!";
           _isDownloading = false;
           return;
@@ -104,14 +106,14 @@ class BulkDownloadService {
       // 1. Get Base Directory: downloads/SimpleMusicDownloads/playlists/{Album Title}
       final baseDir = await getAlbumDownloadDirectory(albumTitle);
       if (baseDir == null) {
-        print("❌ Could not get download directory");
+        debugPrint("❌ Could not get download directory");
         _isDownloading = false;
         return;
       }
 
-      print("📂 Downloading to: ${baseDir.path}");
+      debugPrint("📂 Downloading to: ${baseDir.path}");
 
-      // 🚀 Notify Start
+      // Notify Start
       await notif.showProgress(
           id: notifId,
           progress: 0,
@@ -122,7 +124,7 @@ class BulkDownloadService {
       for (var i = 0; i < songs.length; i++) {
         // 🛑 CHECK CANCELLATION
         if (_isCancelled) {
-          print("⛔ Bulk download cancelled by user.");
+          debugPrint("⛔ Bulk download cancelled by user.");
           _updateProgress(completed, total, "Cancelled");
           errorNotifier.value = "Download cancelled by user.";
           notif.cancel(notifId);
@@ -130,38 +132,42 @@ class BulkDownloadService {
         }
 
         var song = songs[i];
-        currentSongNotifier.value = song.filePath; // 🚀 Notify Start
+        currentSongNotifier.value = song.filePath; // Notify Start
 
         // 🛑 CHECK BAN STATUS FIRST
         final isBanned = await MetricsService().isUserBanned();
         if (isBanned) {
-          print("⛔ User is banned. Stopping bulk download.");
+          debugPrint("⛔ User is banned. Stopping bulk download.");
           _updateProgress(completed, total, "⛔ Account Suspended");
           errorNotifier.value =
               "⛔ Your account has been suspended. Downloads are disabled.";
-          notif.cancel(notifId); // 🚀 Cancel
+          notif.cancel(notifId); // Cancel
           break;
         }
 
         // 🛑 CHECK QUOTA
-        final canDownload = await MetricsService().canDownload();
-        if (!canDownload) {
-          print("⛔ Daily download limit reached. Stopping bulk download.");
-          _updateProgress(completed, total, "📊 Limit Reached");
-          errorNotifier.value =
-              "📊 Daily Download Limit Reached (50/day). Try again tomorrow!";
-          notif.showComplete(
-              id: notifId,
-              title: "Download Paused",
-              body:
-                  "Daily limit reached ($completed/$total)."); // 🚀 Show Paused
-          break;
+        final isAlac = song.sourceUrl != null && song.sourceUrl!.contains('apple.com');
+        
+        if (!isAlac) {
+          final canDownload = await MetricsService().canDownload();
+          if (!canDownload) {
+            debugPrint("⛔ Daily download limit reached. Stopping bulk download.");
+            _updateProgress(completed, total, "📊 Limit Reached");
+            errorNotifier.value =
+                "📊 Daily Download Limit Reached (50/day). Try again tomorrow!";
+            notif.showComplete(
+                id: notifId,
+                title: "Download Paused",
+                body:
+                    "Daily limit reached ($completed/$total)."); // Show Paused
+            break;
+          }
         }
 
         // Update Progress: "Downloading... (x/total)"
         _updateProgress(completed, total, "Downloading...");
 
-        // 🚀 UPDATE NOTIF (Current Song)
+        // UPDATE NOTIF (Current Song)
         // Show "Song Title • 1 of 10"
         notif.showProgress(
             id: notifId,
@@ -177,7 +183,7 @@ class BulkDownloadService {
             ? coverUrl
             : (song.onlineArtUrl ?? "");
 
-        // 🚀 SMART METADATA ENRICHMENT
+        // SMART METADATA ENRICHMENT
         // Always try to enrich YT Music tracks with Spotify data for high-res art and exact album
         String? year = song.year;
         String? genre = song.genre;
@@ -189,7 +195,7 @@ class BulkDownloadService {
 
         if (isYtSource || year == null || year.isEmpty || trackNum == null) {
           try {
-            print(
+            debugPrint(
                 "🔍 Fetching rich Spotify metadata for ${song.title}...");
             // Ensure we search precisely, matching the playlist player behavior
             final query = "${song.title} ${song.artist}";
@@ -198,20 +204,20 @@ class BulkDownloadService {
           try {
             results = await SpotifyService.searchTracks(query);
           } catch (e) {
-            print("Spotify enrichment failed during bulk download: $e, falling back to Deezer");
+            debugPrint("Spotify enrichment failed during bulk download: $e, falling back to Deezer");
           }
 
           if (results.isEmpty) {
             try {
               results = await DeezerService.searchSongs(query);
             } catch (e) {
-              print("Deezer enrichment failed during bulk download: $e");
+              debugPrint("Deezer enrichment failed during bulk download: $e");
             }
           }
 
           if (results.isNotEmpty) {
             final richMeta = results.first;
-            print("✅ Found rich metadata: Album=${richMeta.album}");
+            debugPrint("✅ Found rich metadata: Album=${richMeta.album}");
 
             // Override basic YT metadata with Official Meta
             artUrl = richMeta.albumArtUrl.isNotEmpty ? richMeta.albumArtUrl : artUrl;
@@ -231,7 +237,7 @@ class BulkDownloadService {
             );
             }
           } catch (e) {
-            print("Metadata enrichment failed completely during bulk download: $e");
+            debugPrint("Metadata enrichment failed completely during bulk download: $e");
           }
         }
 
@@ -247,81 +253,139 @@ class BulkDownloadService {
             trackNumber: trackNum ?? (i + 1), // Fallback to loop index
             discNumber: discNum ?? 1);
 
-        // 3. Search / Match or Use Source URL
-        String? videoUrl;
+        // USE GENERATED FILENAME (Configurable)
+        // Pass patternKey for playlist and the index (1-based)
+        final filename = await _smartService.generateFilename(metadata,
+            patternKey: 'playlist_filename_pattern', playlistIndex: i + 1);
 
-        if (song.sourceUrl != null &&
-            song.sourceUrl!.isNotEmpty &&
-            !song.sourceUrl!.contains("spotify.com")) {
-          videoUrl = song.sourceUrl;
-          print("🚀 Using direct source URL for ${song.title}");
-        } else {
-          final debugResult =
-              await _smartService.searchYouTubeForMatch(metadata);
+        String preferredFormat = 'm4a';
+        SearchEngine? currentEngine;
+        if (AppleMusicBackendService.globalRef != null) {
+          final settings = AppleMusicBackendService.globalRef!.read(settingsProvider);
+          preferredFormat = settings.audioFormat;
+          currentEngine = settings.searchEngine;
+        }
+        
+        final isAppleMusic = (song.sourceUrl != null && song.sourceUrl!.contains('apple.com')) ||
+            (currentEngine == SearchEngine.appleMusic && (song.sourceUrl == null || !song.sourceUrl!.contains('youtube.com')));
 
-          if (debugResult != null && debugResult.youtubeMatches.isNotEmpty) {
-            // Best match logic (simplify for now, take top result or similar duration)
-            var match = debugResult.youtubeMatches.first;
-            // If we have multiple, try to find closest duration
-            if (debugResult.youtubeMatches.length > 1) {
-              match = debugResult.youtubeMatches.firstWhere((m) {
-                final parts = m.duration.split(':');
-                int seconds = 0;
-                if (parts.length == 2) {
-                  seconds = int.parse(parts[0]) * 60 + int.parse(parts[1]);
-                }
-                return (seconds - metadata.durationSeconds).abs() < 10;
-              }, orElse: () => debugResult.youtubeMatches.first);
-            }
-            videoUrl = match.url;
-          }
+        if (preferredFormat == 'flac' && !isAppleMusic) {
+          preferredFormat = 'm4a'; // Youtube doesn't support FLAC
         }
 
-        if (videoUrl != null) {
-          // 4. Download
-          // 🚀 USE GENERATED FILENAME (Configurable)
-          // Pass patternKey for playlist and the index (1-based)
-          final filename = await _smartService.generateFilename(metadata,
-              patternKey: 'playlist_filename_pattern', playlistIndex: i + 1);
+        final fileExtension = preferredFormat == 'alac' ? 'm4a' : preferredFormat;
+        final filePath = "${baseDir.path}/$filename.$fileExtension";
 
-          final filePath = "${baseDir.path}/$filename.m4a";
+        // SKIP IF EXISTS: Don't re-download, don't count quota
+        final file = File(filePath);
+        if (await file.exists()) {
+          debugPrint("⏭️ Skipping (already exists): ${song.title}");
+          completed++;
+          _updateProgress(completed, total, "Skipping existing...");
+          _songCompleteController.add(song.filePath); // Notify Cached
+          continue; // Next song
+        }
 
-          // 🚀 SKIP IF EXISTS: Don't re-download, don't count quota
-          final file = File(filePath);
-          if (await file.exists()) {
-            print("⏭️ Skipping (already exists): ${song.title}");
-            completed++;
-            _updateProgress(completed, total, "Skipping existing...");
-            _songCompleteController.add(song.filePath); // 🚀 Notify Cached
-            continue; // Next song
-          }
+        bool success = false;
 
-          bool success = false;
-          try {
-            success = await _downloadWrapper(videoUrl, filePath);
-          } catch (e) {
-            print("❌ Failed to download ${song.title}: $e");
-          }
+        // 3. Search / Match or Use Source URL
+        if (isAppleMusic) {
+           // APPLE MUSIC FLOW
+           debugPrint("🎵 Apple Music source detected. Processing via VPS...");
+           try {
+             String targetUrl = song.sourceUrl ?? '';
+             if (targetUrl.isEmpty || !targetUrl.contains('apple.com')) {
+               final searchResults = await AppleMusicBackendService.search("${song.title} ${song.artist}", limit: 1);
+               if (searchResults.isNotEmpty && searchResults.first['url'] != null) {
+                 targetUrl = searchResults.first['url'];
+               }
+             }
 
-          if (!success) {
-            print("⚠️ Download reported failure for ${song.title}");
-          }
+             if (targetUrl.isNotEmpty && targetUrl.contains('apple.com')) {
+               final remoteUrl = await AppleMusicBackendService.requestDownload(
+                 targetUrl,
+                 title: metadata.title,
+                 artist: metadata.artist,
+                 isCancelled: () => _isCancelled,
+               );
+               
+               if (remoteUrl != null && !_isCancelled) {
+                 success = await AppleMusicBackendService.downloadFile(
+                   remoteUrl,
+                   filePath,
+                   isCancelled: () => _isCancelled,
+                 );
+               }
+             }
+           } catch (e) {
+             if (e.toString().contains('QUOTA_EXCEEDED')) {
+               debugPrint("⛔ ALAC Quota Exceeded. Stopping bulk download.");
+               errorNotifier.value = "QUOTA_EXCEEDED";
+               cancelDownload(); // Abort the remaining queue
+               break;
+             }
+           }
+        } else {
+           // NORMAL YOUTUBE / FALLBACK FLOW
+           String? videoUrl;
+           if (song.sourceUrl != null &&
+               song.sourceUrl!.isNotEmpty &&
+               !song.sourceUrl!.contains("spotify.com")) {
+             videoUrl = song.sourceUrl;
+             debugPrint("Using direct source URL for ${song.title}");
+           } else {
+             final debugResult = await _smartService.searchYouTubeForMatch(metadata);
+             if (debugResult != null && debugResult.youtubeMatches.isNotEmpty) {
+               var match = debugResult.youtubeMatches.first;
+               if (debugResult.youtubeMatches.length > 1) {
+                 match = debugResult.youtubeMatches.firstWhere((m) {
+                   final parts = m.duration.split(':');
+                   int seconds = 0;
+                   if (parts.length == 2) {
+                     seconds = int.parse(parts[0]) * 60 + int.parse(parts[1]);
+                   }
+                   return (seconds - metadata.durationSeconds).abs() < 10;
+                 }, orElse: () => debugResult.youtubeMatches.first);
+               }
+               videoUrl = match.url;
+             }
+           }
+
+           if (videoUrl != null && !_isCancelled) {
+             try {
+               success = await _downloadWrapper(videoUrl, filePath);
+             } catch (e) {
+               debugPrint("❌ Failed to download ${song.title}: $e");
+             }
+           } else if (videoUrl == null) {
+             debugPrint("⚠️ No match found for ${song.title}");
+           }
+        }
+
+        if (!success) {
+          debugPrint("⚠️ Download reported failure for ${song.title}");
+        }
 
           if (success) {
             // Wait for file handle release (Critical for Windows)
             await Future.delayed(const Duration(milliseconds: 500));
 
             // 5. Tag
-            await _smartService.tagFile(filePath: filePath, metadata: metadata);
+            final actualPath = File(filePath).existsSync()
+                ? filePath
+                : (filePath.endsWith('.flac') && File('${filePath.substring(0, filePath.length - 5)}.m4a').existsSync()
+                    ? '${filePath.substring(0, filePath.length - 5)}.m4a'
+                    : filePath);
+            await _smartService.tagFile(filePath: actualPath, metadata: metadata);
 
             // 6. 🛑 TRACK USAGE (Only for new downloads)
-            await MetricsService().trackDownloadMetadata(metadata);
+            if (!isAlac) {
+              await MetricsService().trackDownloadMetadata(metadata);
+            }
 
-            _songCompleteController.add(song.filePath); // 🚀 Notify Success
+            _songCompleteController.add(song.filePath); // Notify Success
           }
-        } else {
-          print("⚠️ No match found for ${song.title}");
-        }
+
 
         completed++;
         _updateProgress(completed, total, "Downloading...");
@@ -331,23 +395,28 @@ class BulkDownloadService {
         int remaining = await MetricsService().getRemainingQuota();
         _updateProgress(total, total, "Completed ($remaining left)");
 
-        // 🚀 DONE
+        // DONE
+        String pFormat = 'm4a';
+        if (AppleMusicBackendService.globalRef != null) {
+          pFormat = AppleMusicBackendService.globalRef!.read(settingsProvider).audioFormat;
+        }
+        final ext = pFormat == 'm4a' ? 'AAC' : pFormat.toUpperCase();
         await notif.showComplete(
             id: notifId,
             title: "Download Complete",
-            body: "$albumTitle downloaded successfully.");
+            body: "$albumTitle downloaded successfully ($ext).");
       }
 
       // Clear after a delay
       await Future.delayed(const Duration(seconds: 3));
       progressNotifier.value = null;
     } catch (e) {
-      print("❌ Bulk Download Error: $e");
+      debugPrint("❌ Bulk Download Error: $e");
       progressNotifier.value = null;
     } finally {
       _isDownloading = false;
       _isCancelled = false; // Reset flag
-      currentSongNotifier.value = null; // 🚀 Reset
+      currentSongNotifier.value = null; // Reset
     }
   }
 
@@ -357,7 +426,7 @@ class BulkDownloadService {
     await _ytService.startDownloadFromUrl(
         youtubeUrl: url,
         outputFilePath: path,
-        audioFormat: 'm4a', // 🚀 FORCE ENC M4A
+        audioFormat: 'm4a', // FORCE ENC M4A
         onProgress: (p) {},
         onComplete: (s) {
           if (!completer.isCompleted) completer.complete(s);
@@ -382,7 +451,7 @@ class BulkDownloadService {
     String? basePath;
 
     if (Platform.isAndroid) {
-      // 🚀 FIX: Use public Download directory on Android
+      // FIX: Use public Download directory on Android
       // /storage/emulated/0/Download/SimpleMusicDownloads/Playlists
       try {
         final externalDir = await getExternalStorageDirectory();
@@ -401,7 +470,7 @@ class BulkDownloadService {
           }
         }
       } catch (e) {
-        print("⛔ Error getting external storage: $e");
+        debugPrint("⛔ Error getting external storage: $e");
       }
 
       // Fallback to app documents directory

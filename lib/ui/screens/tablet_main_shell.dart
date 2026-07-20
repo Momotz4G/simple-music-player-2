@@ -1,15 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../models/album_model.dart';
+import '../../models/daily_mix_model.dart';
+import '../../models/song_metadata.dart';
 import '../../providers/library_presentation_provider.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../providers/tablet_layout_provider.dart';
 import '../../utils/layout_engine.dart';
 import '../components/tablet_queue_panel.dart';
+
+// --- ALL SCREEN IMPORTS ---
+import 'album_detail_page.dart';
+import 'albums_page.dart';
+import 'artist_detail_page.dart';
+import 'artists_page.dart';
+import 'daily_mix_detail_page.dart';
+import 'downloads_page.dart';
+import 'history_page.dart';
 import 'home_page.dart';
+import 'leaderboard_page.dart';
 import 'library_page.dart';
+import 'playlist_detail_page.dart';
+import 'playlists_page.dart';
 import 'search_page.dart';
 import 'settings_page.dart';
+import 'stats_page.dart';
+import 'tools_page.dart';
+import 'track_detail_page.dart';
 
 /// A tablet-specific main shell that uses a [NavigationRail] on the leading
 /// edge instead of a bottom navigation bar or drawer.
@@ -18,7 +37,8 @@ import 'settings_page.dart';
 ///   - [NavigationRail] on the left (leading edge)
 ///   - [Expanded] content area on the right
 ///
-/// Navigation destinations: Home, Library, Search, Settings.
+/// Supports all [LibraryView] values and renders detail pages
+/// (album, artist, track, playlist, daily mix) from the navigation stack.
 class TabletMainShell extends ConsumerStatefulWidget {
   const TabletMainShell({super.key});
 
@@ -29,20 +49,13 @@ class TabletMainShell extends ConsumerStatefulWidget {
 class _TabletMainShellState extends ConsumerState<TabletMainShell> {
   int _selectedIndex = 0;
 
-  /// Maps NavigationRail indices to [LibraryView] values.
+  /// The four primary NavigationRail destinations.
+  /// All other views are reachable via the navigation drawer.
   static const List<LibraryView> _navDestinations = [
     LibraryView.browse,
     LibraryView.localLibrary,
     LibraryView.search,
     LibraryView.settings,
-  ];
-
-  /// The page widgets corresponding to each navigation destination.
-  static const List<Widget> _pages = [
-    HomePage(),
-    LibraryPage(),
-    SearchPage(),
-    SettingsPage(),
   ];
 
   @override
@@ -77,6 +90,65 @@ class _TabletMainShellState extends ConsumerState<TabletMainShell> {
         .setView(_navDestinations[index]);
   }
 
+  /// Returns the correct page widget for any [LibraryView], including views
+  /// that are not part of the NavigationRail (accessed via the drawer).
+  Widget _getPageForView(LibraryView view) {
+    switch (view) {
+      case LibraryView.browse:
+        return const HomePage();
+      case LibraryView.localLibrary:
+        return const LibraryPage();
+      case LibraryView.search:
+        return const SearchPage();
+      case LibraryView.settings:
+        return const SettingsPage();
+      case LibraryView.history:
+        return const HistoryPage();
+      case LibraryView.stats:
+        return const StatsPage();
+      case LibraryView.playlists:
+        return const PlaylistsPage();
+      case LibraryView.artists:
+        return const ArtistsPage();
+      case LibraryView.albums:
+        return const AlbumsPage();
+      case LibraryView.downloads:
+        return const DownloadsPage();
+      case LibraryView.tools:
+        return const ToolsPage();
+      case LibraryView.leaderboard:
+        return const LeaderboardPage();
+      default:
+        return const HomePage();
+    }
+  }
+
+  /// Builds the detail page for the topmost item on the navigation stack.
+  /// Returns `null` if the stack is empty.
+  Widget? _buildDetailPage(List<NavigationItem> stack) {
+    if (stack.isEmpty) return null;
+
+    final item = stack.last;
+    switch (item.type) {
+      case NavigationType.artist:
+        final selection = item.data as ArtistSelection;
+        return ArtistDetailPage(
+          artistName: selection.artistName,
+          songs: selection.songs ?? [],
+        );
+      case NavigationType.album:
+        return AlbumDetailPage(album: item.data as AlbumModel);
+      case NavigationType.playlist:
+        return PlaylistDetailPage(playlistId: item.data as String);
+      case NavigationType.track:
+        return TrackDetailPage(songMetadata: item.data as SongMetadata);
+      case NavigationType.dailyMix:
+        return DailyMixDetailPage(mix: item.data as DailyMix);
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -87,10 +159,16 @@ class _TabletMainShellState extends ConsumerState<TabletMainShell> {
     final tabletLayout = ref.watch(tabletLayoutProvider);
     final isQueueOpen = tabletLayout.isQueuePanelOpen && isLandscape;
 
+    // Watch the navigation stack for detail page rendering.
+    final navigationStack = ref.watch(navigationStackProvider);
+    final detailPage = _buildDetailPage(navigationStack);
+
     // Watch the presentation provider to stay in sync with external navigation
-    // changes (e.g., from deep links or other widgets).
+    // changes (e.g., from the drawer, deep links, or other widgets).
     final currentView = ref.watch(libraryPresentationProvider).currentView;
     final providerIndex = _navDestinations.indexOf(currentView);
+
+    // Sync selected rail index when the view is one of the rail destinations.
     if (providerIndex != -1 && providerIndex != _selectedIndex) {
       // Schedule state update to avoid building during build.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -123,6 +201,19 @@ class _TabletMainShellState extends ConsumerState<TabletMainShell> {
           unselectedLabelTextStyle: TextStyle(
             color: colorScheme.onSurface.withValues(alpha: 0.6),
             fontSize: 12,
+          ),
+          // LEADING: Menu button to open the navigation drawer
+          leading: Builder(
+            builder: (scaffoldContext) => IconButton(
+              icon: Icon(
+                Icons.menu_rounded,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+              tooltip: AppLocalizations.of(context)?.navigation ?? 'Menu',
+              onPressed: () {
+                Scaffold.of(scaffoldContext).openDrawer();
+              },
+            ),
           ),
           trailing: Expanded(
             child: Align(
@@ -190,7 +281,32 @@ class _TabletMainShellState extends ConsumerState<TabletMainShell> {
             children: [
               // Main content compresses when queue is open
               Expanded(
-                child: _pages[_selectedIndex],
+                child: Stack(
+                  children: [
+                    // BASE LAYER: Current page view.
+                    // Hidden (but kept alive) when a detail page is active.
+                    IgnorePointer(
+                      ignoring: detailPage != null,
+                      child: Opacity(
+                        opacity: detailPage != null ? 0.0 : 1.0,
+                        child: _getPageForView(currentView),
+                      ),
+                    ),
+
+                    // DETAIL LAYER: Overlay for detail pages (album, artist,
+                    // track, playlist, daily mix) pushed onto the nav stack.
+                    if (detailPage != null)
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Container(
+                          key: ValueKey(
+                            'tablet_stack_${navigationStack.length}_${navigationStack.last.type}',
+                          ),
+                          child: detailPage,
+                        ),
+                      ),
+                  ],
+                ),
               ),
 
               // Queue panel (landscape only) — animated width container

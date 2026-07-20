@@ -3,7 +3,7 @@ import 'dart:convert';
 class EqPreset {
   final String id;
   final String name;
-  final List<double> gains; // Slider values in dB
+  final List<double> gains;
 
   EqPreset({required this.id, required this.name, required this.gains});
 

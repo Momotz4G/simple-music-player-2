@@ -46,8 +46,8 @@ class _CabinPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double cabinWidth = 60;
-    final double cabinHeight = 50;
+    const double cabinWidth = 60;
+    const double cabinHeight = 50;
     final double x = size.width * 0.5;
     final double y = size.height - 20;
 
@@ -63,7 +63,7 @@ class _CabinPainter extends CustomPainter {
 
     // Main structure
     canvas.drawRect(
-        Rect.fromLTWH(-cabinWidth * 0.5, -cabinHeight, cabinWidth, cabinHeight),
+        const Rect.fromLTWH(-cabinWidth * 0.5, -cabinHeight, cabinWidth, cabinHeight),
         cabinPaint);
 
     // Roof
@@ -76,7 +76,7 @@ class _CabinPainter extends CustomPainter {
 
     // Chimney
     canvas.drawRect(
-        Rect.fromLTWH(-cabinWidth * 0.35, -cabinHeight * 1.3, 8, 15),
+        const Rect.fromLTWH(-cabinWidth * 0.35, -cabinHeight * 1.3, 8, 15),
         cabinPaint);
 
     // Window Glow
@@ -98,7 +98,7 @@ class _CabinPainter extends CustomPainter {
     final Paint doorPaint = Paint()..color = const Color(0xFF14181B);
     canvas.drawRRect(
         RRect.fromRectAndRadius(
-            Rect.fromLTWH(-18, -25, 12, 25), const Radius.circular(2)),
+            const Rect.fromLTWH(-18, -25, 12, 25), const Radius.circular(2)),
         doorPaint);
 
     // Snow on roof

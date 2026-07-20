@@ -160,17 +160,41 @@ class _DebugPanelState extends State<DebugPanel> {
   }
 
   void _copyLogsToClipboard() {
-    final logsText = _debugService.logs.map((log) {
-      return '[${log.formattedTime}] [${log.level.name.toUpperCase()}] ${log.message}';
-    }).join('\n');
+    try {
+      // Limit to most recent 200 logs to prevent Android TransactionTooLargeException
+      final allLogs = _debugService.logs;
+      final logsToCopy = allLogs.length > 200
+          ? allLogs.sublist(allLogs.length - 200)
+          : allLogs;
 
-    Clipboard.setData(ClipboardData(text: logsText));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Logs copied to clipboard'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+      final logsText = logsToCopy.map((log) {
+        String msg = log.message;
+        // Truncate ultra-long YouTube stream URLs to prevent clipboard IPC buffer overflow
+        if (msg.length > 500) {
+          msg = '${msg.substring(0, 500)}... [truncated]';
+        }
+        return '[${log.formattedTime}] [${log.level.name.toUpperCase()}] $msg';
+      }).join('\n');
+
+      Clipboard.setData(ClipboardData(text: logsText));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Copied ${logsToCopy.length} logs to clipboard'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error copying logs: $e'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -363,15 +387,19 @@ class _LogItemState extends State<_LogItem> {
   }
 
   void _copyToClipboard() {
-    Clipboard.setData(ClipboardData(
-        text:
-            '[${widget.log.formattedTime}] [${widget.log.level.name.toUpperCase()}] ${widget.log.message}'));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Log entry copied'),
-        duration: Duration(seconds: 1),
-      ),
-    );
+    try {
+      Clipboard.setData(ClipboardData(
+          text:
+              '[${widget.log.formattedTime}] [${widget.log.level.name.toUpperCase()}] ${widget.log.message}'));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Log entry copied'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (_) {}
   }
 
   @override

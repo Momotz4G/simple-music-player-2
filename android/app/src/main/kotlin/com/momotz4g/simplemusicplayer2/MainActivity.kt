@@ -13,10 +13,31 @@ class MainActivity : AudioServiceActivity() {
     private var usbAudioPlugin: UsbAudioPlugin? = null
     private val dynamicsProcessingMap = mutableMapOf<Int, DynamicsProcessing>()
 
+    /**
+     * True if the activity was launched (or resumed) by Android because a
+     * USB Audio Class device was attached. The Dart layer reads this once
+     * during startup so it can SKIP auto-restoring the last played song.
+     *
+     * Why we need this: when a user enables "Always open SMP" in the USB
+     * permission dialog, Android relaunches the activity on every DAC
+     * attach. If we then auto-resume the last song through just_audio,
+     * Android initializes AudioTrack against the new USB sink while
+     * volume is at the system maximum and the DAC is still settling.
+     * Result: an audible click / "preet" pop on the IEM that's loud enough
+     * to be uncomfortable. The fix is to NOT resume playback on launches
+     * triggered by USB attach — let the user open the app, verify the DAC
+     * shows "Connect", then enable bypass + tap play manually.
+     */
+    private var launchedByUsbAttach = false
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         flutterEngine.plugins.add(YoutubeDLPlugin())
-        
+
+        // Capture the launch intent BEFORE Dart runs so the Dart layer can
+        // ask whether this launch was triggered by a USB attach.
+        launchedByUsbAttach = isUsbAttachIntent(intent)
+
         // Register USB Audio Plugin for Android < 14 bit-perfect support
         usbAudioPlugin = UsbAudioPlugin(this).also {
             it.register(flutterEngine)
@@ -31,6 +52,14 @@ class MainActivity : AudioServiceActivity() {
                     } else {
                         result.error("UNSUPPORTED_VERSION", "Android 14+ required for bit-perfect audio", null)
                     }
+                }
+                "wasLaunchedByUsbAttach" -> {
+                    // Dart calls this once at startup. Returns true exactly once
+                    // per launch; subsequent calls (e.g. after onNewIntent set
+                    // it again) re-arm and return true on the next read.
+                    val v = launchedByUsbAttach
+                    launchedByUsbAttach = false
+                    result.success(v)
                 }
                 "getNativeOutputSampleRate" -> {
                     try {
@@ -103,6 +132,36 @@ class MainActivity : AudioServiceActivity() {
     override fun onDestroy() {
         usbAudioPlugin?.dispose()
         super.onDestroy()
+    }
+
+
+
+    /**
+     * Re-evaluate the launch intent when Android reuses an existing
+     * activity (singleTop launchMode) on subsequent USB attach events.
+     * The Dart layer polls [wasLaunchedByUsbAttach] periodically so a
+     * mid-session attach is still respected.
+     */
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (isUsbAttachIntent(intent)) {
+            launchedByUsbAttach = true
+            Log.i("UsbAttachDetect", "onNewIntent: USB device attached")
+        }
+    }
+
+    private fun isUsbAttachIntent(intent: android.content.Intent?): Boolean {
+        if (intent == null) return false
+        if (intent.action != android.hardware.usb.UsbManager.ACTION_USB_DEVICE_ATTACHED) {
+            return false
+        }
+        // Sanity: confirm the extra carries a UsbDevice. Android always
+        // sets it for this action, but the check costs nothing and
+        // protects against malformed broadcasts.
+        return intent.getParcelableExtra<android.hardware.usb.UsbDevice>(
+            android.hardware.usb.UsbManager.EXTRA_DEVICE
+        ) != null
     }
 
     private fun setBitPerfectAudio(enable: Boolean, result: io.flutter.plugin.common.MethodChannel.Result) {

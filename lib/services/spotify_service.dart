@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'vps_scraper_service.dart';
+import 'spotify_lyrics_service.dart';
 import 'db_service.dart';
 import 'pocketbase_service.dart';
 import '../utils/request_queue.dart';
@@ -168,63 +169,126 @@ class SpotifyService {
     return "";
   }
 
+  /// Fallback Search Method for Metadata via Proxy
+  static Future<List<Map<String, dynamic>>> searchMetadataViaProxy(String query) async {
+    try {
+      final baseUrl = Env.externalLyricsUrl;
+      if (baseUrl.isEmpty) return [];
+
+      final cleanQ = Uri.encodeComponent(query.trim());
+      final searchUrl = Uri.parse('$baseUrl/spotify/search?q=$cleanQ');
+
+      debugPrint("🔍 [Search Proxy] Executing fallback query for: ${query.trim()}");
+      final res = await http.get(searchUrl).timeout(const Duration(seconds: 15));
+      if (res.statusCode != 200) return [];
+
+      final decoded = json.decode(res.body);
+      List<dynamic> items = [];
+      if (decoded is List) {
+        items = decoded;
+      } else if (decoded is Map && decoded['data'] is List) {
+        items = decoded['data'];
+      }
+
+      return items.map<Map<String, dynamic>>((item) {
+        final title = (item['name'] ?? item['title'] ?? 'Unknown Title').toString();
+        final artist = (item['artistName'] ?? item['artist'] ?? 'Unknown Artist').toString();
+        final album = (item['albumName'] ?? item['album'] ?? 'Unknown Album').toString();
+        final imageUrl = (item['albumCover'] ?? item['image_url'] ?? item['image'] ?? '').toString();
+        final spotifyId = (item['trackId'] ?? item['id'] ?? '').toString();
+
+        int durationMs = 0;
+        if (item['duration_ms'] != null && item['duration_ms'] is int) {
+          durationMs = item['duration_ms'] as int;
+        } else if (item['duration'] != null && item['duration'] is String) {
+          final parts = (item['duration'] as String).split(':');
+          if (parts.length == 2) {
+            durationMs = ((int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0)) * 1000;
+          }
+        }
+
+        return {
+          'title': title,
+          'artist': artist,
+          'album': album,
+          'year': '',
+          'image_url': imageUrl,
+          'spotify_id': spotifyId,
+          'duration_ms': durationMs,
+          'track_number': 1,
+          'disc_number': 1,
+          'artist_id': '',
+          'isrc': item['isrc'] ?? '',
+        };
+      }).toList();
+    } catch (e) {
+      debugPrint("💥 Proxy Search Exception: $e");
+      return [];
+    }
+  }
+
   // --- 3. SEARCH METADATA (Rich Data for Editor) ---
   static Future<List<Map<String, dynamic>>> searchMetadata(String query) async {
-    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch)
+    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch) {
       return []; // 🔒 OFFLINE or Online Search Disabled
-    final token = await _getTokenWithFallback(preferPrimary: true);
+    }
 
     try {
-      final uri = Uri.https('api.spotify.com', '/v1/search', {
-        'q': query,
-        'type': 'track',
-        'limit': '10',
-      });
+      final token = await _getTokenWithFallback(preferPrimary: true).catchError((_) => null);
 
-      final response =
-          await http.get(uri, headers: {"Authorization": "Bearer $token"});
+      if (token != null) {
+        final uri = Uri.https('api.spotify.com', '/v1/search', {
+          'q': query,
+          'type': 'track',
+          'limit': '10',
+        });
 
-      if (response.statusCode == 429) throw Exception("rate_limit_429");
+        final response =
+            await http.get(uri, headers: {"Authorization": "Bearer $token"}).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final items = data['tracks']['items'] as List;
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final items = data['tracks']['items'] as List;
 
-        return items.map((item) {
-          final album = item['album'];
-          final artistsList = (item['artists'] as List);
-          final artists =
-              artistsList.map((a) => a['name'].toString()).join(", ");
+          return items.map((item) {
+            final album = item['album'];
+            final artistsList = (item['artists'] as List);
+            final artists =
+                artistsList.map((a) => a['name'].toString()).join(", ");
 
-          final primaryArtistId =
-              artistsList.isNotEmpty ? artistsList[0]['id'] : "";
+            final primaryArtistId =
+                artistsList.isNotEmpty ? artistsList[0]['id'] : "";
 
-          String? imageUrl;
-          if ((album['images'] as List).isNotEmpty) {
-            imageUrl = album['images'][0]['url'];
-          }
+            String? imageUrl;
+            if ((album['images'] as List).isNotEmpty) {
+              imageUrl = album['images'][0]['url'];
+            }
 
-          return {
-            'title': item['name'],
-            'artist': artists,
-            'album': album['name'],
-            'year': (album['release_date'] as String).split('-')[0],
-            'image_url': imageUrl,
-            'spotify_id': item['id'],
-            'duration_ms': item['duration_ms'],
-            'track_number': item['track_number'],
-            'disc_number': item['disc_number'],
-            'artist_id': primaryArtistId,
-            'isrc': item['external_ids']?['isrc'],
-          };
-        }).toList();
+            return {
+              'title': item['name'],
+              'artist': artists,
+              'album': album['name'],
+              'year': (album['release_date'] as String).split('-')[0],
+              'image_url': imageUrl,
+              'spotify_id': item['id'],
+              'duration_ms': item['duration_ms'],
+              'track_number': item['track_number'],
+              'disc_number': item['disc_number'],
+              'artist_id': primaryArtistId,
+              'isrc': item['external_ids']?['isrc'],
+            };
+          }).toList();
+        } else {
+          debugPrint("⚠️ Spotify Metadata Search status ${response.statusCode}. Falling back to proxy search...");
+        }
       } else {
-        throw Exception(
-            "Spotify Metadata Search Failed: ${response.statusCode}");
+        debugPrint("⚠️ Spotify token null/rate-limited. Falling back to proxy search...");
       }
     } catch (e) {
-      rethrow;
+      debugPrint("⚠️ Spotify Metadata Search Error: $e. Falling back to proxy search...");
     }
+
+    return await searchMetadataViaProxy(query);
   }
 
   // --- 3.5 SEARCH BY ISRC ---
@@ -323,14 +387,8 @@ class SpotifyService {
   }
 
   // --- 5. GET ARTIST ID ---
-  static Future<String?> getArtistId({
-    required String artistName,
-    String? trackTitle,
-    bool preferPrimary = true,
-  }) async {
-    final token = await _getTokenWithFallback(preferPrimary: preferPrimary);
-    if (token == null) return null;
-
+  static Future<String?> _getArtistIdWithToken(
+      String token, String artistName, String? trackTitle) async {
     String? spotifyArtistId;
     final cleanArtist = _cleanTerm(artistName);
     final cleanTrack = trackTitle != null ? _cleanTerm(trackTitle) : "";
@@ -339,47 +397,73 @@ class SpotifyService {
       spotifyArtistId =
           await _findArtistIdByTrack(token, cleanArtist, cleanTrack);
     }
+    spotifyArtistId ??= await _findArtistIdByName(token, cleanArtist);
+    return spotifyArtistId;
+  }
 
-    if (spotifyArtistId == null) {
-      spotifyArtistId = await _findArtistIdByName(token, cleanArtist);
+  static Future<String?> getArtistId({
+    required String artistName,
+    String? trackTitle,
+    bool preferPrimary = true,
+  }) async {
+    // 1. Try Primary Token Flow
+    try {
+      final token = await _getTokenWithFallback(preferPrimary: preferPrimary);
+      if (token != null) {
+        final id = await _getArtistIdWithToken(token, artistName, trackTitle);
+        if (id != null) return id;
+      }
+    } catch (e) {
+      debugPrint("⚠️ Spotify Primary Search failed: $e. Falling back to Secondary...");
     }
 
-    return spotifyArtistId;
+    // 2. Try Secondary Token Flow as Fallback
+    try {
+      final altToken = await _getTokenWithFallback(preferPrimary: !preferPrimary);
+      if (altToken != null) {
+        final id = await _getArtistIdWithToken(altToken, artistName, trackTitle);
+        if (id != null) return id;
+      }
+    } catch (e) {
+      debugPrint("⚠️ Spotify Secondary Search failed: $e");
+    }
+
+    return null;
   }
 
   // --- 6. GET FRESH BANNER URL (Custom Backend) ---
   static Future<String?> getFreshBannerUrl(String artistId) async {
     try {
-      final uri = Uri.parse(
-          "https://spotify-banner-backend.onrender.com/api/extractbanner");
-      final String fullSpotifyUrl = "https://open.spotify.com/artist/$artistId";
+      final String baseUrl = Env.spotifyBannerUrl;
+      if (baseUrl.isNotEmpty) {
+        final uri = Uri.parse("$baseUrl/api/extractbanner");
+        final String fullSpotifyUrl = "https://open.spotify.com/artist/$artistId";
 
-      final response = await http.post(
-        uri,
-        headers: {"Content-Type": "application/json"},
-        body:
-            jsonEncode({"artistUrl": fullSpotifyUrl, "deviceType": "desktop"}),
-      );
+        final response = await http.post(
+          uri,
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({"artistUrl": fullSpotifyUrl, "deviceType": "desktop"}),
+        ).timeout(const Duration(seconds: 15));
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final json = jsonDecode(response.body);
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final json = jsonDecode(response.body);
 
-        if (json['success'] == true && json['data'] != null) {
-          final data = json['data'];
-          String? banner = data['bannerUrl'];
+          if (json['success'] == true && json['data'] != null) {
+            final data = json['data'];
+            String? banner = data['bannerUrl'];
 
-          if (banner == null && data['imagePath'] != null) {
-            banner =
-                "https://spotify-banner-backend.onrender.com${data['imagePath']}";
-          }
+            if (banner == null && data['imagePath'] != null) {
+              banner = "$baseUrl${data['imagePath']}";
+            }
 
-          if (banner != null && banner.isNotEmpty) {
-            return banner;
+            if (banner != null && banner.isNotEmpty) {
+              return banner;
+            }
           }
         }
       }
     } catch (e) {
-      //
+      debugPrint("⚠️ getFreshBannerUrl backend error: $e");
     }
 
     try {
@@ -425,9 +509,9 @@ class SpotifyService {
     bool highQuality = false,
     bool preferPrimary = true,
   }) async {
-    final cacheKey = "profile:$artistName"; // 🚀 Unified Key
+    final cacheKey = "profile:$artistName"; // Unified Key
 
-    // 🚀 STEP 0: Check Database Cache (Instant, Offline)
+    // STEP 0: Check Database Cache (Instant, Offline)
     try {
       final cachedUrl = await DBService().getArtCache(cacheKey);
       if (cachedUrl != null && cachedUrl.isNotEmpty) {
@@ -440,7 +524,7 @@ class SpotifyService {
 
     String? foundArtistId;
 
-    // 🚀 STEP 1: Try official Spotify API first (Fastest)
+    // STEP 1: Try official Spotify API first (Fastest)
     try {
       final token = await _getTokenWithFallback(preferPrimary: preferPrimary);
       if (token != null) {
@@ -490,7 +574,7 @@ class SpotifyService {
       }
     }
 
-    // 🚀 STEP 2: Fallback to VPS Scraper (Keyless, handles Rate Limits)
+    // STEP 2: Fallback to VPS Scraper (Keyless, handles Rate Limits)
     try {
       debugPrint("🛰️ [VPS] Fetching: $artistName...");
       // Pass the ID if we found it, so the VPS doesn't have to search!
@@ -513,11 +597,16 @@ class SpotifyService {
   // --- 8. GET TRACK IMAGE & LINK ---
 
   static Future<String?> getTrackLink(String title, String artist,
-      {bool preferPrimary = true}) async {
-    final token = await _getTokenWithFallback(preferPrimary: preferPrimary);
-    if (token == null) return null;
-
+      {bool preferPrimary = true, bool fallbackToProxy = false}) async {
     try {
+      final token = await _getTokenWithFallback(preferPrimary: preferPrimary);
+      if (token == null) {
+        if (fallbackToProxy) {
+          return await _getProxyTrackLinkFallback(title, artist);
+        }
+        return null;
+      }
+
       final cleanTitle = _cleanTerm(title);
       final cleanArtist = _cleanTerm(artist);
       final query = "track:$cleanTitle artist:$cleanArtist";
@@ -537,30 +626,40 @@ class SpotifyService {
         if (items.isNotEmpty) {
           final link = items[0]['external_urls']['spotify'];
           return link;
-          // print("⚠️ Spotify getTrackLink: No tracks found for '$title' by '$artist'");
         }
       } else if (response.statusCode == 429) {
-        print(
-            "⚠️ getTrackLink: API returned 429, token might have been from cached pool");
+        debugPrint(
+            "⚠️ getTrackLink: API returned 429${fallbackToProxy ? ', trying proxy...' : ''}");
+        if (fallbackToProxy) {
+          return await _getProxyTrackLinkFallback(title, artist);
+        }
         throw Exception("rate_limit_429");
       } else if (response.statusCode >= 500 && response.statusCode < 600) {
         // Spotify server outage — suppress spam, just log once quietly
-        // Nothing we can do on the client side; will retry on next user action
       } else {
-        print("❌ Spotify getTrackLink: Failed. Status: ${response.statusCode}");
-        print("Response: ${response.body}");
+        debugPrint("❌ Spotify getTrackLink: Failed. Status: ${response.statusCode}");
+        debugPrint("Response: ${response.body}");
       }
     } catch (e) {
-      if (e.toString().contains("rate_limit_429")) rethrow;
+      if (e.toString().contains("rate_limit_429")) {
+        rethrow;
+      }
+      debugPrint("⚠️ Spotify getTrackLink error: $e${fallbackToProxy ? ', trying proxy...' : ''}");
+      if (fallbackToProxy) {
+        return await _getProxyTrackLinkFallback(title, artist);
+      }
+    }
+    if (fallbackToProxy) {
+      return await _getProxyTrackLinkFallback(title, artist);
     }
     return null;
   }
 
   static Future<String?> getTrackImage(String title, String artist,
-      {bool preferPrimary = true}) async {
+      {bool preferPrimary = true, bool fallbackToProxy = false}) async {
     final cacheKey = "track:$artist-$title";
 
-    // 🚀 STEP 0: Check Database Cache
+    // STEP 0: Check Database Cache
     try {
       final cachedUrl = await DBService().getArtCache(cacheKey);
       if (cachedUrl != null && cachedUrl.isNotEmpty) {
@@ -570,11 +669,15 @@ class SpotifyService {
       debugPrint("⚠️ DB Cache read failed (track): $e");
     }
 
-    // 🚀 UPDATED: Use SECONDARY key first for images unless preferred
-    final token = await _getTokenWithFallback(preferPrimary: preferPrimary);
-    if (token == null) return null;
-
     try {
+      final token = await _getTokenWithFallback(preferPrimary: preferPrimary);
+      if (token == null) {
+        if (fallbackToProxy) {
+          return await _getProxyTrackImageFallback(title, artist, cacheKey);
+        }
+        return null;
+      }
+
       final cleanTitle = _cleanTerm(title);
       final cleanArtist = _cleanTerm(artist);
       final query = "track:$cleanTitle artist:$cleanArtist";
@@ -602,10 +705,58 @@ class SpotifyService {
           }
         }
       } else if (response.statusCode == 429) {
+        debugPrint("⚠️ getTrackImage: API returned 429${fallbackToProxy ? ', trying proxy...' : ''}");
+        if (fallbackToProxy) {
+          return await _getProxyTrackImageFallback(title, artist, cacheKey);
+        }
         throw Exception("rate_limit_429");
       }
     } catch (e) {
-      if (e.toString().contains("rate_limit_429")) rethrow;
+      if (e.toString().contains("rate_limit_429")) {
+        if (fallbackToProxy) {
+          return await _getProxyTrackImageFallback(title, artist, cacheKey);
+        }
+        rethrow;
+      }
+      debugPrint("⚠️ Spotify getTrackImage error: $e${fallbackToProxy ? ', trying proxy...' : ''}");
+      if (fallbackToProxy) {
+        return await _getProxyTrackImageFallback(title, artist, cacheKey);
+      }
+    }
+    if (fallbackToProxy) {
+      return await _getProxyTrackImageFallback(title, artist, cacheKey);
+    }
+    return null;
+  }
+
+  static Future<String?> _getProxyTrackLinkFallback(String title, String artist) async {
+    try {
+      debugPrint("🔄 [SpotifyService] Official API failed/limited, falling back to Proxy getTrackLink for: $title - $artist");
+      final proxyLink = await SpotifyLyricsService.getTrackLink(title, artist);
+      if (proxyLink != null) {
+        debugPrint("✅ [SpotifyService] Successfully retrieved track link via proxy: $proxyLink");
+        return proxyLink;
+      }
+    } catch (e) {
+      debugPrint("❌ [SpotifyService] Proxy getTrackLink fallback failed: $e");
+    }
+    return null;
+  }
+
+  static Future<String?> _getProxyTrackImageFallback(String title, String artist, String cacheKey) async {
+    try {
+      debugPrint("🔄 [SpotifyService] Official API failed/limited, falling back to Proxy getTrackImage for: $title - $artist");
+      final metadata = await SpotifyLyricsService.searchMetadataViaProxy(title, artist);
+      if (metadata != null) {
+        final url = metadata['image_url'] as String?;
+        if (url != null && url.isNotEmpty) {
+          DBService().saveArtCache(cacheKey, url);
+          debugPrint("✅ [SpotifyService] Successfully retrieved track image via proxy: $url");
+          return url;
+        }
+      }
+    } catch (e) {
+      debugPrint("❌ [SpotifyService] Proxy getTrackImage fallback failed: $e");
     }
     return null;
   }
@@ -613,8 +764,9 @@ class SpotifyService {
   // --- 9. GET NEW RELEASES (Dynamic) ---
   static Future<List<Map<String, dynamic>>> getNewReleases(
       {String market = 'US'}) async {
-    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch)
+    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch) {
       return []; // 🔒 OFFLINE or Online Search Disabled
+    }
     final token = await _getAccessToken();
     if (token == null) return [];
 
@@ -634,7 +786,7 @@ class SpotifyService {
         final data = jsonDecode(response.body);
         final items = data['albums']['items'] as List;
 
-        print("✅ New Releases ($market): ${items.length} items");
+        debugPrint("✅ New Releases ($market): ${items.length} items");
 
         return items.map((item) {
           final images = item['images'] as List;
@@ -652,115 +804,188 @@ class SpotifyService {
         throw Exception("rate_limit_429");
       }
     } catch (e) {
-      print("New Releases Error: $e");
+      debugPrint("New Releases Error: $e");
       if (e.toString().contains("rate_limit_429")) rethrow;
     }
     return [];
   }
 
-  static Future<List<AlbumModel>> searchAlbums(String query) async {
-    final token =
-        await _getAccessToken(); // Ensure you have your token logic here
+  /// Fallback Search Method for searchAll via Proxy (Grouped Search for Remote / Listening Party)
+  static Future<Map<String, dynamic>> searchAllViaProxy(String query,
+      {int limit = 5}) async {
+    final rawList = await searchMetadataViaProxy(query);
+    final limited = rawList.take(limit).toList();
 
-    // Notice type=album here
-    final url = Uri.parse(
-        'https://api.spotify.com/v1/search?q=$query&type=album&limit=5');
+    final songs = limited.map((e) {
+      return SongMetadata(
+        title: e['title'] ?? 'Unknown Title',
+        artist: e['artist'] ?? 'Unknown Artist',
+        album: e['album'] ?? 'Unknown Album',
+        year: e['year'] ?? '',
+        genre: 'Pop',
+        durationSeconds: ((e['duration_ms'] as int? ?? 0) ~/ 1000),
+        albumArtUrl: e['image_url'] ?? '',
+        isrc: e['isrc'],
+        spotifyId: e['spotify_id'],
+      );
+    }).toList();
 
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $token'},
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List items = data['albums']['items'];
-      return items.map((e) => AlbumModel.fromJson(e)).toList();
-    } else {
-      return [];
+    // Extract unique albums from songs
+    final albums = <AlbumModel>[];
+    final seenAlbums = <String>{};
+    for (var item in limited) {
+      final albumName = item['album'] as String? ?? '';
+      if (albumName.isNotEmpty && !seenAlbums.contains(albumName)) {
+        seenAlbums.add(albumName);
+        albums.add(AlbumModel(
+          id: item['spotify_id'] ?? albumName,
+          title: albumName,
+          artist: item['artist'] ?? 'Unknown Artist',
+          imageUrl: item['image_url'] ?? '',
+          releaseDate: item['year'] ?? '',
+        ));
+      }
     }
+
+    // Extract unique artists from songs
+    final artists = <ArtistModel>[];
+    final seenArtists = <String>{};
+    for (var item in limited) {
+      final artistName = item['artist'] as String? ?? '';
+      if (artistName.isNotEmpty && !seenArtists.contains(artistName)) {
+        seenArtists.add(artistName);
+        artists.add(ArtistModel(
+          id: item['artist_id'] ?? artistName,
+          name: artistName,
+          imageUrl: item['image_url'] ?? '',
+        ));
+      }
+    }
+
+    return {
+      'songs': songs,
+      'albums': albums,
+      'artists': artists,
+    };
+  }
+
+  static Future<List<AlbumModel>> searchAlbums(String query) async {
+    try {
+      final token = await _getAccessToken();
+      if (token != null) {
+        final url = Uri.parse(
+            'https://api.spotify.com/v1/search?q=$query&type=album&limit=5');
+
+        final response = await http.get(
+          url,
+          headers: {'Authorization': 'Bearer $token'},
+        ).timeout(const Duration(seconds: 10));
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final List items = data['albums']['items'];
+          return items.map((e) => AlbumModel.fromJson(e)).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint("⚠️ Spotify searchAlbums Error: $e");
+    }
+
+    final paxRes = await searchAllViaProxy(query, limit: 5);
+    return (paxRes['albums'] as List<AlbumModel>?) ?? [];
   }
 
   static Future<Map<String, dynamic>> searchAll(String query,
       {int limit = 5}) async {
-    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch)
+    if (PocketBaseService.isOffline || !PocketBaseService.enableOnlineSearch) {
       return {
         'songs': [],
         'albums': [],
         'artists': []
       }; // 🔒 OFFLINE or Online Search Disabled
-    // Uses PRIMARY (CLIENT_ID_1) first for remote search, falls back to SECONDARY on 429
-    final token = await _getTokenWithFallback(preferPrimary: true);
-
-    // Correct URL for searching (uses $query)
-    final url = Uri.parse(
-        'https://api.spotify.com/v1/search?q=$query&type=track,album,artist&limit=$limit'); // 🚀 ADDED artist
-
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $token'},
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      // 1. Parse Songs (Manually mapping to fix missing fields)
-      final tracks = (data['tracks']['items'] as List).map((e) {
-        String image = "";
-        if (e['album'] != null && (e['album']['images'] as List).isNotEmpty) {
-          image = e['album']['images'][0]['url'];
-        }
-
-        String artist = "Unknown";
-        if ((e['artists'] as List).isNotEmpty) {
-          artist = e['artists'][0]['name'];
-        }
-
-        String year = "2000";
-        if (e['album'] != null && e['album']['release_date'] != null) {
-          year = (e['album']['release_date'] as String).split('-').first;
-        }
-
-        return SongMetadata(
-          title: e['name'] ?? "Unknown Title",
-          artist: artist,
-          albumArtUrl: image,
-          // Fill in required fields manually
-          album: e['album']?['name'] ?? "Unknown Album",
-          year: year,
-          durationSeconds: (e['duration_ms'] ?? 0) ~/ 1000,
-          genre: "Pop",
-          isrc: e['external_ids']?['isrc'],
-          spotifyId: e['id'], // 🚀 CAPTURE SPOTIFY ID
-        );
-      }).toList();
-
-      // 2. Parse Albums
-      final albums = (data['albums']['items'] as List)
-          .map((e) => AlbumModel.fromJson(e))
-          .toList();
-
-      // 3. Parse Artists
-      final artists = (data['artists']['items'] as List)
-          .map((e) => ArtistModel.fromJson(e))
-          .toList();
-
-      return {
-        'songs': tracks,
-        'albums': albums,
-        'artists': artists,
-      };
-    } else if (response.statusCode == 429) {
-      throw Exception("rate_limit_429");
-    } else {
-      throw Exception("Spotify SearchAll Failed: ${response.statusCode}");
     }
+
+    try {
+      // Uses PRIMARY (CLIENT_ID_1) first for remote search, falls back to SECONDARY on 429
+      final token = await _getTokenWithFallback(preferPrimary: true).catchError((_) => null);
+
+      if (token != null) {
+        // Correct URL for searching (uses $query)
+        final url = Uri.parse(
+            'https://api.spotify.com/v1/search?q=$query&type=track,album,artist&limit=$limit');
+
+        final response = await http.get(
+          url,
+          headers: {'Authorization': 'Bearer $token'},
+        ).timeout(const Duration(seconds: 10));
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+
+          // 1. Parse Songs (Manually mapping to fix missing fields)
+          final tracks = (data['tracks']['items'] as List).map((e) {
+            String image = "";
+            if (e['album'] != null && (e['album']['images'] as List).isNotEmpty) {
+              image = e['album']['images'][0]['url'];
+            }
+
+            String artist = "Unknown";
+            if ((e['artists'] as List).isNotEmpty) {
+              artist = e['artists'][0]['name'];
+            }
+
+            String year = "2000";
+            if (e['album'] != null && e['album']['release_date'] != null) {
+              year = (e['album']['release_date'] as String).split('-').first;
+            }
+
+            return SongMetadata(
+              title: e['name'] ?? "Unknown Title",
+              artist: artist,
+              albumArtUrl: image,
+              album: e['album']?['name'] ?? "Unknown Album",
+              year: year,
+              durationSeconds: (e['duration_ms'] ?? 0) ~/ 1000,
+              genre: "Pop",
+              isrc: e['external_ids']?['isrc'],
+              spotifyId: e['id'], // CAPTURE SPOTIFY ID
+            );
+          }).toList();
+
+          // 2. Parse Albums
+          final albums = (data['albums']['items'] as List)
+              .map((e) => AlbumModel.fromJson(e))
+              .toList();
+
+          // 3. Parse Artists
+          final artists = (data['artists']['items'] as List)
+              .map((e) => ArtistModel.fromJson(e))
+              .toList();
+
+          return {
+            'songs': tracks,
+            'albums': albums,
+            'artists': artists,
+          };
+        } else {
+          debugPrint("⚠️ Spotify SearchAll status code ${response.statusCode}. Falling back to proxy search...");
+        }
+      } else {
+        debugPrint("⚠️ Spotify SearchAll token null/rate-limited. Falling back to proxy search...");
+      }
+    } catch (e) {
+      debugPrint("⚠️ Spotify SearchAll Exception: $e. Falling back to proxy search...");
+    }
+
+    return await searchAllViaProxy(query, limit: limit);
   }
 
   // Get tracks for a specific album
   static Future<List<SongMetadata>> getAlbumTracks(String albumId) async {
     final token = await _getAccessToken();
-    if (token == null)
+    if (token == null) {
       throw Exception("Spotify Auth Failed - No token available");
+    }
 
     // 1. First fetch the simplified tracks to get IDs
     final url = Uri.parse(
@@ -864,7 +1089,7 @@ class SpotifyService {
         }
       }
     } catch (e) {
-      // print("Error fetching artist image: $e");
+      // debugPrint("Error fetching artist image: $e");
     }
     return null;
   }
@@ -903,7 +1128,7 @@ class SpotifyService {
         }).toList();
       }
     } catch (e) {
-      print("Top Tracks Error: $e");
+      debugPrint("Top Tracks Error: $e");
       if (e.toString().contains("rate_limit_429")) rethrow;
     }
     return [];
@@ -950,7 +1175,7 @@ class SpotifyService {
         return uniqueAlbums;
       }
     } catch (e) {
-      print("Artist Albums Error: $e");
+      debugPrint("Artist Albums Error: $e");
       if (e.toString().contains("rate_limit_429")) rethrow;
     }
     return [];
@@ -984,7 +1209,7 @@ class SpotifyService {
         };
       }
     } catch (e) {
-      print("Playlist Info Error: $e");
+      debugPrint("Playlist Info Error: $e");
     }
     return null;
   }
@@ -1073,10 +1298,10 @@ class SpotifyService {
         }
       }
 
-      print("✅ Fetched ${allTracks.length} tracks from playlist");
+      debugPrint("✅ Fetched ${allTracks.length} tracks from playlist");
       return allTracks;
     } catch (e) {
-      print("Playlist Tracks Error: $e");
+      debugPrint("Playlist Tracks Error: $e");
     }
     return allTracks;
   }
@@ -1112,7 +1337,7 @@ class SpotifyService {
   }) async {
     final token = await _getAccessTokenSecondary();
     if (token == null) {
-      if (verbose) print("⚠️ getRecommendations: No access token");
+      if (verbose) debugPrint("⚠️ getRecommendations: No access token");
       return [];
     }
 
@@ -1130,9 +1355,10 @@ class SpotifyService {
         final tracks = seedTracks.take(5 - seedCount).toList();
         params['seed_tracks'] = tracks.join(',');
         seedCount += tracks.length;
-        if (verbose)
-          print(
+        if (verbose) {
+          debugPrint(
               "🌱 getRecommendations: Using seed_tracks: ${tracks.join(',')}");
+        }
       }
 
       if (seedArtists != null && seedArtists.isNotEmpty && seedCount < 5) {
@@ -1140,7 +1366,7 @@ class SpotifyService {
         params['seed_artists'] = artists.join(',');
         seedCount += artists.length;
         if (verbose) {
-          print(
+          debugPrint(
               "🌱 getRecommendations: Using seed_artists: ${artists.join(',')}");
         }
       }
@@ -1148,32 +1374,33 @@ class SpotifyService {
       if (seedGenres != null && seedGenres.isNotEmpty && seedCount < 5) {
         final genres = seedGenres.take(5 - seedCount).toList();
         params['seed_genres'] = genres.join(',');
-        if (verbose)
-          print(
+        if (verbose) {
+          debugPrint(
               "🌱 getRecommendations: Using seed_genres: ${genres.join(',')}");
+        }
       }
 
       // Must have at least 1 seed
       if (seedCount == 0 && (seedGenres == null || seedGenres.isEmpty)) {
-        if (verbose) print("⚠️ getRecommendations: No seeds provided");
+        if (verbose) debugPrint("⚠️ getRecommendations: No seeds provided");
         return [];
       }
 
       final uri = Uri.https('api.spotify.com', '/v1/recommendations', params);
-      if (verbose) print("🔗 getRecommendations: Calling URL: $uri");
+      if (verbose) debugPrint("🔗 getRecommendations: Calling URL: $uri");
 
       final response =
           await http.get(uri, headers: {"Authorization": "Bearer $token"});
 
       if (verbose) {
-        print("📡 getRecommendations: Response status: ${response.statusCode}");
+        debugPrint("📡 getRecommendations: Response status: ${response.statusCode}");
       }
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final tracks = data['tracks'] as List;
 
-        if (verbose) print("✅ Fetched ${tracks.length} recommendations");
+        if (verbose) debugPrint("✅ Fetched ${tracks.length} recommendations");
 
         return tracks.map((track) {
           final album = track['album'];
@@ -1200,8 +1427,8 @@ class SpotifyService {
         }).toList();
       } else {
         if (verbose) {
-          print("❌ Recommendations API Error: ${response.statusCode}");
-          print("   Response body: ${response.body}");
+          debugPrint("❌ Recommendations API Error: ${response.statusCode}");
+          debugPrint("   Response body: ${response.body}");
         }
 
         // If 404, maybe the recommendations endpoint isn't available
@@ -1209,15 +1436,16 @@ class SpotifyService {
         if (response.statusCode == 404 &&
             seedTracks != null &&
             seedTracks.isNotEmpty) {
-          if (verbose)
-            print("🔄 Trying fallback: search for related tracks...");
+          if (verbose) {
+            debugPrint("🔄 Trying fallback: search for related tracks...");
+          }
           return await _getRecommendationsFallback(seedTracks.first, limit,
               verbose: verbose);
         }
       }
     } catch (e, stack) {
-      print("❌ Recommendations Error: $e");
-      print("   Stack: $stack");
+      debugPrint("❌ Recommendations Error: $e");
+      debugPrint("   Stack: $stack");
     }
     return [];
   }
@@ -1238,16 +1466,18 @@ class SpotifyService {
       );
 
       if (trackResponse.statusCode != 200) {
-        if (verbose) print("❌ Fallback: Could not get track info");
+        if (verbose) debugPrint("❌ Fallback: Could not get track info");
         return [];
       }
 
       final trackData = jsonDecode(trackResponse.body);
+      // ignore: unused_local_variable
       final artistId = trackData['artists'][0]['id'];
       final artistName = trackData['artists'][0]['name'];
 
-      if (verbose)
-        print("🔄 Fallback: Searching for more tracks by $artistName");
+      if (verbose) {
+        debugPrint("🔄 Fallback: Searching for more tracks by $artistName");
+      }
 
       // Search for more tracks by this artist
       final searchUri = Uri.https('api.spotify.com', '/v1/search', {
@@ -1266,8 +1496,9 @@ class SpotifyService {
         final searchData = jsonDecode(searchResponse.body);
         final tracks = searchData['tracks']['items'] as List;
 
-        if (verbose)
-          print("✅ Fallback: Found ${tracks.length} tracks by $artistName");
+        if (verbose) {
+          debugPrint("✅ Fallback: Found ${tracks.length} tracks by $artistName");
+        }
 
         return tracks.map((track) {
           final album = track['album'];
@@ -1294,7 +1525,7 @@ class SpotifyService {
         }).toList();
       }
     } catch (e) {
-      print("❌ Fallback error: $e");
+      debugPrint("❌ Fallback error: $e");
     }
     return [];
   }
@@ -1304,7 +1535,7 @@ class SpotifyService {
       {bool verbose = false}) async {
     final token = await _getAccessToken();
     if (token == null) {
-      if (verbose) print("⚠️ getTrackId: No access token");
+      if (verbose) debugPrint("⚠️ getTrackId: No access token");
       return null;
     }
 
@@ -1314,7 +1545,7 @@ class SpotifyService {
       final cleanArtist = _cleanTerm(artist);
       var query = "track:$cleanTitle artist:$cleanArtist";
 
-      if (verbose) print("🔍 getTrackId: Trying exact search: $query");
+      if (verbose) debugPrint("🔍 getTrackId: Trying exact search: $query");
 
       var uri = Uri.https('api.spotify.com', '/v1/search', {
         'q': query,
@@ -1330,14 +1561,14 @@ class SpotifyService {
         final items = data['tracks']['items'] as List;
         if (items.isNotEmpty) {
           final id = items[0]['id'];
-          if (verbose) print("✅ getTrackId: Found with exact search: $id");
+          if (verbose) debugPrint("✅ getTrackId: Found with exact search: $id");
           return id;
         }
       }
 
       // Try 2: Simple search (more lenient)
       query = "$cleanTitle $cleanArtist";
-      if (verbose) print("🔍 getTrackId: Trying simple search: $query");
+      if (verbose) debugPrint("🔍 getTrackId: Trying simple search: $query");
 
       uri = Uri.https('api.spotify.com', '/v1/search', {
         'q': query,
@@ -1369,16 +1600,32 @@ class SpotifyService {
           }
           // If no exact match, return first result
           final id = items[0]['id'];
-          // if (verbose) print("✅ getTrackId: Using first result: $id");
+          // if (verbose) debugPrint("✅ getTrackId: Using first result: $id");
           return id;
         }
       }
 
-      if (verbose)
-        print("⚠️ getTrackId: No results found for '$title' by '$artist'");
+      if (verbose) {
+        debugPrint("⚠️ getTrackId: No results found for '$title' by '$artist' via Official API. Trying proxy fallback...");
+      }
     } catch (e) {
-      print("❌ getTrackId error: $e");
+      debugPrint("❌ getTrackId Official API error: $e. Trying proxy fallback...");
     }
+
+    // --- FALLBACK TO PAXSENIX PROXY ---
+    try {
+      final metadata = await searchMetadataViaProxy("$title $artist");
+      if (metadata.isNotEmpty) {
+        final id = metadata[0]['spotify_id'];
+        if (id != null && id.toString().isNotEmpty) {
+          if (verbose) debugPrint("✅ getTrackId: Found with proxy fallback: $id");
+          return id.toString();
+        }
+      }
+    } catch (e) {
+      debugPrint("❌ getTrackId proxy fallback error: $e");
+    }
+
     return null;
   }
 
@@ -1513,7 +1760,7 @@ class SpotifyService {
         }
       }
     } catch (e) {
-      // print("Error fetching best match metadata: $e");
+      // debugPrint("Error fetching best match metadata: $e");
     }
     return null;
   }
@@ -1554,6 +1801,8 @@ class SpotifyService {
     if (cleaned.contains(' / ')) cleaned = cleaned.split(' / ')[0];
     return cleaned.trim();
   }
+
+  static String cleanTerm(String text) => _cleanTerm(text);
 }
 
 final spotifyArtistArtProvider =

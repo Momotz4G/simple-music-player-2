@@ -52,7 +52,7 @@ final navigationStackProvider =
   return NavigationStackNotifier();
 });
 
-// --- LEGACY PROVIDERS (Kept for compatibility during migration, mapped to stack if needed) ---
+// LEGACY PROVIDERS (Kept for compatibility during migration, mapped to stack if needed)
 // We will transition MainShell to use navigationStackProvider directly.
 
 final selectedAlbumProvider = StateProvider<AlbumModel?>((ref) => null);

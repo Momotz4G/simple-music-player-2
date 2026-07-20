@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../utils/folder_picker.dart';
 import 'package:path/path.dart' as p;
 import '../services/metadata_service.dart';
 import '../services/art_cache_service.dart';
@@ -14,16 +13,15 @@ import 'package:isar/isar.dart';
 import 'package:metadata_god/metadata_god.dart' show Metadata;
 
 // Imports for Database
-import '../data/schemas.dart'; // The Isar Schema
-import 'db_provider.dart'; // To access the DB Service
-import '../services/db_service.dart'; // 🚀 IMPORT DBService class
+import '../data/schemas.dart';
+import 'db_provider.dart';
+import '../services/db_service.dart';
 import '../models/song_model.dart';
-import 'settings_provider.dart'; // 🚀 IMPORT SettingsState
+import 'settings_provider.dart';
 
 class LibraryProvider extends ChangeNotifier {
-  final Ref ref; // We need Ref to talk to other providers (DB)
+  final Ref ref;
 
-  // 🚀 REACTIVE STATE: Managed internally to prevent disposal crashes
   // This allows LibraryProvider to stay alive even when settings change.
   bool _ignoreSubfolders = true;
 
@@ -35,20 +33,17 @@ class LibraryProvider extends ChangeNotifier {
   String? _selectedFolder;
   String? _error;
   bool _isPermissionDenied = false;
-  bool _disposed = false; // 🚀 Track disposal state
-  int _scanToken = 0; // 🚀 Cancellation token for scan operations
-  int _scanProgress = 0; // 🚀 Live counter for songs found during scan
+  bool _disposed = false;
+  int _scanToken = 0; // Cancellation token for scan operations
+  int _scanProgress = 0; // Live counter for songs found during scan
 
   List<SongModel> get songs => _searchQuery.isEmpty ? _songs : _filteredSongs;
-  List<SongModel> get allSongs =>
-      _songs; // 🚀 Unfiltered — for grouped providers
-  String get searchQuery =>
-      _searchQuery; // 🚀 Public getter for efficient presentation filtering
-  bool get hasSearchQuery => _searchQuery
-      .isNotEmpty; // 🚀 UI can distinguish empty search vs empty library
-  int get totalSongCount => _songs.length; // 🚀 Total before filtering
+  List<SongModel> get allSongs => _songs;
+  String get searchQuery => _searchQuery;
+  bool get hasSearchQuery => _searchQuery.isNotEmpty;
+  int get totalSongCount => _songs.length;
   bool get isLoading => _isLoading;
-  int get scanProgress => _scanProgress; // 🚀 Live scan progress for loading UI
+  int get scanProgress => _scanProgress;
   String? get selectedFolder => _selectedFolder;
   String? get error => _error;
   bool get isPermissionDenied => _isPermissionDenied;
@@ -66,7 +61,8 @@ class LibraryProvider extends ChangeNotifier {
     '.dff',
     '.aif',
     '.aiff',
-    '.alac'
+    '.alac',
+    '.wv'
   ];
 
   LibraryProvider(this.ref) {
@@ -74,7 +70,7 @@ class LibraryProvider extends ChangeNotifier {
     final initialSettings = ref.read(settingsProvider);
     _ignoreSubfolders = initialSettings.ignoreSubfolders;
 
-    // 2. 🚀 DECOUPLED LISTENER: Update internal state without provider disposal
+    // 2. DECOUPLED LISTENER: Update internal state without provider disposal
     // This is the permanent fix for: Cannot use ref functions after the dependency of a provider changed...
     ref.listen(settingsProvider, (previous, next) {
       bool shouldFetch = false;
@@ -106,7 +102,7 @@ class LibraryProvider extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  // 🚀 New Method: Request Permissions manually
+  // Request Permissions manually
   Future<void> requestPermissions() async {
     // Capture dependencies at ENTRY
     final dbService = ref.read(dbServiceProvider);
@@ -122,11 +118,10 @@ class LibraryProvider extends ChangeNotifier {
   }
 
   Future<void> _loadSavedPath() async {
-    // 🚀 Capture dependencies at ENTRY
+    // Capture dependencies at ENTRY
     final dbService = ref.read(dbServiceProvider);
     final settings = ref.read(settingsProvider);
-    final myToken =
-        _scanToken; // 🚀 Track token to detect setFolder() cancellation
+    final myToken = _scanToken;
 
     final prefs = await SharedPreferences.getInstance();
     if (_disposed) return;
@@ -134,8 +129,9 @@ class LibraryProvider extends ChangeNotifier {
 
     // 1. First, load whatever is already in the DB (Instant Load)
     await _fetchFromDatabase(dbService, settings);
-    if (_disposed || _scanToken != myToken)
-      return; // 🚀 Abort if setFolder() was called
+    if (_disposed || _scanToken != myToken) {
+      return;
+    }
 
     // 2. Then, if we have a main path, verify it and scan for changes
     if (savedPath != null) {
@@ -143,21 +139,22 @@ class LibraryProvider extends ChangeNotifier {
       _selectedFolder = canonicalPath;
       _safeNotify();
       await _scanFolder(canonicalPath, dbService, settings);
-      if (_disposed || _scanToken != myToken)
-        return; // 🚀 Abort if setFolder() was called
+      if (_disposed || _scanToken != myToken) {
+        return;
+      }
     }
 
     // 3. Also scan additional folders from settings
     for (final folder in settings.additionalMusicFolders) {
-      if (_scanToken != myToken) return; // 🚀 Abort if setFolder() was called
+      if (_scanToken != myToken) return;
       await _scanFolder(p.canonicalize(folder), dbService, settings);
       if (_disposed || _scanToken != myToken) return;
     }
 
     // 4. Clean up stale DB entries that no longer exist on disk
     if (_songs.isNotEmpty && _scanToken == myToken) {
-      final existingPaths = _songs.map((s) => s.filePath).toList();
-      await dbService.cleanMissingSongs(existingPaths);
+      // NOTE: Cleanup is now handled securely inside _scanFolder
+      // to avoid comparing the database with itself.
     }
   }
 
@@ -166,7 +163,6 @@ class LibraryProvider extends ChangeNotifier {
       DBService dbService, SettingsState settings) async {
     final dbSongs = await dbService.getAllSongs();
 
-    // 🚀 DISPOSAL GUARD
     if (_disposed) return;
 
     // Convert Isar 'Song' entities back to 'SongModel' for the UI
@@ -178,7 +174,7 @@ class LibraryProvider extends ChangeNotifier {
       ...settings.additionalMusicFolders.map((f) => p.canonicalize(f)),
     ];
 
-    // 🚀 FILTERING LOGIC
+    // FILTERING
     if (allFolders.isNotEmpty) {
       _songs = allSongs.where((s) {
         for (final folder in allFolders) {
@@ -199,7 +195,7 @@ class LibraryProvider extends ChangeNotifier {
       _songs = allSongs;
     }
 
-    // 🚀 DEDUPLICATE by canonicalized filePath (handles case/encoding differences)
+    // DEDUPLICATE by canonicalized filePath (handles case/encoding differences)
     final seen = <String>{};
     _songs = _songs.where((s) => seen.add(p.canonicalize(s.filePath))).toList();
 
@@ -213,14 +209,14 @@ class LibraryProvider extends ChangeNotifier {
 
     debugPrint(
         "📂 [_fetchFromDatabase] Finished! allSongs: ${allSongs.length}, filteredToFolder: ${_songs.length}");
-    // 🚀 Only notify if search() didn't already do it — prevents double notification per batch
+    // Only notify if search() didn't already do it — prevents double notification per batch
     if (_searchQuery.isEmpty) {
       _safeNotify();
     }
   }
 
   SongModel _mapToModel(Song dbSong) {
-    // 🚀 CUE SUPPORT: Extract the real audio file extension for CUE virtual paths
+    // CUE SUPPORT: Extract the real audio file extension for CUE virtual paths
     final effectivePath = CuePath.isCuePath(dbSong.path)
         ? CuePath.extractAudioPath(dbSong.path)
         : dbSong.path;
@@ -242,7 +238,7 @@ class LibraryProvider extends ChangeNotifier {
   Future<void> search(String query) async {
     if (_searchQuery == query) return;
     _searchQuery = query;
-    _safeNotify(); // Notify display providers to perform the filter ONCE.
+    _safeNotify();
   }
 
   /// Called from UI after the user has already picked a folder via FilePicker.
@@ -263,24 +259,24 @@ class LibraryProvider extends ChangeNotifier {
       _error = null;
       _isPermissionDenied = false;
 
-      // 🚀 Cancel any in-progress scan
+      // Cancel any in-progress scan
       _scanToken++;
 
-      // 🚀 IMMEDIATE UI REFRESH — don't block
+      // IMMEDIATE UI REFRESH — don't block
       _songs = [];
       _filteredSongs = [];
       _isLoading = true;
       _safeNotify();
       debugPrint("📂 [setFolder] UI state cleared. Firing background work...");
 
-      // 🚀 NON-BLOCKING: Fire DB fetch and scan in background
+      // NON-BLOCKING: Fire DB fetch and scan in background
       // This prevents the UI hang when changing folders.
       _fetchFromDatabase(dbService, settings).then((_) {
         if (!_disposed) {
           _scanFolder(canonicalPath, dbService, settings);
         }
       }).catchError((e, stack) {
-        // 🚀 SAFETY NET: Catch any unhandled errors from the background scan
+        // SAFETY NET: Catch any unhandled errors from the background scan
         // Without this, errors in _scanFolder crash the entire app silently.
         debugPrint("❌ [setFolder] Background scan error: $e");
         debugPrint("❌ [setFolder] Stack: $stack");
@@ -306,13 +302,13 @@ class LibraryProvider extends ChangeNotifier {
       // but guard against duplicate concurrent scans on same path
     }
 
-    // 🚀 Capture token at start for cancellation
+    // Capture token at start for cancellation
     final myToken = _scanToken;
 
     _isLoading = true;
     _error = null;
     _isPermissionDenied = false;
-    _scanProgress = 0; // 🚀 Reset progress counter
+    _scanProgress = 0;
     _safeNotify();
 
     try {
@@ -331,7 +327,9 @@ class LibraryProvider extends ChangeNotifier {
 
         // Use `await for` instead of `.toList()` to prevent ANR via massive memory buffer block
         final List<String> pathsToProcess = [];
-        final List<String> cueFilesToProcess = []; // 🚀 CUE SUPPORT
+        final List<String> cueFilesToProcess = [];
+        final Set<String> scannedPaths = {}; // Track actual physical files
+
 
         // Listen to the directory stream and yield frequently to avoid freezing the UI Isolate
         int filesScanned = 0;
@@ -348,17 +346,20 @@ class LibraryProvider extends ChangeNotifier {
                 String extension = p.extension(entity.path).toLowerCase();
                 if (_audioExtensions.contains(extension)) {
                   final canonicalPath = p.canonicalize(entity.path);
+                  scannedPaths.add(canonicalPath);
                   if (!existingPaths.contains(canonicalPath)) {
                     pathsToProcess.add(entity.path);
                   }
                 }
-                // 🚀 CUE SUPPORT: Also collect .cue files for parsing
+                // CUE SUPPORT: Also collect .cue files for parsing
                 if (extension == '.cue') {
+                  final canonicalPath = p.canonicalize(entity.path);
+                  scannedPaths.add(canonicalPath);
                   cueFilesToProcess.add(entity.path);
                 }
               }
             } catch (fileErr) {
-              // 🚀 Skip individual files that fail (e.g. Unicode path issues)
+              // Skip individual files that fail (e.g. Unicode path issues)
               debugPrint(
                   "⚠️ [_scanFolder] Skipping file: ${entity.path} — $fileErr");
             }
@@ -370,7 +371,7 @@ class LibraryProvider extends ChangeNotifier {
             }
           }
         } catch (walkErr) {
-          // 🚀 Catch dir.list() stream errors (permissions, broken symlinks, etc.)
+          // Catch dir.list() stream errors (permissions, broken symlinks, etc.)
           debugPrint(
               "⚠️ [_scanFolder] Directory walk error after $filesScanned files: $walkErr");
         }
@@ -386,7 +387,7 @@ class LibraryProvider extends ChangeNotifier {
           return;
         }
 
-        // 🚀 Processing in chunks of 20 (reduced from 50 to limit ffprobe pressure)
+        // Processing in chunks of 20 (reduced from 50 to limit ffprobe pressure)
         for (int i = 0; i < pathsToProcess.length; i += 20) {
           if (_disposed || _scanToken != myToken) return;
 
@@ -405,16 +406,15 @@ class LibraryProvider extends ChangeNotifier {
 
             final Song song = _mapMetadataToSong(filePath, metadata, ext);
 
-            // 🚀 Cache extracted album art during scan (especially for AIFF/WAV/OGG via ffmpeg)
+            // Cache extracted album art during scan (especially for AIFF/WAV/OGG via ffmpeg)
             if (metadata?.picture?.data != null &&
                 metadata!.picture!.data.isNotEmpty) {
               final canonPath = p.canonicalize(filePath);
               ArtCacheService().saveArt(canonPath, metadata.picture!.data);
-              SmartArt.invalidateCache(
-                  canonPath); // Clear in-memory negative cache
+              SmartArt.invalidateCache(canonPath);
             }
 
-            // 🚀 DSD tags are already handled by MetadataService._readMetadataViaFFprobe()
+            // DSD tags are already handled by MetadataService._readMetadataViaFFprobe()
             // via the combined getTagsAndInfo() call — no extra ffprobe needed here.
 
             batchToAdd.add(song);
@@ -425,14 +425,12 @@ class LibraryProvider extends ChangeNotifier {
             _scanProgress += batchToAdd.length;
             debugPrint(
                 "🔍 [_scanFolder] Saved chunk $i to DB (${batchToAdd.length} songs, progress: $_scanProgress)");
-            _safeNotify(); // 🚀 Only updates scanProgress counter — NO full DB reload
+            _safeNotify();
           }
           await Future.delayed(Duration.zero);
         }
 
-        // =====================================================================
-        // 🚀 CUE SHEET PROCESSING: Parse .cue files and create virtual tracks
-        // =====================================================================
+        // CUE SHEET PROCESSING: Parse .cue files and create virtual tracks
         if (cueFilesToProcess.isNotEmpty) {
           debugPrint(
               "🎵 [_scanFolder] Processing ${cueFilesToProcess.length} CUE sheets...");
@@ -479,7 +477,7 @@ class LibraryProvider extends ChangeNotifier {
               _scanProgress += cueBatch.length;
               debugPrint(
                   "🎵 [_scanFolder] Saved ${cueBatch.length} CUE tracks from ${p.basename(cuePath)}, progress: $_scanProgress");
-              _safeNotify(); // 🚀 Only updates scanProgress counter — NO full DB reload
+              _safeNotify();
             }
             await Future.delayed(Duration.zero);
           }
@@ -487,16 +485,42 @@ class LibraryProvider extends ChangeNotifier {
 
         debugPrint(
             "✅ [_scanFolder] Fully completed batching ${pathsToProcess.length} tracks + ${cueFilesToProcess.length} CUE sheets.");
+
+        // Clean up deleted files from this folder
+        final idsToDelete = <int>[];
+        for (final dbSong in existingSongs) {
+          String songPath = dbSong.path;
+          String baseFilePath = CuePath.isCuePath(songPath)
+              ? CuePath.extractAudioPath(songPath)
+              : songPath;
+
+          final canonicalBase = p.canonicalize(baseFilePath);
+
+          if (_ignoreSubfolders) {
+            if (p.equals(p.dirname(canonicalBase), path)) {
+              if (!scannedPaths.contains(canonicalBase)) idsToDelete.add(dbSong.id);
+            }
+          } else {
+            if (p.isWithin(path, canonicalBase) || p.equals(p.dirname(canonicalBase), path)) {
+              if (!scannedPaths.contains(canonicalBase)) idsToDelete.add(dbSong.id);
+            }
+          }
+        }
+
+        if (idsToDelete.isNotEmpty) {
+          await dbService.deleteSongsByIds(idsToDelete);
+          debugPrint("🧹 [_scanFolder] Cleaned ${idsToDelete.length} deleted songs from DB.");
+        }
+
       } else {
         _error = "Directory does not exist or access denied.";
       }
     } catch (e) {
-      print("Scan Error: $e");
+      debugPrint("Scan Error: $e");
       _error = "Scan failed: $e";
     } finally {
       if (_scanToken == myToken) {
-        await _fetchFromDatabase(
-            dbService, settings); // 🚀 Single authoritative reload
+        await _fetchFromDatabase(dbService, settings);
         _scanProgress = 0;
         _isLoading = false;
         _safeNotify();
@@ -589,7 +613,7 @@ class LibraryProvider extends ChangeNotifier {
 
   static final RegExp _splitPattern = RegExp(r'(\d+)|(\D+)');
 
-  /// 🚀 OPTIMIZED SORT: Pre-computes regex tokens in O(N) before sorting.
+  /// OPTIMIZED SORT: Pre-computes regex tokens in O(N) before sorting.
   /// Previously, regex was evaluated inside every comparison (O(N log N) evals).
   /// For 800 songs this reduces regex calls from ~16,000 to ~800.
   void _sortSongs() {
@@ -602,7 +626,7 @@ class LibraryProvider extends ChangeNotifier {
       tokenCache[song.filePath] = _splitPattern.allMatches(name).map((m) {
         final s = m.group(0)!;
         final n = int.tryParse(s);
-        return (n as Object?) ?? s; // int or String
+        return (n as Object?) ?? s;
       }).toList();
     }
 
@@ -625,6 +649,36 @@ class LibraryProvider extends ChangeNotifier {
       }
       return tokensA.length.compareTo(tokensB.length);
     });
+  }
+
+  Future<void> removeSongByPath(String path) async {
+    final canonicalPath = p.canonicalize(path);
+    final dbService = ref.read(dbServiceProvider);
+    
+    // Remove from DB
+    await dbService.deleteSongByPath(canonicalPath);
+    
+    // Remove from UI State instantly
+    _songs.removeWhere((s) => s.filePath == path || p.canonicalize(s.filePath) == canonicalPath);
+    _filteredSongs.removeWhere((s) => s.filePath == path || p.canonicalize(s.filePath) == canonicalPath);
+    _songs = List.from(_songs);
+    _filteredSongs = List.from(_filteredSongs);
+    _safeNotify();
+  }
+  
+  Future<void> removeFolderByPath(String folderPath) async {
+    final canonicalFolder = p.canonicalize(folderPath);
+    final dbService = ref.read(dbServiceProvider);
+    
+    // Remove from DB
+    await dbService.deleteSongsByFolder(canonicalFolder);
+    
+    // Remove from UI State instantly
+    _songs.removeWhere((s) => s.filePath.startsWith(folderPath) || p.isWithin(canonicalFolder, s.filePath) || p.equals(p.dirname(s.filePath), canonicalFolder));
+    _filteredSongs.removeWhere((s) => s.filePath.startsWith(folderPath) || p.isWithin(canonicalFolder, s.filePath) || p.equals(p.dirname(s.filePath), canonicalFolder));
+    _songs = List.from(_songs);
+    _filteredSongs = List.from(_filteredSongs);
+    _safeNotify();
   }
 
   Future<void> resetLibrary() async {

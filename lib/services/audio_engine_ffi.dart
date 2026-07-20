@@ -73,8 +73,10 @@ class AudioEngineFfi {
 
     if (Platform.isWindows) {
       _lib = ffi.DynamicLibrary.open('audio_engine.dll');
+    } else if (Platform.isAndroid) {
+      _lib = ffi.DynamicLibrary.open('libaudio_engine.so');
     } else {
-      throw UnsupportedError('AudioEngineFfi is currently Windows-only fallback');
+      throw UnsupportedError('AudioEngineFfi is currently Windows/Android only');
     }
 
     create = _lib.lookupFunction<EngineCreateFunc, EngineCreate>('Engine_Create');

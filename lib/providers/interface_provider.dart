@@ -48,8 +48,8 @@ class InterfaceNotifier extends StateNotifier<InterfaceState> {
     // 3. Resize Window
     // Update bitsdojo_window constraints too
     appWindow.minSize = const Size(300, 150);
-    await windowManager.setMinimumSize(const Size(300, 150)); // Allow shrinking
-    await windowManager.setSize(const Size(320, 160)); // Small banner size
+    await windowManager.setMinimumSize(const Size(300, 150));
+    await windowManager.setSize(const Size(320, 160));
     await windowManager.setResizable(false);
 
     // Restore Last Mini Position
@@ -83,7 +83,6 @@ class InterfaceNotifier extends StateNotifier<InterfaceState> {
       await windowManager.setSize(Size(prev.width, prev.height));
       await windowManager.setPosition(Offset(prev.left, prev.top));
     } else {
-      // Fallback
       await windowManager.setSize(const Size(1280, 800));
       await windowManager.center();
     }

@@ -7,7 +7,7 @@ class DailyMix {
   final String description;
   final List<SongMetadata> songs;
   final DateTime generatedAt;
-  final List<String> seedArtists; // Artist names used for seeding
+  final List<String> seedArtists;
 
   DailyMix({
     required this.id,

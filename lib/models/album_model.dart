@@ -5,7 +5,7 @@ class AlbumModel {
   final String imageUrl;
   final String releaseDate;
 
-  final List<dynamic>? localSongs; // ADDED To support local library albums
+  final List<dynamic>? localSongs;
 
   AlbumModel({
     required this.id,
@@ -26,7 +26,7 @@ class AlbumModel {
     return AlbumModel(
       id: json['id'],
       title: json['name'],
-      artist: json['artists'][0]['name'], // Grab the first artist
+      artist: json['artists'][0]['name'],
       imageUrl: image,
       releaseDate: json['release_date'] ?? "",
     );
@@ -40,6 +40,8 @@ class AlbumModel {
       'releaseDate': releaseDate,
     };
   }
+
+  Map<String, dynamic> toJson() => toMap();
 
   factory AlbumModel.fromMap(Map<String, dynamic> map) {
     return AlbumModel(

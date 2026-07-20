@@ -2,35 +2,42 @@ package com.momotz4g.simplemusicplayer2.usbaudio
 
 import android.content.Context
 import android.hardware.usb.UsbDeviceConnection
-import android.hardware.usb.UsbInterface
 import android.util.Log
 import java.io.File
-import java.io.FileInputStream
-import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.concurrent.thread
 
 /**
- * UsbAudioPlayer - High-level audio playback engine for USB DACs.
- * Connects the audio decoder with USB isochronous transfer.
+ * UsbAudioPlayer — high-level audio playback engine for USB DACs.
  *
- * Responsibilities:
- * - Open and manage USB device connection
- * - Decode audio files (WAV for Phase 1, FFmpeg for Phase 2) to raw PCM
- * - Stream decoded audio to USB DAC via isochronous transfer
- * - Handle format matching (sample rate, bit depth)
- * - Manage playback state and progress reporting
+ * The decoding + DSP pipeline is delegated to the C audio engine
+ * (`cpp_audio_engine`) via [EngineJni]. The same engine that powers
+ * Windows playback runs on Android too, which means we get FLAC, MP3,
+ * AAC/M4A, OGG, Vorbis, and WAV support "for free" without depending on
+ * ExoPlayer's codec coverage.
+ *
+ * Pipeline:
+ *
+ *   File → EngineJni (decode + EQ + volume) → ring buffer
+ *                                                  ↓
+ *                                    UsbIsoTransfer (isochronous URBs)
+ *                                                  ↓
+ *                                              USB DAC
+ *
+ * Public API surface is identical to the previous WAV-only implementation
+ * so [UsbAudioPlugin] stays untouched.
  */
 class UsbAudioPlayer(private val context: Context) {
 
     companion object {
         private const val TAG = "UsbAudioPlayer"
 
-        // Audio buffer configuration
-        private const val RING_BUFFER_SIZE = 131072    // 128KB ring buffer
-        private const val DECODE_CHUNK_SIZE = 8192     // Bytes per decode read
-        private const val LOW_WATER_MARK = 16384       // Trigger decode when below this
+        // Audio buffer configuration. The ring buffer sits between the
+        // decode thread and UsbIsoTransfer's audio data callback.
+        private const val RING_BUFFER_SIZE = 8388608    // 8 MB (supports up to 32-bit/384kHz)
+        private const val DECODE_CHUNK_FRAMES = 1024   // frames per engine read
+
     }
 
     enum class PlayerState {
@@ -39,143 +46,170 @@ class UsbAudioPlayer(private val context: Context) {
         PLAYING,
         PAUSED,
         STOPPED,
-        ERROR
+        ERROR,
     }
 
-    private val usbAudioManager = UsbAudioManager(context)
-    private var deviceConnection: UsbDeviceConnection? = null
-    private var isoTransfer: UsbIsoTransfer? = null
-    private var selectedInterface: UsbAudioManager.AudioStreamingInterface? = null
-
-    private var currentState = PlayerState.IDLE
-    private var currentSampleRate = 44100
-    private var currentBitDepth = 16
-    private var currentChannels = 2
-
-    // Ring buffer for decoded audio (producer: decode thread, consumer: transfer thread)
-    private val ringBuffer = ByteArray(RING_BUFFER_SIZE)
-    private var ringReadPos = 0
-    private var ringWritePos = 0
-    @Volatile private var ringAvailable = 0
-    private val ringLock = Object()
-
-    // Current audio source
-    private var audioSource: AudioSource? = null
-
-    // WAV file decoder state
-    private var wavFile: RandomAccessFile? = null
-    private var wavDataOffset = 0L     // Byte offset where PCM data starts
-    private var wavDataLength = 0L     // Total PCM data length in bytes
-    private var wavBytesRead = 0L      // How many PCM bytes we've decoded so far
-
-    // Decode thread
-    private var decodeThread: Thread? = null
-    @Volatile private var decodeRunning = false
-
-    // Playback callbacks
-    private var onStateChange: ((PlayerState) -> Unit)? = null
-    private var onProgress: ((Long, Long) -> Unit)? = null
-    private var onError: ((String) -> Unit)? = null
-
-    /**
-     * Audio source abstraction
-     */
     sealed class AudioSource {
         data class FilePath(val path: String) : AudioSource()
         data class RawPcm(
             val buffer: ByteBuffer,
             val sampleRate: Int,
             val bitDepth: Int,
-            val channels: Int
+            val channels: Int,
         ) : AudioSource()
+        data class StreamUrl(val url: String) : AudioSource()
     }
 
-    /**
-     * Set callbacks for playback events
-     */
+    private val usbAudioManager = UsbAudioManager(context)
+    private var deviceConnection: UsbDeviceConnection? = null
+    private var isoTransfer: UsbIsoTransfer? = null
+    private var audioTrackOutput: AudioTrackOutput? = null
+    private var selectedInterface: UsbAudioManager.AudioStreamingInterface? = null
+
+    // DAP mode: when true, output goes to AudioTrack (built-in DAC)
+    // instead of USB isochronous transfers.
+    private var isDapMode = false
+
+    // Engine that owns the decoder + DSP. One instance per UsbAudioPlayer.
+    private val engine = EngineJni()
+
+    private var currentState = PlayerState.IDLE
+    private var currentSampleRate = 44100
+    private var currentBitDepth = 16
+    private var currentChannels = 2
+    private var currentVolume = 1.0f
+
+    // Ring buffer between decode thread (producer) and transfer (consumer).
+    private val ringBuffer = ByteArray(RING_BUFFER_SIZE)
+    private var ringReadPos = 0
+    private var ringWritePos = 0
+    @Volatile private var ringAvailable = 0
+    private val ringLock = Object()
+
+    private var audioSource: AudioSource? = null
+
+    // Decode thread state
+    private var decodeThread: Thread? = null
+    @Volatile private var decodeRunning = false
+    @Volatile private var decoderEof = false
+
+    // Progress timer state
+    private var progressThread: Thread? = null
+    @Volatile private var progressRunning = false
+
+    // Callbacks back to UsbAudioPlugin
+    private var onStateChange: ((PlayerState) -> Unit)? = null
+    private var onProgress: ((Long, Long) -> Unit)? = null
+    private var onError: ((String) -> Unit)? = null
+
     fun setCallbacks(
         onStateChange: ((PlayerState) -> Unit)? = null,
         onProgress: ((Long, Long) -> Unit)? = null,
-        onError: ((String) -> Unit)? = null
+        onError: ((String) -> Unit)? = null,
     ) {
         this.onStateChange = onStateChange
         this.onProgress = onProgress
         this.onError = onError
     }
 
-    /**
-     * Get list of connected USB DACs
-     */
-    fun getConnectedDacs(): List<UsbAudioManager.UsbAudioDevice> {
-        return usbAudioManager.getConnectedDacs()
-    }
+    // ==================== Discovery ====================
 
-    /**
-     * Check if USB DAC is available
-     */
-    fun isDacAvailable(): Boolean {
-        return usbAudioManager.getConnectedDacs().isNotEmpty()
-    }
+    fun getConnectedDacs(): List<UsbAudioManager.UsbAudioDevice> =
+        usbAudioManager.getConnectedDacs()
 
-    /**
-     * Open connection to a specific DAC
-     */
+    fun isDacAvailable(): Boolean =
+        usbAudioManager.getConnectedDacs().isNotEmpty()
+
+    // ==================== Connection ====================
+
     fun openDac(dac: UsbAudioManager.UsbAudioDevice, callback: (Boolean) -> Unit) {
         val hasPerm = usbAudioManager.hasPermission(dac.usbDevice)
-        Log.i(TAG, "Opening DAC: ${dac.deviceName}, Current permission: $hasPerm")
+        Log.i(TAG, "Opening DAC: ${dac.deviceName}, current permission=$hasPerm")
 
         if (!hasPerm) {
             Log.i(TAG, "Requesting USB permission...")
             usbAudioManager.requestPermission(dac.usbDevice) { granted ->
                 if (granted) {
-                    Log.i(TAG, "Permission granted. Connecting to DAC...")
-                    val success = connectToDac(dac)
-                    callback(success)
+                    Log.i(TAG, "Permission granted; connecting")
+                    callback(connectToDac(dac))
                 } else {
                     Log.w(TAG, "USB permission denied")
                     callback(false)
                 }
             }
         } else {
-            Log.i(TAG, "Found existing permission. Connecting to DAC...")
-            val success = connectToDac(dac)
-            callback(success)
+            Log.i(TAG, "Permission already granted; connecting")
+            callback(connectToDac(dac))
         }
     }
 
-    /**
-     * Connect to DAC after permission is granted
-     */
     private fun connectToDac(dac: UsbAudioManager.UsbAudioDevice): Boolean {
-        try {
+        return try {
             deviceConnection = usbAudioManager.openDevice(dac.usbDevice)
             if (deviceConnection == null) {
                 Log.e(TAG, "Failed to open USB device connection")
                 return false
             }
-
             usbAudioManager.setActiveDac(dac)
-            Log.i(TAG, "Connected to DAC: ${dac.deviceName}")
-            Log.i(TAG, "  Supported sample rates: ${dac.supportedSampleRates}")
-            Log.i(TAG, "  ${dac.audioStreamingInterfaces.size} audio interface(s) available")
-            return true
+            Log.i(TAG, "Connected to DAC: ${dac.deviceName}, " +
+                    "rates=${dac.supportedSampleRates}, " +
+                    "${dac.audioStreamingInterfaces.size} iface(s)")
+
+            // Lazily create the engine on first DAC open. We keep the engine
+            // alive across prepare/stop cycles to avoid repeatedly paying
+            // miniaudio init cost.
+            if (!engine.isCreated) {
+                if (!EngineJni.isAvailable) {
+                    Log.e(TAG, "Native audio engine library not loaded; " +
+                            "USB bypass will not function")
+                    return false
+                }
+                if (!engine.create()) {
+                    Log.e(TAG, "EngineJni.create() failed")
+                    return false
+                }
+            }
+            true
         } catch (e: Exception) {
-            Log.e(TAG, "Error connecting to DAC: ${e.message}")
-            return false
+            Log.e(TAG, "Error connecting to DAC: ${e.message}", e)
+            false
         }
     }
 
+    private var isKnownDap = false
+
     /**
-     * Prepare audio source for playback.
-     * Parses the audio file header and determines the format.
+     * Set up for playback via Android's AudioTrack (bypassing USB).
+     * Used for devices like DAPs where the internal DAC is high-end.
+     * We only need the C++ engine for decoding.
      */
+    fun openBuiltInDac(knownDap: Boolean = false): Boolean {
+        isDapMode = true
+        isKnownDap = knownDap
+        Log.i(TAG, "Opening built-in DAC (DAP mode, knownDap=$knownDap)")
+
+        if (!engine.isCreated) {
+            if (!EngineJni.isAvailable) {
+                Log.e(TAG, "Native audio engine library not loaded")
+                return false
+            }
+            if (!engine.create()) {
+                Log.e(TAG, "EngineJni.create() failed")
+                return false
+            }
+        }
+        return true
+    }
+
+    // ==================== Prepare ====================
+
     fun prepare(source: AudioSource): Boolean {
         if (currentState == PlayerState.PLAYING) {
             stop()
         }
-
         updateState(PlayerState.PREPARING)
         resetRingBuffer()
+        decoderEof = false
 
         when (source) {
             is AudioSource.FilePath -> {
@@ -184,7 +218,15 @@ class UsbAudioPlayer(private val context: Context) {
                     return false
                 }
             }
+            is AudioSource.StreamUrl -> {
+                if (!prepareUrlSource(source.url)) {
+                    updateState(PlayerState.ERROR)
+                    return false
+                }
+            }
             is AudioSource.RawPcm -> {
+                // Raw PCM path bypasses the engine — the caller already has
+                // decoded frames. Used for diagnostic/test playback only.
                 currentSampleRate = source.sampleRate
                 currentBitDepth = source.bitDepth
                 currentChannels = source.channels
@@ -193,18 +235,24 @@ class UsbAudioPlayer(private val context: Context) {
 
         audioSource = source
 
-        // Find the best matching interface for this format on the connected DAC
-        val dac = usbAudioManager.getActiveDac()
-        if (dac != null) {
-            selectedInterface = dac.findBestInterface(currentSampleRate, currentBitDepth, currentChannels)
-            if (selectedInterface != null) {
-                Log.i(TAG, "Selected interface #${selectedInterface!!.interfaceNumber} " +
-                        "alt=${selectedInterface!!.alternateSetting} for " +
-                        "${currentSampleRate}Hz/${currentBitDepth}bit/${currentChannels}ch")
-            } else {
-                Log.w(TAG, "No suitable interface found for format, using first available")
-                selectedInterface = dac.audioStreamingInterfaces.firstOrNull()
+        // DAP mode: no USB interface selection needed — AudioTrack handles
+        // the format negotiation with the built-in DAC driver.
+        if (!isDapMode) {
+            val dac = usbAudioManager.getActiveDac()
+            if (dac != null) {
+                selectedInterface = dac.findBestInterface(
+                    currentSampleRate, currentBitDepth, currentChannels
+                ) ?: dac.audioStreamingInterfaces.firstOrNull()
+
+                selectedInterface?.let {
+                    Log.i(TAG, "USB DAC negotiated: alt=${it.alternateSetting} " +
+                            "ch=${it.channels} bit=${it.bitDepth} " +
+                            "rate=${currentSampleRate}")
+                }
             }
+        } else {
+            Log.i(TAG, "DAP mode: will use AudioTrack at " +
+                    "${currentSampleRate}Hz / ${currentBitDepth}bit / ${currentChannels}ch")
         }
 
         updateState(PlayerState.IDLE)
@@ -212,233 +260,11 @@ class UsbAudioPlayer(private val context: Context) {
     }
 
     /**
-     * Start playback
-     */
-    fun play(): Boolean {
-        val connection = deviceConnection
-        val dac = usbAudioManager.getActiveDac()
-
-        if (connection == null || dac == null) {
-            onError?.invoke("No USB DAC connected")
-            return false
-        }
-
-        val iface = selectedInterface
-        if (iface == null) {
-            onError?.invoke("No audio interface selected")
-            return false
-        }
-
-        val endpoint = iface.isochronousEndpoint
-        if (endpoint == null) {
-            onError?.invoke("No audio endpoint found on DAC")
-            return false
-        }
-
-        // Start the decode thread first to fill the ring buffer
-        startDecodeThread()
-
-        // Wait briefly for initial buffer fill
-        Thread.sleep(50)
-
-        // Create isochronous transfer handler with the selected interface
-        isoTransfer = UsbIsoTransfer(
-            connection = connection,
-            endpoint = endpoint,
-            audioInterface = iface.usbInterface,
-            sampleRate = currentSampleRate,
-            bitDepth = currentBitDepth,
-            channels = currentChannels
-        ).apply {
-            setAudioDataCallback { buffer, requestedBytes ->
-                provideAudioData(buffer, requestedBytes)
-            }
-        }
-
-        if (isoTransfer?.start() == true) {
-            updateState(PlayerState.PLAYING)
-            return true
-        } else {
-            stopDecodeThread()
-            onError?.invoke("Failed to start USB audio transfer")
-            updateState(PlayerState.ERROR)
-            return false
-        }
-    }
-
-    /**
-     * Pause playback
-     */
-    fun pause() {
-        isoTransfer?.stop()
-        decodeRunning = false
-        updateState(PlayerState.PAUSED)
-    }
-
-    /**
-     * Resume playback
-     */
-    fun resume(): Boolean {
-        return if (currentState == PlayerState.PAUSED) {
-            play()
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Stop playback
-     */
-    fun stop() {
-        isoTransfer?.stop()
-        isoTransfer = null
-        stopDecodeThread()
-        closeWavFile()
-        resetRingBuffer()
-        updateState(PlayerState.STOPPED)
-    }
-
-    /**
-     * Seek to position in milliseconds
-     */
-    fun seek(positionMs: Long) {
-        val source = audioSource
-        if (source !is AudioSource.FilePath) return
-
-        val wasPlaying = currentState == PlayerState.PLAYING
-        if (wasPlaying) {
-            isoTransfer?.stop()
-            decodeRunning = false
-        }
-
-        // Calculate byte offset from millisecond position
-        val bytesPerSecond = currentSampleRate * currentChannels * (currentBitDepth / 8)
-        val targetByteOffset = (positionMs * bytesPerSecond / 1000).coerceIn(0, wavDataLength)
-
-        // Align to frame boundary
-        val bytesPerFrame = currentChannels * (currentBitDepth / 8)
-        val alignedOffset = (targetByteOffset / bytesPerFrame) * bytesPerFrame
-
-        synchronized(ringLock) {
-            ringReadPos = 0
-            ringWritePos = 0
-            ringAvailable = 0
-            wavBytesRead = alignedOffset
-        }
-
-        // Seek the WAV file
-        wavFile?.seek(wavDataOffset + alignedOffset)
-
-        if (wasPlaying) {
-            startDecodeThread()
-            Thread.sleep(30)
-            isoTransfer?.start()
-        }
-
-        // Report progress
-        val currentMs = (alignedOffset * 1000) / bytesPerSecond
-        val totalMs = (wavDataLength * 1000) / bytesPerSecond
-        onProgress?.invoke(currentMs, totalMs)
-    }
-
-    /**
-     * Close DAC connection
-     */
-    fun closeDac() {
-        stop()
-        deviceConnection?.close()
-        deviceConnection = null
-        selectedInterface = null
-        usbAudioManager.setActiveDac(null)
-        updateState(PlayerState.IDLE)
-    }
-
-    /**
-     * Get current player state
-     */
-    fun getState(): PlayerState = currentState
-
-    /**
-     * Get current audio format
-     */
-    fun getAudioFormat(): Map<String, Any> {
-        return mapOf(
-            "sampleRate" to currentSampleRate,
-            "bitDepth" to currentBitDepth,
-            "channels" to currentChannels
-        )
-    }
-
-    /**
-     * Dispose all resources
-     */
-    fun dispose() {
-        closeDac()
-        usbAudioManager.dispose()
-    }
-
-    // ==================== Ring Buffer Operations ====================
-
-    /**
-     * Provide audio data to the USB transfer thread.
-     * Called from the isochronous transfer thread.
-     */
-    private fun provideAudioData(buffer: ByteBuffer, requestedBytes: Int): Int {
-        synchronized(ringLock) {
-            if (ringAvailable < requestedBytes) {
-                // Underrun — not enough decoded data
-                return 0
-            }
-
-            val bytesToRead = minOf(requestedBytes, ringAvailable)
-            for (i in 0 until bytesToRead) {
-                buffer.put(ringBuffer[ringReadPos])
-                ringReadPos = (ringReadPos + 1) % RING_BUFFER_SIZE
-            }
-            ringAvailable -= bytesToRead
-
-            // Notify decode thread there's space available
-            ringLock.notifyAll()
-
-            return bytesToRead
-        }
-    }
-
-    /**
-     * Feed decoded audio data into the ring buffer.
-     * Called from the decode thread.
-     */
-    private fun feedAudioData(data: ByteArray, offset: Int, length: Int): Int {
-        synchronized(ringLock) {
-            val spaceAvailable = RING_BUFFER_SIZE - ringAvailable
-            if (spaceAvailable < length) {
-                return 0 // Buffer full
-            }
-
-            val bytesToWrite = minOf(length, spaceAvailable)
-            for (i in 0 until bytesToWrite) {
-                ringBuffer[ringWritePos] = data[offset + i]
-                ringWritePos = (ringWritePos + 1) % RING_BUFFER_SIZE
-            }
-            ringAvailable += bytesToWrite
-
-            return bytesToWrite
-        }
-    }
-
-    private fun resetRingBuffer() {
-        synchronized(ringLock) {
-            ringReadPos = 0
-            ringWritePos = 0
-            ringAvailable = 0
-        }
-    }
-
-    // ==================== WAV Decoder ====================
-
-    /**
-     * Prepare file-based audio source.
-     * Parses the WAV header and opens the file for streaming.
+     * Hand the file off to the engine, then read the negotiated format
+     * back so we can pick a matching USB alt setting.
+     *
+     * `bitPerfect = true` → engine bypasses EQ in [EngineJni.readFrames];
+     * only volume scaling stays so the user can still adjust loudness.
      */
     private fun prepareFileSource(path: String): Boolean {
         val file = File(path)
@@ -446,219 +272,509 @@ class UsbAudioPlayer(private val context: Context) {
             onError?.invoke("Audio file not found: $path")
             return false
         }
-
-        val extension = file.extension.lowercase()
-
-        when (extension) {
-            "wav" -> return prepareWavFile(file)
-            "flac", "mp3", "aac", "m4a", "ogg", "opus" -> {
-                // Phase 2: FFmpeg decoding
-                // For now, attempt WAV-like raw PCM or report unsupported
-                Log.w(TAG, "Format '$extension' requires FFmpeg decoder (Phase 2)")
-                onError?.invoke("Format '$extension' not yet supported in USB Direct mode. " +
-                        "WAV files are supported. FFmpeg support coming in Phase 2.")
-                return false
-            }
-            else -> {
-                onError?.invoke("Unsupported audio format: $extension")
-                return false
-            }
-        }
-    }
-
-    /**
-     * Parse WAV file header and prepare for streaming.
-     * Handles standard RIFF/WAVE, including files with extra chunks before 'data'.
-     */
-    private fun prepareWavFile(file: File): Boolean {
-        try {
-            closeWavFile()
-
-            val raf = RandomAccessFile(file, "r")
-
-            // Read RIFF header (12 bytes)
-            val riffHeader = ByteArray(12)
-            raf.readFully(riffHeader)
-
-            // Verify RIFF/WAVE signature
-            val riff = String(riffHeader, 0, 4)
-            val wave = String(riffHeader, 8, 4)
-            if (riff != "RIFF" || wave != "WAVE") {
-                Log.e(TAG, "Not a valid WAV file: RIFF='$riff', WAVE='$wave'")
-                raf.close()
-                return false
-            }
-
-            // Parse chunks to find 'fmt ' and 'data'
-            var foundFmt = false
-            var foundData = false
-            var filePos = 12L
-
-            while (filePos < raf.length() - 8) {
-                raf.seek(filePos)
-                val chunkHeader = ByteArray(8)
-                raf.readFully(chunkHeader)
-
-                val chunkId = String(chunkHeader, 0, 4)
-                val chunkSize = ByteBuffer.wrap(chunkHeader, 4, 4)
-                    .order(ByteOrder.LITTLE_ENDIAN).int.toLong() and 0xFFFFFFFFL
-
-                when (chunkId) {
-                    "fmt " -> {
-                        // Parse format chunk
-                        val fmtData = ByteArray(chunkSize.toInt().coerceAtMost(40))
-                        raf.readFully(fmtData)
-
-                        val fmt = ByteBuffer.wrap(fmtData).order(ByteOrder.LITTLE_ENDIAN)
-                        val audioFormat = fmt.short.toInt() and 0xFFFF  // 1 = PCM, 3 = IEEE float
-                        currentChannels = fmt.short.toInt() and 0xFFFF
-                        currentSampleRate = fmt.int
-                        val byteRate = fmt.int
-                        val blockAlign = fmt.short.toInt() and 0xFFFF
-                        currentBitDepth = fmt.short.toInt() and 0xFFFF
-
-                        if (audioFormat != 1 && audioFormat != 3) {
-                            Log.w(TAG, "WAV audioFormat=$audioFormat (not PCM). May not play correctly.")
-                        }
-
-                        Log.i(TAG, "WAV format: ${currentSampleRate}Hz, ${currentBitDepth}bit, " +
-                                "${currentChannels}ch, byteRate=$byteRate, blockAlign=$blockAlign")
-                        foundFmt = true
-                    }
-
-                    "data" -> {
-                        wavDataOffset = filePos + 8
-                        wavDataLength = chunkSize
-                        foundData = true
-                        Log.i(TAG, "WAV data chunk: offset=$wavDataOffset, length=$wavDataLength")
-                        break // Found what we need
-                    }
-                }
-
-                // Move to next chunk (chunks are 2-byte aligned)
-                filePos += 8 + chunkSize
-                if (chunkSize % 2 != 0L) filePos += 1
-            }
-
-            if (!foundFmt || !foundData) {
-                Log.e(TAG, "WAV file missing required chunks: fmt=$foundFmt, data=$foundData")
-                raf.close()
-                return false
-            }
-
-            // Position at start of PCM data
-            raf.seek(wavDataOffset)
-            wavFile = raf
-            wavBytesRead = 0
-
-            return true
-        } catch (e: Exception) {
-            Log.e(TAG, "Error parsing WAV file: ${e.message}", e)
+        if (!EngineJni.isAvailable || !engine.isCreated) {
+            onError?.invoke("USB audio engine not available on this device")
             return false
         }
+
+        // Hand 0/0/0 hints so the engine uses the file's native format —
+        // that gives us the cleanest match against DAC alternate settings.
+        val ok = engine.prepareFile(
+            path = path,
+            sampleRate = 0,
+            bitDepth = 0,
+            channels = 0,
+            bitPerfect = true,
+        )
+        if (!ok) {
+            onError?.invoke("Engine failed to decode: ${file.name}")
+            return false
+        }
+
+        engine.seek(0f) // FORCE NATIVE DECODER TO RESET CURSOR (Fixes no-sound on next song)
+
+        val (sr, ch, bd) = engine.getFormat()
+        if (sr == 0 || ch == 0) {
+            onError?.invoke("Engine reported invalid format for ${file.name}")
+            engine.releaseRawSink()
+            return false
+        }
+        currentSampleRate = sr
+        currentChannels = ch
+        currentBitDepth = if (bd > 0) bd else 16
+        Log.i(TAG, "Engine prepared $path → ${sr}Hz / ${bd}bit / ${ch}ch")
+        return true
+    }
+
+    private var currentStreamReader: JniStreamReader? = null
+
+    private fun prepareUrlSource(url: String): Boolean {
+        if (!EngineJni.isAvailable || !engine.isCreated) {
+            onError?.invoke("USB audio engine not available on this device")
+            return false
+        }
+
+        val reader = JniStreamReader(url)
+        currentStreamReader = reader
+
+        val ok = engine.prepareUrl(
+            url = url,
+            reader = reader,
+            sampleRate = 0,
+            bitDepth = 0,
+            channels = 0,
+            bitPerfect = true,
+        )
+        if (!ok) {
+            onError?.invoke("Engine failed to prepare stream")
+            return false
+        }
+
+        val (sr, ch, bd) = engine.getFormat()
+        if (sr == 0 || ch == 0) {
+            onError?.invoke("Engine reported invalid format for stream")
+            engine.releaseRawSink()
+            return false
+        }
+        currentSampleRate = sr
+        currentChannels = ch
+        currentBitDepth = if (bd > 0) bd else 16
+        Log.i(TAG, "Engine prepared stream → ${sr}Hz / ${bd}bit / ${ch}ch")
+        return true
+    }
+
+    // ==================== Playback control ====================
+
+    fun play(): Boolean {
+        // Sync volume before decode thread starts to ensure ring buffer is filled at correct volume.
+        engine.setVolume(currentVolume)
+
+        // Flush any stale PCM data from a previous session, but NOT when resuming from pause.
+        if (currentState != PlayerState.PAUSED) {
+            resetRingBuffer()
+        }
+        decoderEof = false
+
+        // Prime the ring buffer before the output thread starts pulling.
+        // DAP mode (AudioTrack) needs more priming than USB isochronous
+        // because the AudioTrack internal buffer is larger and starts
+        // pulling data immediately on play().
+        startDecodeThread()
+        startDecodeThread()
+        val primeMs = if (isDapMode) 300L else 120L
+        Thread.sleep(primeMs)
+
+        // Safety net: pad with silence if decode thread hasn't filled enough.
+        // 20ms of audio ensures at least 2 write chunks are available before
+        // the output thread starts, preventing startup underruns.
+        val minPrimeBytesNeeded = currentChannels * (currentBitDepth / 8) * (currentSampleRate / 1000) * 20  // ~20ms
+        synchronized(ringLock) {
+            if (ringAvailable < minPrimeBytesNeeded) {
+                Log.w(TAG, "Ring buffer under-primed ($ringAvailable < $minPrimeBytesNeeded), padding silence")
+                val silenceNeeded = minPrimeBytesNeeded - ringAvailable
+                ringAvailable += silenceNeeded
+                ringWritePos = (ringWritePos + silenceNeeded) % RING_BUFFER_SIZE
+            }
+        }
+
+        // ── DAP MODE: AudioTrack output ──────────────────────────────────
+        if (isDapMode) {
+            audioTrackOutput = AudioTrackOutput(
+                sampleRate = currentSampleRate,
+                bitDepth = currentBitDepth,
+                channels = currentChannels,
+                isKnownDap = isKnownDap
+            ).apply {
+                setAudioDataCallback { buffer, requested -> provideAudioData(buffer, requested) }
+            }
+
+            return if (audioTrackOutput?.start() == true) {
+                updateState(PlayerState.PLAYING)
+                startProgressTimer()
+                true
+            } else {
+                stopDecodeThread()
+                onError?.invoke("Failed to start AudioTrack (built-in DAC)")
+                updateState(PlayerState.ERROR)
+                false
+            }
+        }
+
+        // ── USB MODE: Isochronous transfer ──────────────────────────────
+        val connection = deviceConnection
+        val dac = usbAudioManager.getActiveDac()
+        if (connection == null || dac == null) {
+            onError?.invoke("No USB DAC connected")
+            stopDecodeThread()
+            return false
+        }
+        val iface = selectedInterface ?: run {
+            onError?.invoke("No audio interface selected")
+            stopDecodeThread()
+            return false
+        }
+        val endpoint = iface.isochronousEndpoint ?: run {
+            onError?.invoke("No isochronous endpoint on DAC")
+            stopDecodeThread()
+            return false
+        }
+
+        isoTransfer = UsbIsoTransfer(
+            connection = connection,
+            endpoint = endpoint,
+            audioInterface = iface.usbInterface,
+            sampleRate = currentSampleRate,
+            bitDepth = currentBitDepth,
+            channels = currentChannels,
+        ).apply {
+            setAudioDataCallback { buffer, requested -> provideAudioData(buffer, requested) }
+        }
+
+        return if (isoTransfer?.start() == true) {
+            updateState(PlayerState.PLAYING)
+            startProgressTimer()
+            true
+        } else {
+            stopDecodeThread()
+            onError?.invoke("Failed to start USB audio transfer")
+            updateState(PlayerState.ERROR)
+            false
+        }
+    }
+
+    fun pause() {
+        if (isDapMode) audioTrackOutput?.stop() else isoTransfer?.stop()
+        decodeRunning = false
+        stopProgressTimer()
+        updateState(PlayerState.PAUSED)
+    }
+
+    fun resume(): Boolean = if (currentState == PlayerState.PAUSED) play() else false
+
+    fun stop() {
+        if (isDapMode) {
+            audioTrackOutput?.stop()
+            audioTrackOutput = null
+        } else {
+            isoTransfer?.stop()
+            isoTransfer = null
+        }
+        
+        // CRITICAL FIX: The native C++ readFrames() can deadlock at EOF or track transitions.
+        // Calling engine.seek(0f) BEFORE joining unblocks the native mutex instantly,
+        // preventing the 2-second UI freeze and stopping the old thread from blocking the new one!
+        decodeRunning = false
+        stopProgressTimer()
+        synchronized(ringLock) { ringLock.notifyAll() }
+        engine.seek(0f) 
+        
+        decodeThread?.join(2000)
+        decodeThread = null
+
+        engine.releaseRawSink()
+        currentStreamReader?.closeConnection()
+        currentStreamReader = null
+        audioSource = null
+        resetRingBuffer()
+        updateState(PlayerState.STOPPED)
     }
 
     /**
-     * Start the decode thread that reads PCM data from the WAV file
-     * and feeds it into the ring buffer.
+     * Stop playback without emitting the STOPPED state callback.
+     * Used by [closeDac] during user-initiated disable so the
+     * Flutter side doesn't misinterpret it as end-of-stream and
+     * auto-advance to the next track.
      */
+    private fun forceStop() {
+        if (isDapMode) {
+            audioTrackOutput?.stop()
+            audioTrackOutput = null
+        } else {
+            isoTransfer?.stop()
+            isoTransfer = null
+        }
+        stopDecodeThread()
+        stopProgressTimer()
+        engine.releaseRawSink()
+        resetRingBuffer()
+        // Deliberately DO NOT call updateState(STOPPED) here —
+        // the caller handles the state transition.
+        currentState = PlayerState.IDLE
+    }
+
+    fun seek(positionMs: Long) {
+        val source = audioSource as? AudioSource.FilePath ?: return
+        val wasPlaying = decodeRunning
+        val positionSeconds = positionMs / 1000f
+
+        // Pause transport while the decoder cursor moves, then refill the
+        // ring buffer from the new position.
+        if (wasPlaying) {
+            if (isDapMode) audioTrackOutput?.stop() else isoTransfer?.stop()
+            decodeRunning = false
+            synchronized(ringLock) { ringLock.notifyAll() }
+            engine.seek(positionSeconds) // Unblock native readFrames INSTANTLY
+            decodeThread?.join(2000)
+            decodeThread = null
+        } else {
+            engine.seek(positionSeconds)
+        }
+
+        resetRingBuffer()
+        decoderEof = false
+
+        // Notify UI right away with the new cursor.
+        val totalSec = engine.getDuration()
+        if (totalSec > 0f) {
+            onProgress?.invoke(positionMs, (totalSec * 1000).toLong())
+        }
+
+        if (wasPlaying) {
+            startDecodeThread()
+            Thread.sleep(30)
+            if (isDapMode) audioTrackOutput?.start() else isoTransfer?.start()
+        }
+
+        // Suppress unused warning while the source field is part of the
+        // sealed-class contract for future expansion.
+        @Suppress("UNUSED_EXPRESSION")
+        source
+    }
+
+    fun closeDac() {
+        // Use forceStop() instead of stop() to avoid emitting a STOPPED
+        // state event — the Flutter layer interprets STOPPED as end-of-stream
+        // and auto-advances to the next track, which is wrong during a
+        // user-initiated disable toggle.
+        forceStop()
+        if (isDapMode) {
+            isDapMode = false
+            Log.i(TAG, "Built-in DAC (DAP mode) closed")
+        } else {
+            deviceConnection?.close()
+            deviceConnection = null
+            selectedInterface = null
+            usbAudioManager.setActiveDac(null)
+        }
+        updateState(PlayerState.IDLE)
+    }
+
+    fun getState(): PlayerState = currentState
+
+    fun isDapMode(): Boolean = isDapMode
+
+    fun getAudioFormat(): Map<String, Any> = mapOf(
+        "sampleRate" to currentSampleRate,
+        "bitDepth" to currentBitDepth,
+        "channels" to currentChannels,
+    )
+
+    fun setVolume(volume: Float) {
+        currentVolume = volume.coerceIn(0f, 1f)
+        if (engine.isCreated) {
+            engine.setVolume(currentVolume)
+        }
+    }
+
+    fun setEqBand(bandIndex: Int, frequency: Float, gain: Float, q: Float) {
+        engine.setEQBand(bandIndex, frequency, gain, q)
+    }
+
+    fun dispose() {
+        closeDac()
+        engine.dispose()
+        usbAudioManager.dispose()
+    }
+
+    // ==================== Ring buffer ====================
+
+    /** Called from the UsbIsoTransfer thread. */
+    private fun provideAudioData(buffer: ByteBuffer, requestedBytes: Int): Int {
+        synchronized(ringLock) {
+            if (ringAvailable < requestedBytes) {
+                // Underrun — caller will pad with silence.
+                return 0
+            }
+            val toRead = minOf(requestedBytes, ringAvailable)
+            val endLen = RING_BUFFER_SIZE - ringReadPos
+            if (toRead <= endLen) {
+                buffer.put(ringBuffer, ringReadPos, toRead)
+                ringReadPos = (ringReadPos + toRead) % RING_BUFFER_SIZE
+            } else {
+                buffer.put(ringBuffer, ringReadPos, endLen)
+                val remaining = toRead - endLen
+                buffer.put(ringBuffer, 0, remaining)
+                ringReadPos = remaining
+            }
+            ringAvailable -= toRead
+            ringLock.notifyAll()
+            return toRead
+        }
+    }
+
+    /** Called from the decode thread. */
+    private fun feedAudioData(data: ByteArray, offset: Int, length: Int): Int {
+        synchronized(ringLock) {
+            val space = RING_BUFFER_SIZE - ringAvailable
+            if (space < length) return 0
+            val toWrite = minOf(length, space)
+            val endLen = RING_BUFFER_SIZE - ringWritePos
+            if (toWrite <= endLen) {
+                System.arraycopy(data, offset, ringBuffer, ringWritePos, toWrite)
+                ringWritePos = (ringWritePos + toWrite) % RING_BUFFER_SIZE
+            } else {
+                System.arraycopy(data, offset, ringBuffer, ringWritePos, endLen)
+                val remaining = toWrite - endLen
+                System.arraycopy(data, offset + endLen, ringBuffer, 0, remaining)
+                ringWritePos = remaining
+            }
+            ringAvailable += toWrite
+            return toWrite
+        }
+    }
+
+
+    private fun resetRingBuffer() {
+        synchronized(ringLock) {
+            // Zero-fill the buffer to prevent stale PCM data from being
+            // sent to the DAC as a startup glitch ("Preett..." sound).
+            ringBuffer.fill(0)
+            ringReadPos = 0
+            ringWritePos = 0
+            ringAvailable = 0
+        }
+    }
+
+    // ==================== Decode thread ====================
+
     private fun startDecodeThread() {
         if (decodeRunning) return
-
         decodeRunning = true
-        decodeThread = thread(name = "WavDecoder") {
+        decodeThread = thread(name = "EngineDecoder") {
             Log.d(TAG, "Decode thread started")
+            val bytesPerFrame = currentChannels * (currentBitDepth / 8)
+            if (bytesPerFrame <= 0) {
+                Log.e(TAG, "Decode thread bailing — invalid bytesPerFrame")
+                decodeRunning = false
+                return@thread
+            }
 
-            val readBuffer = ByteArray(DECODE_CHUNK_SIZE)
-            val bytesPerSecond = currentSampleRate * currentChannels * (currentBitDepth / 8)
-            val totalDurationMs = if (bytesPerSecond > 0) (wavDataLength * 1000 / bytesPerSecond) else 0L
+            val chunkBytes = DECODE_CHUNK_FRAMES * bytesPerFrame
+            val direct = ByteBuffer.allocateDirect(chunkBytes)
+                .order(ByteOrder.LITTLE_ENDIAN)
+            val staging = ByteArray(chunkBytes)
 
-            while (decodeRunning && wavBytesRead < wavDataLength) {
+            // Buffer up to 0.25 seconds of audio, with a minimum of 65536 bytes to prevent underruns
+            val maxBufferedBytes = if (bytesPerFrame > 0 && currentSampleRate > 0) {
+                (currentSampleRate * bytesPerFrame * 0.25f).toInt().coerceIn(65536, RING_BUFFER_SIZE)
+            } else {
+                RING_BUFFER_SIZE
+            }
+
+            while (decodeRunning) {
                 try {
-                    // Wait if ring buffer is too full
+                    // Wait until there's room for at least one chunk.
                     synchronized(ringLock) {
-                        while (decodeRunning && (RING_BUFFER_SIZE - ringAvailable) < DECODE_CHUNK_SIZE) {
+                        while (decodeRunning &&
+                            (maxBufferedBytes - ringAvailable) < chunkBytes) {
                             ringLock.wait(50)
                         }
                     }
-
                     if (!decodeRunning) break
 
-                    // Read PCM data from WAV file
-                    val remaining = (wavDataLength - wavBytesRead).toInt()
-                        .coerceAtMost(DECODE_CHUNK_SIZE)
-
-                    val raf = wavFile ?: break
-                    val bytesRead = raf.read(readBuffer, 0, remaining)
-
-                    if (bytesRead <= 0) {
-                        Log.d(TAG, "End of WAV data reached")
+                    direct.clear()
+                    val framesRead = engine.readFrames(direct, DECODE_CHUNK_FRAMES)
+                    if (framesRead <= 0) {
+                        // 0 = EOS, negative = error/no source. Either way, stop.
+                        decoderEof = true
+                        Log.d(TAG, "Engine returned $framesRead — end of stream")
                         break
                     }
+                    val bytesProduced = (framesRead.toInt() * bytesPerFrame)
+                    direct.position(0)
+                    direct.get(staging, 0, bytesProduced)
 
-                    // Feed into ring buffer (may block if buffer full)
+                    // Feed the ring buffer. Block briefly if it filled up
+                    // while we were decoding.
                     var offset = 0
-                    while (offset < bytesRead && decodeRunning) {
-                        val written = feedAudioData(readBuffer, offset, bytesRead - offset)
+                    while (offset < bytesProduced && decodeRunning) {
+                        val written = feedAudioData(staging, offset, bytesProduced - offset)
                         if (written > 0) {
                             offset += written
-                            wavBytesRead += written
                         } else {
-                            // Buffer full, wait
                             Thread.sleep(5)
                         }
                     }
 
-                    // Report progress
-                    if (bytesPerSecond > 0) {
-                        val currentMs = wavBytesRead * 1000 / bytesPerSecond
-                        onProgress?.invoke(currentMs, totalDurationMs)
-                    }
-
+                    // Push progress periodically from ProgressTimer thread instead.
+                } catch (e: InterruptedException) {
+                    if (!decodeRunning) break
                 } catch (e: Exception) {
                     Log.e(TAG, "Decode error: ${e.message}", e)
                     if (!decodeRunning) break
                     Thread.sleep(10)
                 }
             }
-
-            Log.d(TAG, "Decode thread ended. Bytes decoded: $wavBytesRead / $wavDataLength")
+            Log.d(TAG, "Decode thread ended (eof=$decoderEof)")
         }
     }
 
-    /**
-     * Stop the decode thread
-     */
     private fun stopDecodeThread() {
         decodeRunning = false
-        synchronized(ringLock) {
-            ringLock.notifyAll() // Wake up if waiting
-        }
+        synchronized(ringLock) { ringLock.notifyAll() }
+        engine.seek(0f) // Interrupt native readFrames block
         decodeThread?.join(2000)
         decodeThread = null
     }
 
-    /**
-     * Close the WAV file handle
-     */
-    private fun closeWavFile() {
-        try {
-            wavFile?.close()
-        } catch (e: Exception) {
-            Log.w(TAG, "Error closing WAV file: ${e.message}")
+    // ==================== Progress timer thread ====================
+
+    private fun startProgressTimer() {
+        if (progressRunning) return
+        progressRunning = true
+        progressThread = thread(name = "ProgressTimer") {
+            Log.d(TAG, "Progress timer thread started")
+            while (progressRunning) {
+                try {
+                    Thread.sleep(250)
+                    if (!progressRunning) break
+
+                    if (currentState == PlayerState.PLAYING) {
+                        val pos = engine.getPosition()
+                        val dur = engine.getDuration()
+                        if (dur > 0f) {
+                            val bytesPerFrame = currentChannels * (currentBitDepth / 8)
+                            val bufferedSeconds = if (bytesPerFrame > 0 && currentSampleRate > 0) {
+                                ringAvailable.toFloat() / bytesPerFrame / currentSampleRate
+                            } else {
+                                0f
+                            }
+                            // Smoothly decrease offset down to 0 at EOF as the ring buffer drains
+                            val actualPlaybackPos = maxOf(0f, pos - bufferedSeconds)
+                            onProgress?.invoke((actualPlaybackPos * 1000).toLong(), (dur * 1000).toLong())
+                        }
+                    }
+                } catch (e: InterruptedException) {
+                    break
+                } catch (e: Exception) {
+                    // Ignore
+                }
+            }
+            Log.d(TAG, "Progress timer thread ended")
         }
-        wavFile = null
-        wavBytesRead = 0
-        wavDataOffset = 0
-        wavDataLength = 0
     }
 
-    /**
-     * Update player state and notify listener
-     */
+    private fun stopProgressTimer() {
+        progressRunning = false
+        progressThread?.interrupt()
+        progressThread = null
+    }
+
+    // ==================== State ====================
+
     private fun updateState(newState: PlayerState) {
         if (currentState != newState) {
-            Log.d(TAG, "State change: $currentState -> $newState")
+            Log.d(TAG, "State change: $currentState → $newState")
             currentState = newState
             onStateChange?.invoke(newState)
         }

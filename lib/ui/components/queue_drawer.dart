@@ -295,7 +295,7 @@ class QueueDrawer extends ConsumerWidget {
                         ),
                       ],
 
-                      // 🚀 Loading indicator while fetching recommendations
+                      // Loading indicator while fetching recommendations
                       if (playerState.isLoadingRecommendations &&
                           playerState.recommendationQueue.isEmpty) ...[
                         SliverToBoxAdapter(
@@ -364,7 +364,7 @@ class QueueDrawer extends ConsumerWidget {
     );
   }
 
-  /// 🚀 Context menu for recommendation songs (right-click, long-press, or 3-dot button)
+  /// Context menu for recommendation songs (right-click, long-press, or 3-dot button)
   void _showRecContextMenu(BuildContext context, Offset position,
       SongModel song, PlayerNotifier notifier, WidgetRef ref, {int? index}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -427,13 +427,13 @@ class QueueDrawer extends ConsumerWidget {
           ),
         ),
         const PopupMenuDivider(),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'remove_from_rec',
           child: Row(
             children: [
-              const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
-              const SizedBox(width: 12),
-              const Text('Remove from recommendations', style: TextStyle(color: Colors.redAccent)),
+              Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+              SizedBox(width: 12),
+              Text('Remove from recommendations', style: TextStyle(color: Colors.redAccent)),
             ],
           ),
         ),
@@ -493,7 +493,7 @@ class QueueDrawer extends ConsumerWidget {
     });
   }
 
-  /// 🚀 Add to Playlist dialog (same as library context menu)
+  /// Add to Playlist dialog (same as library context menu)
   void _showAddToPlaylistDialog(
       BuildContext context, SongModel song, WidgetRef ref) {
     final playlists = ref.read(playlistProvider);
@@ -564,7 +564,7 @@ class QueueDrawer extends ConsumerWidget {
     int? indexForDrag,
     VoidCallback? onDismiss, // NEW
     Widget?
-        trailingWidget, // 🚀 Optional trailing widget (e.g. 3-dot menu button)
+        trailingWidget, // Optional trailing widget (e.g. 3-dot menu button)
   }) {
     final bool isClickable = onTap != null;
 
@@ -666,7 +666,7 @@ class QueueDrawer extends ConsumerWidget {
             style: TextStyle(color: subTextColor, fontSize: 12),
           ),
 
-          // 🚀 Optional trailing widget (3-dot menu for recommendations)
+          // Optional trailing widget (3-dot menu for recommendations)
           if (trailingWidget != null) ...[
             const SizedBox(width: 8),
             trailingWidget,

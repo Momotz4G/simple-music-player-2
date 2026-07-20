@@ -1,7 +1,7 @@
 name: simple_music_player_2
 description: "A new modern Flutter music player."
 publish_to: 'none'
-version: 2.6.9+1
+version: 2.8.0+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -20,6 +20,7 @@ dependencies:
 
   # Metadata
   metadata_god: 1.1.0
+  audio_metadata_reader: ^1.6.0
   
   # Discord
   flutter_discord_rpc: ^1.0.0
@@ -99,6 +100,8 @@ dependencies:
   url_launcher: ^6.3.2
   file_selector: ^1.1.0
   image_picker: ^1.0.7
+  background_downloader: ^9.5.4
+  media_kit_video: ^2.0.1
 
 dev_dependencies:
   flutter_test:

@@ -2,12 +2,13 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart';
-import 'native_music_service.dart'; // 🚀 FIXED IMPORT
+import 'native_music_service.dart'; // FIXED IMPORT
 
 /// The "Side-Car" that talks to the Android Notification System
 class MusicHandler extends BaseAudioHandler {
   final Stream<PlaybackEvent> _playbackEventStream;
-  bool _isPlaying = false; // 🚀 Manually track playing state
+  bool _isPlaying = false; // Manually track playing state
+  bool _isCustomEngineActive = false; // Flag to ignore ExoPlayer events during ALAC playback
 
   // Callbacks for queue navigation (since NativeMusicService doesn't know about Queue)
   VoidCallback? onSkipNext;
@@ -18,10 +19,22 @@ class MusicHandler extends BaseAudioHandler {
 
   MusicHandler(this._playbackEventStream) {
     // Only listening to the active stream provided by NativeMusicService
-    _playbackEventStream.listen(_broadcastState);
+    _playbackEventStream.listen((event) {
+      if (_isCustomEngineActive) return;
+      _broadcastState(event);
+    });
     // Listen to playerStateStream to track _isPlaying reliably
     NativeMusicService().playerStateStream.listen((state) {
+      if (_isCustomEngineActive) return;
       _isPlaying = state.playing;
+      playbackState.add(playbackState.value.copyWith(
+        controls: [
+          MediaControl.skipToPrevious,
+          if (_isPlaying) MediaControl.pause else MediaControl.play,
+          MediaControl.skipToNext,
+        ],
+        playing: _isPlaying,
+      ));
     });
   }
 
@@ -58,6 +71,34 @@ class MusicHandler extends BaseAudioHandler {
     ));
   }
 
+  /// Manually force the notification state (used for C++ Audio Engine ALAC fallback)
+  void setCustomState(bool isPlaying, Duration position) {
+    _isCustomEngineActive = true;
+    _isPlaying = isPlaying;
+    playbackState.add(playbackState.value.copyWith(
+      controls: [
+        MediaControl.skipToPrevious,
+        if (isPlaying) MediaControl.pause else MediaControl.play,
+        MediaControl.skipToNext,
+      ],
+      playing: isPlaying,
+      updatePosition: position,
+      processingState: AudioProcessingState.ready,
+    ));
+  }
+
+  /// Pre-activate the custom engine flag to block ExoPlayer events
+  /// BEFORE pausing ExoPlayer. This prevents the async "paused" event
+  /// from leaking to Android MediaSession and downgrading the foreground service.
+  void preActivateCustomEngine() {
+    _isCustomEngineActive = true;
+  }
+
+  /// Restore ExoPlayer control over the OS notification
+  void clearCustomEngineState() {
+    _isCustomEngineActive = false;
+  }
+
   // --- OS COMMANDS (The "Police" telling us what to do) ---
 
   @override
@@ -65,8 +106,8 @@ class MusicHandler extends BaseAudioHandler {
     if (onPlay != null) {
       onPlay?.call();
     } else {
-      final NativeMusicService _musicService = NativeMusicService();
-      await _musicService.resume();
+      final NativeMusicService musicService = NativeMusicService();
+      await musicService.resume();
     }
   }
 
@@ -75,10 +116,15 @@ class MusicHandler extends BaseAudioHandler {
     if (onPause != null) {
       onPause?.call();
     } else {
-      final NativeMusicService _musicService = NativeMusicService();
-      await _musicService.pause();
+      final NativeMusicService musicService = NativeMusicService();
+      await musicService.pause();
     }
     playbackState.add(playbackState.value.copyWith(
+      controls: [
+        MediaControl.skipToPrevious,
+        MediaControl.play,
+        MediaControl.skipToNext,
+      ],
       processingState: AudioProcessingState.ready,
       playing: false,
     ));
@@ -90,8 +136,8 @@ class MusicHandler extends BaseAudioHandler {
     if (onSeek != null) {
       onSeek?.call(position);
     } else {
-      final NativeMusicService _musicService = NativeMusicService();
-      await _musicService.seek(position);
+      final NativeMusicService musicService = NativeMusicService();
+      await musicService.seek(position);
     }
   }
 
@@ -105,15 +151,15 @@ class MusicHandler extends BaseAudioHandler {
   Future<void> onTaskRemoved() async {
     debugPrint("🎵 Notification: Task Removed (App Swiped Away)");
     await stop();
-    // 🚀 DO NOT DISPOSE here. It can cause race condition crashes if late events fire.
+    // DO NOT DISPOSE here. It can cause race condition crashes if late events fire.
     // exit(0) will clean up the OS process resources.
     exit(0);
   }
 
   @override
   Future<void> stop() async {
-    final NativeMusicService _musicService = NativeMusicService();
-    await _musicService.stop();
+    final NativeMusicService musicService = NativeMusicService();
+    await musicService.stop();
     // 2. Broadcast stopped state to AudioService so notification disappears
     playbackState.add(playbackState.value.copyWith(
       processingState: AudioProcessingState.idle, // Reverted to original correct state

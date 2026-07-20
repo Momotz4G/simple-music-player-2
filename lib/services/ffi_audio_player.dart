@@ -67,7 +67,7 @@ class FfiAudioPlayer {
 
     _statusPort = ReceivePort();
     
-    // 🚀 SPAWN PERSISTENT WORKER:
+    // SPAWN PERSISTENT WORKER:
     // We pass the status port to the worker.
     await Isolate.spawn(_engineWorkerMain, _statusPort!.sendPort);
 
@@ -76,7 +76,7 @@ class FfiAudioPlayer {
       if (message is SendPort) {
         _commandPort = message;
         _initialized = true;
-        debugPrint("🚀 FFI Player: Worker Isolate Ready (STA Protected)");
+        debugPrint("FFI Player: Worker Isolate Ready (STA Protected)");
       } else if (message is _EngineStatus) {
         _handleStatusUpdate(message);
       }
@@ -189,7 +189,7 @@ class FfiAudioPlayer {
   }
 
   // ---------------------------------------------------------------------------
-  // 🚀 WORKER ISOLATE ENTRY POINT
+  // WORKER ISOLATE ENTRY POINT
   // ---------------------------------------------------------------------------
   static void _engineWorkerMain(SendPort mainSendPort) {
     // 1. Initialize FFI in this isolate

@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:palette_generator/palette_generator.dart';
 
+import 'package:audio_session/audio_session.dart';
 import '../models/song_model.dart';
 import '../services/native_music_service.dart';
 import '../services/discord_service.dart';
@@ -20,11 +21,12 @@ import '../services/youtube_downloader_service.dart';
 import '../services/smart_download_service.dart';
 import '../services/windows_taskbar_service.dart';
 import '../services/flac_downloader_service.dart';
-import '../services/debug_log_service.dart'; // 🚀 IMPORT
-import '../services/metadata_service.dart'; // 🚀 Safe metadata reader (ffmpeg fallback for AIFF/WAV)
-import '../env/env.dart'; // 🚀 IMPORT ENV FOR API KEY
+import '../services/debug_log_service.dart';
+import '../services/metadata_service.dart'; // Safe metadata reader (ffmpeg fallback for AIFF/WAV)
+import '../env/env.dart';
 import '../models/song_metadata.dart';
 import 'stats_provider.dart';
+import 'profile_provider.dart';
 import 'history_provider.dart';
 import 'settings_provider.dart';
 import 'data_usage_provider.dart';
@@ -32,11 +34,12 @@ import '../services/apple_music_backend_service.dart';
 
 import '../services/db_service.dart';
 import '../services/remote_control_service.dart';
+import '../services/pocketbase_service.dart';
 import '../services/auto_queue_service.dart';
 import '../services/metrics_service.dart';
-import '../services/cue_parser_service.dart'; // 🚀 CUE SUPPORT
+import '../services/cue_parser_service.dart';
 
-// --- STATE CLASS ---
+// STATE CLASS
 class PlayerState {
   final bool isPlaying;
   final SongModel? currentSong;
@@ -69,7 +72,7 @@ class PlayerState {
   // Smart Sleep Timer
   final bool isSleepPending;
 
-  // 🚀 Cross-Device Sync
+  // Cross-Device Sync
   final String? activeDeviceId;
   final String? activeDeviceName;
 
@@ -88,7 +91,7 @@ class PlayerState {
     this.loopMode = ja.LoopMode.off,
     this.isLyricsVisible = false,
     this.dominantColor,
-    this.endlessQueueEnabled = true, // Enabled by default
+    this.endlessQueueEnabled = true,
     this.isLoadingRecommendations = false,
     this.isBuffering = false,
     this.isSleepPending = false,
@@ -174,7 +177,7 @@ class PlayerState {
   }
 }
 
-// --- NOTIFIER CLASS ---
+// NOTIFIER CLASS
 class PlayerNotifier extends StateNotifier<PlayerState> {
   final NativeMusicService _musicService;
   final DiscordService _discordService = DiscordService();
@@ -183,9 +186,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       YoutubeDownloaderService();
   final SmartDownloadService _smartService = SmartDownloadService();
   final WindowsTaskbarService _taskbarService = WindowsTaskbarService();
-  final RemoteControlService _remoteService =
-      RemoteControlService(); // Remote Control Service
-  late final AutoQueueService _autoQueueService; // Endless Queue Service
+  final RemoteControlService _remoteService = RemoteControlService();
+  late final AutoQueueService _autoQueueService;
   final Ref ref;
 
   // USB Audio bypass flag (for Android <14 bit-perfect playback)
@@ -199,33 +201,35 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
   int _playlistIndex = 0;
   int get currentPlaylistIndex => _playlistIndex;
-  // 🚀 Play history stack — tracks every song played for universal "previous" button
+  // Play history stack — tracks every song played for universal "previous" button
   final List<SongModel> _playHistory = [];
   static const int _maxPlayHistorySize = 50;
-  // _isSwitchingSong removed
   bool _isLooping = false;
+  bool _isCppEnginePrepared = false;
   bool _isHandlingCompletion = false;
-  bool _isRecoveringFromCrash = false; // 🚀 Guard: crash recovery in progress
-  final Set<int> _preloadCheckpoints = {}; // 🚀 Track preload at 10%, 35%, 70%
-  String? _preloadingTitle; // 🚀 Guard: currently preloading song title
-  Completer<void>? _preloadLock; // 🚀 Serialize preloads: 1 download at a time
-  int _consecutiveSkipCount = 0; // 🚀 Prevent infinite skip loops
-  static const int _maxConsecutiveSkips = 3; // Max before stopping
-  bool _isExtractingPalette =
-      false; // 🚀 Guard: Prevent concurrent palette extractions
+  bool _isRecoveringFromCrash = false;
+  bool _volumeCallInProgress = false;
+  double? _pendingVolume;
+  final Set<int> _preloadCheckpoints = {}; // Track preload at 10%, 35%, 70%
+  String? _preloadingTitle;
+  Completer<void>? _preloadLock;
+  int _consecutiveSkipCount = 0;
+  static const int _maxConsecutiveSkips = 3;
+  int _currentSongRetryCount = 0;
+  static const int _maxSongRetries = 2;
+  bool _isExtractingPalette = false;
+  bool _isTransitioning = false;
 
-  // 🚀 ANDROID FIX: Static guard to prevent re-initialization on lifecycle events
-  // This prevents stale saved songs from overwriting the current audio source
   static bool _globalInitialized = false;
 
   // Stats config
   bool _isThresholdMet = false;
   bool _isSessionLogged = false;
   double _lastLogPosition = 0.0;
-  double _lastSavedPosition = 0.0; // 💾 For periodic saving
+  double _lastSavedPosition = 0.0;
   double _cumulativeSecondsListened = 0.0;
-  double _cacheClearListeningTimer =
-      0.0; // 🚀 Global timer for auto-clear cache
+  double _cacheClearListeningTimer = 0.0;
+  double _minutesBumpAccumulator = 0.0; // Tracks seconds to bump UI minutes
   static const double _playCountThreshold = 0.60;
   DateTime _lastSongChangeTime = DateTime.now();
 
@@ -233,20 +237,22 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   String? _cachedDiscordImage;
   String? _lastProcessedSongPath;
 
-  // 🚀 Track last notified song to auto-sync notification (by key, not reference)
+  // Track last notified song to auto-sync notification (by key, not reference)
 
   DateTime? _lastLocalShuffleTap;
   DateTime? _lastLocalLoopTap;
   static const int _syncCooldownMs = 1000; // 1 second cooldown
 
-  int _playRequestToken = 0; // 🚀 Guard against outdated async plays
+  int _playRequestToken = 0; // Guard against outdated async plays
   DateTime _lastPlayRequestTime = DateTime.fromMillisecondsSinceEpoch(
-      0); // 🚀 Guard against async spurious completed events
+      0); // Guard against async spurious completed events
   int _preloadRequestToken =
-      0; // 🚀 Guard against outdated async preloads (e.g. queue changes)
-  int _lastDiscordSyncSeconds = -1; // 🚀 Discord 30s Sync Tracker
+      0; // Guard against outdated async preloads (e.g. queue changes)
+  int _lastDiscordSyncSeconds = -1; // Discord 30s Sync Tracker
+  int _lastNotificationSyncMs = 0; // Throttle for Android MediaSession sync
   DateTime?
-      _lastManualSeekTime; // 🚀 Sync Lock: Track manual interactions to prevent rubber-banding
+      _lastManualSeekTime; // Sync Lock: Track manual interactions to prevent rubber-banding
+  double _lastEngineSecs = -1.0; // Track native engine position for watchdog
 
   PlayerNotifier(this._musicService, this.ref) : super(PlayerState()) {
     _autoQueueService = AutoQueueService();
@@ -269,11 +275,15 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       state = state.copyWith(isBuffering: true);
 
       final freshUrl = await _getJitStreamUrl(expiredSong);
-      if (freshUrl != null && freshUrl != expiredSong.filePath) {
+      if (freshUrl != null && freshUrl.isNotEmpty) {
         final refreshedSong = expiredSong.copyWith(filePath: freshUrl);
         state = state.copyWith(currentSong: refreshedSong);
         DebugLogService().info("✅ Stream re-resolved, reloading player");
-        await _musicService.load(refreshedSong);
+        final initialPos = state.currentPosition > 0
+            ? Duration(seconds: state.currentPosition.round())
+            : null;
+        await _musicService.load(refreshedSong, initialPosition: initialPos);
+        state = state.copyWith(isBuffering: false);
       } else {
         DebugLogService()
             .error("❌ Stream re-resolve failed for '${expiredSong.title}'");
@@ -285,24 +295,38 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
   }
 
-  // 🚀 Device info for cross-device coordination
+  // Device info for cross-device coordination
   String? _localDeviceId;
   String? _localDeviceName;
 
-  // 🚀 REMOTE SESSION FLAG: Controls cross-device sync behavior.
+  // REMOTE SESSION FLAG: Controls cross-device sync behavior.
   // When false (default & after "This Device"), the device plays independently.
   // When true (after connecting to a remote device), cross-device sync is active.
   bool _isRemoteSessionActive = false;
   bool get isRemoteSessionActive => _isRemoteSessionActive;
 
-  // 🚀 SAVED LOCAL STATE: Preserved when entering a remote session so we can
+  /// Enable remote session & broadcast current state immediately to PocketBase.
+  void enableRemoteSession() {
+    _isRemoteSessionActive = true;
+    if (_localDeviceId != null) {
+      state = state.copyWith(
+        activeDeviceId: _localDeviceId,
+        activeDeviceName: _localDeviceName,
+      );
+    }
+    DebugLogService()
+        .info("📲 Remote: Activated remote session / Listening Party mode");
+    _broadcastRemoteState(forceActive: true);
+  }
+
+  // SAVED LOCAL STATE: Preserved when entering a remote session so we can
   // restore the user's last-played song when they disconnect.
   SongModel? _savedLocalSong;
   List<SongModel>? _savedLocalPlaylist;
   int _savedLocalPlaylistIndex = 0;
   double _savedLocalPosition = 0.0;
 
-  // 🚀 isMaster: Returns true when
+  // isMaster: Returns true when
   //   1. Not in a remote session (independent mode), OR
   //   2. In a remote session and this device is the active player
   bool get isMaster =>
@@ -311,11 +335,57 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       state.activeDeviceId == _localDeviceId;
 
   void _init() async {
-    // 🚀 ANDROID FIX: Prevent re-initialization from overwriting current audio
     if (_globalInitialized) {
       return;
     }
     _globalInitialized = true;
+
+    if (Platform.isAndroid) {
+      UsbAudioService.init(
+        onProgress: (currentMs, totalMs) {
+          if (_isLooping) return;
+          if (!isMaster) return;
+
+          final currentSecs = currentMs / 1000.0;
+          final totalSecs = totalMs / 1000.0;
+
+          if (totalSecs > 0) {
+            // Reset completion handler early enough to catch next completion
+            if (currentSecs < 2 && _isHandlingCompletion) {
+              _isHandlingCompletion = false;
+            }
+
+            final durationChanged =
+                (state.totalDuration - totalSecs).abs() > 0.5;
+            final positionChanged =
+                (state.currentPosition - currentSecs).abs() > 0.2;
+
+            if (durationChanged || positionChanged) {
+              state = state.copyWith(
+                currentPosition: currentSecs,
+                totalDuration: totalSecs,
+              );
+              if (durationChanged) {
+                _broadcastRemoteState();
+                _updateDiscord();
+              }
+            }
+
+            // Throttle Android OS notification sync to once per second to prevent IPC DDOS and hanging
+            if (currentMs - _lastNotificationSyncMs >= 1000 ||
+                _lastNotificationSyncMs > currentMs) {
+              _lastNotificationSyncMs = currentMs;
+              _musicService.syncCustomEngineState(
+                  isPlaying: state.isPlaying,
+                  position: Duration(milliseconds: currentMs));
+            }
+
+            _processSharedPositionLogic(currentSecs, totalSecs,
+                isUsbAudio: true);
+          }
+        },
+      );
+    }
 
     _localDeviceId = await MetricsService().getDeviceIdentifier();
     _localDeviceName = await MetricsService().getDeviceName();
@@ -335,9 +405,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       try {
         lastSong = SongModel.fromJson(jsonDecode(lastSongJson));
 
-        // 🚀 SET SONG IN STATE IMMEDIATELY (so UI shows song info while rebuffering)
-        // Check if file needs rebuffering
-        // 🚀 CUE SUPPORT: Use real audio path for existence check
         final checkPath = CuePath.isCuePath(lastSong.filePath)
             ? CuePath.extractAudioPath(lastSong.filePath)
             : lastSong.filePath;
@@ -349,13 +416,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           unmutedVolume: volume > 0 ? volume : 0.5,
           isShuffle: shuffle,
           loopMode: ja.LoopMode.values[loopIndex],
-          currentSong: lastSong, // Show song info immediately!
-          currentPosition:
-              lastPosition, // 🚀 FIX: Restore seekbar position immediately!
-          isBuffering: needsRebuffering, // Show buffering animation if needed
+          currentSong: lastSong,
+          currentPosition: lastPosition,
+          totalDuration:
+              lastSong.duration > 0 ? lastSong.duration : state.totalDuration,
+          isBuffering: needsRebuffering,
         );
 
-        // 🚀 CRITICAL: Validate file existence.
+        // CRITICAL: Validate file existence.
         // If cache was cleared, this will trigger JIT caching (re-download)
         // so the player doesn't get stuck on a missing file.
         lastSong = await _ensureFileExists(lastSong);
@@ -382,8 +450,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     if (lastSong != null) {
       try {
-        // 🚀 USE DIFFERENT FLOW BASED ON FILE AVAILABILITY
-        // 🚀 CUE SUPPORT: Use real audio path for existence check
+        // USE DIFFERENT FLOW BASED ON FILE AVAILABILITY
+        // CUE SUPPORT: Use real audio path for existence check
         final loadCheckPath = CuePath.isCuePath(lastSong.filePath)
             ? CuePath.extractAudioPath(lastSong.filePath)
             : lastSong.filePath;
@@ -391,23 +459,24 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             !lastSong.filePath.startsWith('http') &&
             await File(loadCheckPath).exists()) {
           // File exists locally - use simple load with initial position
-          // 🚀 STARTUP OPTIMIZATION: Non-blocking Eager Load
+          // STARTUP OPTIMIZATION: Non-blocking Eager Load
           // We do NOT await this. This allows UI to render instantly while player buffers in background.
           _musicService.load(
             lastSong,
             initialPosition: lastPosition > 0
                 ? Duration(seconds: lastPosition.round())
                 : null,
-            lazyLoad: false, // 🚀 Eager load so it's ready in 2-3s
+            lazyLoad: false,
           );
         } else if (lastSong.filePath.startsWith('http')) {
-          // 🚀 FIX: Stream URL (Tidal) may have expired — re-resolve it
-          debugPrint(
-              "🔄 Startup: Re-resolving expired stream URL for '${lastSong.title}'");
-          final freshStreamUrl = await _getJitStreamUrl(lastSong);
-          if (freshStreamUrl != null) {
-            lastSong = lastSong.copyWith(filePath: freshStreamUrl);
-            state = state.copyWith(currentSong: lastSong);
+          // OPTIMIZATION: If the URL is already a valid Tidal stream URL from our server
+          // (contains /stream? and id=), reuse it directly. The server handles auth refresh
+          // internally, so the URL is stable. This saves ~1-2s of redundant Tidal search.
+          final isTidalStreamUrl = lastSong.filePath.contains('/stream?') &&
+              lastSong.filePath.contains('id=');
+          if (isTidalStreamUrl) {
+            debugPrint(
+                "🔄 Startup: Reusing existing Tidal stream URL for '${lastSong.title}'");
             _musicService.load(
               lastSong,
               initialPosition: lastPosition > 0
@@ -416,8 +485,23 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
               lazyLoad: false,
             );
           } else {
-            // Tidal can't find it anymore — just show the song info, don't autoplay
-            state = state.copyWith(isPlaying: false, isBuffering: false);
+            debugPrint(
+                "🔄 Startup: Re-resolving expired stream URL for '${lastSong.title}'");
+            final freshStreamUrl = await _getJitStreamUrl(lastSong);
+            if (freshStreamUrl != null) {
+              lastSong = lastSong.copyWith(filePath: freshStreamUrl);
+              state = state.copyWith(currentSong: lastSong);
+              _musicService.load(
+                lastSong,
+                initialPosition: lastPosition > 0
+                    ? Duration(seconds: lastPosition.round())
+                    : null,
+                lazyLoad: false,
+              );
+            } else {
+              // Tidal can't find it anymore — just show the song info, don't autoplay
+              state = state.copyWith(isPlaying: false, isBuffering: false);
+            }
           }
         } else {
           // File missing or cloud stream - use load (prepare but don't autoplay)
@@ -431,19 +515,18 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           state = state.copyWith(isPlaying: false);
         }
 
-        // 🚀 RESTORE THRESHOLD STATE (Fixes stats not logging after app restart)
         final savedThresholdPath = prefs.getString('threshold_song_path');
         if (savedThresholdPath == lastSong.filePath) {
           _isThresholdMet = prefs.getBool('threshold_met') ?? false;
           _cumulativeSecondsListened =
               prefs.getDouble('cumulative_seconds') ?? 0.0;
-          _lastLogPosition = lastPosition; // Prevent double-counting on resume
+          _lastLogPosition = lastPosition;
         } else {
           // Different song - reset threshold state
           _startNewSession(resetTime: false);
         }
 
-        // 🚀 RESTORE CACHE CLEAR TIMER
+        // RESTORE CACHE CLEAR TIMER
         _cacheClearListeningTimer =
             prefs.getDouble('cache_clear_listening_timer') ?? 0.0;
       } catch (e) {
@@ -462,7 +545,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       final settings = ref.read(settingsProvider);
       _discordService.setEnabled(settings.enableDiscordRpc);
 
-      // 🚀 Sync Discord presence after Discord connects (~6 seconds to be safe)
+      // Sync Discord presence after Discord connects (~6 seconds to be safe)
       // This ensures the current song is sent to Discord even on app restart
       Future.delayed(const Duration(seconds: 6), () {
         if (state.currentSong != null) {
@@ -472,7 +555,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
       // Initialize Taskbar Service
       _taskbarService.initialize(
-        onPlay: () => _musicService.resume(),
+        onPlay: () => _musicService.resume(
+          lastKnownPosition: state.currentSong != null
+              ? Duration(milliseconds: (state.currentPosition * 1000).toInt())
+              : null,
+        ),
         onPause: () => _musicService.pause(),
         onNext: () => playNext(),
         onPrevious: () => playPrevious(),
@@ -480,7 +567,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
       // Initialize Remote Control
       _remoteService.init().then((_) async {
-        // 🚀 Set initial state BEFORE listening to prevent stale server data from overwriting local settings
+        // Set initial state BEFORE listening to prevent stale server data from overwriting local settings
         final loopModeInt = state.loopMode == ja.LoopMode.off
             ? 0
             : (state.loopMode == ja.LoopMode.all ? 1 : 2);
@@ -490,10 +577,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         );
 
         await _remoteService.startListening(onCommand: _handleRemoteCommand);
-        // 🚀 Only broadcast initial state if no other device is currently active
-        // isMaster will be false if startListening found an active remote session
-        if (isMaster) {
-          _broadcastRemoteState(); // Sync Initial State to server
+        // Automatically enable remote session mode if remote control is enabled in settings and not offline
+        if (!PocketBaseService.isOffline &&
+            PocketBaseService.enableRemoteControl) {
+          _isRemoteSessionActive = true;
+          if (isMaster) {
+            _broadcastRemoteState(
+                forceActive: true); // Sync Initial State to server
+          }
         }
       });
 
@@ -513,6 +604,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       if (previous?.enableDiscordRpc != next.enableDiscordRpc) {
         _discordService.setEnabled(next.enableDiscordRpc);
       }
+      if (previous?.enableReplayGain != next.enableReplayGain) {
+        _musicService.enableReplayGain = next.enableReplayGain;
+      }
     });
 
     // Initialize the Downloader Service
@@ -523,18 +617,43 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     // Load settings first (Volume, Shuffle, Repeat)
     _loadSettings();
 
-    // 🚀 SLAVE DEVICE SEEK BAR INTERPOLATOR (High-Resolution)
-    // Runs at 5Hz (200ms) to provide buttery smooth movement and
-    // maintain sub-second synchronization with the Master.
+    // SEEK BAR UPDATER & SLAVE INTERPOLATOR (High-Resolution)
+    // Runs at 5Hz (200ms) to provide buttery smooth movement.
+    // Also acts as a watchdog to update the slider if the native positionStream freezes (e.g. Android VideoPlayer conflict).
     Timer.periodic(const Duration(milliseconds: 200), (timer) {
+      if (!state.isPlaying || _isTransitioning) return;
+
       if (_isRemoteSessionActive &&
           !isMaster &&
-          state.isPlaying &&
           state.totalDuration > 0) {
         final newPos = state.currentPosition + 0.2;
         if (newPos <= state.totalDuration) {
           state = state.copyWith(currentPosition: newPos);
         }
+      } else if (isMaster) {
+        // Watchdog: If the positionStream freezes (which can happen on Android when VideoPlayer initializes),
+        // we manually fetch the position from the engine to keep the UI ticking.
+        final pos = _musicService.position;
+        final currentSecs = pos.inMilliseconds / 1000.0;
+        
+        // If the native engine position is completely stuck but we are still in a playing state,
+        // we force the slider to interpolate forward.
+        if (currentSecs == _lastEngineSecs && state.isPlaying && state.totalDuration > 0) {
+          final newPos = state.currentPosition + 0.2;
+          if (newPos <= state.totalDuration) {
+            state = state.copyWith(currentPosition: newPos);
+          } else if (newPos > state.totalDuration + 1.0) {
+            // Failsafe auto-advance if the engine is completely dead and we passed the end of the song
+            playNext(autoPlay: true);
+          }
+        } else {
+          // Engine is ticking normally (or user seeked natively), sync our state
+          if ((state.currentPosition - currentSecs).abs() > 0.4) {
+            state = state.copyWith(currentPosition: currentSecs);
+          }
+        }
+        
+        _lastEngineSecs = currentSecs;
       }
     });
 
@@ -544,229 +663,74 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
 
     _musicService.activePlayerStream.listen((player) {
-      if (!isMaster) return; // 🚀 IGNORE LOCAL ENGINE IF SLAVE
+      if (!isMaster) return;
       state = state.copyWith(audioSessionId: player.androidAudioSessionId);
     });
 
     _musicService.durationStream.listen((duration) {
-      // 🚀 FIX: Ignore duration updates during loop transition to prevent UI blink
       if (_isLooping) return;
-      if (!isMaster) return; // 🚀 IGNORE LOCAL ENGINE IF SLAVE
-      // 🚀 FIX: Ignore transient 0-duration during stream seek hot-swap
+      if (!isMaster) return;
       if (_musicService.isSeeking) return;
 
       if (duration != null) {
         final newDuration = duration.inMilliseconds / 1000.0;
-        // 🚀 Reject zero/near-zero duration if we already have a valid one (stream reload artifact)
+        // Reject zero/near-zero duration if we already have a valid one (stream reload artifact)
         if (newDuration < 1.0 && state.totalDuration > 1.0) return;
-        // 🚀 Only broadcast if duration ACTUALLY changed (prevents spam during crossfade)
+        // Only broadcast if duration ACTUALLY changed (prevents spam during crossfade)
         final durationChanged = (state.totalDuration - newDuration).abs() > 0.5;
-        // 🚀 Use millisecond precision to avoid truncation artifacts
+        // Use millisecond precision to avoid truncation artifacts
         state = state.copyWith(totalDuration: newDuration);
-        _updateDiscord(); // 🚀 Sync: Update Discord as soon as duration resolves
+        _updateDiscord();
         if (durationChanged) {
-          _broadcastRemoteState(); // 🚀 SYNC: Inform slaves of real duration (fixes seek stuck at 0:00)
+          _broadcastRemoteState();
         }
       }
     });
 
     _musicService.positionStream.listen((position) {
-      // 🚀 FIX: Ignore position updates during loop transition to prevent UI blink
       if (_isLooping) return;
-      if (!isMaster) return; // 🚀 IGNORE LOCAL ENGINE IF SLAVE
-      // 🚀 FIX: Ignore transient position resets during stream seek hot-swap
+      if (!isMaster) return;
       if (_musicService.isSeeking) return;
 
-      // 🚀 Use millisecond precision to prevent 2-3s early skip appearance
+      // Ignore resets when the player goes idle due to error/disconnect
+      if (_musicService.player.processingState == ja.ProcessingState.idle &&
+          position == Duration.zero) {
+        return;
+      }
+
+      // Use millisecond precision to prevent 2-3s early skip appearance
       final currentSecs = position.inMilliseconds / 1000.0;
       final duration = state.totalDuration;
 
-      state = state.copyWith(currentPosition: currentSecs);
+      // Stale position stream protection:
+      // Completely block position stream events while the engine is being swapped
+      if (_isTransitioning) return;
 
-      // 🚀 Reset consecutive skips on successful continuous playback (>2s)
-      if (currentSecs >= 2.0 && _consecutiveSkipCount > 0) {
-        _consecutiveSkipCount = 0;
+      // FROZEN ENGINE PROTECTION:
+      // If the position stream is stuck on the exact same position, but the app is in a playing state,
+      // it means the native Android player event channel has frozen (e.g., due to VideoPlayer conflict).
+      // We IGNORE these stale updates so the UI doesn't get snapped back, allowing the Watchdog timer to interpolate!
+      if (currentSecs == _lastEngineSecs && state.isPlaying) {
+        return;
+      }
+      
+      _lastEngineSecs = currentSecs;
+
+      if ((state.currentPosition - currentSecs).abs() > 0.2) {
+        state = state.copyWith(currentPosition: currentSecs);
       }
 
-      // 🚀 FIX: Reset completion guard once the NEW song has been playing for 2+ seconds.
-      // This keeps the flag true during the critical transition window (preventing the
-      // position listener + ProcessingState.completed double-fire race) but resets it
-      // in time for the next song's end-of-track triggers to work.
-      // 🚀 BUGFIX: Added `currentSecs < 10.0` so we don't accidentally reset the guard at
-      // the VERY END of the track when a stray position update arrives during pause/completion!
-      if (currentSecs >= 2.0 && currentSecs < 10.0 && _isHandlingCompletion) {
-        _isHandlingCompletion = false;
-      }
-
-      // 🚀 SMART SLEEP TIMER FADE & INTERCEPT (Highest Priority)
-      if (state.isSleepPending && duration > 0 && !_isHandlingCompletion) {
-        if (duration > 10.0 && currentSecs >= (duration - 10.0)) {
-          double fraction = (duration - currentSecs) / 10.0;
-          if (fraction < 0.0) fraction = 0.0;
-          if (fraction > 1.0) fraction = 1.0;
-          _musicService.setVolume(state.unmutedVolume * fraction);
-        }
-
-        // 🚀 Intercept the end of the track to PAUSE instead of skipping or repeating.
-        // Triggers at -0.4s to beat both LoopOne (-0.3s) and Crossfade/Gapless.
-        if (currentSecs >= (duration - 0.4)) {
-          _isHandlingCompletion = true;
-          _finalizePlaySession();
-          state = state.copyWith(isPlaying: false, isSleepPending: false);
-          _musicService.pause();
-          _musicService
-              .setVolume(state.volume); // Restore raw volume for next day
-          return;
-        }
-      }
-
-      // 🚀 Manual Loop One Logic (Only if not sleeping)
-      if (state.loopMode == ja.LoopMode.one &&
-          duration > 0 &&
-          !_isHandlingCompletion) {
-        if (currentSecs >= (duration - 0.3)) {
-          _forceLoopOne();
-          return;
-        }
-      }
-
-      // 🚀 CROSSFADE / GAPLESS TRIGGER (Skip if Repeat One is active or Sleeping)
-      final settings = ref.read(settingsProvider);
-      final crossfadeLen = settings.crossfadeDuration;
-      final isGapless = settings.gaplessPlayback;
-
-      if (duration > 0 &&
-          !_isHandlingCompletion &&
-          state.loopMode != ja.LoopMode.one &&
-          !state.isSleepPending) {
-        if (crossfadeLen > 0.1) {
-          // Crossfade: Trigger early (at duration - crossfadeLen)
-          if (currentSecs >= (duration - crossfadeLen)) {
-            _isHandlingCompletion = true;
-            _finalizePlaySession();
-            playNext(autoPlay: true);
-          }
-        } else if (isGapless) {
-          // Gapless: Trigger slightly early (200ms) to ensure smooth transition
-          if (currentSecs >= (duration - 0.2)) {
-            _isHandlingCompletion = true;
-            _finalizePlaySession();
-            playNext(autoPlay: true);
-          }
-        }
-      }
-
-      // 💾 Periodic Save (Every 10 seconds)
-      // This ensures we save position even if app is killed while playing
-      if ((currentSecs - _lastSavedPosition).abs() > 10) {
-        _saveSettings();
-        _lastSavedPosition = currentSecs;
-      }
-
-      // 🚀 MULTI-CHECKPOINT PRELOAD: Trigger at 0%, 30%, 70%
-      if (duration > 0) {
-        final progressPercent = currentSecs / duration;
-
-        // Check each threshold
-        for (final threshold in [10, 35, 70]) {
-          if (!_preloadCheckpoints.contains(threshold) &&
-              progressPercent >= threshold / 100) {
-            _preloadCheckpoints.add(threshold);
-            _preloadNextSong();
-            break; // Only trigger one per position update
-          }
-        }
-      }
-
-      // 🚀 Discord Sync: Update every 30 seconds to keep rich presence accurate and check connection health
-      final posInSeconds = currentSecs.toInt();
-      if (posInSeconds > 0 && posInSeconds % 30 == 0 && state.isPlaying) {
-        if (_lastDiscordSyncSeconds != posInSeconds) {
-          _lastDiscordSyncSeconds = posInSeconds;
-          _updateDiscord();
-        }
-      }
-
-      // Stats Logic
-      if (DateTime.now().difference(_lastSongChangeTime).inSeconds < 2) return;
-
-      if (state.currentSong != null && state.isPlaying) {
-        double delta = currentSecs - _lastLogPosition;
-        if (delta >= 1.0 && delta < 5.0) {
-          int secondsToLog = delta.toInt();
-          ref
-              .read(statsProvider.notifier)
-              .logTime(state.currentSong!, secondsToLog);
-          _cumulativeSecondsListened += delta;
-          _cacheClearListeningTimer += delta;
-
-          // 🚀 STREAMING DATA USAGE TRACKING
-          // Estimate bytes consumed based on bitrate × duration.
-          // Only count when actively streaming from HTTP (not local files).
-          final currentPath = state.currentSong!.filePath;
-          final isStreaming = currentPath.startsWith('http://') ||
-              currentPath.startsWith('https://');
-          if (isStreaming) {
-            // Bitrate heuristic by quality tier:
-            //   - lossless (FLAC HI_RES): ~1100 kbps
-            //   - high (320 kbps mp3): ~320 kbps
-            //   - standard (128 kbps mp3): ~128 kbps
-            int bitrateKbps = 320; // safe default
-            if (currentPath.contains('HI_RES_LOSSLESS') ||
-                currentPath.contains('LOSSLESS')) {
-              bitrateKbps = 1100;
-            } else if (currentPath.contains('quality=HIGH') ||
-                currentPath.contains('LOW')) {
-              bitrateKbps = 320;
-            }
-            // Bytes = (kbps × 1000 / 8) × seconds
-            final bytesConsumed = ((bitrateKbps * 1000) ~/ 8) * secondsToLog;
-            ref.read(dataUsageProvider.notifier).addBytes(bytesConsumed);
-          }
-
-          // 🚀 AUTO CLEAR CACHE LOGIC
-          final settings = ref.read(settingsProvider);
-          final clearMode = settings.autoClearCache;
-          double cacheThreshold = 0;
-          if (clearMode == 'every_30min') {
-            cacheThreshold = 1800; // 30 mins
-          }
-
-          if (cacheThreshold > 0 &&
-              _cacheClearListeningTimer >= cacheThreshold) {
-            _downloaderService.clearCache();
-            _cacheClearListeningTimer = 0;
-            // Immediate save to prevent double-clear on crash
-            SharedPreferences.getInstance()
-                .then((p) => p.setDouble('cache_clear_listening_timer', 0.0));
-          }
-
-          // Advance log position only by the truncated integer so fraactional left-over is preserved
-          _lastLogPosition += secondsToLog;
-        } else if (delta < 0 || delta >= 5.0) {
-          // Seek or new song
-          _lastLogPosition = currentSecs;
-        }
-      }
-
-      if (!_isSessionLogged && !_isThresholdMet && state.totalDuration > 0) {
-        if (_cumulativeSecondsListened >=
-            (state.totalDuration * _playCountThreshold)) {
-          _isThresholdMet = true;
-        }
-      }
+      _processSharedPositionLogic(currentSecs, duration, isUsbAudio: false);
     });
 
-    // 🚀 HANDLE ASYNCHRONOUS PLAYBACK ERRORS (Streaming / Decoding)
+    // HANDLE ASYNCHRONOUS PLAYBACK ERRORS (Streaming / Decoding)
     _musicService.playbackEventStream.listen((event) {
       // Normal playback events can be ignored as they are handled elsewhere
     }, onError: (error, stackTrace) {
-      if (_musicService.isSeeking)
-        return; // 🚀 Ignore during Android absolute seeks
+      if (_musicService.isSeeking) {
+        return; // Ignore during Android absolute seeks
+      }
 
-      // 🚀 CROSSFADE STREAM RECOVERY: If the incoming stream fails during crossfade
-      // (e.g. TLS error), don't skip — retry the SAME song via normal play after the
-      // crossfade fades out the old player. This prevents silence.
       if (_musicService.isCrossfading) {
         DebugLogService().info(
             "[Player] Stream error during crossfade — scheduling recovery replay for: ${state.currentSong?.title}");
@@ -785,8 +749,64 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         return;
       }
 
-      if (_isHandlingCompletion) return; // Already transitioning
+      if (_isHandlingCompletion) return;
 
+      // RETRY CURRENT SONG: If we haven't exhausted retries, try to resume
+      // the same song at the last known position instead of skipping.
+      final retrySong = state.currentSong;
+      final retryPosition = state.currentPosition;
+      if (_currentSongRetryCount < _maxSongRetries && retrySong != null) {
+        _currentSongRetryCount++;
+        _isRecoveringFromCrash = true;
+        _isHandlingCompletion = true;
+        _musicService.recreateActivePlayer();
+        DebugLogService().info(
+            "[Player] 🔄 Stream error — retrying current song '${retrySong.title}' at ${retryPosition.toStringAsFixed(1)}s (attempt $_currentSongRetryCount/$_maxSongRetries)");
+
+        final errorToken = _playRequestToken;
+        Future.delayed(const Duration(milliseconds: 800), () async {
+          if (errorToken != _playRequestToken) {
+            _isRecoveringFromCrash = false;
+            return;
+          }
+          // Re-resolve the stream URL in case the CDN link expired
+          final isOnlineStream = retrySong.filePath.startsWith('http');
+          SongModel songToPlay = retrySong;
+          if (isOnlineStream) {
+            try {
+              final freshUrl = await _getJitStreamUrl(retrySong);
+              if (freshUrl != null) {
+                songToPlay = retrySong.copyWith(filePath: freshUrl);
+                // Update state so the UI reflects the new URL
+                state = state.copyWith(currentSong: songToPlay);
+              }
+            } catch (e) {
+              DebugLogService().warning(
+                  "[Player] Failed to re-resolve stream URL: $e");
+            }
+          }
+          final resumePos = retryPosition > 1.0
+              ? Duration(milliseconds: (retryPosition * 1000).toInt())
+              : null;
+          final success = await _executePlayRouting(songToPlay,
+              crossfadeDuration: 0.0, initialPosition: resumePos);
+          _isHandlingCompletion = false;
+          if (success) {
+            DebugLogService().info(
+                "[Player] ✅ Retry succeeded for '${retrySong.title}'");
+          } else {
+            DebugLogService().warning(
+                "[Player] ❌ Retry failed for '${retrySong.title}', skipping...");
+            _currentSongRetryCount = 0;
+            await playNext(autoPlay: true);
+          }
+          _isRecoveringFromCrash = false;
+        });
+        return;
+      }
+
+      // Exhausted retries — fall through to skip logic
+      _currentSongRetryCount = 0;
       _consecutiveSkipCount++;
       if (_consecutiveSkipCount >= _maxConsecutiveSkips) {
         _consecutiveSkipCount = 0;
@@ -794,13 +814,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       } else {
         _isHandlingCompletion = true;
         _isRecoveringFromCrash = true;
-        _musicService.recreateActivePlayer(); // 🚀 Recreate dead player
+        _musicService.recreateActivePlayer();
         _finalizePlaySession();
 
-        // 🚀 Throttled Retry
+        // Throttled Retry
         final errorToken = _playRequestToken;
         Future.delayed(const Duration(milliseconds: 1500), () async {
-          // 🚀 FIX: Prevent auto-skip if user already initiated a new playback request
           if (errorToken == _playRequestToken) {
             await playNext(autoPlay: true);
           }
@@ -813,23 +832,85 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       final isPlaying = playerState.playing;
       final processingState = playerState.processingState;
 
-      // 🚀 CRASH DETECTION: ProcessingState.idle + playing=true is an impossible state
-      // that only occurs when MediaKit/MPV kills the player mid-playback (e.g. AAC decode error).
-      // The platform player has been disposed — we must recreate it and skip to next.
+      // Sync buffering state from native player engine (only for online streams)
+      final isOnline = state.currentSong?.filePath.startsWith('http') ?? false;
+      if (processingState == ja.ProcessingState.buffering) {
+        if (isOnline && !state.isBuffering) {
+          state = state.copyWith(isBuffering: true);
+        }
+      } else if (processingState == ja.ProcessingState.ready ||
+          processingState == ja.ProcessingState.completed ||
+          processingState == ja.ProcessingState.idle) {
+        if (state.isBuffering) {
+          state = state.copyWith(isBuffering: false);
+        }
+      }
+
       if (processingState == ja.ProcessingState.idle &&
           isPlaying &&
           state.isPlaying) {
-        // 🚀 FIX: Ignore idle state if a new song is currently being loaded to prevent false positives during fast skips.
-        // CRITICAL: _musicService.isLoading is now set TRUE at the very top of NMS.play() (before stop/setAudioSource),
-        // so it covers the full source-switching window including the idle+true transition on Android.
         if (_isHandlingCompletion ||
             _isLooping ||
             _isRecoveringFromCrash ||
             _musicService.isSeeking ||
             _musicService.isLoading ||
-            _musicService.isCrossfading) return;
+            _musicService.isCrossfading) {
+          return;
+        }
         _isRecoveringFromCrash = true;
 
+        // RETRY CURRENT SONG on unexpected idle (same logic as playbackEvent error)
+        final retrySong = state.currentSong;
+        final retryPosition = state.currentPosition;
+        if (_currentSongRetryCount < _maxSongRetries && retrySong != null) {
+          _currentSongRetryCount++;
+          _isHandlingCompletion = true;
+          _musicService.recreateActivePlayer();
+          DebugLogService().info(
+              "[Player] 🔄 Unexpected idle — retrying '${retrySong.title}' at ${retryPosition.toStringAsFixed(1)}s (attempt $_currentSongRetryCount/$_maxSongRetries)");
+
+          final crashToken = _playRequestToken;
+          Future.microtask(() async {
+            if (crashToken != _playRequestToken) {
+              _isRecoveringFromCrash = false;
+              return;
+            }
+            final isOnlineStream = retrySong.filePath.startsWith('http');
+            SongModel songToPlay = retrySong;
+            if (isOnlineStream) {
+              try {
+                final freshUrl = await _getJitStreamUrl(retrySong);
+                if (freshUrl != null) {
+                  songToPlay = retrySong.copyWith(filePath: freshUrl);
+                  state = state.copyWith(currentSong: songToPlay);
+                }
+              } catch (e) {
+                DebugLogService().warning(
+                    "[Player] Failed to re-resolve stream URL: $e");
+              }
+            }
+            final resumePos = retryPosition > 1.0
+                ? Duration(milliseconds: (retryPosition * 1000).toInt())
+                : null;
+            final success = await _executePlayRouting(songToPlay,
+                crossfadeDuration: 0.0, initialPosition: resumePos);
+            _isHandlingCompletion = false;
+            if (success) {
+              DebugLogService().info(
+                  "[Player] ✅ Idle retry succeeded for '${retrySong.title}'");
+            } else {
+              DebugLogService().warning(
+                  "[Player] ❌ Idle retry failed for '${retrySong.title}', skipping...");
+              _currentSongRetryCount = 0;
+              await playNext(autoPlay: true);
+            }
+            _isRecoveringFromCrash = false;
+          });
+          return;
+        }
+
+        // Exhausted retries — fall through to skip
+        _currentSongRetryCount = 0;
         _consecutiveSkipCount++;
         if (_consecutiveSkipCount >= _maxConsecutiveSkips) {
           _consecutiveSkipCount = 0;
@@ -838,11 +919,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         } else {
           _musicService.recreateActivePlayer();
           _finalizePlaySession();
-          // 🚀 NON-BLOCKING: Use Future.microtask to avoid blocking the stream listener
+          // NON-BLOCKING: Use Future.microtask to avoid blocking the stream listener
           // playNext involves potentially long JIT cache downloads
           final crashToken = _playRequestToken;
           Future.microtask(() async {
-            // 🚀 FIX: Prevent auto-skip if user already initiated a new playback request
             if (crashToken == _playRequestToken) {
               await playNext(autoPlay: true);
             }
@@ -854,15 +934,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
       if (processingState == ja.ProcessingState.completed) {
         if (_isHandlingCompletion) return;
-        // 🚀 FIX: Ignore spurious `completed` events emitted by just_audio on Android
-        // when setAudioSource() is called during source switching (e.g. user taps new song).
-        // This is the root cause of the "skip-to-next" bug: the player briefly reports
-        // `completed` while transitioning sources on certain Android versions.
-        // Since NMS.play() now sets _isLoading=true immediately, this flag covers
-        // the full source-switching window including any spurious completed events.
         if (_musicService.isLoading) return;
 
-        // 🚀 ADDITIONAL PROTECT: Platform channels are asynchronous. The spurious completed
+        // ADDITIONAL PROTECT: Platform channels are asynchronous. The spurious completed
         // event might arrive slightly AFTER _isLoading is flipped back to false.
         // Debounce: Ignore any 'completed' event firing within 1.5 seconds of a fresh request!
         if (DateTime.now().difference(_lastPlayRequestTime).inMilliseconds <
@@ -874,13 +948,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
         _isHandlingCompletion = true;
 
-        // 🚀 MOBILE FIX: On Android/iOS, wait for the audio buffer to drain
         // Only delay if NEITHER crossfade nor gapless is enabled.
         final settings = ref.read(settingsProvider);
         final useDelay =
             !settings.gaplessPlayback && settings.crossfadeDuration < 0.1;
 
-        // 🚀 Capture token to detect stale handlers (e.g. if user manually skips during the 1s delay)
+        // Capture token to detect stale handlers (e.g. if user manually skips during the 1s delay)
         final completionToken = _playRequestToken;
         Future.delayed(
           (Platform.isWindows ||
@@ -899,7 +972,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
               _finalizePlaySession();
               state = state.copyWith(isPlaying: false, isSleepPending: false);
               _musicService.pause();
-              _musicService.setVolume(state.volume); // Restore raw volume
+              _musicService.setVolume(state.volume);
             } else if (state.loopMode == ja.LoopMode.one) {
               _forceLoopOne();
             } else {
@@ -911,28 +984,33 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         return;
       }
 
-      if (!isMaster) return; // 🚀 IGNORE LOCAL ENGINE IF SLAVE
+      if (!isMaster) return;
+
+      // C++ Engine Override: When C++ Engine is active, ExoPlayer is kept paused in the background.
+      // Seeking ExoPlayer causes it to emit a false "paused" state stream update.
+      // Do NOT let ExoPlayer's paused state override our true UI state!
+      if (_isUsingCppEngine() && _isCppEnginePrepared) {
+        return;
+      }
 
       if (state.isPlaying != isPlaying) {
-        // 🚀 FIX: Ignore 'paused' state while looping to avoid UI flicker (blink)
         if (_isLooping && !isPlaying) {
           return;
         }
 
-        // 🚀 FIX: Ignore state changes from freshly recreated player during crash recovery
         if (_isRecoveringFromCrash) {
           return;
         }
 
         state = state.copyWith(isPlaying: isPlaying);
         _updateDiscord();
-        _updateTaskbar(); // UPDATE TASKBAR STATUS
-        _broadcastRemoteState(); // Sync Play/Pause
+        _updateTaskbar();
+        _broadcastRemoteState();
       }
     });
   }
 
-  // --- DOWNLOAD INTEGRATION ---
+  // DOWNLOAD INTEGRATION
   Future<bool> downloadFromSearch({
     required String youtubeUrl,
     required String artist,
@@ -958,30 +1036,30 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     return true;
   }
 
-  // --- QUEUE MANAGEMENT METHODS ---
+  // QUEUE MANAGEMENT METHODS
 
   void reorderUserQueue(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
-    _preloadRequestToken++; // 🚀 Cancel outdated preloads
+    _preloadRequestToken++;
     final newQueue = List<SongModel>.from(state.userQueue);
     final song = newQueue.removeAt(oldIndex);
     newQueue.insert(newIndex, song);
 
     state = state.copyWith(userQueue: newQueue);
-    _preloadCheckpoints.clear(); // 🚀 Re-trigger preload for new next song
+    _preloadCheckpoints.clear(); // Re-trigger preload for new next song
     _preloadingTitle = null; // Allow preloading a different song
-    _saveQueueState(); // SAVE STATE
+    _saveQueueState();
   }
 
   void removeUserQueueItem(int index) {
     if (index < 0 || index >= state.userQueue.length) return;
-    _preloadRequestToken++; // 🚀 Cancel outdated preloads
+    _preloadRequestToken++;
     final newQueue = List<SongModel>.from(state.userQueue);
     newQueue.removeAt(index);
     state = state.copyWith(userQueue: newQueue);
-    _preloadCheckpoints.clear(); // 🚀 Re-trigger preload for new next song
+    _preloadCheckpoints.clear();
     _preloadingTitle = null;
     _saveQueueState();
   }
@@ -1005,7 +1083,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (oldIndex < 0 ||
         oldIndex >= state.recommendationQueue.length ||
         newIndex < 0 ||
-        newIndex >= state.recommendationQueue.length) return;
+        newIndex >= state.recommendationQueue.length) {
+      return;
+    }
 
     _preloadRequestToken++;
     final newQueue = List<SongModel>.from(state.recommendationQueue);
@@ -1025,9 +1105,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (oldIndex < 0 ||
         oldIndex >= state.playlist.length ||
         newIndex < 0 ||
-        newIndex >= state.playlist.length) return;
+        newIndex >= state.playlist.length) {
+      return;
+    }
 
-    _preloadRequestToken++; // 🚀 Cancel outdated preloads
+    _preloadRequestToken++;
     final newPlaylist = List<SongModel>.from(state.playlist);
     final song = newPlaylist.removeAt(oldIndex);
     newPlaylist.insert(newIndex, song);
@@ -1048,12 +1130,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             .indexWhere((s) => s.filePath == state.currentSong!.filePath);
       }
     }
-    _saveQueueState(); // SAVE STATE
-    _preloadCheckpoints.clear(); // 🚀 Re-trigger preload for new next song
+    _saveQueueState();
+    _preloadCheckpoints.clear();
     _preloadingTitle = null;
   }
 
-  // 🚀 SERIALIZED DOWNLOAD HELPER
+  // SERIALIZED DOWNLOAD HELPER
   // Ensures only 1 download happens at a time (e.g. current song + preload) to save bandwidth
   Future<void> _safeCacheSong(SongMetadata meta,
       {String? youtubeUrl, String? streamUrl, int? preloadToken}) async {
@@ -1061,7 +1143,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       await _preloadLock!.future;
     }
 
-    // 🚀 Check if this preload request was superseded while waiting for the lock
+    // Check if this preload request was superseded while waiting for the lock
     if (preloadToken != null && preloadToken != _preloadRequestToken) {
       return;
     }
@@ -1071,7 +1153,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       await _smartService.cacheSong(meta,
           youtubeUrl: youtubeUrl, streamUrl: streamUrl);
 
-      // 🚀 HOT-SWAP: If the currently playing song was just cached, update its model
+      // HOT-SWAP: If the currently playing song was just cached, update its model
       if (state.currentSong != null &&
           state.currentSong!.title == meta.title &&
           state.currentSong!.artist == meta.artist) {
@@ -1089,9 +1171,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
   }
 
-  /// 🚀 BUGFIX: Unified helper to schedule a delayed background FLAC cache for the
-  /// currently-streaming song. All 5 playback branches delegate to this instead of
-  /// duplicating the Future.delayed + identity guard + _safeCacheSong pattern.
   void _scheduleStreamingCacheIfEnabled({
     required SongModel song,
     required String streamUrl,
@@ -1112,9 +1191,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       deezerId: song.deezerId,
     );
     Future.delayed(const Duration(seconds: 15), () {
-      // 🚀 Token guard: skip if a newer play request superseded this one
+      // Token guard: skip if a newer play request superseded this one
       if (currentToken != null && currentToken != _playRequestToken) return;
-      // 🚀 Title+artist identity guard (survives filePath hot-swap by _safeCacheSong)
+      // Title+artist identity guard (survives filePath hot-swap by _safeCacheSong)
       if (state.currentSong?.title == song.title &&
           state.currentSong?.artist == song.artist) {
         _safeCacheSong(meta, youtubeUrl: song.sourceUrl, streamUrl: streamUrl);
@@ -1122,7 +1201,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     });
   }
 
-  /// 🚀 NEW: Synchronize a song update across the entire player state (Current, Playlist, Queue)
+  // Synchronize a song update across the entire player state (Current, Playlist, Queue)
   void _updateSongInState(SongModel oldSong, SongModel newSong) {
     // 1. Update Currently Playing
     if (state.currentSong?.filePath == oldSong.filePath &&
@@ -1161,28 +1240,25 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     // Append to userQueue (FIFO for Play Next batch) instead of prepending
     final newQueue = List<SongModel>.from(state.userQueue)..add(song);
 
-    // 🚀 NEW: Remove from recommendation section if added manually
+    // Remove from recommendation section if added manually
     final newRecQueue = List<SongModel>.from(state.recommendationQueue);
-    newRecQueue.removeWhere((s) => s.title == song.title && s.artist == song.artist);
+    newRecQueue
+        .removeWhere((s) => s.title == song.title && s.artist == song.artist);
 
-    state = state.copyWith(userQueue: newQueue, recommendationQueue: newRecQueue);
-    _saveQueueState(); // SAVE STATE
-
-    // 🚀 FIX: Fire preload in background (non-blocking).
-    // Previously this was awaited, which meant rapid "Play Next" taps would
-    // serialize downloads and block the calling UI/method for 10-30 seconds.
-    // The queue state is already saved above — the download is purely for caching.
+    state =
+        state.copyWith(userQueue: newQueue, recommendationQueue: newRecQueue);
+    _saveQueueState();
     _preloadPlayNextSong(song);
   }
 
-  /// 🚀 Background preloader for Play Next queue items.
+  /// Background preloader for Play Next queue items.
   /// Non-blocking: runs in background so insertSongNext returns immediately.
   void _preloadPlayNextSong(SongModel song) async {
     try {
       if (await File(song.filePath).exists()) return;
 
-      // 🚀 BUGFIX: Gate streamed preloads on cacheStreamedSongs toggle.
-      final isYtSource = song.sourceUrl != null && song.sourceUrl!.contains('youtube');
+      final isYtSource =
+          song.sourceUrl != null && song.sourceUrl!.contains('youtube');
       if (!isYtSource && !ref.read(settingsProvider).cacheStreamedSongs) {
         return;
       }
@@ -1203,7 +1279,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       await _safeCacheSong(meta,
           youtubeUrl: song.sourceUrl, preloadToken: preReqToken);
 
-      // 🚀 Update the song in state with resolved cached path
+      // Update the song in state with resolved cached path
       final cachedPath = await _smartService.getPredictedCachePath(meta);
       if (await File(cachedPath).exists() &&
           await File(cachedPath).length() > 1024) {
@@ -1219,18 +1295,20 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   void addToQueue(SongModel song) async {
     final newQueue = List<SongModel>.from(state.userQueue)..add(song);
 
-    // 🚀 NEW: Remove from recommendation section if added manually
+    // Remove from recommendation section if added manually
     final newRecQueue = List<SongModel>.from(state.recommendationQueue);
-    newRecQueue.removeWhere((s) => s.title == song.title && s.artist == song.artist);
+    newRecQueue
+        .removeWhere((s) => s.title == song.title && s.artist == song.artist);
 
-    state = state.copyWith(userQueue: newQueue, recommendationQueue: newRecQueue);
-    _saveQueueState(); // SAVE STATE
-    _broadcastRemoteState(); // 📢 UPDATE REMOTE CLIENT
+    state =
+        state.copyWith(userQueue: newQueue, recommendationQueue: newRecQueue);
+    _saveQueueState();
+    _broadcastRemoteState();
 
-    // 🚀 TRIGGER PRELOAD (serialized: waits for any active preload)
+    // TRIGGER PRELOAD (serialized: waits for any active preload)
     if (!await File(song.filePath).exists()) {
-      // 🚀 BUGFIX: Gate streamed preloads on cacheStreamedSongs toggle.
-      final isYtSource = song.sourceUrl != null && song.sourceUrl!.contains('youtube');
+      final isYtSource =
+          song.sourceUrl != null && song.sourceUrl!.contains('youtube');
       if (!isYtSource && !ref.read(settingsProvider).cacheStreamedSongs) {
         return;
       }
@@ -1262,12 +1340,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     final newQueue = List<SongModel>.from(state.userQueue);
     newQueue.remove(song);
 
-    // 🚀 NEW: Remove from recommendation section if played directly
+    // Remove from recommendation section if played directly
     final newRecQueue = List<SongModel>.from(state.recommendationQueue);
-    newRecQueue.removeWhere((s) => s.title == song.title && s.artist == song.artist);
+    newRecQueue
+        .removeWhere((s) => s.title == song.title && s.artist == song.artist);
 
-    state = state.copyWith(userQueue: newQueue, recommendationQueue: newRecQueue);
-    _saveQueueState(); // SAVE STATE
+    state =
+        state.copyWith(userQueue: newQueue, recommendationQueue: newRecQueue);
+    _saveQueueState();
 
     // Save to history
     ref.read(historyProvider.notifier).addToHistory(
@@ -1281,19 +1361,23 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     // JIT / REBUFFER CHECK (Fixes "Cloud Stream Error" and Missing Files)
     final readySong = await _ensureFileExists(song);
 
-    state = state.copyWith(currentSong: readySong, isPlaying: true);
+    state = state.copyWith(
+      currentSong: readySong,
+      isPlaying: true,
+      currentPosition: 0.0,
+    );
 
     await _musicService.play(readySong);
     _updateDiscord();
     _broadcastRemoteState(); // Sync Song Change
   }
 
-  // --- COLOR EXTRACTION (Fixed for MP3s and Streaming) ---
+  // COLOR EXTRACTION (Fixed for MP3s and Streaming)
   Future<void> _extractPalette(SongModel song) async {
     if (_isExtractingPalette) return;
     _isExtractingPalette = true;
 
-    // 🚀 OFF-LOAD: Run in microtask to avoid blocking the current animation frame
+    // OFF-LOAD: Run in microtask to avoid blocking the current animation frame
     Future.microtask(() async {
       try {
         final filePath = song.filePath;
@@ -1328,7 +1412,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
                   state = state.copyWith(dominantColor: poppedColor);
                   _isExtractingPalette = false;
-                  return; // Success with local art
+                  return;
                 }
               }
             }
@@ -1341,10 +1425,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         if (song.onlineArtUrl != null && song.onlineArtUrl!.isNotEmpty) {
           try {
             final palette = await PaletteGenerator.fromImageProvider(
-              ResizeImage(NetworkImage(song.onlineArtUrl!), width: 150, height: 150),
+              ResizeImage(NetworkImage(song.onlineArtUrl!),
+                  width: 150, height: 150),
               maximumColorCount: 20,
             ).timeout(const Duration(
-                seconds: 5)); // 🚀 Timeout to prevent blocking offline
+                seconds: 5)); // Timeout to prevent blocking offline
 
             Color? color = palette.lightVibrantColor?.color ??
                 palette.vibrantColor?.color ??
@@ -1375,12 +1460,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     });
   }
 
-  // --- SETTINGS LOADING ---
+  // SETTINGS LOADING
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final savedVolume = prefs.getDouble('volume') ?? 0.5;
     await _musicService.setVolume(savedVolume);
-    _broadcastRemoteState(); // Sync Volume
+    _musicService.enableReplayGain = prefs.getBool('enableReplayGain') ?? true;
+    _broadcastRemoteState();
 
     final savedShuffle = prefs.getBool('shuffle') ?? false;
     final savedLoopIndex = prefs.getInt('loopMode') ?? 0;
@@ -1401,7 +1487,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     );
   }
 
-  // --- QUEUE PERSISTENCE ---
+  // QUEUE PERSISTENCE
   Future<void> _saveQueueState() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -1419,6 +1505,238 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     await prefs.setString('queue_original_playlist', originalPlaylistJson);
     await prefs.setString('queue_user_queue', userQueueJson);
     await prefs.setString('queue_recommendation', recommendationQueueJson);
+  }
+
+  void _processSharedPositionLogic(double currentSecs, double duration,
+      {bool isUsbAudio = false}) {
+    // Reset consecutive skips and song retry count on successful continuous playback (>2s)
+    if (currentSecs >= 2.0 && _consecutiveSkipCount > 0) {
+      _consecutiveSkipCount = 0;
+    }
+    if (currentSecs >= 2.0 && _currentSongRetryCount > 0) {
+      _currentSongRetryCount = 0;
+    }
+
+    if (currentSecs >= 2.0 && currentSecs < 10.0 && _isHandlingCompletion) {
+      _isHandlingCompletion = false;
+    }
+
+    // SMART SLEEP TIMER FADE & INTERCEPT (Highest Priority)
+    if (state.isSleepPending && duration > 0 && !_isHandlingCompletion) {
+      if (duration > 10.0 && currentSecs >= (duration - 10.0)) {
+        double fraction = (duration - currentSecs) / 10.0;
+        if (fraction < 0.0) fraction = 0.0;
+        if (fraction > 1.0) fraction = 1.0;
+        _musicService.setVolume(state.unmutedVolume * fraction);
+        if (isUsbAudio) {
+          UsbAudioService.setVolume(state.unmutedVolume * fraction);
+        }
+      }
+
+      // Intercept the end of the track to PAUSE instead of skipping or repeating.
+      // Triggers at -0.4s to beat both LoopOne (-0.3s) and Crossfade/Gapless.
+      if (currentSecs >= (duration - 0.4)) {
+        _isHandlingCompletion = true;
+        _finalizePlaySession();
+        state = state.copyWith(isPlaying: false, isSleepPending: false);
+        _musicService.pause();
+        _musicService.setVolume(state.volume);
+        if (isUsbAudio) {
+          UsbAudioService.pause();
+          UsbAudioService.setVolume(state.volume);
+        }
+        return;
+      }
+    }
+
+    // Manual Loop One Logic (Only if not sleeping)
+    if (state.loopMode == ja.LoopMode.one &&
+        duration > 0 &&
+        !_isHandlingCompletion) {
+      if (currentSecs >= (duration - 0.3)) {
+        _forceLoopOne();
+        return;
+      }
+    }
+
+    // CROSSFADE / GAPLESS TRIGGER (Skip if Repeat One is active or Sleeping)
+    final settings = ref.read(settingsProvider);
+    final crossfadeLen = settings.crossfadeDuration;
+    final isGapless = settings.gaplessPlayback;
+
+    if (duration > 0 &&
+        !_isHandlingCompletion &&
+        state.loopMode != ja.LoopMode.one &&
+        !state.isSleepPending) {
+      final canCrossfade = _canCrossfadeWithNextSong();
+      if (crossfadeLen > 0.1 && canCrossfade) {
+        // Crossfade: Trigger early (at duration - crossfadeLen)
+        if (currentSecs >= (duration - crossfadeLen)) {
+          _isHandlingCompletion = true;
+          _finalizePlaySession();
+          playNext(autoPlay: true);
+        }
+      } else if (isGapless || (crossfadeLen > 0.1 && !canCrossfade)) {
+        // Gapless or Crossfade fallback: Trigger slightly early to ensure smooth transition.
+        // For USB/JNI audio, trigger slightly earlier (0.4s) due to scheduling/JNI overhead.
+        final triggerOffset = isUsbAudio ? 0.4 : 0.2;
+        if (currentSecs >= (duration - triggerOffset)) {
+          _isHandlingCompletion = true;
+          _finalizePlaySession();
+          playNext(autoPlay: true);
+        }
+      } else if (isUsbAudio && currentSecs >= (duration - 0.4)) {
+        // Gapless / Completion fallback for USB Audio
+        _isHandlingCompletion = true;
+        _finalizePlaySession();
+        playNext(autoPlay: true);
+      }
+    }
+
+    // Periodic Save (Every 10 seconds)
+    // This ensures we save position even if app is killed while playing
+    if ((currentSecs - _lastSavedPosition).abs() > 10) {
+      _saveSettings();
+      _lastSavedPosition = currentSecs;
+    }
+
+    // MULTI-CHECKPOINT PRELOAD: Trigger at 0%, 30%, 70%
+    if (duration > 0) {
+      final progressPercent = currentSecs / duration;
+
+      // Check each threshold
+      for (final threshold in [10, 35, 70]) {
+        if (!_preloadCheckpoints.contains(threshold) &&
+            progressPercent >= threshold / 100) {
+          _preloadCheckpoints.add(threshold);
+          _preloadNextSong();
+          break; // Only trigger one per position update
+        }
+      }
+    }
+
+    // Discord Sync: Update every 30 seconds to keep rich presence accurate and check connection health
+    final posInSeconds = currentSecs.toInt();
+    if (posInSeconds > 0 && posInSeconds % 30 == 0 && state.isPlaying) {
+      if (_lastDiscordSyncSeconds != posInSeconds) {
+        _lastDiscordSyncSeconds = posInSeconds;
+        _updateDiscord();
+      }
+    }
+
+    // Stats Logic
+    if (DateTime.now().difference(_lastSongChangeTime).inSeconds < 2) return;
+
+    if (state.currentSong != null && state.isPlaying) {
+      double delta = currentSecs - _lastLogPosition;
+      if (delta >= 1.0 && delta < 5.0) {
+        int secondsToLog = delta.toInt();
+        ref
+            .read(statsProvider.notifier)
+            .logTime(state.currentSong!, secondsToLog);
+        _cumulativeSecondsListened += delta;
+        _cacheClearListeningTimer += delta;
+
+        // STREAMING DATA USAGE TRACKING
+        final currentPath = state.currentSong!.filePath;
+        final isStreaming = currentPath.startsWith('http://') ||
+            currentPath.startsWith('https://');
+        if (isStreaming) {
+          int bitrateKbps = 320; // safe default
+          if (currentPath.contains('HI_RES_LOSSLESS') ||
+              currentPath.contains('LOSSLESS')) {
+            bitrateKbps = 1100;
+          } else if (currentPath.contains('quality=HIGH') ||
+              currentPath.contains('LOW')) {
+            bitrateKbps = 320;
+          }
+          final bytesConsumed = ((bitrateKbps * 1000) ~/ 8) * secondsToLog;
+          ref.read(dataUsageProvider.notifier).addBytes(bytesConsumed);
+        }
+
+        // AUTO CLEAR CACHE LOGIC
+        final clearMode = settings.autoClearCache;
+        double cacheThreshold = 0;
+        if (clearMode == 'every_30min') {
+          cacheThreshold = 1800;
+        } else if (clearMode == 'every_hour') {
+          cacheThreshold = 3600;
+        } else if (clearMode == 'every_2hours') {
+          cacheThreshold = 7200;
+        }
+
+        if (cacheThreshold > 0 && _cacheClearListeningTimer >= cacheThreshold) {
+          _downloaderService.clearCache();
+          _cacheClearListeningTimer = 0;
+          SharedPreferences.getInstance()
+              .then((p) => p.setDouble('cache_clear_listening_timer', 0.0));
+        }
+
+        // Advance log position only by the truncated integer so fractional left-over is preserved
+        _lastLogPosition += secondsToLog;
+
+        // REAL-TIME MINUTES BUMP: Update UI every 60 accumulated seconds
+        _minutesBumpAccumulator += secondsToLog;
+        if (_minutesBumpAccumulator >= 60.0) {
+          final minutesToBump = (_minutesBumpAccumulator / 60.0).floor();
+          _minutesBumpAccumulator -= minutesToBump * 60.0;
+          ref.read(profileProvider.notifier).bumpCloudStats(
+                minutesIncrement: minutesToBump,
+              );
+        }
+      } else if (delta < -1.0 || delta >= 5.0) {
+        // Seek or new song
+        _lastLogPosition = currentSecs;
+      }
+    }
+
+    if (!_isSessionLogged && !_isThresholdMet && duration > 0) {
+      double requiredTime = duration * _playCountThreshold;
+
+      // Anti-Farming: Force a minimum of 25 seconds of listening time
+      // even if the song is extremely short (e.g. 2-second exploit file).
+      if (requiredTime < 25.0) {
+        requiredTime = 25.0;
+      }
+
+      if (_cumulativeSecondsListened >= requiredTime) {
+        _isThresholdMet = true;
+      }
+    }
+  }
+
+  SongModel? _peekNextSong() {
+    if (state.userQueue.isNotEmpty) {
+      return state.userQueue.first;
+    }
+    if (state.playlist.isNotEmpty) {
+      if (_playlistIndex < state.playlist.length - 1) {
+        return state.playlist[_playlistIndex + 1];
+      } else if (state.loopMode == ja.LoopMode.all) {
+        return state.playlist.first;
+      }
+    }
+    return null;
+  }
+
+  bool _canCrossfadeWithNextSong() {
+    final current = state.currentSong;
+    final next = _peekNextSong();
+    if (current == null || next == null) return false;
+
+    // 1. If either is JNI (ALAC or USB bypass), we CANNOT crossfade
+    if (_isUsingCppEngine(current) || _isUsingCppEngine(next)) return false;
+
+    // 2. Both must use the same engine (both FFI local, or both ExoPlayer stream)
+    final isCurrentFfi = (Platform.isWindows || Platform.isAndroid) &&
+        !current.filePath.startsWith('http') &&
+        NativeMusicService.isFfiSupported(current.filePath);
+
+    final isNextFfi = (Platform.isWindows || Platform.isAndroid) &&
+        !next.filePath.startsWith('http') &&
+        NativeMusicService.isFfiSupported(next.filePath);
+
+    return isCurrentFfi == isNextFfi;
   }
 
   Future<void> _restoreQueueState() async {
@@ -1478,10 +1796,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         userQueue = [];
 
         for (var song in rawQueue) {
-          // 🚀 FIX: Use explicit filePath + exact title for deduplication instead of regex.
-          // The old regex (strip all non-alphanumeric) was destroying foreign languages
-          // (Japanese/Korean/Arabic/Thai) setting their keys to "", which caused them
-          // to be detected as duplicates of each other and falsely deleted on restart!
           final key = "${song.filePath}|${song.title}".toLowerCase();
 
           if (!seen.contains(key)) {
@@ -1531,7 +1845,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
   }
 
-  // --- CONTROLS ---
+  // CONTROLS
 
   Future<void> _forceLoopOne() async {
     if (_isLooping) return;
@@ -1542,18 +1856,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       return;
     }
 
-    // 🚀 FIX: Instead of seeking to 0, we perform a full reload of the song.
-    // This mirrors the "next song" transition logic which is known to be stable.
-    // It avoids native state machine corruption in just_audio_media_kit/ExoPlayer
-    // that occurs when seeking from a 'completed' state.
     await playSong(
       state.currentSong!,
-      skipFinalize: false, // Log stats for the completed loop
-      forceReload: true, // Force stop -> setAudioSource -> play
+      skipFinalize: false,
+      forceReload: true,
     );
 
-    // 🚀 SMOOTH RESET: Keep _isLooping true for a short duration after reload
-    // to absorb any flickering native 'stop' events.
     Future.delayed(const Duration(milliseconds: 500), () {
       _isLooping = false;
     });
@@ -1581,8 +1889,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _isSessionLogged = false;
     _lastLogPosition = 0.0;
     _cumulativeSecondsListened = 0.0;
-    _preloadCheckpoints.clear(); // 🚀 Reset preload checkpoints for new song
-    _preloadRequestToken++; // 🚀 Cancel outdated preloads
+    _preloadCheckpoints.clear();
+    _preloadRequestToken++;
     if (resetTime) {
       _lastSongChangeTime = DateTime.now();
     }
@@ -1592,9 +1900,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   Future<SongModel> _ensureFileExists(SongModel song) async {
     final isHttp = song.filePath.startsWith('http://') ||
         song.filePath.startsWith('https://');
-    if (isHttp) return song; // 🚀 ALREADY A STREAMING URL
+    if (isHttp) return song; // ALREADY A STREAMING URL
 
-    // 🚀 CUE SUPPORT: For CUE virtual paths, check the real audio file
+    // CUE SUPPORT: For CUE virtual paths, check the real audio file
     if (CuePath.isCuePath(song.filePath)) {
       final realPath = CuePath.extractAudioPath(song.filePath);
       final f = File(realPath);
@@ -1604,11 +1912,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       return song.copyWith(filePath: "cloud_stream"); // Audio file missing
     }
 
-    // 🚀 ONLY skip if we have a VALID local file (> 1KB)
+    // ONLY skip if we have a VALID local file (> 1KB)
     if (song.filePath != "cloud_stream") {
       final f = File(song.filePath);
       if (await f.exists() && await f.length() > 1024) {
-        // 🚀 HARDENED: Verify FLAC integrity before playback
+        // HARDENED: Verify FLAC integrity before playback
         bool isValid = true;
         if (song.filePath.toLowerCase().endsWith('.flac')) {
           isValid = await FlacDownloaderService.isFlacFileValid(song.filePath);
@@ -1649,7 +1957,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       return song.copyWith(filePath: cachedPath);
     }
 
-    // 🚀 FINAL FALLBACK: If caching failed, switch to direct cloud streaming.
+    // FINAL FALLBACK: If caching failed, switch to direct cloud streaming.
     // Try to find a valid URL to pass to NativeMusicService
     if (song.sourceUrl == null ||
         song.sourceUrl!.isEmpty ||
@@ -1685,7 +1993,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
   // PRELOAD NEXT SONG LOGIC (serialized: 1 download at a time)
   Future<void> _preloadNextSong() async {
-    // 🚀 DELAY PRELOAD: Wait 3 seconds to let current song establish stream
+    // DELAY PRELOAD: Wait 3 seconds to let current song establish stream
     await Future.delayed(const Duration(seconds: 3));
 
     SongModel? nextSong;
@@ -1712,12 +2020,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       // Check if file exists
       if (await File(nextSong.filePath).exists()) return;
 
-      // 🚀 Guard: Skip if already preloading this song
+      // Guard: Skip if already preloading this song
       if (_preloadingTitle == nextSong.title) {
         return;
       }
 
-      // 🚀 Guard: Check if file was already cached by a previous preload
+      // Guard: Check if file was already cached by a previous preload
       // (e.g. 10% checkpoint cached it, now 35% fires — no need to re-download)
       final preCheckMeta = SongMetadata(
         title: nextSong.title,
@@ -1737,9 +2045,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
       _preloadingTitle = nextSong.title;
 
-      // 🚀 BUGFIX (defect 1.5): Gate streamed preloads on cacheStreamedSongs toggle.
-      // If the upcoming song will be streamed from Tidal (not a local file, not YouTube),
-      // and the toggle is disabled, skip the preload cache to honor the Settings UI.
       final isYtSource =
           nextSong.sourceUrl != null && nextSong.sourceUrl!.contains('youtube');
       if (!isYtSource && !ref.read(settingsProvider).cacheStreamedSongs) {
@@ -1748,7 +2053,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         return;
       }
 
-      // 🔍 INJECT SPOTIFY ENRICHMENT (YT MUSIC IMPORTS)
+      // INJECT SPOTIFY ENRICHMENT (YT MUSIC IMPORTS)
       String title = nextSong.title;
       String artist = nextSong.artist;
       String album = nextSong.album;
@@ -1828,9 +2133,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       await _safeCacheSong(meta,
           youtubeUrl: nextSong.sourceUrl, preloadToken: currentPreloadToken);
 
-      // 🚀 RESOLVE AND UPDATE RESOLVED PATH IN QUEUE
-      // This ensures that when the user taps play or the song changes,
-      // the model already has the .flac path instead of "cloud_stream" or underscored .m4a
       final resolvedPath = await _smartService.getPredictedCachePath(meta);
       if (await File(resolvedPath).exists() &&
           await File(resolvedPath).length() > 1024) {
@@ -1838,11 +2140,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _updateSongInState(nextSong, updatedNext);
       }
 
-      _preloadingTitle = null; // Clear guard after completion
+      _preloadingTitle = null;
     }
   }
 
   // PRELOAD PREVIOUS SONG (serialized: 1 download at a time)
+  // ignore: unused_element
   Future<void> _preloadPreviousSong() async {
     if (state.playlist.isEmpty) return;
 
@@ -1858,13 +2161,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     final prevSong = state.playlist[prevIndex];
     if (await File(prevSong.filePath).exists()) return;
 
-    // 🚀 Guard: Skip if we are currently streaming a live song (Bandwidth congestion protection)
+    // Guard: Skip if we are currently streaming a live song (Bandwidth congestion protection)
     final isStreaming = state.currentSong?.filePath.startsWith('http') ?? false;
     if (isStreaming) {
       return;
     }
 
-    // 🔍 INJECT SPOTIFY ENRICHMENT (YT MUSIC IMPORTS)
+    // INJECT SPOTIFY ENRICHMENT (YT MUSIC IMPORTS)
     String title = prevSong.title;
     String artist = prevSong.artist;
     String album = prevSong.album;
@@ -1957,15 +2260,67 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
   }
 
+  Future<bool> _executePlayRouting(SongModel song,
+      {double crossfadeDuration = 0.0, Duration? initialPosition}) async {
+    final bool isM4A = song.filePath.toLowerCase().endsWith('.m4a');
+    final bool isALAC = song.filePath.toLowerCase().endsWith('.alac');
+
+    // Estimate bitrate for .m4a to separate ALAC from AAC (AAC almost never exceeds 320-512kbps)
+    double estimatedBitrate = 0;
+    if (isM4A && song.duration > 0 && song.filePath != "cloud_stream" && !song.filePath.startsWith('http')) {
+      try {
+        final file = File(song.filePath);
+        if (file.existsSync()) {
+          final size = file.lengthSync();
+          estimatedBitrate = (size * 8) / song.duration / 1000;
+        }
+      } catch (_) {}
+    }
+
+    final bool isLocalAlac = Platform.isAndroid &&
+        song.filePath != "cloud_stream" &&
+        !song.filePath.startsWith('http') &&
+        (isALAC || (isM4A && estimatedBitrate > 500));
+
+    if ((_useUsbAudioBypass ||
+            ref.read(settingsProvider).androidBitPerfect ||
+            isLocalAlac) &&
+        Platform.isAndroid) {
+      // PRE-ACTIVATE: Block ExoPlayer's async "paused" event from reaching Android MediaSession
+      // BEFORE we pause ExoPlayer. Without this, ExoPlayer fires "paused" → Android downgrades
+      // the foreground service → app gets suspended when minimized.
+      _musicService.preActivateCustomEngineState();
+      await _musicService.pause();
+      await UsbAudioService.stop();
+      _isCppEnginePrepared = false;
+
+      final usbSuccess = await _playViaUsbAudio(song,
+          isAlacFallback: isLocalAlac, initialPosition: initialPosition);
+      if (!usbSuccess) {
+        debugPrint("⚠️ C++ engine failed for ALAC, trying ExoPlayer...");
+        // play() calls clearCustomEngineState() internally, restoring ExoPlayer control
+        return await _musicService.play(song, initialPosition: initialPosition);
+      }
+      return true;
+    } else {
+      if (Platform.isAndroid) {
+        await UsbAudioService.pause();
+      }
+      return await _musicService.play(song,
+          crossfadeDuration: crossfadeDuration,
+          initialPosition: initialPosition);
+    }
+  }
+
   Future<void> playSong(SongModel song,
       {List<SongModel>? newQueue,
       bool skipFinalize = false,
       bool forceReload = false,
       Duration? initialPosition}) async {
-    final currentToken = ++_playRequestToken; // 🚀 Register new play request
-    _lastPlayRequestTime = DateTime.now(); // 🚀 Timestamp request
+    final currentToken = ++_playRequestToken;
+    _lastPlayRequestTime = DateTime.now();
 
-    // 🚀 NEW: SLAVE INTERCEPT
+    // SLAVE INTERCEPT
     if (!isMaster) {
       DebugLogService().info(
           "📲 Remote: Intercepting play_song request and forwarding to Master.");
@@ -1980,12 +2335,15 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       return;
     }
 
-    // 🚀 Reset completion guard on explicit play
+    // Reset completion guard and retry count on explicit play
     _isHandlingCompletion = false;
+    _currentSongRetryCount = 0;
 
     if (!skipFinalize) _finalizePlaySession();
     _startNewSession(resetTime: true);
+    state = state.copyWith(isBuffering: false);
 
+    _isTransitioning = true;
     // CLEAR RECOMMENDATIONS only when user switches to a NEW playlist/album context
     // Don't clear when just playing a single song (streaming)
     if (newQueue != null) {
@@ -2050,15 +2408,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     if (_playlistIndex == -1) _playlistIndex = 0;
 
     // JIT CACHING CHECK
-    // 🚀 FIX: If the local file exists OR is already a streaming URL, play it directly.
     final isHttp = song.filePath.startsWith('http://') ||
         song.filePath.startsWith('https://');
     bool fileExists = isHttp || await File(song.filePath).exists();
 
     if (!fileExists) {
-      state = state.copyWith(isBuffering: true); // 🚀 BUFFER START
+      state = state.copyWith(isBuffering: true);
 
-      // 🚀 1. TRY JIT STREAMING FIRST
+      // 1. TRY JIT STREAMING FIRST
       bool streamedInstantly = false;
       try {
         final streamUrl = await _getJitStreamUrl(song);
@@ -2068,7 +2425,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
 
         if (streamedInstantly) {
-          // 🚀 BUGFIX: Use unified helper (fixes defect 1.4 — title+artist guard instead of filePath)
           _scheduleStreamingCacheIfEnabled(
             song: song,
             streamUrl: song.filePath,
@@ -2079,7 +2435,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         // Silent
       }
 
-      // 🚀 2. FALLBACK TO BACKGROUND CACHING
+      // 2. FALLBACK TO BACKGROUND CACHING
       if (!streamedInstantly) {
         final meta = SongMetadata(
           title: song.title,
@@ -2118,10 +2474,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
       }
 
-      state = state.copyWith(isBuffering: false); // 🚀 BUFFER END
+      state = state.copyWith(isBuffering: false);
     } else if (isHttp) {
-      // 🚀 BUGFIX: Song filePath is already a stream URL (e.g. pre-resolved by preload
-      // or passed in directly). Schedule background cache for the CURRENT song.
       _scheduleStreamingCacheIfEnabled(
         song: song,
         streamUrl: song.filePath,
@@ -2131,56 +2485,47 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     final isSameSong = state.currentSong?.filePath == song.filePath;
 
-    // 🚀 FIX: Reset current position to 0 (or initialosition) instantly BEFORE broadcasting remotely!
-    // If we don't, _broadcastRemoteState() pushes the end-of-song position (e.g., 200s) to Slaves!
     final newPos =
         initialPosition != null ? initialPosition.inMilliseconds / 1000.0 : 0.0;
     state = state.copyWith(currentPosition: newPos);
 
     if (isSameSong && !forceReload && initialPosition == null) {
-      // USB Audio bypass for seek
-      if (_useUsbAudioBypass) {
-        await UsbAudioService.seek(0);
-        if (!state.isPlaying) await _resumeUsbAudio();
-      } else {
-        await _musicService.seek(Duration.zero);
-        if (!state.isPlaying) await _musicService.resume();
-      }
-    } else {
-      // 🚀 Push current song to play history before switching
-      _pushToPlayHistory(state.currentSong);
-      state = state.copyWith(currentSong: song, isPlaying: true);
+      // USB Audio bypass / ALAC Fallback seek
+      await _musicService.seek(Duration.zero);
+      if (Platform.isAndroid) await UsbAudioService.seek(0);
 
-      // 🎧 USB AUDIO BYPASS: Try USB playback first for Android <14 bit-perfect
-      if (_useUsbAudioBypass && Platform.isAndroid) {
-        final usbSuccess = await _playViaUsbAudio(song);
-        if (!usbSuccess) {
-          await _musicService.play(song, initialPosition: initialPosition);
-        }
-      } else {
-        final settings = ref.read(settingsProvider);
-        // 🚀 FIX: Crossfade is for CHANGING song only. If it's the same song (Repeat One reload), force 0.0 crossfade.
-        if (currentToken != _playRequestToken) return;
-        final success = await _musicService.play(song,
-            crossfadeDuration:
-                (isSameSong || skipFinalize) ? 0.0 : settings.crossfadeDuration,
-            initialPosition: initialPosition);
-        if (currentToken != _playRequestToken) return;
-        if (!success) {
-          playNext(autoPlay: true);
-          return;
-        }
+      if (!state.isPlaying) {
+        await _musicService.resume();
+        await _resumeUsbAudio();
+      }
+      _isTransitioning = false;
+    } else {
+      // Push current song to play history before switching
+      _pushToPlayHistory(state.currentSong);
+      state = state.copyWith(
+        currentSong: song,
+        isPlaying: true,
+        currentPosition: initialPosition?.inSeconds.toDouble() ?? 0.0,
+        totalDuration: song.duration > 0 ? song.duration : state.totalDuration,
+      );
+      _updateDiscord();
+
+      final success = await _executePlayRouting(song,
+          crossfadeDuration: (isSameSong || skipFinalize)
+              ? 0.0
+              : ref.read(settingsProvider).crossfadeDuration,
+          initialPosition: initialPosition);
+      _isTransitioning = false;
+      if (currentToken != _playRequestToken) return;
+      if (!success) {
+        playNext(autoPlay: true);
+        return;
       }
     }
-    _updateDiscord();
-    _saveSettings(); // SAVE STATE
-    _saveQueueState(); // SAVE QUEUE
+    _saveSettings();
+    _saveQueueState();
 
-    _broadcastRemoteState(); // Sync Song Change
-
-    // 🚀 REMOVED: Immediate preloads.
-    // Preloading is now triggered ONLY by positionStream checkpoints (10%, 35%, 70%)
-    // to prevent bandwidth collision with the initial buffering of the current song.
+    _broadcastRemoteState();
 
     // ENDLESS QUEUE: Check immediately when playing
     _checkEndlessQueue();
@@ -2192,7 +2537,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       return;
     }
 
-    // 🚀 REPEAT ONE: If triggered automatically, perform a repeat instead of skipping.
+    // REPEAT ONE: If triggered automatically, perform a repeat instead of skipping.
     // EXCEPTION: If we are recovering from a crash, ignore loop mode and skip to next
     // to prevent infinite retry loop on a dead/broken stream.
     if (autoPlay &&
@@ -2202,10 +2547,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       return;
     }
 
-    final currentToken = ++_playRequestToken; // 🚀 Register new play request
-    _lastPlayRequestTime = DateTime.now(); // 🚀 Timestamp request
+    final currentToken = ++_playRequestToken;
+    _lastPlayRequestTime = DateTime.now();
 
-    // 🚀 Explicit user skip resets the guard
+    // Explicit user skip resets the guard
     if (!autoPlay) {
       _isHandlingCompletion = false;
       _finalizePlaySession();
@@ -2213,6 +2558,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     _startNewSession(resetTime: true);
     _isLooping = false;
+    state = state.copyWith(isBuffering: false);
 
     final settings = ref.read(settingsProvider);
 
@@ -2222,9 +2568,18 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       state = state.copyWith(userQueue: state.userQueue.sublist(1));
       _saveQueueState();
 
-      // 🚀 Push current song to play history before switching
+      _isTransitioning = true;
+
+      // Push current song to play history before switching
       _pushToPlayHistory(state.currentSong);
-      state = state.copyWith(currentSong: nextSong, isPlaying: true);
+      state = state.copyWith(
+        currentSong: nextSong,
+        isPlaying: true,
+        currentPosition: 0.0,
+        totalDuration:
+            nextSong.duration > 0 ? nextSong.duration : state.totalDuration,
+      );
+      _updateDiscord();
 
       // EXTRACT COLOR (Immediate for UI snappiness)
       _extractPalette(nextSong);
@@ -2240,7 +2595,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           nextSong = nextSong.copyWith(filePath: streamUrl);
           state = state.copyWith(currentSong: nextSong);
 
-          // 🚀 BUGFIX: Use unified helper (de-duplication, consistent title+artist guard)
           _scheduleStreamingCacheIfEnabled(
             song: nextSong,
             streamUrl: streamUrl,
@@ -2265,8 +2619,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
         state = state.copyWith(isBuffering: false);
       } else if (isHttpByPath) {
-        // 🚀 BUGFIX: Song filePath is already a stream URL (pre-resolved by preload).
-        // Still need to schedule background cache for the CURRENT song.
         _scheduleStreamingCacheIfEnabled(
           song: nextSong,
           streamUrl: nextSong.filePath,
@@ -2275,17 +2627,16 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       }
 
       if (currentToken != _playRequestToken) return;
-      final success = await _musicService.play(nextSong,
+      final success = await _executePlayRouting(nextSong,
           crossfadeDuration: settings.crossfadeDuration);
+      _isTransitioning = false;
       if (currentToken != _playRequestToken) return;
       if (!success) {
-        // 🚀 FIX: Don't recursively skip when user queue song fails.
-        // This prevents draining the entire play-next queue on cascading failures.
-        // Instead, try _ensureFileExists as a last resort before giving up on this one song.
         final fallbackSong = await _ensureFileExists(nextSong);
         if (currentToken != _playRequestToken) return;
-        final retrySuccess = await _musicService.play(fallbackSong,
+        final retrySuccess = await _executePlayRouting(fallbackSong,
             crossfadeDuration: settings.crossfadeDuration);
+        _isTransitioning = false;
         if (currentToken != _playRequestToken) return;
         if (!retrySuccess) {
           // Only skip THIS song — try the next userQueue item or playlist song
@@ -2299,10 +2650,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         nextSong = fallbackSong;
         state = state.copyWith(currentSong: nextSong);
       }
-      _updateDiscord();
       _broadcastRemoteState();
 
-      // 🚀 REMOVED: Immediate preload (handled by checkpoints now)
       // _isHandlingCompletion will be reset by position listener at 2s mark
       return;
     }
@@ -2318,9 +2667,16 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
               artUrl: nextSong.onlineArtUrl,
             );
 
-        // 🚀 Push current song to play history before switching
+        // Push current song to play history before switching
         _pushToPlayHistory(state.currentSong);
-        state = state.copyWith(currentSong: nextSong, isPlaying: true);
+        state = state.copyWith(
+          currentSong: nextSong,
+          isPlaying: true,
+          currentPosition: 0.0,
+          totalDuration:
+              nextSong.duration > 0 ? nextSong.duration : state.totalDuration,
+        );
+        _updateDiscord();
 
         // EXTRACT COLOR
         _extractPalette(nextSong);
@@ -2336,7 +2692,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             nextSong = nextSong.copyWith(filePath: streamUrl);
             state = state.copyWith(currentSong: nextSong);
 
-            // 🚀 BUGFIX: Use unified helper (fixes defect 1.3 — adds missing streamUrl: param)
             _scheduleStreamingCacheIfEnabled(
               song: nextSong,
               streamUrl: streamUrl,
@@ -2360,8 +2715,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           }
           state = state.copyWith(isBuffering: false);
         } else if (isHttpByPath) {
-          // 🚀 BUGFIX: Song filePath is already a stream URL (pre-resolved by preload).
-          // Still need to schedule background cache for the CURRENT song.
           _scheduleStreamingCacheIfEnabled(
             song: nextSong,
             streamUrl: nextSong.filePath,
@@ -2370,8 +2723,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
 
         if (currentToken != _playRequestToken) return;
-        final success = await _musicService.play(nextSong,
+        final success = await _executePlayRouting(nextSong,
             crossfadeDuration: settings.crossfadeDuration);
+        _isTransitioning = false;
         if (currentToken != _playRequestToken) return;
         if (!success) {
           _consecutiveSkipCount++;
@@ -2394,9 +2748,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
         // Success! Reset count
         _consecutiveSkipCount = 0;
-        _updateDiscord();
 
-        // 🚀 REMOVED: Immediate preload (handled by checkpoints now)
         // ENDLESS QUEUE CHECK
         _checkEndlessQueue();
         // _isHandlingCompletion will be reset by position listener at 2s mark
@@ -2410,9 +2762,16 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
               artUrl: nextSong.onlineArtUrl,
             );
 
-        // 🚀 Push current song to play history before switching
+        // Push current song to play history before switching
         _pushToPlayHistory(state.currentSong);
-        state = state.copyWith(currentSong: nextSong, isPlaying: true);
+        state = state.copyWith(
+          currentSong: nextSong,
+          isPlaying: true,
+          currentPosition: 0.0,
+          totalDuration:
+              nextSong.duration > 0 ? nextSong.duration : state.totalDuration,
+        );
+        _updateDiscord();
         _extractPalette(nextSong);
 
         // JIT CHECK FOR LOOP ALL
@@ -2424,7 +2783,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           if (streamUrl != null) {
             nextSong = nextSong.copyWith(filePath: streamUrl);
             state = state.copyWith(currentSong: nextSong);
-            // 🚀 BUGFIX: Use unified helper (fixes defect 1.2 — adds 15s delay + streamUrl:)
             _scheduleStreamingCacheIfEnabled(
               song: nextSong,
               streamUrl: streamUrl,
@@ -2448,7 +2806,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           }
           state = state.copyWith(isBuffering: false);
         } else if (isHttpByPath) {
-          // 🚀 BUGFIX: Song filePath is already a stream URL (pre-resolved by preload).
           _scheduleStreamingCacheIfEnabled(
             song: nextSong,
             streamUrl: nextSong.filePath,
@@ -2457,14 +2814,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
 
         if (currentToken != _playRequestToken) return;
-        final success = await _musicService.play(nextSong,
+        final success = await _executePlayRouting(nextSong,
             crossfadeDuration: settings.crossfadeDuration);
+        _isTransitioning = false;
         if (currentToken != _playRequestToken) return;
         if (!success) {
           playNext(autoPlay: true);
           return;
         }
-        _updateDiscord();
         _preloadNextSong();
         _checkEndlessQueue();
         // _isHandlingCompletion will be reset by position listener at 2s mark
@@ -2487,9 +2844,16 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       );
       _saveQueueState();
 
-      // 🚀 Push current song to play history before switching
+      // Push current song to play history before switching
       _pushToPlayHistory(state.currentSong);
-      state = state.copyWith(currentSong: nextSong, isPlaying: true);
+      state = state.copyWith(
+        currentSong: nextSong,
+        isPlaying: true,
+        currentPosition: 0.0,
+        totalDuration:
+            nextSong.duration > 0 ? nextSong.duration : state.totalDuration,
+      );
+      _updateDiscord();
       _extractPalette(nextSong);
 
       // JIT CACHING CHECK FOR RECOMMENDATIONS
@@ -2505,15 +2869,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         if (streamUrl != null) {
           nextSong = nextSong.copyWith(filePath: streamUrl);
           state = state.copyWith(currentSong: nextSong);
-          // 🚀 BUGFIX: PRIMARY FIX for defect 1.1 — schedule delayed cache for current song
           _scheduleStreamingCacheIfEnabled(
             song: nextSong,
             streamUrl: streamUrl,
             currentToken: currentToken,
           );
         } else {
-          // 🚀 FIX: Instead of slow cache-first download, delegate to playSong
-          // which handles JIT streaming properly (same path as search/home page)
           state = state.copyWith(isBuffering: false);
           if (currentToken != _playRequestToken) return;
           await playSong(nextSong, skipFinalize: true);
@@ -2522,8 +2883,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
         state = state.copyWith(isBuffering: false);
       } else if (isHttpByPath) {
-        // 🚀 BUGFIX: Song filePath is already a stream URL (pre-resolved by preload).
-        // Still need to schedule background cache for the CURRENT song.
         _scheduleStreamingCacheIfEnabled(
           song: nextSong,
           streamUrl: nextSong.filePath,
@@ -2532,16 +2891,15 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       }
 
       if (currentToken != _playRequestToken) return;
-      final success = await _musicService.play(nextSong,
+      final success = await _executePlayRouting(nextSong,
           crossfadeDuration: settings.crossfadeDuration);
+      _isTransitioning = false;
       if (currentToken != _playRequestToken) return;
       if (!success) {
         playNext(autoPlay: true);
         return;
       }
-      _updateDiscord();
       _broadcastRemoteState();
-      // 🚀 REMOVED: Immediate preload (handled by checkpoints now)
       _checkEndlessQueue();
       // _isHandlingCompletion will be reset by position listener at 2s mark
       return;
@@ -2553,7 +2911,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _isHandlingCompletion = false;
   }
 
-  // --- ENDLESS QUEUE ---
+  // ENDLESS QUEUE
 
   /// Toggle endless queue on/off
   void toggleEndlessQueue() {
@@ -2578,7 +2936,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
   /// Check if we need to fetch more songs for endless queue
   Future<void> _checkEndlessQueue() async {
-    // 🚀 NEW: Delay recommendations fetch by 3 seconds to prioritize initial audio buffering
+    // Delay recommendations fetch by 3 seconds to prioritize initial audio buffering
     await Future.delayed(const Duration(seconds: 3));
 
     if (!state.endlessQueueEnabled) {
@@ -2610,7 +2968,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         return;
       }
 
-      // 🚀 Filter out duplicates: current song, songs in playlist, songs already in rec queue
+      // Filter out duplicates: current song, songs in playlist, songs already in rec queue
       final currentTitle = state.currentSong?.title.toLowerCase() ?? '';
       final currentArtist = state.currentSong?.artist.toLowerCase() ?? '';
       final existingPlaylistKeys = state.playlist
@@ -2624,7 +2982,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         final key = '${song.title.toLowerCase()}_${song.artist.toLowerCase()}';
         // Skip current song
         if (song.title.toLowerCase() == currentTitle &&
-            song.artist.toLowerCase() == currentArtist) return false;
+            song.artist.toLowerCase() == currentArtist) {
+          return false;
+        }
         // Skip songs already in playlist
         if (existingPlaylistKeys.contains(key)) return false;
         // Skip songs already in recommendation queue
@@ -2661,34 +3021,42 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       return;
     }
 
-    // 🚀 FIX 1: Read the true position from the service's active stream, not the just_audio shell mask.
-    // FFI player keeps the shell at 0:00, so reading _musicService.player.position made the > 3s check fail.
     final pos = await _musicService.positionStream.first;
     if (pos.inSeconds > 3) {
       await _musicService.seek(Duration.zero);
-      // 🚀 Update Discord to reset timelapse when restarting song
+      if (Platform.isAndroid) await UsbAudioService.seek(0);
       _updateDiscord();
       return;
     }
 
-    // 🚀 HYBRID PREVIOUS: Use play history stack (works for local, streaming, recommendations)
+    // HYBRID PREVIOUS: Use play history stack (works for local, streaming, recommendations)
     if (_playHistory.isNotEmpty) {
       final prevSong = _playHistory.removeLast();
 
       final currentToken = ++_playRequestToken;
+      _lastPlayRequestTime = DateTime.now();
       _isHandlingCompletion = false;
       _finalizePlaySession();
       _startNewSession(resetTime: true);
       _isLooping = false;
+      state = state.copyWith(isBuffering: false);
 
       // Save to history
+      _isTransitioning = true;
       ref.read(historyProvider.notifier).addToHistory(
             song: prevSong,
             youtubeUrl: prevSong.sourceUrl,
             artUrl: prevSong.onlineArtUrl,
           );
 
-      state = state.copyWith(currentSong: prevSong, isPlaying: true);
+      state = state.copyWith(
+        currentSong: prevSong,
+        isPlaying: true,
+        currentPosition: 0.0,
+        totalDuration:
+            prevSong.duration > 0 ? prevSong.duration : state.totalDuration,
+      );
+      _updateDiscord();
 
       // Update playlist index if song is in current playlist
       final idx = state.playlist.indexWhere((s) =>
@@ -2705,20 +3073,22 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       _extractPalette(readySong);
 
       if (currentToken != _playRequestToken) return;
-      _musicService.play(readySong);
-      _updateDiscord();
+      await _executePlayRouting(readySong);
+      _isTransitioning = false;
       _broadcastRemoteState();
       return;
     }
 
-    // 🚀 FALLBACK: If no history, try playlist-based previous
+    // FALLBACK: If no history, try playlist-based previous
     if (state.playlist.isEmpty) {
       await _musicService.seek(Duration.zero);
+      if (Platform.isAndroid) await UsbAudioService.seek(0);
       _updateDiscord();
       return;
     }
 
     final currentToken = ++_playRequestToken;
+    _lastPlayRequestTime = DateTime.now();
 
     _isHandlingCompletion = false;
     _finalizePlaySession();
@@ -2732,19 +3102,28 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _playlistIndex = state.playlist.length - 1;
       } else {
         await _musicService.seek(Duration.zero);
+        if (Platform.isAndroid) await UsbAudioService.seek(0);
         _updateDiscord();
         return;
       }
     }
 
     final prevSong = state.playlist[_playlistIndex];
+    _isTransitioning = true;
     ref.read(historyProvider.notifier).addToHistory(
           song: prevSong,
           youtubeUrl: prevSong.sourceUrl,
           artUrl: prevSong.onlineArtUrl,
         );
 
-    state = state.copyWith(currentSong: prevSong, isPlaying: true);
+    state = state.copyWith(
+      currentSong: prevSong,
+      isPlaying: true,
+      currentPosition: 0.0,
+      totalDuration:
+          prevSong.duration > 0 ? prevSong.duration : state.totalDuration,
+    );
+    _updateDiscord();
 
     final readySong = await _ensureFileExists(prevSong);
     if (currentToken != _playRequestToken) return;
@@ -2753,12 +3132,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _extractPalette(readySong);
 
     if (currentToken != _playRequestToken) return;
-    _musicService.play(readySong);
-    _updateDiscord();
+    await _executePlayRouting(readySong);
+    _isTransitioning = false;
     _broadcastRemoteState();
   }
 
-  /// 🚀 Push a song to the play history stack (for universal previous button)
+  /// Push a song to the play history stack (for universal previous button)
   void _pushToPlayHistory(SongModel? song) {
     if (song == null) return;
     _playHistory.add(song);
@@ -2769,32 +3148,65 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   }
 
   Future<void> togglePlay() async {
-    if (!isMaster) {
-      _remoteService.sendCommand(state.isPlaying ? 'pause' : 'play');
-      return;
-    }
-
-    if (state.isPlaying) {
-      await _musicService.pause();
-    } else {
-      _isHandlingCompletion = false;
-      await _musicService.resume();
-    }
+    await togglePlayPause();
   }
 
   Future<void> seek(double seconds) async {
     if (!isMaster) {
       _lastManualSeekTime =
-          DateTime.now(); // 🚀 ACTIVATED: Start the 2-second sync lock
+          DateTime.now(); // ACTIVATED: Start the 2-second sync lock
       _remoteService.sendCommand('seek', payload: seconds);
       // Optimistic UI update
       state = state.copyWith(currentPosition: seconds);
       return;
     }
 
-    await _musicService.seek(Duration(milliseconds: (seconds * 1000).toInt()));
+    // Optimistically update position state so _updateDiscord() and UI use new position immediately
+    state = state.copyWith(currentPosition: seconds);
+
+    final ms = (seconds * 1000).toInt();
+    if (_isUsingCppEngine() && _isCppEnginePrepared) {
+      if (Platform.isAndroid) {
+        await UsbAudioService.seek(ms);
+      }
+      // Keep Android OS media notification synced without triggering false ExoPlayer events
+      _musicService.syncCustomEngineState(
+          isPlaying: state.isPlaying, position: Duration(milliseconds: ms));
+    } else {
+      await _musicService.seek(Duration(milliseconds: ms));
+      if (Platform.isAndroid) {
+        await UsbAudioService.seek(ms);
+      }
+    }
     _lastLogPosition = seconds;
     _updateDiscord();
+  }
+
+  Future<void> _sendVolumeToEngine(double value) async {
+    if (_volumeCallInProgress) {
+      _pendingVolume = value;
+      return;
+    }
+
+    _volumeCallInProgress = true;
+    try {
+      // Always sync _musicService's volume so FFI volume state remains in sync
+      await _musicService.setVolume(value);
+
+      if (_isUsingCppEngine() && _isCppEnginePrepared) {
+        final calculatedVol =
+            _musicService.getCalculatedVolumeForSong(state.currentSong, value);
+        await UsbAudioService.setVolume(calculatedVol);
+      }
+    } finally {
+      _volumeCallInProgress = false;
+      if (_pendingVolume != null) {
+        final nextVol = _pendingVolume!;
+        _pendingVolume = null;
+        // Run next volume update
+        _sendVolumeToEngine(nextVol);
+      }
+    }
   }
 
   Future<void> setVolume(double value) async {
@@ -2808,7 +3220,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     final newUnmuted = value > 0 ? value : state.unmutedVolume;
     state = state.copyWith(volume: value, unmutedVolume: newUnmuted);
-    await _musicService.setVolume(value);
+
+    // Asynchronously update volume with concurrency locking
+    _sendVolumeToEngine(value);
+
     _saveSettings();
   }
 
@@ -2821,7 +3236,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
   }
 
-  // 🚀 SMART SLEEP TIMER
+  // SMART SLEEP TIMER
   void setSleepPending(bool isPending) {
     state = state.copyWith(isSleepPending: isPending);
   }
@@ -2860,15 +3275,15 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   }
 
   void toggleShuffle() {
-    _lastLocalShuffleTap = DateTime.now(); // 🚀 COOLDOWN: Mark local tap
+    _lastLocalShuffleTap = DateTime.now(); // COOLDOWN: Mark local tap
     if (!isMaster) {
       _remoteService.sendCommand('shuffle');
-      state = state.copyWith(isShuffle: !state.isShuffle); // Optimistic UI
+      state = state.copyWith(isShuffle: !state.isShuffle);
       return;
     }
 
     final newShuffle = !state.isShuffle;
-    _preloadRequestToken++; // 🚀 Cancel outdated preloads
+    _preloadRequestToken++;
     final baseList = state.originalPlaylist.isNotEmpty
         ? state.originalPlaylist
         : state.playlist;
@@ -2889,14 +3304,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             .indexWhere((s) => s.filePath == state.currentSong!.filePath);
       }
     }
-    _preloadCheckpoints.clear(); // 🚀 Re-trigger preload for new next song
+    _preloadCheckpoints.clear();
     _preloadingTitle = null;
     _saveSettings();
-    _broadcastRemoteState(); // 🚀 SYNC: Broadcast Shuffle Change
+    _broadcastRemoteState();
   }
 
   void cycleLoopMode() {
-    _lastLocalLoopTap = DateTime.now(); // 🚀 COOLDOWN: Mark local tap
+    _lastLocalLoopTap = DateTime.now();
     final current = state.loopMode;
     ja.LoopMode nextMode;
     switch (current) {
@@ -2913,7 +3328,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
     if (!isMaster) {
       _remoteService.sendCommand('repeat');
-      state = state.copyWith(loopMode: nextMode); // Optimistic UI
+      state = state.copyWith(loopMode: nextMode);
       return;
     }
 
@@ -2921,7 +3336,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _musicService.setLoopMode(ja.LoopMode.off);
     state = state.copyWith(loopMode: nextMode);
     _saveSettings();
-    _broadcastRemoteState(); // 🚀 SYNC: Broadcast Loop Change
+    _broadcastRemoteState();
   }
 
   Future<void> _updateDiscord() async {
@@ -2937,13 +3352,26 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _lastProcessedSongPath = song.filePath;
         _cachedDiscordImage = null;
 
-        // 🚀 Use existing onlineArtUrl if available (faster than Spotify fetch)
-        final initialArt = song.onlineArtUrl;
+        // Use existing onlineArtUrl if available (faster than Spotify fetch)
+        String? initialArt = song.onlineArtUrl;
+
+        // --- Discord YouTube Thumbnail Fix ---
+        // Discord Rich Presence drops .webp images and complex URLs. 
+        // Forcefully construct a clean .jpg URL for YouTube sources.
+        final bool isYtSource = song.sourceUrl != null && song.sourceUrl!.contains('youtube');
+        if (isYtSource) {
+          final RegExp regExp = RegExp(r'(?:v=|/)([0-9A-Za-z_-]{11}).*');
+          final match = regExp.firstMatch(song.sourceUrl!);
+          if (match != null && match.groupCount >= 1) {
+            final videoId = match.group(1);
+            initialArt = 'https://i.ytimg.com/vi/$videoId/hqdefault.jpg';
+          }
+        }
 
         _discordService.updatePresence(
           song,
           state.isPlaying,
-          Duration(seconds: state.currentPosition.toInt()),
+          Duration(milliseconds: (state.currentPosition * 1000).toInt()),
           Duration(seconds: effectiveDuration.toInt()),
           imageUrl: initialArt,
         );
@@ -2953,59 +3381,45 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         }
 
         // Fetch higher quality art from APIs (with timeout + fallback chain)
-        SpotifyService.getTrackImage(song.title, song.artist)
-            .timeout(const Duration(seconds: 8), onTimeout: () => null)
-            .then((artUrl) async {
-          if (artUrl != null && artUrl.isNotEmpty) {
-            _cachedDiscordImage = artUrl;
-            _discordService.updatePresence(
-              song,
-              state.isPlaying,
-              Duration(seconds: state.currentPosition.toInt()),
-              Duration(seconds: effectiveDuration.toInt()),
-              imageUrl: artUrl,
-            );
-          } else {
-            // Fallback 1: Deezer
-            final deezerUrl =
-                await DeezerService.getTrackImage(song.title, song.artist)
-                    .timeout(const Duration(seconds: 6), onTimeout: () => null);
-            if (deezerUrl != null && deezerUrl.isNotEmpty) {
-              _cachedDiscordImage = deezerUrl;
-              _discordService.updatePresence(
-                song,
-                state.isPlaying,
-                Duration(seconds: state.currentPosition.toInt()),
-                Duration(seconds: effectiveDuration.toInt()),
-                imageUrl: deezerUrl,
-              );
+        // Skip for YouTube sources to preserve the thumbnail and prevent 404s
+        if (!isYtSource) {
+          SpotifyService.getTrackImage(song.title, song.artist,
+                  fallbackToProxy: true)
+              .timeout(const Duration(seconds: 8), onTimeout: () => null)
+              .then((artUrl) async {
+            if (artUrl != null && artUrl.isNotEmpty) {
+              _cachedDiscordImage = artUrl;
+              _discordService.updateImage(artUrl);
+            } else {
+              // Fallback 1: Deezer
+              final deezerUrl =
+                  await DeezerService.getTrackImage(song.title, song.artist)
+                      .timeout(const Duration(seconds: 6), onTimeout: () => null);
+              if (deezerUrl != null && deezerUrl.isNotEmpty) {
+                _cachedDiscordImage = deezerUrl;
+                _discordService.updateImage(deezerUrl);
+              }
             }
-          }
-        }).catchError((e) {
-          // Spotify rate-limited or failed — try Deezer as fallback
-          DebugLogService()
-              .info("[Discord] Spotify art failed: $e, trying Deezer...");
-          DeezerService.getTrackImage(song.title, song.artist)
-              .timeout(const Duration(seconds: 6), onTimeout: () => null)
-              .then((deezerUrl) {
-            if (deezerUrl != null && deezerUrl.isNotEmpty) {
-              _cachedDiscordImage = deezerUrl;
-              _discordService.updatePresence(
-                song,
-                state.isPlaying,
-                Duration(seconds: state.currentPosition.toInt()),
-                Duration(seconds: effectiveDuration.toInt()),
-                imageUrl: deezerUrl,
-              );
-            }
-          }).catchError((_) => null);
-          return null;
-        });
+          }).catchError((e) {
+            // Spotify rate-limited or failed — try Deezer as fallback
+            DebugLogService()
+                .info("[Discord] Spotify art failed: $e, trying Deezer...");
+            DeezerService.getTrackImage(song.title, song.artist)
+                .timeout(const Duration(seconds: 6), onTimeout: () => null)
+                .then((deezerUrl) {
+              if (deezerUrl != null && deezerUrl.isNotEmpty) {
+                _cachedDiscordImage = deezerUrl;
+                _discordService.updateImage(deezerUrl);
+              }
+            }).catchError((_) => null);
+            return null;
+          });
+        }
       } else {
         _discordService.updatePresence(
           song,
           state.isPlaying,
-          Duration(seconds: state.currentPosition.toInt()),
+          Duration(milliseconds: (state.currentPosition * 1000).toInt()),
           Duration(seconds: effectiveDuration.toInt()),
           imageUrl: _cachedDiscordImage,
         );
@@ -3014,7 +3428,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       _discordService.clearPresence();
     }
 
-    _broadcastRemoteState(); // Trigger remote sync
+    _broadcastRemoteState();
     _updateTaskbar();
     _saveSettings();
   }
@@ -3033,14 +3447,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       final songJson = jsonEncode(state.currentSong!.toJson());
       await prefs.setString('last_played_song', songJson);
 
-      // 🚀 SAVE THRESHOLD STATE (Fixes stats not logging after app restart)
       // Save the threshold state keyed to the current song so it can be restored
       await prefs.setString('threshold_song_path', state.currentSong!.filePath);
       await prefs.setBool('threshold_met', _isThresholdMet);
       await prefs.setDouble('cumulative_seconds', _cumulativeSecondsListened);
     }
 
-    // 🚀 SAVE GLOBAL CACHE CLEAR TIMER
+    // SAVE GLOBAL CACHE CLEAR TIMER
     await prefs.setDouble(
         'cache_clear_listening_timer', _cacheClearListeningTimer);
   }
@@ -3064,69 +3477,105 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     state = state.copyWith(isLyricsVisible: visible);
   }
 
-  void togglePlayPause() async {
+  Future<void> togglePlayPause() async {
     if (!isMaster) {
       _remoteService.sendCommand(state.isPlaying ? 'pause' : 'play');
       return;
     }
 
     final currentlyPlaying = state.isPlaying;
-    _broadcastRemoteState();
 
     if (currentlyPlaying) {
       await _musicService.pause();
-      await _pauseUsbAudio(); // 🚀 USB AUDIO SYNC
+      if (_isUsingCppEngine()) await _pauseUsbAudio(); // USB AUDIO SYNC
+      state = state.copyWith(isPlaying: false);
+      _broadcastRemoteState();
+      _updateDiscord();
     } else {
-      // 🚀 FIX: Reset the completion guard when the user manually restarts playback.
-      // This ensures that if the song was paused at the very end (e.g. by the sleep timer),
-      // resuming will allow the natural "end of track" skip to trigger again.
       _isHandlingCompletion = false;
 
-      // 🚀 MOBILE BUG FIX: Re-initialize the player if it was killed by the OS (Android/iOS)
       if ((Platform.isAndroid || Platform.isIOS)) {
         if (state.currentSong != null) {
-          final savedPosition = state
-              .currentPosition; // 🚀 Save persisted position BEFORE play() resets it
-          _playRequestToken++; // 🚀 Cancel any pending async loads
-          state =
-              state.copyWith(isBuffering: false); // 🚀 Clear buffering state
-          await _musicService.play(state.currentSong!);
-          // 🚀 RESUME POSITION: After re-loading song (e.g. cache cleared),
-          // seek to the persisted position so audio matches the seekbar.
-          if (savedPosition > 1) {
-            await _musicService
-                .seek(Duration(milliseconds: (savedPosition * 1000).toInt()));
+          final savedPosition = state.currentPosition;
+          _playRequestToken++;
+          state = state.copyWith(isBuffering: false);
+
+          if (_isUsingCppEngine()) {
+            // PRE-ACTIVATE: Block ExoPlayer's async "paused" event from downgrading foreground service
+            _musicService.preActivateCustomEngineState();
+            await _musicService.pause(); // Ensure ExoPlayer is stopped
+            if (!_isCppEnginePrepared) {
+              final isLocalAlac =
+                  state.currentSong!.filePath.toLowerCase().endsWith('.m4a') &&
+                      !state.currentSong!.filePath.startsWith('http');
+              await _playViaUsbAudio(state.currentSong!,
+                  isAlacFallback: isLocalAlac,
+                  initialPosition:
+                      Duration(milliseconds: (savedPosition * 1000).toInt()));
+            } else {
+              await _resumeUsbAudio();
+            }
+          } else {
+            await _musicService.resume(
+              lastKnownPosition: Duration(
+                  milliseconds: (state.currentPosition * 1000).toInt()),
+            );
           }
-          await _resumeUsbAudio(); // 🚀 USB AUDIO SYNC
         } else {
           await _musicService.resume();
-          await _resumeUsbAudio(); // 🚀 USB AUDIO SYNC
+          if (_isUsingCppEngine()) await _resumeUsbAudio();
         }
       } else {
-        await _musicService.resume();
-        await _resumeUsbAudio(); // 🚀 USB AUDIO SYNC
+        await _musicService.resume(
+          lastKnownPosition: state.currentSong != null
+              ? Duration(milliseconds: (state.currentPosition * 1000).toInt())
+              : null,
+        );
+        if (_isUsingCppEngine()) await _resumeUsbAudio();
       }
+      state = state.copyWith(isPlaying: true);
+      _broadcastRemoteState();
+      _updateDiscord();
     }
   }
 
   // Handle Remote Commands
   Future<void> _handleRemoteCommand(String action, dynamic value) async {
-    // 🚀 AUTO-ACTIVATE: Only activate remote session via explicit adopt_master command.
+    // AUTO-ACTIVATE: Only activate remote session via explicit adopt_master command.
     // We do NOT auto-activate from sync_state because the cloud may contain stale
     // active_device_id from a previous session, which would cause a rogue broadcast loop.
     if (!_isRemoteSessionActive) {
       if (action == 'adopt_master' && value == _localDeviceId) {
         _isRemoteSessionActive = true;
+        if (_localDeviceId != null) {
+          state = state.copyWith(
+            activeDeviceId: _localDeviceId,
+            activeDeviceName: _localDeviceName,
+          );
+        }
         DebugLogService().info(
             "📲 Remote: Auto-activated remote session (adopted as master)");
+      } else if (!PocketBaseService.isOffline &&
+          PocketBaseService.enableRemoteControl) {
+        _isRemoteSessionActive = true;
+        if (_localDeviceId != null) {
+          state = state.copyWith(
+            activeDeviceId: _localDeviceId,
+            activeDeviceName: _localDeviceName,
+          );
+        }
+        DebugLogService().info(
+            "📲 Remote: Auto-activated remote session from command '$action'");
       } else {
         return; // Not in remote session, ignore all remote commands
       }
     }
 
-    DebugLogService().info("[Remote] Cmd: $action, Val: $value");
-    DebugLogService().info(
-        "[Remote] State: Playing=${state.isPlaying}, Song=${state.currentSong?.title}"); // DEBUG LOG
+    if (action != 'sync_state') {
+      DebugLogService().info("[Remote] Cmd: $action, Val: $value");
+      DebugLogService().info(
+          "[Remote] State: Playing=${state.isPlaying}, Song=${state.currentSong?.title}"); // DEBUG LOG
+    }
 
     switch (action) {
       case 'play_song':
@@ -3154,12 +3603,23 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       case 'play':
         if (!isMaster) return;
         DebugLogService().info("[Remote] Executing RESUME");
-        await _musicService.resume();
+        _isHandlingCompletion = false;
+        await _musicService.resume(
+          lastKnownPosition: state.currentSong != null
+              ? Duration(milliseconds: (state.currentPosition * 1000).toInt())
+              : null,
+        );
+        if (_isUsingCppEngine()) await _resumeUsbAudio();
+        state = state.copyWith(isPlaying: true);
+        _broadcastRemoteState();
         break;
       case 'pause':
         if (!isMaster) return;
         DebugLogService().info("[Remote] Executing PAUSE");
         await _musicService.pause();
+        if (_isUsingCppEngine()) await _pauseUsbAudio();
+        state = state.copyWith(isPlaying: false);
+        _broadcastRemoteState();
         break;
       case 'next':
         if (!isMaster) return;
@@ -3183,7 +3643,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           DebugLogService().info("[Remote] Executing SEEK to $seekVal");
           seek(seekVal);
 
-          // 🚀 IMMEDIATE SYNC: Blast the new position back to the cloud immediately!
+          // IMMEDIATE SYNC: Blast the new position back to the cloud immediately!
           // This "squashes" any stale position broadcasts already in flight.
           _broadcastRemoteState();
         } else {
@@ -3222,33 +3682,31 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           }
         }
         break;
-      // 🚀 SAFE STATE SYNC (Artist, Title, Position, Logic)
+      // SAFE STATE SYNC (Artist, Title, Position, Logic)
       case 'sync_state':
         if (value is Map<String, dynamic>) {
           final now = DateTime.now();
 
-          // 🚀 MASTER ECHO GUARD: When the master broadcasts, polling reads it back.
+          // MASTER ECHO GUARD: When the master broadcasts, polling reads it back.
           // Skip processing our own echo to prevent wasted state churn and excessive UI rebuilds.
           final cloudActiveId = value['active_device_id'] as String?;
           if (isMaster && cloudActiveId == _localDeviceId) {
-            break; // Our own data bounced back, nothing to do
+            break;
           }
 
           final cloudActiveName = value['active_device_name'] as String?;
 
-          final wasMaster = isMaster; // Evaluate using our robust getter
+          final wasMaster = isMaster;
 
           state = state.copyWith(
             activeDeviceId: cloudActiveId,
             activeDeviceName: cloudActiveName,
           );
 
-          final isNowMaster = isMaster; // Evaluate after state update
+          final isNowMaster = isMaster;
 
-          // 🚀 AUTO-ADOPT MASTER: If we were a follower but the cloud just told us
+          // AUTO-ADOPT MASTER: If we were a follower but the cloud just told us
           // we are the active device (nominated by a remote device), we take over.
-          // ALSO FIX: If cloudActiveId is NULL, it means the master record was orphaned.
-          // SLAVES should NOT take over as master automatically just because ID is missing.
           if (!wasMaster && isNowMaster && cloudActiveId != null) {
             DebugLogService()
                 .info("📲 Remote: Adopted as MASTER by cloud nomination.");
@@ -3260,21 +3718,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             _broadcastRemoteState(forceActive: true);
           }
 
-          // 🚀 DUAL-MASTER PROTECTION: If we think we are master (id is null),
-          // but we are NOT playing and another device IS playing, we yield the throne.
-          if (isNowMaster &&
-              cloudActiveId == null &&
-              !state.isPlaying &&
-              (value['is_playing'] == true)) {
-            DebugLogService().info(
-                "📲 Remote: Phantom Master detected. Yielding to remote player.");
-            state = state.copyWith(activeDeviceId: "remote_holding_spot");
-          }
-
           // 2. POSITION & PLAYBACK SYNC
           if (!isNowMaster) {
             // we are a SLAVE: Follow the master's song information
-            // 🚀 SILENCE LOCAL PLAYER: Slaves MUST NOT make sound
+            // SILENCE LOCAL PLAYER: Slaves MUST NOT make sound
             if (state.isPlaying) {
               _musicService.pause();
             }
@@ -3287,7 +3734,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             final cloudDuration =
                 (value['duration_seconds'] as num? ?? 0).toDouble();
 
-            // 🚀 SYNC LOCK: Check if we recently performed a manual seek (Cooldown: 2s)
+            // SYNC LOCK: Check if we recently performed a manual seek (Cooldown: 2s)
             bool isSeekLocked = false;
             if (_lastManualSeekTime != null) {
               final diff = now.difference(_lastManualSeekTime!).inSeconds;
@@ -3306,7 +3753,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             if (cloudTitle != null &&
                 (state.currentSong == null ||
                     state.currentSong!.title != cloudTitle)) {
-              // 🚀 FAST LOCAL MATCH: Avoid Spotify limits and get Instant 4K Native Art if we have the file!
+              // FAST LOCAL MATCH: Avoid Spotify limits and get Instant 4K Native Art if we have the file!
               SongModel? localMatch;
               try {
                 localMatch = state.playlist.firstWhere(
@@ -3337,11 +3784,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
                 totalDuration: cloudDuration,
               );
 
-              // 🚀 Push remote metadata to Native Notifications!
+              // Push remote metadata to Native Notifications!
               _musicService.updateNotificationMetadata(dummySong);
               _updateTaskbar();
 
-              // 🚀 FETCH ARTWORK FOR LOCAL FILES: If PC is playing a local file, it won't send an art url.
+              // FETCH ARTWORK FOR LOCAL FILES: If PC is playing a local file, it won't send an art url.
               if (dummySong.onlineArtUrl == null ||
                   dummySong.onlineArtUrl!.isEmpty) {
                 _fetchRemoteArtLazily(dummySong);
@@ -3376,7 +3823,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
                   final eDuration = (e['duration'] as num?)?.toDouble() ?? 0.0;
                   final isCustom = e['isCustom'] == true;
 
-                  // 🚀 FAST LOCAL MATCH: Prevent art placeholder flickers!
+                  // FAST LOCAL MATCH: Prevent art placeholder flickers!
                   SongModel? localMatch;
                   try {
                     localMatch = state.playlist.firstWhere(
@@ -3403,7 +3850,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
                       duration: eDuration,
                     );
 
-                    // 🚀 MOBILE-SIDE ART FETCH: If no art URL, trigger lookup from mobile
+                    // MOBILE-SIDE ART FETCH: If no art URL, trigger lookup from mobile
                     if ((e['albumArt'] == null ||
                             (e['albumArt'] as String).isEmpty) &&
                         eArtist.isNotEmpty &&
@@ -3421,9 +3868,6 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
                 // If we are a follower, seamlessly mirror the master's queue
                 if (!isMaster) {
-                  // 🚀 FIX: Prepend current song to playlist so nextSong getter works.
-                  // The getter finds currentSong by filePath in playlist; without this,
-                  // the remote dummy (filePath="remote") never matches and queue appears empty.
                   final fullPlaylist = <SongModel>[];
                   if (state.currentSong != null) {
                     fullPlaylist.add(state.currentSong!);
@@ -3477,12 +3921,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             } else {
               final targetVal = value['loop_mode'] as int;
               ja.LoopMode targetMode;
-              if (targetVal == 1)
+              if (targetVal == 1) {
                 targetMode = ja.LoopMode.all;
-              else if (targetVal == 2)
+              } else if (targetVal == 2) {
                 targetMode = ja.LoopMode.one;
-              else
+              } else {
                 targetMode = ja.LoopMode.off;
+              }
 
               if (state.loopMode != targetMode) {
                 DebugLogService()
@@ -3521,11 +3966,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
                   (results['artists'] as List).map((e) => e.toJson()).toList(),
             };
 
-            print(
+            debugPrint(
                 "DEBUG: SearchAll Results: ${serialized['songs']?.length} songs, ${serialized['albums']?.length} albums");
             _remoteService.updateSearchResults(serialized);
           } catch (e) {
-            print("❌ SearchAll Error: $e");
+            debugPrint("❌ SearchAll Error: $e");
           }
         }
         break;
@@ -3540,11 +3985,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
             addToQueue(song);
           }
         } catch (e) {
-          print("☁️ Party Mode Error: Invalid song data - $e");
+          debugPrint("☁️ Party Mode Error: Invalid song data - $e");
         }
         break;
       case 'get_album_details':
-        print("📥 Received 'get_album_details' command with value: $value");
+        debugPrint(
+            "📥 Received 'get_album_details' command with value: $value");
         Map<String, dynamic>? payload;
 
         if (value is Map<String, dynamic>) {
@@ -3553,7 +3999,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           try {
             payload = jsonDecode(value);
           } catch (e) {
-            print("❌ Error decoding payload: $e");
+            debugPrint("❌ Error decoding payload: $e");
           }
         }
 
@@ -3561,9 +4007,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           final albumId = payload['id'];
           if (albumId != null) {
             try {
-              print("💿 Fetching tracks for Album ID: $albumId");
+              debugPrint("💿 Fetching tracks for Album ID: $albumId");
               final tracks = await SpotifyService.getAlbumTracks(albumId);
-              print("✅ Fetched ${tracks.length} tracks from Spotify.");
+              debugPrint("✅ Fetched ${tracks.length} tracks from Spotify.");
 
               // Convert to JSON
               final tracksJson = tracks
@@ -3580,25 +4026,25 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
                       })
                   .toList();
 
-              print("📤 Broadcasting active_album_details...");
+              debugPrint("📤 Broadcasting active_album_details...");
               _remoteService.broadcastState(albumDetails: {
                 'id': albumId,
                 'tracks': tracksJson,
               });
             } catch (e) {
-              print("❌ Album Details Error: $e");
+              debugPrint("❌ Album Details Error: $e");
             }
           } else {
-            print("⚠️ Album ID is null in payload.");
+            debugPrint("⚠️ Album ID is null in payload.");
           }
         } else {
-          print("⚠️ Payload could not be parsed.");
+          debugPrint("⚠️ Payload could not be parsed.");
         }
         break;
     }
   }
 
-  // 🚀 CACHE FOR ALBUM ART URLs (from Spotify lookup)
+  // CACHE FOR ALBUM ART URLs (from Spotify lookup)
   // Key: "artist|title", Value: Spotify image URL or empty string if not found
   final Map<String, String> _artUrlCache = {};
 
@@ -3623,23 +4069,19 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _artUrlCache[key] = '';
 
     try {
-      DebugLogService().info("🎨 Fetching art for: $title - $artist");
       String? artUrl = await SpotifyService.getTrackImage(title, artist);
 
       if (artUrl == null || artUrl.isEmpty) {
-        DebugLogService()
-            .info("🎨 ⚠️ Spotify failed, falling back to Deezer for art");
         artUrl = await DeezerService.getTrackImage(title, artist);
       }
 
       if (artUrl != null && artUrl.isNotEmpty) {
         _artUrlCache[key] = artUrl;
-        DebugLogService().info("🎨 Got art: $artUrl");
 
-        // 🚀 MASTER: Trigger a re-broadcast to send the now-cached art
+        // MASTER: Trigger a re-broadcast to send the now-cached art
         _broadcastRemoteState();
 
-        // 🚀 SLAVE: Update local state directly (broadcast is a no-op for followers)
+        // SLAVE: Update local state directly (broadcast is a no-op for followers)
         if (!isMaster) {
           // Update current song if it matches
           if (state.currentSong != null &&
@@ -3685,10 +4127,12 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   }
 
   void _broadcastRemoteState({bool forceActive = false}) {
-    if (!_isRemoteSessionActive)
-      return; // 🚀 Don't broadcast when playing independently
-    if (!isMaster && !forceActive)
+    if (!_isRemoteSessionActive) {
+      return; // Don't broadcast when playing independently
+    }
+    if (!isMaster && !forceActive) {
       return; // Followers don't broadcast state unless claiming master
+    }
 
     // Construct "Next Up" Queue (Limit 20)
     List<Map<String, dynamic>> queueData = [];
@@ -3697,10 +4141,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     // 1. Priority: User Queue (Play Next)
     for (var song in state.userQueue) {
       if (queueData.length >= limit) break;
-      // 🚀 SMART ART FALLBACK: If local file has no onlineArtUrl, check the art cache
+      // SMART ART FALLBACK: If local file has no onlineArtUrl, check the art cache
       final artUrl =
           song.onlineArtUrl ?? _getCachedArtUrl(song.artist, song.title);
-      // 🚀 LAZY ART FETCH: If we still have no art, trigger a background fetch
+      // LAZY ART FETCH: If we still have no art, trigger a background fetch
       if (artUrl == null && song.artist.isNotEmpty && song.title.isNotEmpty) {
         _fetchAndCacheArt(song.artist, song.title);
       }
@@ -3722,7 +4166,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       for (int i = startIndex; i < state.playlist.length; i++) {
         if (queueData.length >= limit) break;
         final song = state.playlist[i];
-        // 🚀 SMART ART FALLBACK: Check art cache for local files
+        // SMART ART FALLBACK: Check art cache for local files
         final artUrl =
             song.onlineArtUrl ?? _getCachedArtUrl(song.artist, song.title);
         if (artUrl == null && song.artist.isNotEmpty && song.title.isNotEmpty) {
@@ -3741,7 +4185,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       }
     }
 
-    // 🚀 SMART ART for current song: ensure we send art even for local files
+    // SMART ART for current song: ensure we send art even for local files
     String? currentArtUrl = state.currentSong?.onlineArtUrl;
     if ((currentArtUrl == null || currentArtUrl.isEmpty) &&
         state.currentSong != null) {
@@ -3762,10 +4206,8 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       loopMode: state.loopMode == ja.LoopMode.all
           ? 1
           : (state.loopMode == ja.LoopMode.one ? 2 : 0),
-      positionSeconds:
-          state.currentPosition, // 🚀 HIGH PRECISION: Send raw Double
-      durationSeconds:
-          state.totalDuration, // 🚀 HIGH PRECISION: Send raw Double
+      positionSeconds: state.currentPosition, // HIGH PRECISION: Send raw Double
+      durationSeconds: state.totalDuration, // HIGH PRECISION: Send raw Double
       artUrl: currentArtUrl,
       sourceUrl: state.currentSong?.sourceUrl,
       spotifyId: state.currentSong?.spotifyId,
@@ -3774,14 +4216,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     );
   }
 
-  // --- CROSS DEVICE HANDOFF ---
+  // CROSS DEVICE HANDOFF
 
   Future<void> switchToThisDevice() async {
     if (_localDeviceId == null) return;
     DebugLogService().info(
         "📲 Remote: Disconnecting from remote session → Independent mode...");
 
-    // 🚀 1. DEACTIVATE REMOTE SESSION
+    // 1. DEACTIVATE REMOTE SESSION
     _isRemoteSessionActive = false;
 
     // 2. Set local state to independent master
@@ -3794,7 +4236,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         (current.filePath == "remote" || current.filePath == "cloud_stream");
 
     if (isRemoteSong && _savedLocalSong != null) {
-      // 🚀 RESTORE SAVED LOCAL STATE: Go back to the song we were playing before connecting
+      // RESTORE SAVED LOCAL STATE: Go back to the song we were playing before connecting
       DebugLogService().info(
           "📲 Remote: Restoring saved local song: ${_savedLocalSong!.title}");
       state = state.copyWith(
@@ -3822,8 +4264,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       _savedLocalPlaylist = null;
     } else if (current != null && !isRemoteSong) {
       // Local file exists, just resume at current position
-      await _musicService
-          .seek(Duration(seconds: state.currentPosition.toInt()));
+      final ms = state.currentPosition.toInt() * 1000;
+      await _musicService.seek(Duration(milliseconds: ms));
+      if (Platform.isAndroid) await UsbAudioService.seek(ms);
       await _musicService.resume();
     } else if (_savedLocalSong != null) {
       // No current song at all but we have a saved one
@@ -3855,7 +4298,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   Future<void> switchToRemoteDevice(String deviceId, String deviceName) async {
     DebugLogService().info("📲 Remote: Switching playback to $deviceName...");
 
-    // 🚀 SAVE LOCAL STATE before entering remote session
+    // SAVE LOCAL STATE before entering remote session
     // This allows us to restore the last-played song when disconnecting
     if (state.currentSong != null &&
         state.currentSong!.filePath != "remote" &&
@@ -3868,7 +4311,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           "📲 Remote: Saved local state: ${_savedLocalSong!.title} @ ${_savedLocalPosition.toInt()}s");
     }
 
-    // 🚀 ACTIVATE REMOTE SESSION — enables cross-device sync
+    // ACTIVATE REMOTE SESSION — enables cross-device sync
     _isRemoteSessionActive = true;
 
     // 1. We become a follower IMMEDIATELY
@@ -3886,6 +4329,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     _remoteService.sendCommand('adopt_master', payload: deviceId);
   }
 
+  // ignore: unused_element
   Future<void> _handleHandoffResume(SongModel remoteSong) async {
     DebugLogService().info("🔄 Remote: Resolving metadata for handoff...");
 
@@ -3899,7 +4343,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     } else {
       DebugLogService().error(
           "❌ Remote: Cannot resume handoff - No source URL. Resetting player.");
-      // 🚀 PROPER RESET: Create a fresh PlayerState to truly clear currentSong.
+      // PROPER RESET: Create a fresh PlayerState to truly clear currentSong.
       // copyWith(currentSong: null) doesn't work because Dart's ?? pattern
       // treats null as "not provided" and keeps the old value.
       state = PlayerState(
@@ -3923,32 +4367,36 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   Future<bool> enableUsbAudioBypass(UsbDacDevice dac) async {
     if (!Platform.isAndroid) return false;
 
-    print("🔊 Attempting to ENABLE USB Audio Bypass for: ${dac.deviceName}");
+    debugPrint(
+        "🔊 Attempting to ENABLE USB Audio Bypass for: ${dac.deviceName}");
     final success = await UsbAudioService.openDac(dac);
     if (success) {
       _connectedUsbDac = dac;
       _useUsbAudioBypass = true;
-      print("✅ USB Audio Bypass ENABLED: ${dac.deviceName}");
+      debugPrint("✅ USB Audio Bypass ENABLED: ${dac.deviceName}");
       return true;
     }
-    print("❌ USB Audio Bypass FAILED to enable for: ${dac.deviceName}");
+    debugPrint("❌ USB Audio Bypass FAILED to enable for: ${dac.deviceName}");
     return false;
   }
 
   /// Disable USB Audio bypass and return to normal playback
   Future<void> disableUsbAudioBypass() async {
     if (_useUsbAudioBypass) {
-      print("🔇 Disabling USB Audio Bypass...");
+      debugPrint("🔇 Disabling USB Audio Bypass...");
       await UsbAudioService.closeDac();
       _connectedUsbDac = null;
       _useUsbAudioBypass = false;
-      print("🔇 USB Audio Bypass DISABLED");
+      debugPrint("🔇 USB Audio Bypass DISABLED");
     }
   }
 
-  /// Play a song through USB Audio (for Android <14 bit-perfect)
-  Future<bool> _playViaUsbAudio(SongModel song) async {
-    if (!_useUsbAudioBypass || _connectedUsbDac == null) {
+  /// Play a song through USB Audio (C++ engine → AudioTrack).
+  /// Used for bit-perfect mode AND as ALAC fallback on Android < 12.
+  Future<bool> _playViaUsbAudio(SongModel song,
+      {bool isAlacFallback = false, Duration? initialPosition}) async {
+    final settings = ref.read(settingsProvider);
+    if (!settings.androidBitPerfect && !_useUsbAudioBypass && !isAlacFallback) {
       return false;
     }
 
@@ -3956,59 +4404,121 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       // For USB Audio, we need a local file path
       if (song.filePath == "cloud_stream" ||
           !await File(song.filePath).exists()) {
-        print("⚠️ USB Audio: Cannot play cloud streams or missing files");
+        debugPrint("⚠️ USB Audio: Cannot play cloud streams or missing files");
         return false;
+      }
+
+      // If we don't have a physical DAC, use built-in AudioTrack
+      if (_connectedUsbDac == null &&
+          (settings.androidBitPerfect || isAlacFallback)) {
+        debugPrint(
+            "⚠️ Routing to C++ Engine → Built-in AudioTrack (${isAlacFallback ? 'ALAC fallback' : 'bit-perfect'})...");
+        await UsbAudioService.openBuiltInDac();
       }
 
       // Prepare the file for USB playback
       final prepared = await UsbAudioService.prepareFile(song.filePath);
       if (!prepared) {
-        print("❌ USB Audio: Failed to prepare file");
+        debugPrint("❌ USB Audio: Failed to prepare file");
         return false;
+      }
+
+      // Sync volume BEFORE playing/priming to prevent loud volume blasts
+      final calculatedVol =
+          _musicService.getCalculatedVolumeForSong(song, state.volume);
+      await UsbAudioService.setVolume(calculatedVol);
+
+      // Pre-seek the engine BEFORE starting playback to prevent UI flicker ("blinging")
+      if (initialPosition != null && initialPosition.inMilliseconds > 0) {
+        await UsbAudioService.seek(initialPosition.inMilliseconds);
       }
 
       // Start USB playback
       final success = await UsbAudioService.play();
       if (success) {
-        print("✅ USB Audio: Playing ${song.title}");
+        _isCppEnginePrepared = true;
+
+        // Ensure Android OS notification gets the ALAC track metadata
+        await _musicService.updateNotificationMetadata(song);
+        _lastNotificationSyncMs = 0; // Reset throttle for new track
+        _musicService.syncCustomEngineState(
+            isPlaying: true, position: initialPosition ?? Duration.zero);
+
+        // CLAIM AUDIO FOCUS FOR C++ ENGINE
+        // ExoPlayer abandons focus when paused. Playing audio in the background without Focus
+        // causes Android to strictly throttle and freeze the C++ thread when minimized.
+        if (Platform.isAndroid || Platform.isIOS) {
+          final session = await AudioSession.instance;
+          await session.setActive(true);
+        }
+
+        debugPrint("✅ USB Audio: Playing ${song.title}");
         state = state.copyWith(isPlaying: true);
         return true;
       }
       return false;
     } catch (e) {
-      print("❌ USB Audio Error: $e");
+      debugPrint("❌ USB Audio Error: $e");
       return false;
     }
   }
 
   /// Pause USB Audio playback
   Future<void> _pauseUsbAudio() async {
-    if (_useUsbAudioBypass) {
+    if (_isUsingCppEngine() && _isCppEnginePrepared) {
       await UsbAudioService.pause();
+      state = state.copyWith(isPlaying: false);
+      _musicService.syncCustomEngineState(
+          isPlaying: false,
+          position:
+              Duration(milliseconds: (state.currentPosition * 1000).toInt()));
     }
   }
 
   /// Resume USB Audio playback
   Future<void> _resumeUsbAudio() async {
-    if (_useUsbAudioBypass) {
+    if (_isUsingCppEngine() && _isCppEnginePrepared) {
+      // Re-claim Audio Focus when resuming
+      if (Platform.isAndroid || Platform.isIOS) {
+        final session = await AudioSession.instance;
+        await session.setActive(true);
+      }
+
       await UsbAudioService.resume();
+      state = state.copyWith(isPlaying: true);
+      _musicService.syncCustomEngineState(
+          isPlaying: true,
+          position:
+              Duration(milliseconds: (state.currentPosition * 1000).toInt()));
     }
   }
 
+  bool _isUsingCppEngine([SongModel? song]) {
+    song ??= state.currentSong;
+    if (song == null || !Platform.isAndroid) return false;
+    final bool isLocalAlac = song.filePath != "cloud_stream" &&
+        !song.filePath.startsWith('http') &&
+        song.filePath.toLowerCase().endsWith('.m4a');
+    return _useUsbAudioBypass ||
+        ref.read(settingsProvider).androidBitPerfect ||
+        isLocalAlac;
+  }
+
   /// Stop USB Audio playback
+  // ignore: unused_element
   Future<void> _stopUsbAudio() async {
     if (_useUsbAudioBypass) {
       await UsbAudioService.stop();
     }
   }
 
-  // --- JIT STREAMING HELPER ---
+  //JIT STREAMING HELPER
 
   /// Resolves a Tidal Stream URL based on user quality settings.
   /// Returns null if no match found or error occurs.
   Future<String?> _getJitStreamUrl(SongModel song) async {
     try {
-      // 🍎 APPLE MUSIC FAST-PATH
+      // APPLE MUSIC FAST-PATH
       final isAppleMusic =
           song.sourceUrl != null && song.sourceUrl!.contains('music.apple.com');
       if (isAppleMusic) {
@@ -4021,27 +4531,48 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
           onQueueUpdate: (pos) {
             if (pos > 0) {
               debugPrint("🍎 Apple Music Queue: Position $pos");
-              // Future improvement: Push this to UI status message
             }
           },
         );
       }
 
-      // 🚀 FEATURE GATE: YouTube sources never support lossless streaming
+      // FEATURE GATE: YouTube sources never support lossless streaming
       final isYtSource =
           song.sourceUrl != null && song.sourceUrl!.contains('youtube');
       if (isYtSource) {
-        debugPrint(
-            "🚫 YouTube source: Skipping JIT FLAC/Tidal resolution (Lossless unavailable)");
-        return null;
+        debugPrint("▶️ YouTube source: Requesting instant JIT stream...");
+        return await YoutubeDownloaderService().getStreamUrl(song.sourceUrl!);
       }
 
       debugPrint(
           "🔍 JIT Stream: Searching Tidal for '${song.title}' by '${song.artist}'");
 
       final flacService = FlacDownloaderService();
-      final tidalId =
-          await flacService.getTidalTrackIdBySearch(song.title, song.artist);
+      String? tidalId;
+
+      // 1. Try to resolve via Spotify ID using song.link (most accurate for complex/foreign titles)
+      if (song.spotifyId != null && song.spotifyId!.isNotEmpty) {
+        debugPrint("🔍 JIT Stream: Attempting to resolve Tidal ID via Spotify ID...");
+        final urls = await flacService.getStreamingUrls(song.spotifyId!);
+        if (urls != null && urls.tidalUrl != null) {
+          final regex = RegExp(r'/track/(\d+)');
+          final match = regex.firstMatch(urls.tidalUrl!);
+          if (match != null) {
+            tidalId = match.group(1);
+            if (tidalId != null) {
+              debugPrint("✅ JIT Stream: Resolved Tidal ID via Spotify ID: $tidalId");
+            }
+          }
+        }
+      }
+
+      // 2. Fallback to direct search if song.link failed
+      if (tidalId == null) {
+        debugPrint(
+            "🔍 JIT Stream: Searching Tidal for '${song.title}' by '${song.artist}'");
+        tidalId =
+            await flacService.getTidalTrackIdBySearch(song.title, song.artist);
+      }
 
       if (tidalId != null) {
         final settings = ref.read(settingsProvider);
@@ -4062,7 +4593,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       } else {
         debugPrint(
             "⚠️ JIT Stream: Tidal ID not found for '${song.title}' by '${song.artist}'");
-        // 🚀 FALLBACK: Try with simplified title (remove parentheses content)
+        // FALLBACK: Try with simplified title (remove parentheses content)
         final cleanTitle =
             song.title.replaceAll(RegExp(r'\s*\(.*?\)\s*'), '').trim();
         if (cleanTitle != song.title && cleanTitle.isNotEmpty) {
@@ -4093,7 +4624,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     return null;
   }
 
-  // --- REMOTE ART LAZY FETCH ---
+  // REMOTE ART LAZY FETCH
   Future<void> _fetchRemoteArtLazily(SongModel dummySong) async {
     try {
       final imgUrl =

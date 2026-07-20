@@ -25,6 +25,12 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+
+  taskbar_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(),
+      "com.momotz4g.simplemusicplayer2/taskbar_recreated",
+      &flutter::StandardMethodCodec::GetInstance());
+
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -58,6 +64,18 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                                                       lparam);
     if (result) {
       return *result;
+    }
+  }
+
+  static const UINT wm_taskbar_created = RegisterWindowMessageW(L"TaskbarCreated");
+  if (message == wm_taskbar_created) {
+    if (taskbar_channel_) {
+      // Notify both Dart-side listeners. WindowsTaskbarService uses this to
+      // re-attach thumbnail toolbar buttons; TrayService uses it to
+      // re-publish the tray icon when explorer.exe restarts (otherwise the
+      // icon disappears permanently and there's no way to restore the
+      // window from tray).
+      taskbar_channel_->InvokeMethod("onTaskbarCreated", nullptr);
     }
   }
 

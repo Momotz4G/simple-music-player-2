@@ -221,7 +221,7 @@ class _AudioOutputDialogState extends ConsumerState<AudioOutputDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${l10n.pathLabel}: ${widget.filePath?.startsWith('http') == true ? (widget.filePath!.contains('apm-api') ? 'Apple Music Stream Server' : 'Tidal Server Stream') : (widget.filePath ?? l10n.unknown)}",
+                            "${l10n.pathLabel}: ${widget.filePath?.startsWith('http') == true ? (widget.filePath!.contains('googlevideo.com') || widget.filePath!.contains('youtube') ? 'YouTube Server Stream' : (widget.filePath!.contains('apm-api') ? 'Apple Music Stream Server' : 'Tidal Server Stream')) : (widget.filePath ?? l10n.unknown)}",
                             style: TextStyle(
                                 color: Colors.grey[500], fontSize: 11),
                             maxLines: 2,

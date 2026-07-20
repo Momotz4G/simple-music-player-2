@@ -21,10 +21,10 @@ class MetricsService {
   String? _userId;
   String? get userId => _userId;
 
-  // 🚀 Mutex for sequential updates
+  // Mutex for sequential updates
   Future<void> _lastUpdateFuture = Future.value();
 
-  // 🚀 LOCAL SESSION TRACKING (for accurate quota enforcement)
+  // LOCAL SESSION TRACKING (for accurate quota enforcement)
   int _sessionDownloadCount = 0;
   DateTime? _sessionStartDate;
   int? _cachedDailyCountAtStart;
@@ -40,7 +40,7 @@ class MetricsService {
       final prefs = await SharedPreferences.getInstance();
       final linkedUserId = prefs.getString('pb_linked_user_id');
       
-      // 🚀 CRITICAL FIX: Update internal _userId to the synchronized identity
+      // CRITICAL FIX: Update internal _userId to the synchronized identity
       _userId = linkedUserId ?? hardwareId;
       
       // 1. Initialize PocketBase (Unified for all platforms)
@@ -79,6 +79,7 @@ class MetricsService {
     await _pbWrite(fields);
   }
 
+  // ignore: unused_element
   Future<void> _restAdd(
       String collectionPath, Map<String, dynamic> fields) async {
     // For 'add', we just merge it into the user's record or ignore if it's an event
@@ -107,8 +108,8 @@ class MetricsService {
     // Increment Total Plays
     await _incrementUserStat('play_count');
     // Global Artist Tracking
-    if (song.artist != null && song.artist!.isNotEmpty) {
-      await PocketBaseService().incrementArtistPlay(song.artist!);
+    if (song.artist.isNotEmpty) {
+      await PocketBaseService().incrementArtistPlay(song.artist);
     }
     // Sync Local Total
     if (localTotal != null) {
@@ -127,14 +128,14 @@ class MetricsService {
     if (PocketBaseService.isOffline) return; // 🔒 OFFLINE MODE: Skip cloud tracking
     await _incrementUserStat('play_count');
     // Global Artist Tracking
-    if (song.artist != null && song.artist!.isNotEmpty) {
-      await PocketBaseService().incrementArtistPlay(song.artist!);
+    if (song.artist.isNotEmpty) {
+      await PocketBaseService().incrementArtistPlay(song.artist);
     }
     if (localTotal != null || totalMinutes != null) {
-      // 🚀 SERIALIZE: Chain onto the mutex to prevent race conditions
+      // SERIALIZE: Chain onto the mutex to prevent race conditions
       _lastUpdateFuture = _lastUpdateFuture.whenComplete(() async {
         try {
-          // 🚀 CRITICAL FIX: Never overwrite cloud values with a LOWER local value.
+          // CRITICAL FIX: Never overwrite cloud values with a LOWER local value.
           // On multi-device setups, each device has its own local Isar DB.
           // Without this check, a device with fewer plays would nuke the cloud total.
           final currentCloud = await PocketBaseService().getUserMetrics();
@@ -144,9 +145,22 @@ class MetricsService {
           final safePlayCount = localTotal != null
               ? (localTotal > cloudPlayCount ? localTotal : cloudPlayCount)
               : null;
-          final safeMinutes = totalMinutes != null
-              ? (totalMinutes > cloudMinutes ? totalMinutes : cloudMinutes)
-              : null;
+          // DELTA-BASED MINUTES SYNC: Track incremental listening time
+          // instead of max(local, cloud). This ensures minutes always go up,
+          // even on multi-device setups where cloud > local.
+          int? safeMinutes;
+          if (totalMinutes != null) {
+            final prefs = await SharedPreferences.getInstance();
+            final lastSyncedLocal = prefs.getInt('last_synced_local_minutes') ?? totalMinutes;
+            final delta = totalMinutes - lastSyncedLocal;
+            if (delta > 0) {
+              safeMinutes = cloudMinutes + delta;
+            } else {
+              safeMinutes = cloudMinutes;
+            }
+            // ALWAYS persist snapshot so next call can compute the real delta
+            await prefs.setInt('last_synced_local_minutes', totalMinutes);
+          }
 
           final updates = <String, dynamic>{
             if (safePlayCount != null) 'local_total_plays': localTotal,
@@ -171,7 +185,7 @@ class MetricsService {
   }
 
   Future<void> trackDownloadMetadata(dynamic metadata) async {
-    // 🚀 INCREMENT LOCAL SESSION COUNTER FIRST (instant, no race condition)
+    // INCREMENT LOCAL SESSION COUNTER FIRST (instant, no race condition)
     _sessionDownloadCount++;
     debugPrint("📊 Session download count: $_sessionDownloadCount");
 
@@ -212,7 +226,7 @@ class MetricsService {
     try {
       final now = DateTime.now().toUtc();
 
-      // 🚀 CHECK IF LOCAL SESSION IS FROM TODAY
+      // CHECK IF LOCAL SESSION IS FROM TODAY
       if (_sessionStartDate != null) {
         final sessionDate = _sessionStartDate!;
         if (sessionDate.year != now.year ||
@@ -226,8 +240,9 @@ class MetricsService {
       }
 
       final currentData = await PocketBaseService().getUserMetrics();
-      if (currentData == null)
+      if (currentData == null) {
         return dailyDownloadLimit - _sessionDownloadCount;
+      }
 
       // Check if user is banned - return 0 quota
       if (currentData['is_banned'] == true) {
@@ -253,14 +268,14 @@ class MetricsService {
         }
       }
 
-      // 🚀 CACHE THE SERVER COUNT AT START OF SESSION
+      // CACHE THE SERVER COUNT AT START OF SESSION
       if (_cachedDailyCountAtStart == null) {
         _cachedDailyCountAtStart = serverDailyCount;
         _sessionStartDate = now;
         _sessionDownloadCount = 0; // Reset session count when caching
       }
 
-      // 🚀 USE LOCAL SESSION COUNTER FOR ACCURATE REAL-TIME QUOTA
+      // USE LOCAL SESSION COUNTER FOR ACCURATE REAL-TIME QUOTA
       // Total = cached server count at start + downloads in this session
       final effectiveCount = _cachedDailyCountAtStart! + _sessionDownloadCount;
 
@@ -281,7 +296,7 @@ class MetricsService {
   Future<void> _incrementUserStat(String fieldName) async {
     if (!_initialized || _userId == null) return;
 
-    // 🚀 SERIALIZE REQUESTS (Prevents Race Condition in Bulk Downloads)
+    // SERIALIZE REQUESTS (Prevents Race Condition in Bulk Downloads)
     // Chain this request to the end of the previous one
     _lastUpdateFuture = _lastUpdateFuture.whenComplete(() async {
       try {
@@ -440,7 +455,7 @@ class MetricsService {
             'hostname': hostname,
             'os': os,
             'os_version': osVersion,
-            'client_version': clientVersion, // 🚀 NEW
+            'client_version': clientVersion, // NEW
             'last_active': DateTime.now().toUtc().toIso8601String(),
           },
           isUpdate: true);
@@ -452,7 +467,7 @@ class MetricsService {
   Future<void> syncLocalStats(int localTotal) async {
     if (!_initialized || _userId == null) return;
     try {
-      // 🚀 CRITICAL FIX: Never overwrite cloud with lower local value
+      // CRITICAL FIX: Never overwrite cloud with lower local value
       final currentCloud = await PocketBaseService().getUserMetrics();
       final cloudPlayCount = currentCloud?['play_count'] ?? 0;
       final safePlayCount =
@@ -495,7 +510,7 @@ class MetricsService {
     }
     if (PocketBaseService.isOffline) return; // 🔒 OFFLINE MODE: Skip cloud sync
     try {
-      // 🚀 CRITICAL FIX: Never overwrite cloud with lower local values (Multi-device protection)
+      // CRITICAL FIX: Never overwrite cloud with lower local values (Multi-device protection)
       final currentCloud = await PocketBaseService().getUserMetrics();
 
       final cloudMinutes = currentCloud?['total_minutes'] ?? 0;
@@ -505,9 +520,22 @@ class MetricsService {
       final cloudTopArtistPlays = currentCloud?['top_artist_plays'] ?? 0;
       final cloudMostListenedPlays = currentCloud?['most_listened_plays'] ?? 0;
 
-      final safeMinutes = (totalMinutes != null && totalMinutes > cloudMinutes)
-          ? totalMinutes
-          : (totalMinutes != null ? cloudMinutes : null);
+      // DELTA-BASED MINUTES SYNC: Track incremental listening time
+      // instead of max(local, cloud). This ensures minutes always go up,
+      // even on multi-device setups where cloud > local.
+      int? safeMinutes;
+      if (totalMinutes != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final lastSyncedLocal = prefs.getInt('last_synced_local_minutes') ?? totalMinutes;
+        final delta = totalMinutes - lastSyncedLocal;
+        if (delta > 0) {
+          safeMinutes = cloudMinutes + delta;
+        } else {
+          safeMinutes = cloudMinutes;
+        }
+        // ALWAYS persist snapshot so next call can compute the real delta
+        await prefs.setInt('last_synced_local_minutes', totalMinutes);
+      }
       final safePlayCount = (playCount != null && playCount > cloudPlayCount)
           ? playCount
           : (playCount != null ? cloudPlayCount : null);
@@ -544,7 +572,7 @@ class MetricsService {
 
       final cloudTitle = currentCloud?['selected_title'] as String?;
       
-      // 🚀 TITLE PROTECTION: Never let a low-rarity title from another device overwrite a prestige cloud title.
+      // TITLE PROTECTION: Never let a low-rarity title from another device overwrite a prestige cloud title.
       // Note: Competitive titles ("Top X Global") CAN be saved here when intentionally equipped.
       // The DISPLAY side validates them against actual rank — if rank doesn't match, it shows the fallback title.
       bool shouldUpdateTitle = true;
@@ -563,7 +591,7 @@ class MetricsService {
       final cloudTopTrack = currentCloud?['top_track'] as String?;
 
       final updates = <String, dynamic>{
-        // 🚀 STATS PROTECTION: Only update Top Artist/Track if cloud is empty or "N/A"
+        // STATS PROTECTION: Only update Top Artist/Track if cloud is empty or "N/A"
         if (topArtist != null && (cloudTopArtist == null || cloudTopArtist.isEmpty || cloudTopArtist == "N/A")) 
           'top_artist': topArtist,
         if (topTrack != null && (cloudTopTrack == null || cloudTopTrack.isEmpty || cloudTopTrack == "N/A")) 
@@ -590,8 +618,11 @@ class MetricsService {
         final Map<String, int> cloudArtistMinutes = {};
         if (cloudArtistMinutesRaw is Map) {
           cloudArtistMinutesRaw.forEach((k, v) {
-            if (v is int) cloudArtistMinutes[k.toString()] = v;
-            else if (v is num) cloudArtistMinutes[k.toString()] = v.toInt();
+            if (v is int) {
+              cloudArtistMinutes[k.toString()] = v;
+            } else if (v is num) {
+              cloudArtistMinutes[k.toString()] = v.toInt();
+            }
           });
         }
         // Merge: take the higher value for each artist
@@ -607,7 +638,7 @@ class MetricsService {
         // More than just last_active
         debugPrint(
             "📊 syncAdvancedStats: WRITING total_minutes=$totalMinutes (safe=$safeMinutes), topArtist=$topArtist, topTrack=$topTrack, maxRepeatStreak=$maxRepeatStreak");
-        // 🚀 SERIALIZE through mutex
+        // SERIALIZE through mutex
         _lastUpdateFuture = _lastUpdateFuture.whenComplete(() async {
           await _pbWrite(updates);
         });
@@ -736,7 +767,7 @@ class MetricsService {
       }
       if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
-        return iosInfo.name ?? "iPhone";
+        return iosInfo.name;
       }
       if (Platform.isMacOS) {
         final macInfo = await deviceInfo.macOsInfo;

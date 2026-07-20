@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 
 class NotificationService {
@@ -88,7 +89,7 @@ class NotificationService {
 
     if (Platform.isWindows || Platform.isLinux) return;
 
-    final AndroidNotificationDetails androidPlatformChannelSpecifics =
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'download_channel',
       'Download Notifications',
@@ -100,7 +101,7 @@ class NotificationService {
       onlyAlertOnce: false, // Allow alert for completion
     );
 
-    final NotificationDetails platformChannelSpecifics =
+    const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.show(
@@ -119,7 +120,7 @@ class NotificationService {
     try {
       await flutterLocalNotificationsPlugin.cancel(id);
     } catch (e) {
-      print("Warning: Failed to cancel notification $id: $e");
+      debugPrint("Warning: Failed to cancel notification $id: $e");
     }
   }
 }

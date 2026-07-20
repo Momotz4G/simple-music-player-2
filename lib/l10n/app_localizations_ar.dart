@@ -38,6 +38,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountLinkedSuccessfully => 'تم ربط الحساب بنجاح!';
 
   @override
+  String get accountTiers => 'مستويات الحساب';
+
+  @override
   String get achievementsUnlocked => 'الإنجازات المفتوحة';
 
   @override
@@ -54,6 +57,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addFoldersScan => 'إضافة مجلدات للمسح';
+
+  @override
+  String get addLineToEnd => 'إضافة إلى النهاية';
+
+  @override
+  String get addLineToTop => 'إضافة إلى الأعلى';
 
   @override
   String get addToFavorite => 'إضافة إلى المفضلة';
@@ -77,6 +86,65 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addedToQueue => 'تمت الإضافة إلى قائمة الانتظار';
+
+  @override
+  String get aiGenerate => 'إنشاء بالذكاء الاصطناعي';
+
+  @override
+  String get aiLyricsComplete => 'اكتمل!';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsGenerationTitle => 'إنشاء الكلمات بالذكاء الاصطناعي';
+
+  @override
+  String get aiLyricsInitializing => 'جاري التهيئة...';
+
+  @override
+  String get aiLyricsLocalFileMissing => 'خطأ: ملف الصوت المحلي غير موجود.';
+
+  @override
+  String get aiLyricsParsing => 'جاري تحليل الكلمات...';
+
+  @override
+  String get aiLyricsPolling => 'جاري الحصول على الكلمات... يرجى الصبر!';
+
+  @override
+  String get aiLyricsReceiving => 'تم استلام الكلمات';
+
+  @override
+  String get aiLyricsStatusOk => 'رمز الحالة 200 OK!';
+
+  @override
+  String get aiLyricsSuccess => 'تم إنشاء الكلمات بنجاح!';
+
+  @override
+  String get aiLyricsUploadFailed => 'خطأ: فشل الرفع.';
+
+  @override
+  String get aiLyricsUploadSuccess => 'اكتمل الرفع!';
+
+  @override
+  String get aiLyricsUploading => 'جاري رفع الأغنية إلى الخادم...';
+
+  @override
+  String get aiLyricsVerifying => 'جاري التحقق من حالة الخادم...';
+
+  @override
+  String alacDownloadsPerDay(int count) {
+    return '$count تنزيلات ALAC / يوم';
+  }
+
+  @override
+  String get alacHighResDownloads => 'تنزيلات ALAC عالية الدقة';
 
   @override
   String get album => 'الألبوم';
@@ -106,6 +174,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get alreadyInLikedSongs => 'موجودة بالفعل في الأغاني المعجب بها';
 
   @override
+  String get alreadyPaidCheckStatus => 'تم الدفع بالفعل؟ تحقق من الحالة';
+
+  @override
   String get android14BitPerfect => 'Android 14+ Bit-Perfect';
 
   @override
@@ -123,6 +194,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appearance => 'المظهر';
+
+  @override
+  String get applyBtn => 'تطبيق';
 
   @override
   String get applyOnRestart =>
@@ -204,6 +278,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get automatic => 'تلقائي';
 
   @override
+  String get automaticGainControl => 'التحكم التلقائي في الكسب';
+
+  @override
+  String get automaticGainControlDesc =>
+      'تطبيع مستوى الصوت عبر الأغاني بحيث لا يكون أي شيء مرتفعًا جدًا أو هادئًا جدًا.';
+
+  @override
   String automaticTitleLabel(String title) {
     return 'تلقائي: $title';
   }
@@ -215,14 +296,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get avatarPickerDesc => 'اختر قالبًا أو استورد صورتك الخاصة';
 
   @override
-  String get beFirstToClaim => 'كن الأول للمطالبة بالمركز الأول!';
-
-  @override
   String get backgroundCacheFlacStreams => 'تخزين مؤقت لتدفقات FLAC في الخلفية';
 
   @override
   String get backgroundCacheFlacStreamsSubtitle =>
       'يقوم بتنزيل المسارات عالية الجودة المتدفقة بصمت إلى القرص المحلي لجعل إعادة التشغيل فورية دون استخدام البيانات.';
+
+  @override
+  String get beFirstToClaim => 'كن الأول للمطالبة بالمركز الأول!';
 
   @override
   String get behavioralHeader => 'إنجازات سلوكية';
@@ -235,6 +316,23 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bitDepthLabel => 'عمق البت';
+
+  @override
+  String get bitPerfectBypassSub14 =>
+      'تجاوز خلاط النظام باستخدام واجهة برمجية Bit-Perfect لنظام Android 14+';
+
+  @override
+  String get bitPerfectBypassSubLegacy =>
+      'تجاوز خلاط النظام باستخدام محرك الصوت C++ (نظام Android 13 وما قبله)';
+
+  @override
+  String get bitPerfectBypassSuccess => 'تم تمكين تشغيل Bit-Perfect.';
+
+  @override
+  String get bitPerfectBypassTitle => 'Bit-Perfect / تجاوز صوت USB';
+
+  @override
+  String get bitPerfectBypassWarning => 'يجب توصيل USB DAC أولاً.';
 
   @override
   String get bitPerfectEnabled =>
@@ -270,6 +368,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cancel => 'إلغاء';
+
+  @override
+  String get cancelAllBtn => 'إلغاء الكل';
+
+  @override
+  String get canvasSourcePreferenceSubtitle =>
+      'اختر من أين يتم تحميل حلقات الخلفية المتحركة';
+
+  @override
+  String get canvasSourcePreferenceTitle => 'مصدر الكانفاس / الغلاف المتحرك';
 
   @override
   String get championChampionTooltip =>
@@ -326,6 +434,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chooseAvatar => 'اختر الأفاتار';
 
   @override
+  String get chooseFormat => 'اختر التنسيق المفضل لديك:';
+
+  @override
   String get chooseYourTitle => 'اختر لقبك';
 
   @override
@@ -333,6 +444,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clearAll => 'مسح الكل';
+
+  @override
+  String get clearAllDesc =>
+      'سيؤدي هذا إلى مسح حالة المحرر الحالية. لن يتم حذف ملفاتك المحلية إلا إذا قمت بالحفظ لاحقاً.';
+
+  @override
+  String get clearAllQuestion => 'مسح الكل؟';
+
+  @override
+  String get clearBtn => 'مسح';
 
   @override
   String get clearHistory => 'مسح السجل';
@@ -355,6 +476,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cloud => 'سحابي';
+
+  @override
+  String get cloudStatsAndRankings => 'إحصائيات السحابة والتصنيفات';
 
   @override
   String get codeCopied => 'تم نسخ الرمز إلى الحافظة!';
@@ -413,7 +537,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contentRegion => 'منطقة المحتوى';
 
   @override
+  String get continueToSociabuzz => 'المتابعة إلى Sociabuzz';
+
+  @override
   String get copyCode => 'نسخ الرمز';
+
+  @override
+  String get copyLink => 'نسخ الرابط';
 
   @override
   String get couldNotDownloadFlac => 'لم يتم تنزيل FLAC.';
@@ -447,6 +577,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get crownedChampionTitlesHeader => 'ألقاب البطل المتوج';
+
+  @override
+  String get currentTierLabel => 'الحالي';
 
   @override
   String get customDevice => 'جهاز مخصص';
@@ -532,6 +665,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get disableRomanization => 'تعطيل الرومنة';
 
   @override
+  String get disableServicesTitle => 'تعطيل الخدمات';
+
+  @override
+  String get disabled => 'معطل';
+
+  @override
   String get disablingSharingWarning =>
       'سيعمل تعطيل المشاركة على حذف الرمز والبيانات نهائياً من الخادم لتوفير المساحة.';
 
@@ -549,6 +688,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get donate => 'تبرع';
+
+  @override
+  String get donateMinToObtain => 'تبرع بحد أدنى 10,000 IDR للحصول عليه (دائم)';
 
   @override
   String get download => 'تنزيل';
@@ -611,6 +753,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dspLabel => 'DSP';
 
   @override
+  String get editLyricsTooltip => 'تعديل الكلمات';
+
+  @override
   String get editMetadata => 'تعديل البيانات الوصفية';
 
   @override
@@ -643,6 +788,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get enableBarVisualizer => 'تفعيل المصور الشريطي';
+
+  @override
+  String get enableOfflineModeBtn => 'تمكين وضع عدم الاتصال';
+
+  @override
+  String get enableOfflineModeQuestion => 'هل تريد تمكين وضع عدم الاتصال؟';
+
+  @override
+  String get endLabel => 'النهاية: ';
 
   @override
   String get endlessQueue => 'قائمة انتظار لا نهائية';
@@ -703,6 +857,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'تحذير: الوضع الحصري يعمل بشكل أفضل إذا اخترت جهازاً محدداً أعلاه بدلاً من افتراضي النظام.';
 
   @override
+  String get exclusiveSupporterTitle => 'لقب داعم حصري ودور Discord';
+
+  @override
   String get exclusiveTitles => 'حصري';
 
   @override
@@ -719,7 +876,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expand => 'توسيع';
 
   @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
   String get externalFiles => 'ملفات خارجية';
+
+  @override
+  String get externalLinkDetected => 'تم اكتشاف رابط خارجي';
 
   @override
   String get fadingAtEnd => 'مؤقت النوم: يتلاشى في نهاية المقطع...';
@@ -740,6 +903,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get failedToGenerateCode => 'فشل إنشاء رمز المشاركة. تحقق من الاتصال.';
 
   @override
+  String get failedToSave => 'فشل في حفظ ملف الكلمات.';
+
+  @override
   String get failedToSetAvatar => 'فشل في تعيين قالب الصورة الرمزية';
 
   @override
@@ -747,6 +913,76 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get favoriteTrack => 'الأغنية المفضلة';
+
+  @override
+  String get featureAiLyrics => 'مولد كلمات الأغاني بالذكاء الاصطناعي';
+
+  @override
+  String get featureAiLyricsDesc => 'تم تعطيل كلمات الأغاني المتزامنة تلقائيًا';
+
+  @override
+  String get featureAiLyricsLongDesc =>
+      'إنشاء كلمات أغاني متزامنة عبر الذاء الاصطناعي';
+
+  @override
+  String get featureCloudSync => 'مزامنة إحصائيات السحابة';
+
+  @override
+  String get featureCloudSyncDesc => 'يتم حفظ إحصائيات الاستماع محليًا فقط';
+
+  @override
+  String get featureCloudSyncLongDesc => 'مزامنة مقاييس الاستماع مع PocketBase';
+
+  @override
+  String get featureConnectDevice => 'الاتصال بجهاز';
+
+  @override
+  String get featureConnectDeviceDesc =>
+      'تم تعطيل التحكم عن بعد وحفلات الاستماع';
+
+  @override
+  String get featureConnectDeviceLongDesc => 'التحكم عن بعد وحفلات الاستماع';
+
+  @override
+  String get featureLeaderboard => 'قائمة المتصدرين العالمية';
+
+  @override
+  String get featureLeaderboardDesc => 'توقفت تحديثات الترتيب';
+
+  @override
+  String get featureLeaderboardLongDesc => 'إظهار وتحديث ترتيبك علنًا';
+
+  @override
+  String get featureOnlineLyrics => 'البحث عن كلمات الأغاني عبر الإنترنت';
+
+  @override
+  String get featureOnlineLyricsDesc => 'ملفات .lrc/.ttml المحلية فقط';
+
+  @override
+  String get featureOnlineLyricsLongDesc =>
+      'جلب كلمات الأغاني من LRCLIB/Spotify';
+
+  @override
+  String get featureOnlineSearch => 'البحث عبر الإنترنت';
+
+  @override
+  String get featureOnlineSearchDesc => 'تم تعطيل بحث Spotify/YouTube';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'بحث Spotify و YouTube عن بعد';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => 'تم تعطيل مقاطع الفيديو في الخلفية';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => 'مقاطع فيديو الخلفية للمسارات';
+
+  @override
+  String get fetchingAlacAppleMusic =>
+      'جاري جلب ALAC Lossless من Apple Music...';
 
   @override
   String get fetchingCanvas => 'جاري جلب Canvas...';
@@ -892,7 +1128,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get general => 'عام';
 
   @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
   String get generatingShareCode => 'جاري إنشاء رمز المشاركة...';
+
+  @override
+  String get generationFailed => 'فشل الإنشاء';
 
   @override
   String get genre => 'النوع';
@@ -924,6 +1166,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'اذهب إلى المكتبة المحلية لاختيار مجلد.';
 
   @override
+  String get gofileDownloadFailedPrompt =>
+      'فشل التنزيل التلقائي بسبب قيود الشبكة أو الخادم الصارمة.\\n\\nهل ترغب في فتح صفحة تنزيل Gofile في متصفح النظام، أم نسخ الرابط للتنزيل يدويًا؟';
+
+  @override
   String get goodAfternoon => 'مساء الخير';
 
   @override
@@ -940,6 +1186,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get grantPermission => 'منح الإذن';
+
+  @override
+  String get guestTier => 'ضيف';
 
   @override
   String get hallOfFameHeader => 'إنجازات قاعة المشاهير';
@@ -1011,6 +1260,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get importFromGallery => 'استيراد من المعرض';
 
   @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
   String get importFromSpotify => 'استيراد من Spotify';
 
   @override
@@ -1031,6 +1286,80 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get importLyricsTooltip => 'استيراد كلمات';
+
+  @override
+  String get localFile => 'ملف محلي';
+
+  @override
+  String get importLocalFileSubtitle => 'استيراد .lrc أو .ttml أو .txt';
+
+  @override
+  String get searchFromAppleMusic => 'البحث في Apple Music';
+
+  @override
+  String get searchAppleMusicSubtitle => 'تنزيل LRC/TTML تلقائيًا';
+
+  @override
+  String get searchFromSpotifyLyrics => 'البحث في Spotify';
+
+  @override
+  String get searchSpotifyLyricsSubtitle => 'تنزيل الكلمات المزامنة من Spotify';
+
+  @override
+  String get searchFromMusixmatch => 'البحث في Musixmatch';
+
+  @override
+  String get searchMusixmatchSubtitle => 'تنزيل الكلمات المزامنة من Musixmatch';
+
+  @override
+  String get searchingAppleMusic => 'جاري البحث في Apple Music...';
+
+  @override
+  String get findingMatches => 'جاري البحث عن تطابقات...';
+
+  @override
+  String get noResultsAppleMusic => 'لم يتم العثور على نتائج في Apple Music.';
+
+  @override
+  String get selectSong => 'حدد الأغنية';
+
+  @override
+  String get downloadingLyrics => 'جاري تنزيل الكلمات...';
+
+  @override
+  String get fetchingLyricsFromServer => 'جاري جلب TTML/LRC من الخادم...';
+
+  @override
+  String get failedDownloadAppleMusic =>
+      'فشل تنزيل الكلمات. قد لا تكون موجودة على Apple Music.';
+
+  @override
+  String get lyricsImportedSuccess =>
+      'تم استيراد الكلمات بنجاح! اضغط على حفظ للاحتفاظ بها.';
+
+  @override
+  String get receivedEmptyLyrics => 'تم استلام كلمات فارغة من الخادم.';
+
+  @override
+  String get downloadingFromSpotify => 'جاري التنزيل من Spotify...';
+
+  @override
+  String get fetchingLyrics => 'جاري جلب الكلمات...';
+
+  @override
+  String get lyricsImportedSpotify => 'تم استيراد الكلمات من Spotify!';
+
+  @override
+  String get noLyricsSpotify => 'لم يتم العثور على كلمات في Spotify.';
+
+  @override
+  String get downloadingFromMusixmatch => 'جاري التنزيل من Musixmatch...';
+
+  @override
+  String get lyricsImportedMusixmatch => 'تم استيراد الكلمات من Musixmatch!';
+
+  @override
+  String get noLyricsMusixmatch => 'لم يتم العثور على كلمات في Musixmatch.';
 
   @override
   String get importSpotifyPlaylist => 'استيراد قائمة تشغيل Spotify';
@@ -1064,6 +1393,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inputLabel => 'المدخلات';
 
   @override
+  String get insertAfter => 'إدراج بعد';
+
+  @override
   String get installNow => 'تثبيت الآن';
 
   @override
@@ -1074,6 +1406,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get invalidCode => 'رمز وصول غير صحيح';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
 
   @override
   String get invalidSpotifyUrl => 'رابط قائمة تشغيل Spotify غير صالح';
@@ -1138,6 +1473,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkAccountDesc => 'مزامنة واستعادة تقدمك باستخدام Google';
 
   @override
+  String get linkAccountToUpgrade =>
+      'تحتاج إلى ربط حسابك أولاً للترقية. يرجى استخدام نفس البريد الإلكتروني في Sociabuzz!';
+
+  @override
+  String get linkCopied => 'تم نسخ الرابط إلى الحافظة!';
+
+  @override
   String listenMinutesTooltip(String minutes) {
     return 'استمع لـ $minutes دقيقة من الموسيقى';
   }
@@ -1180,10 +1522,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get losslessQuality => 'بدون فقدان (آلي)';
 
   @override
+  String get lrcFormat => 'LRC (مزامنة قياسية)';
+
+  @override
+  String get lrcFormatDesc => 'تنسيق عالمي، يعمل في كل مكان.';
+
+  @override
   String get lunarNewYear => 'رأس السنة القمرية';
 
   @override
+  String get lyricTextHint => 'نص الكلمات...';
+
+  @override
+  String get lyricsApplied => 'تم تطبيق الكلمات على اللوحة!';
+
+  @override
   String get lyricsByLRCLIB => 'الكلمات بواسطة LRCLIB';
+
+  @override
+  String get lyricsEditorTitle => 'محرر الكلمات';
 
   @override
   String get lyricsSaveError => 'خطأ أثناء حفظ الكلمات';
@@ -1196,6 +1553,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get madeForYou => 'صنع لك';
+
+  @override
+  String get manageIndividualFeatures => 'إدارة ميزات الإنترنت الفردية';
 
   @override
   String get manualSearch => 'بحث يدوي';
@@ -1432,6 +1792,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offline => 'بدون اتصال';
 
   @override
+  String get offlineModeActive => 'نشط';
+
+  @override
+  String get offlineModeAllEnabledStatus => 'الكل مُمكّن';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      'سيؤدي هذا إلى تعطيل جميع اتصالات الشبكة تمامًا. سيتم إيقاف الميزات التالية:';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return 'معطل ($count)';
+  }
+
+  @override
+  String get offlineModeEnabledStatus => 'تم تمكين وضع عدم الاتصال';
+
+  @override
+  String get offlineModeHeader => 'وضع عدم الاتصال';
+
+  @override
+  String get offlineModeLockdownDesc =>
+      'إغلاق الشبكة نشط. يتم حفظ الإحصائيات محليًا.';
+
+  @override
+  String get offlineModeMainDesc =>
+      'تعطيل جميع خدمات الشبكة وتشغيل المكتبة المحلية فقط.';
+
+  @override
+  String get offlineModeSyncRestoreNote =>
+      'ستتم مزامنة إحصائياتك تلقائيًا عند إيقاف تشغيل هذا.';
+
+  @override
+  String get offlineModeTitle => 'وضع عدم الاتصال';
+
+  @override
   String get offlineStatus => 'غير متصل';
 
   @override
@@ -1441,7 +1837,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get online => 'متصل';
 
   @override
+  String get onlineModeRestored =>
+      'تم استعادة الوضع عبر الإنترنت. جاري مزامنة الإحصائيات...';
+
+  @override
+  String get onlyAppleMusic => 'آبل ميوزك فقط';
+
+  @override
   String get onlyScanSelected => 'مسح المجلدات المختارة فقط (مفعل افتراضياً)';
+
+  @override
+  String get onlySpotify => 'سبوتيفاي فقط';
 
   @override
   String get opacity => 'الشفافية';
@@ -1450,6 +1856,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String opacityLabel(int percent) {
     return 'الشفافية: $percent%';
   }
+
+  @override
+  String get openBrowser => 'فتح المتصفح';
 
   @override
   String get openProfile => 'فتح الملف الشخصي';
@@ -1468,7 +1877,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'يوجد ملف .lrc محلي للأغنية بالفعل.\\nهل تريد الاستبدال؟';
 
   @override
+  String get owned => 'مملوك';
+
+  @override
   String get parsingPlaylistData => 'جاري تحليل بيانات قائمة التشغيل...';
+
+  @override
+  String get pasteLyricsHint => 'الصق كلماتك هنا...';
 
   @override
   String get pathLabel => 'المسار';
@@ -1481,12 +1896,18 @@ class AppLocalizationsAr extends AppLocalizations {
       'إذن \"الدخول إلى جميع الملفات\" مطلوب لتعديل البيانات الوصفية. هذا يسمح بتعديل ملفات الموسيقى الخاصة بك مباشرة.';
 
   @override
+  String get plainMode => 'نص عادي';
+
+  @override
   String get play => 'تشغيل';
 
   @override
   String playCountLabel(int count) {
     return '$count تشغيل';
   }
+
+  @override
+  String get playFromLine => 'تشغيل من هذا السطر';
 
   @override
   String get playNext => 'تشغيل تالياً';
@@ -1544,7 +1965,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get portuguese => 'البرتغالية (البرازيل)';
 
   @override
+  String get preferAppleMusic => 'تفضيل آبل ميوزك';
+
+  @override
+  String get preferSpotify => 'تفضيل سبوتيفاي';
+
+  @override
   String get preferredOutputFormat => 'تنسيق الإخراج المفضل للتنزيلات';
+
+  @override
+  String get premiumMemberDesc =>
+      'لديك تنزيلات ALAC غير محدودة وإمكانية الوصول إلى قائمة الانتظار ذات الأولوية!';
+
+  @override
+  String get premiumMemberTitle => 'عضو مميز';
 
   @override
   String get preparingDownload => 'جاري تحضير التنزيل';
@@ -1565,6 +1999,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get previousTrack => 'المسار السابق';
+
+  @override
+  String get priorityVipServerQueue => 'قائمة انتظار خادم VIP ذات الأولوية';
+
+  @override
+  String get processingOnServer => 'جاري المعالجة على الخادم...';
 
   @override
   String get profileSettings => 'إعدادات الملف الشخصي';
@@ -1588,6 +2028,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get queueIsEmpty => 'قائمة الانتظار فارغة';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return 'طابور $position... يرجى الانتظار';
+  }
 
   @override
   String get queueTooltip => 'قائمة الانتظار';
@@ -1668,10 +2113,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get refreshLyricsTooltip => 'تحديث كلمات';
 
   @override
+  String get registeredLinkedTier => 'مسجل (مرتبط)';
+
+  @override
   String get removeAvatar => 'إزالة الأفاتار الحالي';
 
   @override
   String get removeFromPlaylist => 'إزالة من قائمة التشغيل';
+
+  @override
+  String get removeLine => 'إزالة السطر';
 
   @override
   String removedFolder(Object folder) {
@@ -1686,6 +2137,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get repeats => 'تكرارات';
+
+  @override
+  String get reportTrouble => 'الإبلاغ عن مشكلة';
 
   @override
   String get requiresAndroid14 => 'يتطلب Android 14+ و USB DAC';
@@ -1761,6 +2215,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get revert => 'رجوع';
 
   @override
+  String get romajiHint => 'روماجي / ترجمة صوتية (اختياري)...';
+
+  @override
   String get russian => 'الروسية';
 
   @override
@@ -1785,8 +2242,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get saveLabel => 'حفظ';
 
   @override
+  String get saveLocallyBtn => 'حفظ محلياً';
+
+  @override
   String get saveLrcPrompt =>
       'هل تريد حفظ الكلمات الحالية كملف .lrc بجانب الملف الصوتي؟';
+
+  @override
+  String get saveLyricsTitle => 'حفظ الكلمات';
 
   @override
   String get saveLyricsTooltip => 'حفظ كلمات';
@@ -1811,6 +2274,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String savedAsFormat(String format) {
     return 'تم الحفظ بصيغة $format';
+  }
+
+  @override
+  String savedSuccessfully(String extension) {
+    return 'تم الحفظ في ملف $extension بنجاح!';
   }
 
   @override
@@ -1895,6 +2363,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seeAll => 'عرض الكل';
 
   @override
+  String get seeBenefitsBtn => 'اطلع على الفوائد';
+
+  @override
+  String get seePremiumBenefits => 'عرض مزايا العضوية المميزة';
+
+  @override
   String get selectDifferentFolder => 'اختر مجلداً مختلفاً';
 
   @override
@@ -1925,6 +2399,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get setCustomTimer => 'ضبط مؤقت مخصص';
+
+  @override
+  String get setEndTooltip => 'تعيين النهاية عند الموضع الحالي';
+
+  @override
+  String get setStartTooltip => 'تعيين البداية عند الموضع الحالي';
 
   @override
   String get settings => 'الإعدادات';
@@ -2006,6 +2486,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get songLabelUpper => 'أغنية';
 
   @override
+  String get songQueueTitle => 'قائمة انتظار الأغاني';
+
+  @override
   String get songTitleKeyword => 'العنوان أو كلمة مفتاحية';
 
   @override
@@ -2054,6 +2537,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get standardDesc => 'MP3 - حجم أصغر، تحميل أسرع';
 
   @override
+  String get standardDownloadQueue => 'قائمة انتظار التنزيل القياسية';
+
+  @override
   String get standardQuality => 'قياسية (MP3)';
 
   @override
@@ -2061,6 +2547,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get startBulkProcess => 'بدء عملية جماعية';
+
+  @override
+  String get startLabel => 'البداية: ';
 
   @override
   String get startedDownloadingAll => 'بدأ تنزيل جميع الأغاني...';
@@ -2121,6 +2610,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get syncThemeAlbumArt => 'مزامنة المظهر مع صورة الألبوم';
+
+  @override
+  String get syncedMode => 'متزامن';
 
   @override
   String get system => 'النظام';
@@ -2234,6 +2726,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translationLanguage => 'لغة الترجمة';
 
   @override
+  String get ttmlFormat => 'TTML (دقة عالية)';
+
+  @override
+  String get ttmlFormatDesc =>
+      'أفضل لإنشاء الذكاء الاصطناعي والمزامنة التفصيلية.';
+
+  @override
   String get turnOffTimer => 'إيقاف المؤقت';
 
   @override
@@ -2261,6 +2760,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unknownDevice => 'جهاز غير معروف';
 
   @override
+  String get unlimitedAlacDownloads => 'تنزيلات ALAC غير محدودة';
+
+  @override
   String get unlink => 'إلغاء الربط';
 
   @override
@@ -2278,6 +2780,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unlinkFolderClear => 'إلغاء ربط المجلد وتنظيف قائمة الأغاني';
+
+  @override
+  String get unlockUnlimitedPremium => 'فتح العضوية المميزة غير المحدودة';
 
   @override
   String unlockedCountLabel(int unlocked, int total) {
@@ -2338,6 +2843,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get useMixedColors => 'استخدام ألوان مختلطة (الأولوية للمزامنة)';
 
   @override
+  String get useSameEmailCheckStatus =>
+      'استخدم نفس البريد الإلكتروني المستخدم في التطبيق للتحقق من الحالة تلقائيًا.';
+
+  @override
+  String usedToday(int used, int max) {
+    return 'تم استخدام $used / $max اليوم';
+  }
+
+  @override
   String get verifiedDeveloper => 'مطور معتمد';
 
   @override
@@ -2359,6 +2873,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get visualizerStyle => 'نمط المصور';
+
+  @override
+  String get waitingForServerResponse => 'في انتظار استجابة الخادم...';
 
   @override
   String get wasapiExclusive => 'وضع WASAPI الحصري';
@@ -2395,312 +2912,4 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'تحديث yt-dlp متاح.';
-
-  @override
-  String get importFromM3u => 'Import from M3U';
-
-  @override
-  String get importFromM3uSubtitle => 'Import an M3U playlist file';
-
-  @override
-  String get exportToM3u => 'Export to M3U';
-
-  @override
-  String get invalidM3uFile => 'Invalid M3U File';
-
-  @override
-  String get generateAiLyrics => 'Generate AI Lyrics';
-
-  @override
-  String get aiLyricsGenerating => 'Generating AI Lyrics...';
-
-  @override
-  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
-
-  @override
-  String get aiLyricsError => 'Error generating AI lyrics.';
-
-  @override
-  String get offlineModeHeader => 'وضع عدم الاتصال';
-
-  @override
-  String get offlineModeTitle => 'وضع عدم الاتصال';
-
-  @override
-  String get offlineModeActive => 'نشط';
-
-  @override
-  String get offlineModeEnabledStatus => 'تم تمكين وضع عدم الاتصال';
-
-  @override
-  String offlineModeDisabledStatus(int count) {
-    return 'معطل ($count)';
-  }
-
-  @override
-  String get offlineModeAllEnabledStatus => 'الكل مُمكّن';
-
-  @override
-  String get offlineModeLockdownDesc =>
-      'إغلاق الشبكة نشط. يتم حفظ الإحصائيات محليًا.';
-
-  @override
-  String get offlineModeMainDesc =>
-      'تعطيل جميع خدمات الشبكة وتشغيل المكتبة المحلية فقط.';
-
-  @override
-  String get enableOfflineModeQuestion => 'هل تريد تمكين وضع عدم الاتصال؟';
-
-  @override
-  String get offlineModeConfirmationDesc =>
-      'سيؤدي هذا إلى تعطيل جميع اتصالات الشبكة تمامًا. سيتم إيقاف الميزات التالية:';
-
-  @override
-  String get offlineModeSyncRestoreNote =>
-      'ستتم مزامنة إحصائياتك تلقائيًا عند إيقاف تشغيل هذا.';
-
-  @override
-  String get enableOfflineModeBtn => 'تمكين وضع عدم الاتصال';
-
-  @override
-  String get onlineModeRestored =>
-      'تم استعادة الوضع عبر الإنترنت. جاري مزامنة الإحصائيات...';
-
-  @override
-  String get disableServicesTitle => 'تعطيل الخدمات';
-
-  @override
-  String get manageIndividualFeatures => 'إدارة ميزات الإنترنت الفردية';
-
-  @override
-  String get featureCloudSync => 'مزامنة إحصائيات السحابة';
-
-  @override
-  String get featureCloudSyncDesc => 'يتم حفظ إحصائيات الاستماع محليًا فقط';
-
-  @override
-  String get featureCloudSyncLongDesc => 'مزامنة مقاييس الاستماع مع PocketBase';
-
-  @override
-  String get featureLeaderboard => 'قائمة المتصدرين العالمية';
-
-  @override
-  String get featureLeaderboardDesc => 'توقفت تحديثات الترتيب';
-
-  @override
-  String get featureLeaderboardLongDesc => 'إظهار وتحديث ترتيبك علنًا';
-
-  @override
-  String get featureOnlineLyrics => 'البحث عن كلمات الأغاني عبر الإنترنت';
-
-  @override
-  String get featureOnlineLyricsDesc => 'ملفات .lrc/.ttml المحلية فقط';
-
-  @override
-  String get featureOnlineLyricsLongDesc =>
-      'جلب كلمات الأغاني من LRCLIB/Spotify';
-
-  @override
-  String get featureAiLyrics => 'مولد كلمات الأغاني بالذكاء الاصطناعي';
-
-  @override
-  String get featureAiLyricsDesc => 'تم تعطيل كلمات الأغاني المتزامنة تلقائيًا';
-
-  @override
-  String get featureAiLyricsLongDesc =>
-      'إنشاء كلمات أغاني متزامنة عبر الذاء الاصطناعي';
-
-  @override
-  String get featureSpotifyCanvas => 'Spotify Canvas';
-
-  @override
-  String get featureSpotifyCanvasDesc => 'تم تعطيل مقاطع الفيديو في الخلفية';
-
-  @override
-  String get featureSpotifyCanvasLongDesc => 'مقاطع فيديو الخلفية للمسارات';
-
-  @override
-  String get featureOnlineSearch => 'البحث عبر الإنترنت';
-
-  @override
-  String get featureOnlineSearchDesc => 'تم تعطيل بحث Spotify/YouTube';
-
-  @override
-  String get featureOnlineSearchLongDesc => 'بحث Spotify و YouTube عن بعد';
-
-  @override
-  String get featureConnectDevice => 'الاتصال بجهاز';
-
-  @override
-  String get featureConnectDeviceDesc =>
-      'تم تعطيل التحكم عن بعد وحفلات الاستماع';
-
-  @override
-  String get featureConnectDeviceLongDesc => 'التحكم عن بعد وحفلات الاستماع';
-
-  @override
-  String get lyricsEditorTitle => 'محرر الكلمات';
-
-  @override
-  String get clearAllQuestion => 'مسح الكل؟';
-
-  @override
-  String get clearAllDesc =>
-      'سيؤدي هذا إلى مسح حالة المحرر الحالية. لن يتم حذف ملفاتك المحلية إلا إذا قمت بالحفظ لاحقاً.';
-
-  @override
-  String get clearBtn => 'مسح';
-
-  @override
-  String get lyricsApplied => 'تم تطبيق الكلمات على اللوحة!';
-
-  @override
-  String get chooseFormat => 'اختر التنسيق المفضل لديك:';
-
-  @override
-  String get lrcFormat => 'LRC (مزامنة قياسية)';
-
-  @override
-  String get lrcFormatDesc => 'تنسيق عالمي، يعمل في كل مكان.';
-
-  @override
-  String get ttmlFormat => 'TTML (دقة عالية)';
-
-  @override
-  String get ttmlFormatDesc =>
-      'أفضل لإنشاء الذكاء الاصطناعي والمزامنة التفصيلية.';
-
-  @override
-  String savedSuccessfully(String extension) {
-    return 'تم الحفظ في ملف $extension بنجاح!';
-  }
-
-  @override
-  String get failedToSave => 'فشل في حفظ ملف الكلمات.';
-
-  @override
-  String get generationFailed => 'فشل الإنشاء';
-
-  @override
-  String get aiLyricsGenerationTitle => 'إنشاء الكلمات بالذكاء الاصطناعي';
-
-  @override
-  String get syncedMode => 'متزامن';
-
-  @override
-  String get plainMode => 'نص عادي';
-
-  @override
-  String get addLineToTop => 'إضافة إلى الأعلى';
-
-  @override
-  String get addLineToEnd => 'إضافة إلى النهاية';
-
-  @override
-  String get lyricTextHint => 'نص الكلمات...';
-
-  @override
-  String get insertAfter => 'إدراج بعد';
-
-  @override
-  String get removeLine => 'إزالة السطر';
-
-  @override
-  String get romajiHint => 'روماجي / ترجمة صوتية (اختياري)...';
-
-  @override
-  String get startLabel => 'البداية: ';
-
-  @override
-  String get setStartTooltip => 'تعيين البداية عند الموضع الحالي';
-
-  @override
-  String get endLabel => 'النهاية: ';
-
-  @override
-  String get setEndTooltip => 'تعيين النهاية عند الموضع الحالي';
-
-  @override
-  String get playFromLine => 'تشغيل من هذا السطر';
-
-  @override
-  String get pasteLyricsHint => 'الصق كلماتك هنا...';
-
-  @override
-  String get applyBtn => 'تطبيق';
-
-  @override
-  String get saveLocallyBtn => 'حفظ محلياً';
-
-  @override
-  String get editLyricsTooltip => 'تعديل الكلمات';
-
-  @override
-  String get saveLyricsTitle => 'حفظ الكلمات';
-
-  @override
-  String get aiGenerate => 'إنشاء بالذكاء الاصطناعي';
-
-  @override
-  String get aiLyricsInitializing => 'جاري التهيئة...';
-
-  @override
-  String get aiLyricsUploading => 'جاري رفع الأغنية إلى الخادم...';
-
-  @override
-  String get aiLyricsUploadFailed => 'خطأ: فشل الرفع.';
-
-  @override
-  String get aiLyricsUploadSuccess => 'اكتمل الرفع!';
-
-  @override
-  String get aiLyricsVerifying => 'جاري التحقق من حالة الخادم...';
-
-  @override
-  String get aiLyricsStatusOk => 'رمز الحالة 200 OK!';
-
-  @override
-  String get aiLyricsPolling => 'جاري الحصول على الكلمات... يرجى الصبر!';
-
-  @override
-  String get aiLyricsReceiving => 'تم استلام الكلمات';
-
-  @override
-  String get aiLyricsParsing => 'جاري تحليل الكلمات...';
-
-  @override
-  String get aiLyricsSuccess => 'تم إنشاء الكلمات بنجاح!';
-
-  @override
-  String get aiLyricsLocalFileMissing => 'خطأ: ملف الصوت المحلي غير موجود.';
-
-  @override
-  String get aiLyricsComplete => 'اكتمل!';
-
-  @override
-  String get externalLinkDetected => 'تم اكتشاف رابط خارجي';
-
-  @override
-  String get gofileDownloadFailedPrompt =>
-      'فشل التنزيل التلقائي بسبب قيود الشبكة أو الخادم الصارمة.\\n\\nهل ترغب في فتح صفحة تنزيل Gofile في متصفح النظام، أم نسخ الرابط للتنزيل يدويًا؟';
-
-  @override
-  String get copyLink => 'نسخ الرابط';
-
-  @override
-  String get openBrowser => 'فتح المتصفح';
-
-  @override
-  String get linkCopied => 'تم نسخ الرابط إلى الحافظة!';
-
-  @override
-  String get waitingForServerResponse => 'في انتظار استجابة الخادم...';
-
-  @override
-  String queuePositionPleaseWait(int position) {
-    return 'طابور $position... يرجى الانتظار';
-  }
-
-  @override
-  String get processingOnServer => 'جاري المعالجة على الخادم...';
 }

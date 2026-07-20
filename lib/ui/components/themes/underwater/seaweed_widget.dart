@@ -49,7 +49,7 @@ class _SeaweedPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Random random = Random(1234);
-    final int plantCount = 5;
+    const int plantCount = 5;
 
     for (int i = 0; i < plantCount; i++) {
       final double xBase = (i * (size.width / plantCount)) + 20;

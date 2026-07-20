@@ -1,5 +1,3 @@
-// lib/providers/download_search_provider.dart
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/song_metadata.dart';
 import '../services/hybrid_service.dart';

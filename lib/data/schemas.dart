@@ -1,15 +1,10 @@
 import 'package:isar/isar.dart';
-
-// This line is needed for the code generator
-// The file name must match: 'schemas.g.dart'
 part 'schemas.g.dart';
 
 @collection
 class Song {
-  Id id = Isar.autoIncrement; // Isar automatically handles IDs
+  Id id = Isar.autoIncrement;
 
-  // We index the path because we search by it constantly.
-  // 'unique: true' ensures we don't save the same file twice.
   @Index(unique: true, replace: false)
   late String path;
 
@@ -17,21 +12,19 @@ class Song {
   late String artist;
   String? album;
 
-  late double duration; // Stored in seconds
+  late double duration;
 
-  // Optional: Store file modification time to detect updates
   late DateTime dateAdded;
 
-  // --- Statistics Embedded ---
-  // Storing stats directly on the Song object makes queries instant.
-  // e.g., isar.songs.where().sortByPlayCountDesc().findAll()
   int playCount = 0;
+
+  // ReplayGain for Loudness Scanner
+  double? replayGain;
   DateTime? lastPlayed;
 
   // Store the dominant color (int) for UI theming
   int? accentColor;
 
-  // --- New Metadata Fields ---
   String? year;
   int? trackNumber;
   int? discNumber;
@@ -46,8 +39,6 @@ class Playlist {
 
   late DateTime createdAt;
 
-  // IsarLinks creates a relationship.
-  // A playlist "contains" many songs.
   final songs = IsarLinks<Song>();
 }
 
@@ -62,12 +53,12 @@ class HistoryEntry {
   late String title;
   late String artist;
   late String album;
-  late String albumArtUrl; // Store URL so we can re-download art if needed
+  late String albumArtUrl;
   late double duration;
 
   // Playback Data
-  late String originalFilePath; // Where it WAS stored
-  late String youtubeUrl; // How to get it back
+  late String originalFilePath;
+  late String youtubeUrl;
   late bool isStream; // Was it a stream or a local file?
 
   // Extended Metadata
@@ -80,7 +71,7 @@ class SavedStat {
   Id id = Isar.autoIncrement;
 
   @Index(unique: true, replace: true)
-  late String statId; // The hash ID we used before
+  late String statId;
 
   late String title;
 
@@ -89,8 +80,8 @@ class SavedStat {
 
   late int playCount;
   late int totalSeconds;
-  
-  DateTime? lastPlayed; // 📅 NEW: Tracked for daily/weekly totals
+
+  DateTime? lastPlayed;
 
   late String lastKnownPath;
 
@@ -106,10 +97,10 @@ class MailboxMessage {
   Id id = Isar.autoIncrement;
 
   @Index(unique: true)
-  String? remoteId; // PocketBase record ID for deduplication
+  String? remoteId;
 
   late String message;
-  
+
   @Index()
   late DateTime timestamp;
 
@@ -130,7 +121,7 @@ class OnlineArtCache {
   Id id = Isar.autoIncrement;
 
   @Index(unique: true, replace: true)
-  late String key; // artist:ArtistName or track:ArtistName-TrackTitle
+  late String key;
 
   late String url;
 
@@ -142,7 +133,7 @@ class OnlineDataCache {
   Id id = Isar.autoIncrement;
 
   @Index(unique: true, replace: true)
-  late String key; // artist_tracks:ArtistName or artist_albums:ArtistName
+  late String key;
 
   late String json;
 

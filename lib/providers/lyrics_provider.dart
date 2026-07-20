@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
-
+import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import '../utils/chinese_romanizer.dart';
 import '../utils/japanese_romanizer.dart';
 import '../utils/korean_romanizer.dart';
@@ -12,7 +14,7 @@ import '../services/ai_lyrics_service.dart';
 import '../services/smart_download_service.dart';
 import '../models/song_metadata.dart';
 import '../providers/player_provider.dart';
-import '../providers/settings_provider.dart'; // 🔒 OFFLINE MODE
+import '../providers/settings_provider.dart';
 
 class LyricWord {
   final String text;
@@ -66,6 +68,7 @@ class LyricsState {
   final bool isFromApi;
   final bool hasLocalLrc;
   final bool showTranslation;
+  final bool isKaraokeMode;
   final String? generationStatus;
   final List<String> generationLogs;
 
@@ -77,6 +80,7 @@ class LyricsState {
     this.isFromApi = false,
     this.hasLocalLrc = false,
     this.showTranslation = false,
+    this.isKaraokeMode = false,
     this.generationStatus,
     this.generationLogs = const [],
   });
@@ -89,6 +93,7 @@ class LyricsState {
     bool? isFromApi,
     bool? hasLocalLrc,
     bool? showTranslation,
+    bool? isKaraokeMode,
     String? generationStatus,
     List<String>? generationLogs,
   }) {
@@ -100,6 +105,7 @@ class LyricsState {
       isFromApi: isFromApi ?? this.isFromApi,
       hasLocalLrc: hasLocalLrc ?? this.hasLocalLrc,
       showTranslation: showTranslation ?? this.showTranslation,
+      isKaraokeMode: isKaraokeMode ?? this.isKaraokeMode,
       generationStatus: generationStatus != null
           ? (generationStatus == "" ? null : generationStatus)
           : this.generationStatus,
@@ -121,6 +127,14 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
   void toggleTranslation() {
     state = state.copyWith(showTranslation: !state.showTranslation);
+  }
+
+  void setKaraokeMode(bool value) {
+    state = state.copyWith(isKaraokeMode: value);
+  }
+
+  void toggleKaraokeMode() {
+    state = state.copyWith(isKaraokeMode: !state.isKaraokeMode);
   }
 
   @override
@@ -188,37 +202,37 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         syncOffset: 0.0,
         isFromApi: false);
     try {
-      print("🔄 Refreshing lyrics from LRCLib for: $title - $artist");
-      // 🔒 OFFLINE MODE: Block online lyrics refresh
+      debugPrint("🔄 Refreshing lyrics from LRCLib for: $title - $artist");
+      // OFFLINE MODE: Block online lyrics refresh
       final settings = ref.read(settingsProvider);
       if (settings.isOfflineMode || !settings.enableOnlineLyrics) {
         state = state.copyWith(
           isLoading: false,
-          rawLyrics: "🔒 Offline or Disabled: Online lyrics unavailable.",
+          rawLyrics: "Offline or Disabled: Online lyrics unavailable.",
         );
         return;
       }
       await _fetchFromApi(title, artist, durationSecs);
     } catch (e) {
-      print("Refresh Lyrics Error: $e");
+      debugPrint("Refresh Lyrics Error: $e");
       state = state.copyWith(
           isLoading: false, rawLyrics: "Error refreshing lyrics.");
     }
   }
 
-  /// Generates AI lyrics using PotatoAI service.
+  /// Generates AI lyrics using AI service.
   Future<void> generateAiLyrics(String filePath,
       {Map<String, String>? statusMessages}) async {
     String getMsg(String key, String fallback) =>
         statusMessages?[key] ?? fallback;
 
-    // 🔒 OFFLINE MODE: Block AI lyrics generation
+    // OFFLINE MODE: Block AI lyrics generation
     final settings = ref.read(settingsProvider);
     if (settings.isOfflineMode || !settings.enableAiLyrics) {
       state = state.copyWith(
         isLoading: false,
         rawLyrics: settings.isOfflineMode
-            ? "🔒 Offline Mode active"
+            ? "Offline Mode active"
             : "AI Lyrics disabled",
         generationStatus: settings.isOfflineMode
             ? "Offline Mode active"
@@ -237,7 +251,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     try {
       String resolvedPath = filePath;
 
-      // 🚀 STREAMING RESOLUTION: If song is a stream, try to find its preloaded/cached file
+      // STREAMING RESOLUTION: If song is a stream, try to find its preloaded/cached file
       if (filePath == "cloud_stream" || filePath.startsWith('http')) {
         final currentSong = ref.read(playerProvider).currentSong;
         if (currentSong != null) {
@@ -255,11 +269,11 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
           final predicted =
               await SmartDownloadService().getPredictedCachePath(meta);
           if (predicted.isNotEmpty && await File(predicted).exists()) {
-            print(
+            debugPrint(
                 "📡 AI Lyrics: Resolved streaming path to local cache: $predicted");
             resolvedPath = predicted;
           } else {
-            print(
+            debugPrint(
                 "⚠️ AI Lyrics: Could not resolve local file for stream. AI may fail.");
             state = state.copyWith(
               isLoading: false,
@@ -273,7 +287,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         }
       }
 
-      print("🎬 AI Lyrics Generation Started for: $resolvedPath");
+      debugPrint("🎬 AI Lyrics Generation Started for: $resolvedPath");
       state = state.copyWith(
         isLoading: true,
         rawLyrics: getMsg('initializing', 'Generating AI Lyrics...'),
@@ -315,7 +329,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
           );
         }
       } catch (e) {
-        print("AI Lyrics Generation Error: $e");
+        debugPrint("AI Lyrics Generation Error: $e");
         state = state.copyWith(
           isLoading: false,
           rawLyrics: "Error generating AI lyrics.",
@@ -323,11 +337,11 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         );
       }
     } finally {
-      // 🚀 GUARANTEE: Always clear status after a delay, no matter how we exited
+      // GUARANTEE: Always clear status after a delay, no matter how we exited
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           state = state.copyWith(
-              generationStatus: ""); // 🚀 Use empty string to signal "CLEAR"
+              generationStatus: ""); // Use empty string to signal "CLEAR"
         }
       });
     }
@@ -371,7 +385,50 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       );
       return true;
     } catch (e) {
-      print("Error saving lyrics: $e");
+      debugPrint("Error saving lyrics: $e");
+      return false;
+    }
+  }
+
+  /// Embeds the current lyrics directly into the audio file's metadata using FFmpegKit.
+  Future<bool> embedLyrics(String filePath) async {
+    try {
+      final String content;
+      if (state.parsedLyrics.isNotEmpty) {
+        content = _convertToLrc(state.parsedLyrics);
+      } else {
+        content = state.rawLyrics;
+      }
+
+      final tempDir = await Directory.systemTemp.createTemp('embed_lyrics');
+      final tempFile = File(p.join(tempDir.path, p.basename(filePath)));
+
+      // We use FFmpeg to copy the file and add the lyrics tag
+      final args = [
+        '-y',
+        '-i',
+        filePath,
+        '-c',
+        'copy',
+        '-metadata',
+        'lyrics=$content',
+        tempFile.path,
+      ];
+
+      final session = await FFmpegKit.executeWithArguments(args);
+      final returnCode = await session.getReturnCode();
+
+      if (ReturnCode.isSuccess(returnCode)) {
+        if (await tempFile.exists() && await tempFile.length() > 0) {
+          // Replace the original file
+          await tempFile.copy(filePath);
+          await tempFile.delete();
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint("Error embedding lyrics: $e");
       return false;
     }
   }
@@ -403,13 +460,15 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
   String _convertPlainToTtml(String text) {
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    buffer.writeln('<tt xmlns="http://www.w3.org/ns/ttml" itunes:timing="None">');
+    buffer
+        .writeln('<tt xmlns="http://www.w3.org/ns/ttml" itunes:timing="None">');
     buffer.writeln('  <body>');
     buffer.writeln('    <div>');
     for (final line in text.split('\n')) {
       final t = line.trim();
       if (t.isNotEmpty) {
-        buffer.writeln('      <p>${t.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</p>');
+        buffer.writeln(
+            '      <p>${t.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</p>');
       }
     }
     buffer.writeln('    </div>');
@@ -514,10 +573,10 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
   Future<void> loadLyrics(
       String filePath, String title, String artist, double durationSecs) async {
-    // 🚀 NEW: Delay lyrics fetch by 2 seconds to prioritize initial audio buffering
+    // Delay lyrics fetch by 2 seconds to prioritize initial audio buffering
     await Future.delayed(const Duration(seconds: 2));
 
-    // 🚀 Same-song guard: preserve syncOffset if lyrics already loaded for this song
+    // Same-song guard: preserve syncOffset if lyrics already loaded for this song
     final songKey = '$filePath|$title';
     if (songKey == _currentSongKey &&
         !state.isLoading &&
@@ -572,7 +631,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       }
 
       if (foundLocalFile != null) {
-        print("📂 Found local lyrics file: ${foundLocalFile.path}");
+        debugPrint("📂 Found local lyrics file: ${foundLocalFile.path}");
         final rawContent = await foundLocalFile.readAsString();
         final content = _fixMojibake(rawContent);
 
@@ -601,7 +660,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       }
 
       // 2. API (LRC LIB) (Priority 2)
-      // 🔒 OFFLINE MODE: Skip online lyrics search
+      // OFFLINE MODE: Skip online lyrics search
       final settings = ref.read(settingsProvider);
       if (settings.isOfflineMode || !settings.enableOnlineLyrics) {
         state = state.copyWith(
@@ -612,10 +671,10 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         );
         return;
       }
-      print("🌍 Fetching lyrics from LRC LIB for: $title - $artist");
+      debugPrint("🌍 Fetching lyrics from LRC LIB for: $title - $artist");
       await _fetchFromApi(title, artist, durationSecs);
     } catch (e) {
-      print("Lyrics Logic Error: $e");
+      debugPrint("Lyrics Logic Error: $e");
       state =
           state.copyWith(isLoading: false, rawLyrics: "Error loading lyrics.");
     }
@@ -641,8 +700,8 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         String lyrics = data['syncedLyrics'] ?? "";
 
         if (lyrics.isNotEmpty) {
-          print("✅ Found Synced Lyrics from API");
-          print("🔗 Fetched URL: $uri"); //Debug URL LRCLIB
+          debugPrint("✅ Found Synced Lyrics from API");
+          debugPrint("🔗 Fetched URL: $uri"); //Debug URL LRCLIB
           if (!mounted) return;
           state = state.copyWith(
             isLoading: false,
@@ -655,13 +714,13 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       }
 
       if (response.statusCode == 404) {
-        print("⚠️ API 404: Trying fallback search...");
+        debugPrint("⚠️ API 404: Trying fallback search...");
         await _searchFallback(cleanTitle, artist);
         return;
       }
       throw Exception("Lyrics not found");
     } catch (e) {
-      print("❌ No lyrics found via API: $e");
+      debugPrint("❌ No lyrics found via API: $e");
       // Try fallback one last time if we haven't already
       if (!state.isFromApi && state.parsedLyrics.isEmpty) {
         await _searchFallback(title, artist);
@@ -682,7 +741,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       final cleanTitle = _cleanTerm(title);
       final cleanArtist = _cleanTerm(artist);
 
-      print("🔍 Fallback Search: q=$cleanTitle $cleanArtist");
+      debugPrint("🔍 Fallback Search: q=$cleanTitle $cleanArtist");
 
       final uri =
           Uri.parse("https://lrclib.net/api/search").replace(queryParameters: {
@@ -740,7 +799,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
           if (lyrics.isEmpty) lyrics = bestMatch?['plainLyrics'] ?? "";
 
           if (lyrics.isNotEmpty) {
-            print(
+            debugPrint(
                 "✅ Found Search Result Lyrics for: ${bestMatch?['trackName']}");
             if (!mounted) return;
             state = state.copyWith(
@@ -754,7 +813,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         }
       }
     } catch (e) {
-      print("Fallback Search Error: $e");
+      debugPrint("Fallback Search Error: $e");
     }
 
     if (!mounted) return;
@@ -845,7 +904,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         }
       }
     } catch (e) {
-      print("TTML parsing error: $e");
+      debugPrint("TTML parsing error: $e");
     }
     return lines;
   }
@@ -864,7 +923,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         return double.parse(parts[0]);
       }
     } catch (e) {
-      print("Time parsing error: $e");
+      debugPrint("Time parsing error: $e");
     }
     return 0.0;
   }
@@ -925,7 +984,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
       return (hours * 3600) + (minutes * 60) + seconds;
     } catch (e) {
-      print("SRT Time parsing error: $e");
+      debugPrint("SRT Time parsing error: $e");
       return 0.0;
     }
   }

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../env/env.dart';
@@ -14,7 +15,7 @@ class PocketBaseService {
   factory PocketBaseService() => _instance;
   PocketBaseService._internal();
 
-  // 🚀 YOUR SERVER URL (Cloudflare Tunnel - Permanent Public Access)
+  // YOUR SERVER URL (Cloudflare Tunnel - Permanent Public Access)
   final pb = PocketBase(Env.pocketbaseUrl);
 
   bool _initialized = false;
@@ -30,7 +31,7 @@ class PocketBaseService {
   static bool enableRemoteControl = true;
   static bool enableCanvas = true;
 
-  String? get userId => _userId; // 🚀 Exposed for rank verification logic
+  String? get userId => _userId; // Exposed for rank verification logic
 
   Future<void> init({String? userId}) async {
     if (isOffline) {
@@ -41,7 +42,7 @@ class PocketBaseService {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // 🚀 FIX: Compare against PERSISTED user ID, not just in-memory _userId.
+      // FIX: Compare against PERSISTED user ID, not just in-memory _userId.
       // _userId is always null on first cold start, which previously caused
       // "Identity Changed" to fire every single startup (false positive).
       final persistedUserId = _userId ?? prefs.getString('pb_user_id');
@@ -51,7 +52,7 @@ class PocketBaseService {
         DebugLogService().info(
             "📡 Session: Identity Changed ($persistedUserId → $userId). Clearing stale session token.");
         _userId = userId;
-        // 🚀 CRITICAL: Force clear local storage so ensureUniqueSession performs a fresh search
+        // CRITICAL: Force clear local storage so ensureUniqueSession performs a fresh search
         await prefs.remove('pb_session_id');
         await prefs.remove(
             'pb_metrics_id'); // Clear cached metrics ID for old identity
@@ -92,7 +93,7 @@ class PocketBaseService {
       }
 
       DebugLogService()
-          .info("🚀 PocketBaseService: Initialized for User: $_userId");
+          .info("PocketBaseService: Initialized for User: $_userId");
       _initialized = true;
     } catch (e) {
       DebugLogService().error("⚠️ PB Init Error: $e");
@@ -100,7 +101,7 @@ class PocketBaseService {
     }
   }
 
-  /// 🚀 Wait for initialization to complete if it hasn't already
+  /// Wait for initialization to complete if it hasn't already
   Future<void> _ensureInitialized() async {
     if (_initialized && _userId != null) return;
 
@@ -120,8 +121,9 @@ class PocketBaseService {
 
   String? _cachedMetricsId; // Cache metrics record ID
   String? _cachedHostname; // Cache device name
+  String? _cachedClientVersion; // Cache client version
   static const _networkTimeout =
-      Duration(seconds: 5); // 🚀 Timeout for network calls
+      Duration(seconds: 5); // Timeout for network calls
 
   Future<String> _getDeviceName() async {
     if (_cachedHostname != null) return _cachedHostname!;
@@ -152,30 +154,44 @@ class PocketBaseService {
     return _cachedHostname!;
   }
 
+  Future<String> _getClientVersion() async {
+    if (_cachedClientVersion != null) return _cachedClientVersion!;
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      _cachedClientVersion = "${packageInfo.version} (${packageInfo.buildNumber})";
+    } catch (e) {
+      _cachedClientVersion = "Unknown";
+    }
+    return _cachedClientVersion!;
+  }
+
   // SAVE DATA (Upsert: Create or Update) - No List permission needed
   Future<void> saveData(Map<String, dynamic> data,
       {File? avatarFile, bool clearAvatar = false}) async {
-    if (isOffline || !enableCloudSync)
+    if (isOffline || !enableCloudSync) {
       return; // 🔒 OFFLINE or Cloud Sync Disabled
+    }
     if (!_initialized || _userId == null) return;
 
-    // 🚀 Inject Real Hostname & Nickname
+    // Inject Real Hostname & Nickname
     final hostname = await _getDeviceName();
+    final clientVersion = await _getClientVersion();
     final prefs = await SharedPreferences.getInstance();
     final customNickname = prefs.getString('custom_nickname');
     final selectedTitle = prefs.getString('selected_title');
 
-    // 🚀 COMPETITIVE GUARD: Never auto-inject "Top X Global" from local prefs
+    // COMPETITIVE GUARD: Never auto-inject "Top X Global" from local prefs
     // These titles must be validated against actual rank before writing.
     // Without this, old clients re-push stale competitive titles on every heartbeat.
-    final _competitiveTitles = {'Top 1 Global', 'Top 2 Global', 'Top 3 Global'};
+    final competitiveTitles = {'Top 1 Global', 'Top 2 Global', 'Top 3 Global'};
     final isCompetitiveTitle =
-        selectedTitle != null && _competitiveTitles.contains(selectedTitle);
+        selectedTitle != null && competitiveTitles.contains(selectedTitle);
 
     final dataWithHost = {
       ...data,
       'hostname': hostname,
       'nickname': customNickname ?? '',
+      'client_version': clientVersion,
       if (!data.containsKey('selected_title') &&
           selectedTitle != null &&
           selectedTitle.isNotEmpty &&
@@ -238,7 +254,7 @@ class PocketBaseService {
       debugPrint("⚠️ Metrics storage error: $e");
     }
 
-    // 3. 🚀 SEARCH for existing record by user_id BEFORE creating new one
+    // 3. SEARCH for existing record by user_id BEFORE creating new one
     try {
       final existingRecords = await pb
           .collection('metrics')
@@ -276,7 +292,7 @@ class PocketBaseService {
           return;
         } catch (e) {
           debugPrint("⚠️ Failed to update metrics record: $e");
-          // 🚀 SELF-HEALING: If the found record can't be updated (400 = corrupted/wiped),
+          // SELF-HEALING: If the found record can't be updated (400 = corrupted/wiped),
           // clear cache so we fall through to create a new record.
           _cachedMetricsId = null;
           final prefs = await SharedPreferences.getInstance();
@@ -286,7 +302,7 @@ class PocketBaseService {
       }
     } catch (e) {
       debugPrint("⚠️ Search existing record error: $e");
-      // 🚀 CRITICAL FIX: If search fails for ANY reason (403, network, etc.),
+      // CRITICAL FIX: If search fails for ANY reason (403, network, etc.),
       // DO NOT fall through to create a new record — that causes duplicates!
       // Instead, return and retry next time when we might have a valid cache.
       debugPrint(
@@ -320,7 +336,7 @@ class PocketBaseService {
   // GET DATA (Read metrics for a specific user ID - used for restoration)
   Future<Map<String, dynamic>?> getRemoteMetricsForUser(
       String targetUserId) async {
-    // 🚀 CRASH GUARD: Use isolated admin instance for this sensitive post-auth read
+    // CRASH GUARD: Use isolated admin instance for this sensitive post-auth read
     final adminPb = PocketBase(Env.pocketbaseUrl);
     try {
       await adminPb.collection('_superusers').authWithPassword(
@@ -348,8 +364,9 @@ class PocketBaseService {
 
   // GET DATA (Read Current Metrics) - No List permission needed
   Future<Map<String, dynamic>?> getUserMetrics() async {
-    if (isOffline || !enableCloudSync)
+    if (isOffline || !enableCloudSync) {
       return null; // 🔒 OFFLINE or Cloud Sync Disabled
+    }
     if (!_initialized || _userId == null) return null;
 
     // 1. Try cached ID
@@ -359,7 +376,11 @@ class PocketBaseService {
           _cachedMetricsId!,
           query: {'nc': DateTime.now().millisecondsSinceEpoch.toString()},
         );
-        return record.data;
+        if (record.data['user_id'] == _userId) {
+          return record.data;
+        } else {
+          _cachedMetricsId = null;
+        }
       } catch (e) {
         _cachedMetricsId = null;
       }
@@ -375,8 +396,14 @@ class PocketBaseService {
             storedId,
             query: {'nc': DateTime.now().millisecondsSinceEpoch.toString()},
           );
-          _cachedMetricsId = storedId;
-          return record.data;
+          if (record.data['user_id'] == _userId) {
+            _cachedMetricsId = storedId;
+            return record.data;
+          } else {
+            debugPrint("⚠️ Cached metrics ID belongs to a different user. Clearing cache.");
+            await prefs.remove('pb_metrics_id');
+            _cachedMetricsId = null;
+          }
         } catch (e) {
           await prefs.remove('pb_metrics_id');
         }
@@ -385,7 +412,7 @@ class PocketBaseService {
       debugPrint("⚠️ Metrics read storage error: $e");
     }
 
-    // 3. 🚀 CRITICAL FIX: Search by user_id as final fallback
+    // 3. CRITICAL FIX: Search by user_id as final fallback
     // Without this, losing the cached ID means getUserMetrics returns null,
     // which causes _performIncrement to start counters from 0 (losing daily_play_count).
     try {
@@ -410,7 +437,7 @@ class PocketBaseService {
       }
     } catch (e) {
       debugPrint("⚠️ getUserMetrics: user_id search fallback failed: $e");
-      // 🚀 CRITICAL: We MUST rethrow the error. If we return null on a network timeout,
+      // CRITICAL: We MUST rethrow the error. If we return null on a network timeout,
       // the caller (syncAdvancedStats) will assume the cloud stats are 0 and overwrite them!
       throw Exception("Network or API error while fetching user metrics: $e");
     }
@@ -419,13 +446,40 @@ class PocketBaseService {
     return null;
   }
 
+  // GET QUOTA (Read Current Premium & Download stats)
+  Future<Map<String, dynamic>?> getUserQuota() async {
+    if (isOffline || !enableCloudSync) {
+      throw Exception("App is offline or Cloud Sync is disabled.");
+    }
+    
+    // Retrieve the linked user ID from SharedPreferences instead of authStore
+    // because authStore.record is null on app restarts (since we only cache the token).
+    final prefs = await SharedPreferences.getInstance();
+    final linkedUserId = prefs.getString('pb_linked_user_id');
+    
+    if (linkedUserId == null) {
+      throw Exception("You are not logged in to PocketBase.");
+    }
+    
+    try {
+      final record = await pb.collection('users').getOne(
+        linkedUserId,
+        query: {'nc': DateTime.now().millisecondsSinceEpoch.toString()},
+      );
+      return record.toJson();
+    } catch (e) {
+      throw Exception("PocketBase API Error: $e");
+    }
+  }
+
   // --- RANKING ---
 
   /// Determines the user's global rank by counting how many users have strictly more total minutes.
   /// Rank = (Count of users with > minutes) + 1
   Future<int> calculateUserRank(int minutes) async {
-    if (isOffline || !enableLeaderboard)
+    if (isOffline || !enableLeaderboard) {
       return 0; // 🔒 OFFLINE or Leaderboard Disabled
+    }
     if (!_initialized) return 0;
     try {
       final records = await pb
@@ -513,11 +567,12 @@ class PocketBaseService {
 
     // Use explicit fromUserId (crash recovery) or fallback to internal _userId
     final oldUserId = fromUserId ?? _userId;
-    if (oldUserId == null || oldUserId.isEmpty || oldUserId == newUserId)
+    if (oldUserId == null || oldUserId.isEmpty || oldUserId == newUserId) {
       return true; // Already migrated
+    }
     DebugLogService().info("🔗 Migration: $oldUserId → $newUserId");
 
-    // 🚀 CRASH GUARD (Exit -1 Fix):
+    // CRASH GUARD (Exit -1 Fix):
     // Perform all Admin migration tasks in a completely ISOLATED PocketBase instance.
     // Dart on Windows has a native IOCP crash bug when closing an HTTP stream (OAuth SSE)
     // and immediately firing new REST calls on the exact same http.Client.
@@ -703,10 +758,12 @@ class PocketBaseService {
             !RegExp(r'^[a-zA-Z0-9]').hasMatch(cleanUsername)) {
           cleanUsername = 'user_$cleanUsername';
         }
-        if (cleanUsername.length < 3)
+        if (cleanUsername.length < 3) {
           cleanUsername = cleanUsername.padRight(3, '0');
-        if (cleanUsername.length > 150)
+        }
+        if (cleanUsername.length > 150) {
           cleanUsername = cleanUsername.substring(0, 150);
+        }
 
         // Verify if username is unique before setting it
         try {
@@ -763,7 +820,7 @@ class PocketBaseService {
   int _maxInt(int a, int b) => a > b ? a : b;
 
   PocketBase? _adminPb;
-  // 🚀 ISOLATED ADMIN CLIENT: Prevents overwriting the user's Google OAuth session
+  // ISOLATED ADMIN CLIENT: Prevents overwriting the user's Google OAuth session
   Future<PocketBase> _getAdminClient() async {
     if (_adminPb != null && _adminPb!.authStore.isValid) return _adminPb!;
 
@@ -848,17 +905,23 @@ class PocketBaseService {
   // FETCH LEADERBOARD (Available to users)
   Future<List<Map<String, dynamic>>> fetchLeaderboard(
       {required String sortBy, int limit = 50, String? filter}) async {
-    if (isOffline || !enableLeaderboard)
+    if (isOffline || !enableLeaderboard) {
       return []; // 🔒 OFFLINE MODE or Leaderboard Disabled
+    }
     try {
       // Authenticate as admin since metrics list might be restricted
       final adminPb = await _getAdminClient();
+
+      // BAN FILTER: Completely hide anyone with -1 total_minutes OR soft-banned with 1001 daily plays!
+      final activeFilter = filter != null && filter.isNotEmpty 
+          ? '($filter) && total_minutes >= 0 && daily_play_count <= 1000' 
+          : 'total_minutes >= 0 && daily_play_count <= 1000';
 
       final records = await adminPb.collection('metrics').getList(
             page: 1,
             perPage: limit,
             sort: '-$sortBy',
-            filter: filter,
+            filter: activeFilter,
           );
 
       return records.items.map((r) => r.data..['id'] = r.id).toList();
@@ -871,8 +934,9 @@ class PocketBaseService {
   // FETCH ARTIST LEADERBOARD
   Future<List<Map<String, dynamic>>> fetchArtistLeaderboard(
       {required String sortBy, int limit = 50, String? filter}) async {
-    if (isOffline || !enableLeaderboard)
+    if (isOffline || !enableLeaderboard) {
       return []; // 🔒 OFFLINE MODE or Leaderboard Disabled
+    }
     try {
       final adminPb = await _getAdminClient();
 
@@ -893,8 +957,9 @@ class PocketBaseService {
   // INCREMENT ARTIST PLAY
   Future<void> incrementArtistPlay(String artistName) async {
     if (isOffline) return; // 🔒 OFFLINE MODE
-    if (artistName.isEmpty || artistName == "Unknown" || artistName == "N/A")
+    if (artistName.isEmpty || artistName == "Unknown" || artistName == "N/A") {
       return;
+    }
 
     try {
       final adminPb = await _getAdminClient();
@@ -914,9 +979,9 @@ class PocketBaseService {
         // Increment
         final record = existingRecords.items.first;
         final id = record.id;
-        final currentPlayCount = record.data['play_count'] ?? 0;
-        int currentDailyPlayCount = record.data['daily_play_count'] ?? 0;
-        int currentWeeklyPlayCount = record.data['weekly_play_count'] ?? 0;
+        final currentPlayCount = (record.data['play_count'] as num?)?.toInt() ?? 0;
+        int currentDailyPlayCount = (record.data['daily_play_count'] as num?)?.toInt() ?? 0;
+        int currentWeeklyPlayCount = (record.data['weekly_play_count'] as num?)?.toInt() ?? 0;
         final lastPlayDateStr = record.data['last_play_date'];
 
         if (lastPlayDateStr != null && lastPlayDateStr.isNotEmpty) {
@@ -943,7 +1008,9 @@ class PocketBaseService {
             if (lastMonday != nowMonday) {
               currentWeeklyPlayCount = 0;
             }
-          } catch (e) {}
+          } catch (e) {
+            // Ignore format error
+          }
         }
 
         await adminPb.collection('artist_metrics').update(id, body: {
@@ -1036,7 +1103,7 @@ class PocketBaseService {
           .map((r) => {
                 'id': r.id,
                 'message': r.data['message'],
-                'created': r.created,
+                'created': r.get<String>('created'),
               })
           .toList();
     } catch (e) {
@@ -1112,7 +1179,7 @@ class PocketBaseService {
       return _cachedSessionId;
     }
 
-    // 3. 🚀 SEARCH for existing session by user_id
+    // 3. SEARCH for existing session by user_id
     // This ensures all devices on the same account converge on the same cloud record.
     try {
       final existingRecords = await pb.collection('sessions').getList(
@@ -1197,11 +1264,11 @@ class PocketBaseService {
       await pb.collection('sessions').update(recordId, body: data);
     } catch (e) {
       if (e is ClientException) {
-        // 🚀 SELF-HEALING: If 400 or 404, the session is stale/corrupted.
+        // SELF-HEALING: If 404 (Not Found), the session is deleted/stale on server.
         // Force regenerate a fresh session and retry ONCE.
-        if (e.statusCode == 400 || e.statusCode == 404) {
+        if (e.statusCode == 404) {
           DebugLogService().warning(
-              "⚠️ PB: Session $recordId is stale. Force regenerating...");
+              "⚠️ PB: Session $recordId is stale (404). Force regenerating...");
           _cachedSessionId = null;
           final prefs = await SharedPreferences.getInstance();
           await prefs.remove('pb_session_id');
@@ -1237,11 +1304,11 @@ class PocketBaseService {
         'cache_bust': DateTime.now().millisecondsSinceEpoch.toString()
       });
       final data = record.data;
-      data['updated'] = record.updated; // Manual inject
+      data['updated'] = record.get<String>('updated'); // Manual inject
       return data;
     } catch (e) {
       if (e is ClientException) {
-        // 🚀 SELF-HEALING: Clear stale session on 400/404
+        // SELF-HEALING: Clear stale session on 400/404
         if (e.statusCode == 400 || e.statusCode == 404) {
           DebugLogService()
               .warning("⚠️ PB: Polling Session $recordId is stale. Clearing.");
@@ -1268,7 +1335,7 @@ class PocketBaseService {
         if (e.action == 'update') {
           final data = e.record?.data ?? {};
           // Ensure 'updated' is available
-          data['updated'] = e.record?.updated;
+          data['updated'] = e.record?.get<String>('updated');
           // Data received, push to listener
           onUpdate(data);
         } else {
@@ -1447,7 +1514,7 @@ class PocketBaseService {
 
       String jsonStr;
 
-      // 🚀 NORMALIZE DATA (Handles raw JSON, List<int>, or Base64 String)
+      // NORMALIZE DATA (Handles raw JSON, List<int>, or Base64 String)
       final List<int> bytes;
       if (rawData is String) {
         // Try to see if it's Base64. Shareable playlists now use Base64.
@@ -1772,7 +1839,7 @@ class PocketBaseService {
     body['user_id'] = _userId;
 
     try {
-      // 🚀 FIX: Search by title only, then filter by primary artist in code.
+      // FIX: Search by title only, then filter by primary artist in code.
       // This prevents duplicate cloud entries when the same song has different
       // artist strings across sources (e.g. "Ziv Zaifman" vs "Ziv Zaifman, Hugh Jackman").
       final escapedTitle = title.replaceAll("'", "\\'");

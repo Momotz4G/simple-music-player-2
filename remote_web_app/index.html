@@ -261,7 +261,7 @@
         // SETUP FROM URL PARAMS OR CONFIG
         const urlParams = new URLSearchParams(window.location.search);
 
-        let initialHost = urlParams.get('host') || "https://pocketbase.io";
+        let initialHost = urlParams.get('host') || "https://smpv2.stephanus-dev.online";
         let initialId = urlParams.get('id') || urlParams.get('sid') || urlParams.get('uid');
 
         // Try global config if available
@@ -450,8 +450,17 @@
 
             // METADATA (PROTECTED: skip if cooldown active to prevent flicker)
             if (!cooldownActive) {
-                if (data.current_title) document.getElementById('track-title').innerText = data.current_title;
-                if (data.current_artist) document.getElementById('track-artist').innerText = data.current_artist;
+                if (data.current_title && data.current_title.trim().length > 0) {
+                    document.getElementById('track-title').innerText = data.current_title;
+                } else {
+                    document.getElementById('track-title').innerText = "Not Playing";
+                }
+
+                if (data.current_artist && data.current_artist.trim().length > 0) {
+                    document.getElementById('track-artist').innerText = data.current_artist;
+                } else {
+                    document.getElementById('track-artist').innerText = "Waiting for host...";
+                }
 
                 // Art - supports online URLs, base64 data URIs, or shows placeholder
                 const artUrl = data.album_art_url || data.current_art_url;

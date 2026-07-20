@@ -7,7 +7,7 @@ import '../components/playlist_collage.dart';
 import '../../providers/search_bridge_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../l10n/app_localizations.dart';
-import '../../utils/layout_engine.dart';
+
 import '../components/playlist_sharing_dialogs.dart';
 
 class PlaylistsPage extends ConsumerWidget {
@@ -85,7 +85,7 @@ class PlaylistsPage extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 100),
                   itemCount: playlists.length,
                   itemBuilder: (context, index) {
-                    // 🚀 SORT: Pinned "Liked Songs" first
+                    // SORT: Pinned "Liked Songs" first
                     final sortedPlaylists = [...playlists];
                     sortedPlaylists.sort((a, b) {
                       if (a.name == "Liked Songs") return -1;
@@ -96,7 +96,7 @@ class PlaylistsPage extends ConsumerWidget {
                     final playlist = sortedPlaylists[index];
                     final isLikedSongs = playlist.name == "Liked Songs";
 
-                    // 🚀 GET IMAGES FOR COLLAGE
+                    // GET IMAGES FOR COLLAGE
                     // ✅ FIX: Get Paths instead of Bytes
                     final imagePaths = playlist.entries
                         .take(4)
@@ -129,7 +129,7 @@ class PlaylistsPage extends ConsumerWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          // 🚀 FIX: Use Provider Navigation instead of Push
+          // FIX: Use Provider Navigation instead of Push
           ref.read(navigationStackProvider.notifier).push(
                 NavigationItem(
                     type: NavigationType.playlist, data: playlist.id),
@@ -152,7 +152,7 @@ class PlaylistsPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🚀 4-TILE COLLAGE or SPOTIFY COVER
+              // 4-TILE COLLAGE or SPOTIFY COVER
               Expanded(
                 child: ClipRRect(
                   borderRadius:

@@ -126,8 +126,9 @@ class _DeviceSelectorDialogState extends ConsumerState<DeviceSelectorDialog> {
                            Navigator.pop(context);
                         }
                       } else {
-                        // 🚀 REMOTE SWITCH: Command the other device to take over
+                        // REMOTE SWITCH: Command the other device to take over
                         await ref.read(playerProvider.notifier).switchToRemoteDevice(id, name);
+                        if (!context.mounted) return;
                         Navigator.pop(context);
                       }
                     },
@@ -165,6 +166,7 @@ class _DeviceSelectorDialogState extends ConsumerState<DeviceSelectorDialog> {
 
   void _showRemotePairingDialog(AppLocalizations l10n) async {
     try {
+      ref.read(playerProvider.notifier).enableRemoteSession();
       final sessionId = await PocketBaseService().getUniqueSessionId();
       if (sessionId == null) {
         if (mounted) {
@@ -179,7 +181,7 @@ class _DeviceSelectorDialogState extends ConsumerState<DeviceSelectorDialog> {
 
       if (!mounted) return;
 
-      // 🚀 Close the bottom sheet first
+      // Close the bottom sheet first
       final navigator = Navigator.of(context);
       navigator.pop();
 
@@ -351,11 +353,11 @@ class _DeviceSelectorDialogState extends ConsumerState<DeviceSelectorDialog> {
         color: Colors.blue.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.info_outline, size: 16, color: Colors.blue),
-          const SizedBox(width: 8),
-          const Expanded(
+          Icon(Icons.info_outline, size: 16, color: Colors.blue),
+          SizedBox(width: 8),
+          Expanded(
             child: Text(
               "Switching devices will maintain your position and queue.",
               style: TextStyle(fontSize: 11, color: Colors.blue),

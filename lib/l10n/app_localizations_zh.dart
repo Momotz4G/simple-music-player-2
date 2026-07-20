@@ -37,6 +37,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountLinkedSuccessfully => '账号关联成功！';
 
   @override
+  String get accountTiers => '账户层级';
+
+  @override
   String get achievementsUnlocked => '已解锁的成就';
 
   @override
@@ -53,6 +56,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get addFoldersScan => '添加要扫描的文件夹';
+
+  @override
+  String get addLineToEnd => '添加到末尾';
+
+  @override
+  String get addLineToTop => '添加到顶部';
 
   @override
   String get addToFavorite => '添加到收藏';
@@ -76,6 +85,65 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get addedToQueue => '已添加到队列';
+
+  @override
+  String get aiGenerate => 'AI 生成';
+
+  @override
+  String get aiLyricsComplete => '完成！';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsGenerationTitle => 'AI 歌词生成';
+
+  @override
+  String get aiLyricsInitializing => '正在初始化...';
+
+  @override
+  String get aiLyricsLocalFileMissing => '错误：未找到本地音频文件。';
+
+  @override
+  String get aiLyricsParsing => '正在解析歌词...';
+
+  @override
+  String get aiLyricsPolling => '正在获取歌词... 请耐心等待！';
+
+  @override
+  String get aiLyricsReceiving => '已收到歌词';
+
+  @override
+  String get aiLyricsStatusOk => '状态码 200 OK!';
+
+  @override
+  String get aiLyricsSuccess => '歌词生成成功！';
+
+  @override
+  String get aiLyricsUploadFailed => '错误：上传失败。';
+
+  @override
+  String get aiLyricsUploadSuccess => '上传完成！';
+
+  @override
+  String get aiLyricsUploading => '正在上传歌曲到服务器...';
+
+  @override
+  String get aiLyricsVerifying => '正在验证服务器状态...';
+
+  @override
+  String alacDownloadsPerDay(int count) {
+    return '$count 次 ALAC 下载 / 天';
+  }
+
+  @override
+  String get alacHighResDownloads => 'ALAC 高解析度下载';
 
   @override
   String get album => '专辑';
@@ -105,6 +173,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get alreadyInLikedSongs => '已经在喜欢的歌曲中';
 
   @override
+  String get alreadyPaidCheckStatus => '已付款？检查状态';
+
+  @override
   String get android14BitPerfect => 'Android 14+ 位完美';
 
   @override
@@ -121,6 +192,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appearance => '外观';
+
+  @override
+  String get applyBtn => '应用';
 
   @override
   String get applyOnRestart => '更改将在下次重启时生效。';
@@ -199,6 +273,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get automatic => '自动';
 
   @override
+  String get automaticGainControl => '自动增益控制';
+
+  @override
+  String get automaticGainControlDesc => '自动平衡歌曲之间的音量，避免声音过大或过小。';
+
+  @override
   String automaticTitleLabel(String title) {
     return '自动：$title';
   }
@@ -210,14 +290,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get avatarPickerDesc => '选择模板或导入您自己的照片';
 
   @override
-  String get beFirstToClaim => '抢占第一名吧！';
-
-  @override
   String get backgroundCacheFlacStreams => '后台缓存FLAC流';
 
   @override
   String get backgroundCacheFlacStreamsSubtitle =>
       '静默下载流式无损音轨到本地磁盘，使重播即时且不消耗流量。';
+
+  @override
+  String get beFirstToClaim => '抢占第一名吧！';
 
   @override
   String get behavioralHeader => '行为成就';
@@ -230,6 +310,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bitDepthLabel => '位深';
+
+  @override
+  String get bitPerfectBypassSub14 => '使用 Android 14+ 位完美 API 绕过系统混音器';
+
+  @override
+  String get bitPerfectBypassSubLegacy => '使用 C++ 音频引擎绕过系统混音器（Android 13 及以下）';
+
+  @override
+  String get bitPerfectBypassSuccess => '已启用位完美播放。';
+
+  @override
+  String get bitPerfectBypassTitle => '位完美 / USB 音频绕过';
+
+  @override
+  String get bitPerfectBypassWarning => '您必须先插入 USB DAC。';
 
   @override
   String get bitPerfectEnabled => '位完美模式已启用。音量控制可能失效。';
@@ -263,6 +358,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cancel => '取消';
+
+  @override
+  String get cancelAllBtn => '全部取消';
+
+  @override
+  String get canvasSourcePreferenceSubtitle => '选择背景循环动画的加载来源';
+
+  @override
+  String get canvasSourcePreferenceTitle => 'Canvas / 动态封面来源';
 
   @override
   String get championChampionTooltip => '在 5 个不同的周内达到全球第一';
@@ -316,6 +420,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chooseAvatar => '选择头像';
 
   @override
+  String get chooseFormat => '选择您喜欢的格式：';
+
+  @override
   String get chooseYourTitle => '选择你的头衔';
 
   @override
@@ -323,6 +430,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get clearAll => '全部清除';
+
+  @override
+  String get clearAllDesc => '这将清除当前的编辑器状态。除非您之后保存，否则不会删除您的本地文件。';
+
+  @override
+  String get clearAllQuestion => '全部清除？';
+
+  @override
+  String get clearBtn => '清除';
 
   @override
   String get clearHistory => '清除历史记录';
@@ -344,6 +460,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloud => '云端';
+
+  @override
+  String get cloudStatsAndRankings => '云端统计与排名';
 
   @override
   String get codeCopied => '代码已复制到剪贴板！';
@@ -401,7 +520,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contentRegion => '内容区域';
 
   @override
+  String get continueToSociabuzz => '继续前往 Sociabuzz';
+
+  @override
   String get copyCode => '复制代码';
+
+  @override
+  String get copyLink => '复制链接';
 
   @override
   String get couldNotDownloadFlac => '无法下载 FLAC。';
@@ -435,6 +560,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get crownedChampionTitlesHeader => '冠军头衔';
+
+  @override
+  String get currentTierLabel => '当前';
 
   @override
   String get customDevice => '自定义设备';
@@ -518,6 +646,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get disableRomanization => '禁用罗马拼音';
 
   @override
+  String get disableServicesTitle => '禁用服务';
+
+  @override
+  String get disabled => '已禁用';
+
+  @override
   String get disablingSharingWarning => '禁用共享将永久从服务器删除代码和数据以节省空间。';
 
   @override
@@ -534,6 +668,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get donate => '捐赠';
+
+  @override
+  String get donateMinToObtain => '捐赠至少 10,000 IDR 即可获得（永久）';
 
   @override
   String get download => '下载';
@@ -596,6 +733,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dspLabel => 'DSP';
 
   @override
+  String get editLyricsTooltip => '编辑歌词';
+
+  @override
   String get editMetadata => '编辑元数据';
 
   @override
@@ -627,6 +767,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get enableBarVisualizer => '启用条形可视化器';
+
+  @override
+  String get enableOfflineModeBtn => '启用离线模式';
+
+  @override
+  String get enableOfflineModeQuestion => '启用离线模式？';
+
+  @override
+  String get endLabel => '结束: ';
 
   @override
   String get endlessQueue => '无限队列';
@@ -685,6 +834,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exclusiveModeWarning => '警告：如果您在上方选择了特定设备而非系统默认，独占模式效果最佳。';
 
   @override
+  String get exclusiveSupporterTitle => '专属支持者头衔与 Discord 角色';
+
+  @override
   String get exclusiveTitles => '专属';
 
   @override
@@ -700,7 +852,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get expand => '展开';
 
   @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
   String get externalFiles => '外部文件';
+
+  @override
+  String get externalLinkDetected => '检测到外部链接';
 
   @override
   String get fadingAtEnd => '睡眠定时器：在曲目结束时渐弱...';
@@ -721,6 +879,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get failedToGenerateCode => '未能生成共享代码。请检查连接。';
 
   @override
+  String get failedToSave => '保存歌词文件失败。';
+
+  @override
   String get failedToSetAvatar => '设置头像模板失败';
 
   @override
@@ -728,6 +889,72 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get favoriteTrack => '最喜欢的曲目';
+
+  @override
+  String get featureAiLyrics => 'AI 歌词生成器';
+
+  @override
+  String get featureAiLyricsDesc => '自动同步歌词已禁用';
+
+  @override
+  String get featureAiLyricsLongDesc => '通过 AI 生成同步歌词';
+
+  @override
+  String get featureCloudSync => '云统计同步';
+
+  @override
+  String get featureCloudSyncDesc => '听歌统计仅保存在本地';
+
+  @override
+  String get featureCloudSyncLongDesc => '将听歌指标与 PocketBase 同步';
+
+  @override
+  String get featureConnectDevice => '连接到设备';
+
+  @override
+  String get featureConnectDeviceDesc => '远程控制和听歌派对已禁用';
+
+  @override
+  String get featureConnectDeviceLongDesc => '远程控制和听歌派对';
+
+  @override
+  String get featureLeaderboard => '全球排行榜';
+
+  @override
+  String get featureLeaderboardDesc => '排名更新已暂停';
+
+  @override
+  String get featureLeaderboardLongDesc => '公开显示并更新您的排名';
+
+  @override
+  String get featureOnlineLyrics => '在线歌词搜索';
+
+  @override
+  String get featureOnlineLyricsDesc => '仅限本地 .lrc/.ttml 文件';
+
+  @override
+  String get featureOnlineLyricsLongDesc => '从 LRCLIB/Spotify 获取歌词';
+
+  @override
+  String get featureOnlineSearch => '在线搜索';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube 搜索已禁用';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'Spotify 和 YouTube 远程搜索';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => '背景视频已禁用';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => '曲目的背景视频';
+
+  @override
+  String get fetchingAlacAppleMusic => '正在从 Apple Music 获取 ALAC 无损...';
 
   @override
   String get fetchingCanvas => '正在获取 Canvas...';
@@ -870,7 +1097,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get general => '常规';
 
   @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
   String get generatingShareCode => '正在生成共享代码...';
+
+  @override
+  String get generationFailed => '生成失败';
 
   @override
   String get genre => '流派';
@@ -900,6 +1133,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get goToLocalLibraryToSelect => '请前往“本地库”选择一个音乐文件夹。';
 
   @override
+  String get gofileDownloadFailedPrompt =>
+      '由于严格的网络或服务器限制，自动下载失败。\\n\\n您想在系统浏览器中打开 Gofile 下载页面，还是复制链接以进行手动下载？';
+
+  @override
   String get goodAfternoon => '下午好';
 
   @override
@@ -916,6 +1153,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get grantPermission => '授予权限';
+
+  @override
+  String get guestTier => '访客';
 
   @override
   String get hallOfFameHeader => '名人堂成就';
@@ -985,6 +1225,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importFromGallery => '从相册导入';
 
   @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
   String get importFromSpotify => '从 Spotify 导入';
 
   @override
@@ -1004,6 +1250,78 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importLyricsTooltip => '导入歌词';
+
+  @override
+  String get localFile => '本地文件';
+
+  @override
+  String get importLocalFileSubtitle => '导入 .lrc、.ttml 或 .txt';
+
+  @override
+  String get searchFromAppleMusic => '从 Apple Music 搜索';
+
+  @override
+  String get searchAppleMusicSubtitle => '自动下载 LRC/TTML';
+
+  @override
+  String get searchFromSpotifyLyrics => '从 Spotify 搜索';
+
+  @override
+  String get searchSpotifyLyricsSubtitle => '从 Spotify 下载同步歌词';
+
+  @override
+  String get searchFromMusixmatch => '从 Musixmatch 搜索';
+
+  @override
+  String get searchMusixmatchSubtitle => '从 Musixmatch 下载同步歌词';
+
+  @override
+  String get searchingAppleMusic => '正在搜索 Apple Music...';
+
+  @override
+  String get findingMatches => '正在查找匹配项...';
+
+  @override
+  String get noResultsAppleMusic => '在 Apple Music 上未找到结果。';
+
+  @override
+  String get selectSong => '选择歌曲';
+
+  @override
+  String get downloadingLyrics => '正在下载歌词...';
+
+  @override
+  String get fetchingLyricsFromServer => '正在从服务器获取 TTML/LRC...';
+
+  @override
+  String get failedDownloadAppleMusic => '下载歌词失败。Apple Music 上可能不存在这些歌词。';
+
+  @override
+  String get lyricsImportedSuccess => '歌词导入成功！按保存以保留它们。';
+
+  @override
+  String get receivedEmptyLyrics => '从服务器收到空歌词。';
+
+  @override
+  String get downloadingFromSpotify => '正在从 Spotify 下载...';
+
+  @override
+  String get fetchingLyrics => '正在获取歌词...';
+
+  @override
+  String get lyricsImportedSpotify => '已从 Spotify 导入歌词！';
+
+  @override
+  String get noLyricsSpotify => '在 Spotify 上未找到歌词。';
+
+  @override
+  String get downloadingFromMusixmatch => '正在从 Musixmatch 下载...';
+
+  @override
+  String get lyricsImportedMusixmatch => '已从 Musixmatch 导入歌词！';
+
+  @override
+  String get noLyricsMusixmatch => '在 Musixmatch 上未找到歌词。';
 
   @override
   String get importSpotifyPlaylist => '导入 Spotify 播放列表';
@@ -1037,6 +1355,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get inputLabel => '输入';
 
   @override
+  String get insertAfter => '在后插入';
+
+  @override
   String get installNow => '立即安装';
 
   @override
@@ -1047,6 +1368,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get invalidCode => '访问代码无效';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
 
   @override
   String get invalidSpotifyUrl => 'Spotify 播放列表 URL 无效';
@@ -1110,6 +1434,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get linkAccountDesc => '通过 Google 同步并恢复您的进度';
 
   @override
+  String get linkAccountToUpgrade => '您需要先绑定账户才能升级。请使用与 Sociabuzz 相同的电子邮箱！';
+
+  @override
+  String get linkCopied => '链接已复制到剪贴板！';
+
+  @override
   String listenMinutesTooltip(String minutes) {
     return '听 $minutes 分钟音乐';
   }
@@ -1151,10 +1481,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get losslessQuality => '无损 (自动)';
 
   @override
+  String get lrcFormat => 'LRC (标准同步)';
+
+  @override
+  String get lrcFormatDesc => '通用格式，随处可用。';
+
+  @override
   String get lunarNewYear => '农历新年';
 
   @override
+  String get lyricTextHint => '歌词文本...';
+
+  @override
+  String get lyricsApplied => '歌词已应用到面板！';
+
+  @override
   String get lyricsByLRCLIB => '歌词来源 LRCLIB';
+
+  @override
+  String get lyricsEditorTitle => '歌词编辑器';
 
   @override
   String get lyricsSaveError => '保存歌词失败';
@@ -1167,6 +1512,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get madeForYou => '为您推荐';
+
+  @override
+  String get manageIndividualFeatures => '管理单个在线功能';
 
   @override
   String get manualSearch => '手动搜索';
@@ -1397,6 +1745,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get offline => '离线';
 
   @override
+  String get offlineModeActive => '已激活';
+
+  @override
+  String get offlineModeAllEnabledStatus => '全部启用';
+
+  @override
+  String get offlineModeConfirmationDesc => '这将完全禁用所有网络通信。以下功能将被关闭：';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return '已禁用 ($count)';
+  }
+
+  @override
+  String get offlineModeEnabledStatus => '离线模式已启用';
+
+  @override
+  String get offlineModeHeader => '离线模式';
+
+  @override
+  String get offlineModeLockdownDesc => '网络锁定已激活。统计数据保存在本地。';
+
+  @override
+  String get offlineModeMainDesc => '禁用所有网络服务，仅播放本地音乐库。';
+
+  @override
+  String get offlineModeSyncRestoreNote => '禁用此项后，您的统计数据将自动同步。';
+
+  @override
+  String get offlineModeTitle => '离线模式';
+
+  @override
   String get offlineStatus => '离线';
 
   @override
@@ -1406,7 +1786,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get online => '在线';
 
   @override
+  String get onlineModeRestored => '在线模式已恢复。正在同步统计数据...';
+
+  @override
+  String get onlyAppleMusic => '仅限 Apple Music';
+
+  @override
   String get onlyScanSelected => '仅扫描选定的文件夹（默认开启）';
+
+  @override
+  String get onlySpotify => '仅限 Spotify';
 
   @override
   String get opacity => '不透明度';
@@ -1415,6 +1804,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String opacityLabel(int percent) {
     return '透明度: $percent%';
   }
+
+  @override
+  String get openBrowser => '打开浏览器';
 
   @override
   String get openProfile => '打开个人资料';
@@ -1432,7 +1824,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get overwriteLrcWarning => '此歌曲已存在本地 .lrc 文件。\\n是否覆盖？';
 
   @override
+  String get owned => '已拥有';
+
+  @override
   String get parsingPlaylistData => '正在解析播放列表数据...';
+
+  @override
+  String get pasteLyricsHint => '在此粘贴歌词...';
 
   @override
   String get pathLabel => '路径';
@@ -1444,12 +1842,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get permissionRequiredDesc => '编辑标签需要“所有文件访问”权限。这将允许直接修改您的音乐文件。';
 
   @override
+  String get plainMode => '纯文本';
+
+  @override
   String get play => '播放';
 
   @override
   String playCountLabel(int count) {
     return '$count 次播放';
   }
+
+  @override
+  String get playFromLine => '从这一行播放';
 
   @override
   String get playNext => '插播下一首';
@@ -1506,7 +1910,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get portuguese => '葡萄牙语';
 
   @override
+  String get preferAppleMusic => '首选 Apple Music';
+
+  @override
+  String get preferSpotify => '首选 Spotify';
+
+  @override
   String get preferredOutputFormat => '下载的首选输出格式';
+
+  @override
+  String get premiumMemberDesc => '您拥有无限量 ALAC 下载和优先队列访问权限！';
+
+  @override
+  String get premiumMemberTitle => '高级会员';
 
   @override
   String get preparingDownload => '正在准备下载';
@@ -1529,6 +1945,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get previousTrack => '上一首';
 
   @override
+  String get priorityVipServerQueue => '优先 VIP 服务器队列';
+
+  @override
+  String get processingOnServer => '正在服务器上处理...';
+
+  @override
   String get profileSettings => '简介设置';
 
   @override
@@ -1548,6 +1970,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get queueIsEmpty => '队列为空';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return '队列 $position... 请稍候';
+  }
 
   @override
   String get queueTooltip => '队列';
@@ -1628,10 +2055,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get refreshLyricsTooltip => '刷新歌词';
 
   @override
+  String get registeredLinkedTier => '已注册 (已绑定)';
+
+  @override
   String get removeAvatar => '移除当前头像';
 
   @override
   String get removeFromPlaylist => '从播放列表中移除';
+
+  @override
+  String get removeLine => '删除行';
 
   @override
   String removedFolder(Object folder) {
@@ -1646,6 +2079,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeats => '次重复';
+
+  @override
+  String get reportTrouble => '报告问题';
 
   @override
   String get requiresAndroid14 => '需要 Android 14+ 和 USB DAC';
@@ -1717,6 +2153,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get revert => '还原';
 
   @override
+  String get romajiHint => '罗马拼音 / 译音 (可选)...';
+
+  @override
   String get russian => '俄语';
 
   @override
@@ -1741,7 +2180,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get saveLabel => '保存';
 
   @override
+  String get saveLocallyBtn => '本地保存';
+
+  @override
   String get saveLrcPrompt => '是否要将当前歌词保存为音频文件旁的 .lrc 文件？';
+
+  @override
+  String get saveLyricsTitle => '保存歌词';
 
   @override
   String get saveLyricsTooltip => '保存歌词';
@@ -1765,6 +2210,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String savedAsFormat(String format) {
     return '已保存为 $format';
+  }
+
+  @override
+  String savedSuccessfully(String extension) {
+    return '成功保存到 $extension 文件！';
   }
 
   @override
@@ -1848,6 +2298,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seeAll => '查看全部';
 
   @override
+  String get seeBenefitsBtn => '查看权益';
+
+  @override
+  String get seePremiumBenefits => '查看高级会员权益';
+
+  @override
   String get selectDifferentFolder => '选择其他文件夹';
 
   @override
@@ -1878,6 +2334,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get setCustomTimer => '设置自定义定时器';
+
+  @override
+  String get setEndTooltip => '将结束设为当前位置';
+
+  @override
+  String get setStartTooltip => '将开始设为当前位置';
 
   @override
   String get settings => '设置';
@@ -1958,6 +2420,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get songLabelUpper => '歌曲';
 
   @override
+  String get songQueueTitle => '歌曲队列';
+
+  @override
   String get songTitleKeyword => '歌名或关键字';
 
   @override
@@ -1994,6 +2459,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get standardDesc => 'MP3 - 文件较小，缓冲较快';
 
   @override
+  String get standardDownloadQueue => '标准下载队列';
+
+  @override
   String get standardQuality => '标准 (MP3)';
 
   @override
@@ -2001,6 +2469,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get startBulkProcess => '开始批量处理';
+
+  @override
+  String get startLabel => '开始: ';
 
   @override
   String get startedDownloadingAll => '开始下载所有歌曲...';
@@ -2061,6 +2532,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get syncThemeAlbumArt => '主题与专辑封面同步';
+
+  @override
+  String get syncedMode => '已同步';
 
   @override
   String get system => '系统';
@@ -2174,6 +2648,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translationLanguage => '翻译语言';
 
   @override
+  String get ttmlFormat => 'TTML (高精度)';
+
+  @override
+  String get ttmlFormatDesc => '更适合 AI 生成和详细同步。';
+
+  @override
   String get turnOffTimer => '关闭定时器';
 
   @override
@@ -2201,6 +2681,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unknownDevice => '未知设备';
 
   @override
+  String get unlimitedAlacDownloads => '无限制 ALAC 下载';
+
+  @override
   String get unlink => '断开连接';
 
   @override
@@ -2217,6 +2700,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get unlinkFolderClear => '取消文件夹链接并清除歌曲列表';
+
+  @override
+  String get unlockUnlimitedPremium => '解锁无限制高级会员';
 
   @override
   String unlockedCountLabel(int unlocked, int total) {
@@ -2277,6 +2763,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get useMixedColors => '使用混合颜色（同步优先）';
 
   @override
+  String get useSameEmailCheckStatus => '使用与应用内相同的邮箱以自动检查状态。';
+
+  @override
+  String usedToday(int used, int max) {
+    return '今日已用 $used / $max';
+  }
+
+  @override
   String get verifiedDeveloper => '认证开发人员';
 
   @override
@@ -2298,6 +2792,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get visualizerStyle => '可视化器样式';
+
+  @override
+  String get waitingForServerResponse => '正在等待服务器响应...';
 
   @override
   String get wasapiExclusive => 'WASAPI 独占模式';
@@ -2334,302 +2831,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlp 有新版本可用。';
-
-  @override
-  String get importFromM3u => 'Import from M3U';
-
-  @override
-  String get importFromM3uSubtitle => 'Import an M3U playlist file';
-
-  @override
-  String get exportToM3u => 'Export to M3U';
-
-  @override
-  String get invalidM3uFile => 'Invalid M3U File';
-
-  @override
-  String get generateAiLyrics => 'Generate AI Lyrics';
-
-  @override
-  String get aiLyricsGenerating => 'Generating AI Lyrics...';
-
-  @override
-  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
-
-  @override
-  String get aiLyricsError => 'Error generating AI lyrics.';
-
-  @override
-  String get offlineModeHeader => '离线模式';
-
-  @override
-  String get offlineModeTitle => '离线模式';
-
-  @override
-  String get offlineModeActive => '已激活';
-
-  @override
-  String get offlineModeEnabledStatus => '离线模式已启用';
-
-  @override
-  String offlineModeDisabledStatus(int count) {
-    return '已禁用 ($count)';
-  }
-
-  @override
-  String get offlineModeAllEnabledStatus => '全部启用';
-
-  @override
-  String get offlineModeLockdownDesc => '网络锁定已激活。统计数据保存在本地。';
-
-  @override
-  String get offlineModeMainDesc => '禁用所有网络服务，仅播放本地音乐库。';
-
-  @override
-  String get enableOfflineModeQuestion => '启用离线模式？';
-
-  @override
-  String get offlineModeConfirmationDesc => '这将完全禁用所有网络通信。以下功能将被关闭：';
-
-  @override
-  String get offlineModeSyncRestoreNote => '禁用此项后，您的统计数据将自动同步。';
-
-  @override
-  String get enableOfflineModeBtn => '启用离线模式';
-
-  @override
-  String get onlineModeRestored => '在线模式已恢复。正在同步统计数据...';
-
-  @override
-  String get disableServicesTitle => '禁用服务';
-
-  @override
-  String get manageIndividualFeatures => '管理单个在线功能';
-
-  @override
-  String get featureCloudSync => '云统计同步';
-
-  @override
-  String get featureCloudSyncDesc => '听歌统计仅保存在本地';
-
-  @override
-  String get featureCloudSyncLongDesc => '将听歌指标与 PocketBase 同步';
-
-  @override
-  String get featureLeaderboard => '全球排行榜';
-
-  @override
-  String get featureLeaderboardDesc => '排名更新已暂停';
-
-  @override
-  String get featureLeaderboardLongDesc => '公开显示并更新您的排名';
-
-  @override
-  String get featureOnlineLyrics => '在线歌词搜索';
-
-  @override
-  String get featureOnlineLyricsDesc => '仅限本地 .lrc/.ttml 文件';
-
-  @override
-  String get featureOnlineLyricsLongDesc => '从 LRCLIB/Spotify 获取歌词';
-
-  @override
-  String get featureAiLyrics => 'AI 歌词生成器';
-
-  @override
-  String get featureAiLyricsDesc => '自动同步歌词已禁用';
-
-  @override
-  String get featureAiLyricsLongDesc => '通过 AI 生成同步歌词';
-
-  @override
-  String get featureSpotifyCanvas => 'Spotify Canvas';
-
-  @override
-  String get featureSpotifyCanvasDesc => '背景视频已禁用';
-
-  @override
-  String get featureSpotifyCanvasLongDesc => '曲目的背景视频';
-
-  @override
-  String get featureOnlineSearch => '在线搜索';
-
-  @override
-  String get featureOnlineSearchDesc => 'Spotify/YouTube 搜索已禁用';
-
-  @override
-  String get featureOnlineSearchLongDesc => 'Spotify 和 YouTube 远程搜索';
-
-  @override
-  String get featureConnectDevice => '连接到设备';
-
-  @override
-  String get featureConnectDeviceDesc => '远程控制和听歌派对已禁用';
-
-  @override
-  String get featureConnectDeviceLongDesc => '远程控制和听歌派对';
-
-  @override
-  String get lyricsEditorTitle => '歌词编辑器';
-
-  @override
-  String get clearAllQuestion => '全部清除？';
-
-  @override
-  String get clearAllDesc => '这将清除当前的编辑器状态。除非您之后保存，否则不会删除您的本地文件。';
-
-  @override
-  String get clearBtn => '清除';
-
-  @override
-  String get lyricsApplied => '歌词已应用到面板！';
-
-  @override
-  String get chooseFormat => '选择您喜欢的格式：';
-
-  @override
-  String get lrcFormat => 'LRC (标准同步)';
-
-  @override
-  String get lrcFormatDesc => '通用格式，随处可用。';
-
-  @override
-  String get ttmlFormat => 'TTML (高精度)';
-
-  @override
-  String get ttmlFormatDesc => '更适合 AI 生成和详细同步。';
-
-  @override
-  String savedSuccessfully(String extension) {
-    return '成功保存到 $extension 文件！';
-  }
-
-  @override
-  String get failedToSave => '保存歌词文件失败。';
-
-  @override
-  String get generationFailed => '生成失败';
-
-  @override
-  String get aiLyricsGenerationTitle => 'AI 歌词生成';
-
-  @override
-  String get syncedMode => '已同步';
-
-  @override
-  String get plainMode => '纯文本';
-
-  @override
-  String get addLineToTop => '添加到顶部';
-
-  @override
-  String get addLineToEnd => '添加到末尾';
-
-  @override
-  String get lyricTextHint => '歌词文本...';
-
-  @override
-  String get insertAfter => '在后插入';
-
-  @override
-  String get removeLine => '删除行';
-
-  @override
-  String get romajiHint => '罗马拼音 / 译音 (可选)...';
-
-  @override
-  String get startLabel => '开始: ';
-
-  @override
-  String get setStartTooltip => '将开始设为当前位置';
-
-  @override
-  String get endLabel => '结束: ';
-
-  @override
-  String get setEndTooltip => '将结束设为当前位置';
-
-  @override
-  String get playFromLine => '从这一行播放';
-
-  @override
-  String get pasteLyricsHint => '在此粘贴歌词...';
-
-  @override
-  String get applyBtn => '应用';
-
-  @override
-  String get saveLocallyBtn => '本地保存';
-
-  @override
-  String get editLyricsTooltip => '编辑歌词';
-
-  @override
-  String get saveLyricsTitle => '保存歌词';
-
-  @override
-  String get aiGenerate => 'AI 生成';
-
-  @override
-  String get aiLyricsInitializing => '正在初始化...';
-
-  @override
-  String get aiLyricsUploading => '正在上传歌曲到服务器...';
-
-  @override
-  String get aiLyricsUploadFailed => '错误：上传失败。';
-
-  @override
-  String get aiLyricsUploadSuccess => '上传完成！';
-
-  @override
-  String get aiLyricsVerifying => '正在验证服务器状态...';
-
-  @override
-  String get aiLyricsStatusOk => '状态码 200 OK!';
-
-  @override
-  String get aiLyricsPolling => '正在获取歌词... 请耐心等待！';
-
-  @override
-  String get aiLyricsReceiving => '已收到歌词';
-
-  @override
-  String get aiLyricsParsing => '正在解析歌词...';
-
-  @override
-  String get aiLyricsSuccess => '歌词生成成功！';
-
-  @override
-  String get aiLyricsLocalFileMissing => '错误：未找到本地音频文件。';
-
-  @override
-  String get aiLyricsComplete => '完成！';
-
-  @override
-  String get externalLinkDetected => '检测到外部链接';
-
-  @override
-  String get gofileDownloadFailedPrompt =>
-      '由于严格的网络或服务器限制，自动下载失败。\\n\\n您想在系统浏览器中打开 Gofile 下载页面，还是复制链接以进行手动下载？';
-
-  @override
-  String get copyLink => '复制链接';
-
-  @override
-  String get openBrowser => '打开浏览器';
-
-  @override
-  String get linkCopied => '链接已复制到剪贴板！';
-
-  @override
-  String get waitingForServerResponse => '正在等待服务器响应...';
-
-  @override
-  String queuePositionPleaseWait(int position) {
-    return '队列 $position... 请稍候';
-  }
-
-  @override
-  String get processingOnServer => '正在服务器上处理...';
 }

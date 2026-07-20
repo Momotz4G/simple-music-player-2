@@ -20,8 +20,9 @@ class _WhatsNewDialogState extends State<WhatsNewDialog> {
   late final List<WhatsNewSlide> _slides;
 
   String _cleanChangelog(String text) {
-    if (text.isEmpty)
+    if (text.isEmpty) {
       return 'No additional changelog details available for this version.';
+    }
 
     // 1. Truncate at ---
     String cleaned = text.split('---').first.trim();

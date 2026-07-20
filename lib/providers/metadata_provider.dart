@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:metadata_god/metadata_god.dart' show Metadata, Picture; // Keep types
+import 'package:metadata_god/metadata_god.dart' show Metadata, Picture;
 import '../services/metadata_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
@@ -17,7 +17,7 @@ import '../services/audio_info_service.dart';
 import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import 'package:path_provider/path_provider.dart';
-import '../services/art_cache_service.dart'; // 🚀 Added
+import '../services/art_cache_service.dart';
 
 class MetadataState {
   final SongModel? selectedSong;
@@ -98,9 +98,12 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
   MetadataNotifier(this.ref) : super(MetadataState());
 
   String _buildSmartQuery(SongModel song) {
-    String artist =
-        song.artist.replaceAll(RegExp(r'(?i)unknown artist'), '').trim();
-    String title = song.title.replaceAll(RegExp(r'(?i)track \d+'), '').trim();
+    String artist = song.artist
+        .replaceAll(RegExp(r'unknown artist', caseSensitive: false), '')
+        .trim();
+    String title = song.title
+        .replaceAll(RegExp(r'track \d+', caseSensitive: false), '')
+        .trim();
     const badTitles = ["track", "untitled", "unknown", "audio", "mp3"];
     bool isTitleBad =
         title.isEmpty || badTitles.any((k) => title.toLowerCase().contains(k));
@@ -153,7 +156,8 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
             'aac',
             'opus',
             'dsf',
-            'dff'
+            'dff',
+            'wv'
           ],
         );
         if (result != null) {
@@ -179,8 +183,11 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
             '.aac',
             '.opus',
             '.dsf',
-            '.dff'
-          ].contains(ext)) continue;
+            '.dff',
+            '.wv'
+          ].contains(ext)) {
+            continue;
+          }
 
           final metadata = await MetadataService().readMetadata(file.path);
           final song = SongModel.fromFile(
@@ -194,19 +201,18 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
 
           newSongs.add(song);
         } catch (e) {
-          // 🚀 CRITICAL FAIL FALLBACK
+          // CRITICAL FAIL FALLBACK
           final ext = p.extension(file.path).toLowerCase();
           if (ext == '.dsf' || ext == '.dff') {
             try {
-              final tags = await AudioInfoService().getTags(file.path);
+              final rawTags = await AudioInfoService().getTags(file.path);
+              final tags = rawTags.map((key, value) => MapEntry(key.toLowerCase(), value));
               if (tags.isNotEmpty) {
                 newSongs.add(SongModel.fromFile(
                     file.path,
-                    tags['title'] ??
-                        tags['TITLE'] ??
-                        p.basenameWithoutExtension(file.path),
-                    tags['artist'] ?? tags['ARTIST'] ?? "Unknown Artist",
-                    tags['album'] ?? tags['ALBUM'] ?? "Unknown Album",
+                    tags['title'] ?? p.basenameWithoutExtension(file.path),
+                    tags['artist'] ?? "Unknown Artist",
+                    tags['album'] ?? "Unknown Album",
                     0.0,
                     ext,
                     null));
@@ -259,7 +265,7 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
       final diskBytes = metadata.picture?.data;
 
       final updatedSong = state.selectedSong?.copyWith(
-        albumArtBytes: diskBytes, // Trust the fresh read
+        albumArtBytes: diskBytes,
       );
 
       state = state.copyWith(
@@ -328,14 +334,14 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
 
   Future<bool> saveChanges() async {
     if (state.selectedSong == null) return false;
-    final _log = DebugLogService();
+    final log = DebugLogService();
     var filePath = state.selectedSong!.filePath;
     state = state.copyWith(isSaving: true, statusMessage: "Saving tags...");
 
     try {
       Picture? pictureToWrite;
 
-      // 🚀 ARTWORK HANDLING
+      // ARTWORK HANDLING
       if (state.coverUrl != null && state.coverUrl!.isNotEmpty) {
         state = state.copyWith(statusMessage: "Downloading album art...");
         try {
@@ -367,7 +373,7 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
         state = state.copyWith(statusMessage: "No album art to write...");
       }
 
-      // 🚀 PRE-FLIGHT CHECK & PATH CORRECTION
+      // PRE-FLIGHT CHECK & PATH CORRECTION
       var file = File(filePath);
       if (!await file.exists()) {
         // Try decoding the path (in case it was URL encoded like %20)
@@ -381,7 +387,7 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
         }
       }
 
-      // 🚀 READ CHECK - Verify file is accessible (skip timestamp test, Android blocks it)
+      // READ CHECK - Verify file is accessible (skip timestamp test, Android blocks it)
       try {
         final bytes = await file.readAsBytes();
         if (bytes.isEmpty) {
@@ -393,17 +399,27 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
         throw "Cannot read file: ${e.message} (OS Error ${e.osError?.errorCode})";
       }
 
-      // 🚀 STRIP EXISTING ARTWORK (Clean Slate Workaround)
+      // STRIP EXISTING ARTWORK (Clean Slate Workaround)
       // Only necessary if we are ABOUT to write a new picture
       if (pictureToWrite != null) {
         state = state.copyWith(statusMessage: "Clearing old artwork...");
-        final tempPath = "${p.withoutExtension(filePath)}_temp${p.extension(filePath)}";
+        final tempPath =
+            "${p.withoutExtension(filePath)}_temp${p.extension(filePath)}";
         bool stripSuccess = false;
 
         try {
           if (Platform.isAndroid || Platform.isIOS) {
             // Mobile: Use FFmpegKit
-            final session = await FFmpegKit.execute('-y -i "$filePath" -map 0:a -c copy "$tempPath"');
+            final session = await FFmpegKit.executeWithArguments([
+              '-y',
+              '-i',
+              filePath,
+              '-map',
+              '0:a',
+              '-c',
+              'copy',
+              tempPath,
+            ]);
             if (ReturnCode.isSuccess(await session.getReturnCode())) {
               stripSuccess = true;
             }
@@ -431,22 +447,23 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
           if (stripSuccess && await File(tempPath).exists()) {
             final originalFile = File(filePath);
             final tempFile = File(tempPath);
-            
+
             // Safety: Ensure temp file is non-empty
             if (await tempFile.length() > 1000) {
               await originalFile.delete();
               await tempFile.rename(filePath);
-              _log.success('FFmpeg artwork strip successful');
+              log.success('FFmpeg artwork strip successful');
             } else {
-              _log.error('FFmpeg strip output file size is empty/too small!');
+              log.error('FFmpeg strip output file size is empty/too small!');
             }
           } else {
-            _log.warning('FFmpeg artwork strip failed. Appending instead...');
+            log.warning('FFmpeg artwork strip failed. Appending instead...');
             state = state.copyWith(
-                statusMessage: "Warning: Could not clear old art. Appending...");
+                statusMessage:
+                    "Warning: Could not clear old art. Appending...");
           }
         } catch (e) {
-          _log.error('Exception during artwork strip: $e');
+          log.error('Exception during artwork strip: $e');
         } finally {
           // Cleanup partial temp file if still exists
           try {
@@ -472,25 +489,24 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
         ),
       );
 
-      // 🚀 UPDATE DISK CACHE FOR SMARTART (MUST be awaited before invalidation)
+      // UPDATE DISK CACHE FOR SMARTART (MUST be awaited before invalidation)
       if (pictureToWrite != null) {
         await ArtCacheService().saveArt(filePath, pictureToWrite.data);
       }
 
-      _log.success('writeMetadata() completed without exception');
+      log.success('writeMetadata() completed without exception');
 
-      // 🚀 DEBUG: Verify what was actually written
+      // DEBUG: Verify what was actually written
       final verifyMeta = await MetadataService().readMetadata(filePath);
-      _log.info('=== VERIFY READ BACK ===');
-      _log.info('Read Title: ${verifyMeta.title}');
-      _log.info('Read Artist: ${verifyMeta.artist}');
+      log.info('=== VERIFY READ BACK ===');
+      log.info('Read Title: ${verifyMeta.title}');
+      log.info('Read Artist: ${verifyMeta.artist}');
       if (verifyMeta.picture != null) {
-        _log.success(
-            'Read Picture: ${verifyMeta.picture!.data.length} bytes ✓');
+        log.success('Read Picture: ${verifyMeta.picture!.data.length} bytes ✓');
       } else {
-        _log.error('Read Picture: NULL - ART NOT EMBEDDED!');
+        log.error('Read Picture: NULL - ART NOT EMBEDDED!');
       }
-      _log.info('=== METADATA SAVE END ===');
+      log.info('=== METADATA SAVE END ===');
 
       if (verifyMeta.picture == null && pictureToWrite != null) {
         state = state.copyWith(
@@ -508,10 +524,10 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
             pictureToWrite?.data, // Use verified data
       );
 
-      // 🚀 INVALIDATE ART CACHE so UI shows fresh art immediately
+      // INVALIDATE ART CACHE so UI shows fresh art immediately
       // This MUST happen AFTER disk cache is updated above
       SmartArt.invalidateCache(filePath);
-      _log.info('SmartArt cache invalidated for: $filePath');
+      log.info('SmartArt cache invalidated for: $filePath');
 
       await ref.read(libraryProvider).updateSingleSong(newSong);
 
@@ -611,7 +627,9 @@ class MetadataNotifier extends StateNotifier<MetadataState> {
           }
         }
         await Future.delayed(const Duration(milliseconds: 300));
-      } catch (e) {}
+      } catch (e) {
+        debugPrint("Error matching song: $e");
+      }
     }
 
     state = state.copyWith(

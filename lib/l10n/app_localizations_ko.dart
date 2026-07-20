@@ -37,6 +37,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get accountLinkedSuccessfully => '계정이 성공적으로 연결되었습니다!';
 
   @override
+  String get accountTiers => '계정 등급';
+
+  @override
   String get achievementsUnlocked => '해제된 업적';
 
   @override
@@ -53,6 +56,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get addFoldersScan => '스캔할 폴더 추가';
+
+  @override
+  String get addLineToEnd => '맨 뒤에 추가';
+
+  @override
+  String get addLineToTop => '맨 위에 추가';
 
   @override
   String get addToFavorite => '즐겨찾기에 추가';
@@ -76,6 +85,65 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get addedToQueue => '대기열에 추가됨';
+
+  @override
+  String get aiGenerate => 'AI 생성';
+
+  @override
+  String get aiLyricsComplete => '완료!';
+
+  @override
+  String get aiLyricsError => 'Error generating AI lyrics.';
+
+  @override
+  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
+
+  @override
+  String get aiLyricsGenerating => 'Generating AI Lyrics...';
+
+  @override
+  String get aiLyricsGenerationTitle => 'AI 가사 생성';
+
+  @override
+  String get aiLyricsInitializing => '초기화 중...';
+
+  @override
+  String get aiLyricsLocalFileMissing => '오류: 로컬 오디오 파일을 찾을 수 없습니다.';
+
+  @override
+  String get aiLyricsParsing => '가사 분석 중...';
+
+  @override
+  String get aiLyricsPolling => '가사 가져오는 중... 잠시만 기다려 주세요!';
+
+  @override
+  String get aiLyricsReceiving => '가사 수신됨';
+
+  @override
+  String get aiLyricsStatusOk => '상태 코드 200 OK!';
+
+  @override
+  String get aiLyricsSuccess => '가사 생성 성공!';
+
+  @override
+  String get aiLyricsUploadFailed => '오류: 업로드 실패.';
+
+  @override
+  String get aiLyricsUploadSuccess => '업로드 완료!';
+
+  @override
+  String get aiLyricsUploading => '노래를 서버에 업로드 중...';
+
+  @override
+  String get aiLyricsVerifying => '서버 상태 확인 중...';
+
+  @override
+  String alacDownloadsPerDay(int count) {
+    return '하루 $count회 ALAC 다운로드';
+  }
+
+  @override
+  String get alacHighResDownloads => 'ALAC 고음질 다운로드';
 
   @override
   String get album => '앨범';
@@ -105,6 +173,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get alreadyInLikedSongs => '이미 좋아요 표시한 곡';
 
   @override
+  String get alreadyPaidCheckStatus => '이미 결제하셨나요? 상태 확인';
+
+  @override
   String get android14BitPerfect => 'Android 14+ 비트 퍼펙트';
 
   @override
@@ -121,6 +192,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get appearance => '테마 및 디자인';
+
+  @override
+  String get applyBtn => '적용';
 
   @override
   String get applyOnRestart => '변경 사항은 다음 재시작 시 적용됩니다.';
@@ -199,6 +273,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get automatic => '자동';
 
   @override
+  String get automaticGainControl => '자동 게인 제어';
+
+  @override
+  String get automaticGainControlDesc =>
+      '노래 간 볼륨을 균일하게 조절하여 소리가 너무 크거나 작지 않게 만듭니다.';
+
+  @override
   String automaticTitleLabel(String title) {
     return '자동: $title';
   }
@@ -210,14 +291,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get avatarPickerDesc => '템플릿을 선택하거나 본인의 사진을 불러오세요';
 
   @override
-  String get beFirstToClaim => '1위를 먼저 차지해 보세요!';
-
-  @override
   String get backgroundCacheFlacStreams => '백그라운드 FLAC 스트림 캐시';
 
   @override
   String get backgroundCacheFlacStreamsSubtitle =>
       '스트리밍된 무손실 트랙을 로컬 디스크에 자동으로 다운로드하여 재생이 즉각적이고 데이터를 사용하지 않습니다.';
+
+  @override
+  String get beFirstToClaim => '1위를 먼저 차지해 보세요!';
 
   @override
   String get behavioralHeader => '행동 업적';
@@ -230,6 +311,22 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get bitDepthLabel => '비트 깊이';
+
+  @override
+  String get bitPerfectBypassSub14 => 'Android 14+ 비트 퍼펙트 API를 사용하여 시스템 믹서 우회';
+
+  @override
+  String get bitPerfectBypassSubLegacy =>
+      'C++ 오디오 엔진을 사용하여 시스템 믹서 우회 (Android 13 이하)';
+
+  @override
+  String get bitPerfectBypassSuccess => '비트 퍼펙트 재생이 활성화되었습니다.';
+
+  @override
+  String get bitPerfectBypassTitle => '비트 퍼펙트 / USB 오디오 우회';
+
+  @override
+  String get bitPerfectBypassWarning => '먼저 USB DAC를 연결해야 합니다.';
 
   @override
   String get bitPerfectEnabled => '비트 퍼펙트 모드 활성화됨. 볼륨 조절이 비활성화될 수 있습니다.';
@@ -263,6 +360,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get cancel => '취소';
+
+  @override
+  String get cancelAllBtn => '모두 취소';
+
+  @override
+  String get canvasSourcePreferenceSubtitle => '배경 루프 동영상을 불러올 소스를 선택합니다';
+
+  @override
+  String get canvasSourcePreferenceTitle => 'Canvas / 애니메이션 아트워크 소스';
 
   @override
   String get championChampionTooltip => '5주 동안 세계 1위 달성';
@@ -317,6 +423,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chooseAvatar => '아바타 선택';
 
   @override
+  String get chooseFormat => '선호하는 형식을 선택하세요:';
+
+  @override
   String get chooseYourTitle => '타이틀 선택';
 
   @override
@@ -324,6 +433,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get clearAll => '모두 지우기';
+
+  @override
+  String get clearAllDesc => '현재 편집기 상태를 지웁니다. 나중에 저장하지 않는 한 로컬 파일은 삭제되지 않습니다.';
+
+  @override
+  String get clearAllQuestion => '모두 지우시겠습니까?';
+
+  @override
+  String get clearBtn => '지우기';
 
   @override
   String get clearHistory => '기록 지우기';
@@ -345,6 +463,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get cloud => '클라우드';
+
+  @override
+  String get cloudStatsAndRankings => '클라우드 통계 및 순위';
 
   @override
   String get codeCopied => '코드가 클립보드에 복사되었습니다!';
@@ -403,7 +524,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contentRegion => '콘텐츠 지역';
 
   @override
+  String get continueToSociabuzz => 'Sociabuzz로 계속';
+
+  @override
   String get copyCode => '코드 복사';
+
+  @override
+  String get copyLink => '링크 복사';
 
   @override
   String get couldNotDownloadFlac => 'FLAC을 다운로드할 수 없습니다.';
@@ -437,6 +564,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get crownedChampionTitlesHeader => '왕관을 쓴 챔피언 타이틀';
+
+  @override
+  String get currentTierLabel => '현재';
 
   @override
   String get customDevice => '사용자 지정 장치';
@@ -521,6 +651,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get disableRomanization => '로마자 표기 비활성화';
 
   @override
+  String get disableServicesTitle => '서비스 비활성화';
+
+  @override
+  String get disabled => '비활성화됨';
+
+  @override
   String get disablingSharingWarning =>
       '공유를 비활성화하면 공간을 절약하기 위해 서버에서 코드와 데이터가 영구적으로 삭제됩니다.';
 
@@ -538,6 +674,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get donate => '후원하기';
+
+  @override
+  String get donateMinToObtain => '최소 10,000 IDR 기부 시 획득 (영구)';
 
   @override
   String get download => '다운로드';
@@ -600,6 +739,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get dspLabel => 'DSP';
 
   @override
+  String get editLyricsTooltip => '가사 편집';
+
+  @override
   String get editMetadata => '메타데이터 편집';
 
   @override
@@ -631,6 +773,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get enableBarVisualizer => '바 비주얼라이저 활성화';
+
+  @override
+  String get enableOfflineModeBtn => '오프라인 모드 활성화';
+
+  @override
+  String get enableOfflineModeQuestion => '오프라인 모드를 활성화할까요?';
+
+  @override
+  String get endLabel => '종료: ';
 
   @override
   String get endlessQueue => '무한 대기열';
@@ -690,6 +841,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '주의: 독점 모드는 시스템 기본값이 아닌 특정 장치를 선택했을 때 가장 잘 작동합니다.';
 
   @override
+  String get exclusiveSupporterTitle => '독점 서포터 칭호 및 Discord 역할';
+
+  @override
   String get exclusiveTitles => '전용';
 
   @override
@@ -706,7 +860,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get expand => '확장';
 
   @override
+  String get exportToM3u => 'Export to M3U';
+
+  @override
   String get externalFiles => '외부 파일';
+
+  @override
+  String get externalLinkDetected => '외부 링크 감지됨';
 
   @override
   String get fadingAtEnd => '취침 타이머: 트랙 끝에서 페이드 아웃 중...';
@@ -727,6 +887,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get failedToGenerateCode => '공유 코드를 생성하지 못했습니다. 연결을 확인하세요.';
 
   @override
+  String get failedToSave => '가사 파일 저장에 실패했습니다.';
+
+  @override
   String get failedToSetAvatar => '아바타 템플릿 설정 실패';
 
   @override
@@ -734,6 +897,72 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get favoriteTrack => '즐겨찾는 트랙';
+
+  @override
+  String get featureAiLyrics => 'AI 가사 생성기';
+
+  @override
+  String get featureAiLyricsDesc => '자동 동기화 가사 비활성화됨';
+
+  @override
+  String get featureAiLyricsLongDesc => 'AI를 통한 동기화 가사 생성';
+
+  @override
+  String get featureCloudSync => '클라우드 통계 동기화';
+
+  @override
+  String get featureCloudSyncDesc => '청취 통계가 로컬에만 저장됨';
+
+  @override
+  String get featureCloudSyncLongDesc => '청취 메트릭을 PocketBase와 동기화';
+
+  @override
+  String get featureConnectDevice => '기기에 연결';
+
+  @override
+  String get featureConnectDeviceDesc => '원격 제어 및 리스닝 파티 비활성화됨';
+
+  @override
+  String get featureConnectDeviceLongDesc => '원격 제어 및 리스닝 파티';
+
+  @override
+  String get featureLeaderboard => '글로벌 리더보드';
+
+  @override
+  String get featureLeaderboardDesc => '순위 업데이트 일시 중지됨';
+
+  @override
+  String get featureLeaderboardLongDesc => '순위를 공개적으로 표시 및 업데이트';
+
+  @override
+  String get featureOnlineLyrics => '온라인 가사 검색';
+
+  @override
+  String get featureOnlineLyricsDesc => '로컬 .lrc/.ttml 파일만 사용';
+
+  @override
+  String get featureOnlineLyricsLongDesc => 'LRCLIB/Spotify에서 가사 가져오기';
+
+  @override
+  String get featureOnlineSearch => '온라인 검색';
+
+  @override
+  String get featureOnlineSearchDesc => 'Spotify/YouTube 검색 비활성화됨';
+
+  @override
+  String get featureOnlineSearchLongDesc => 'Spotify 및 YouTube 원격 검색';
+
+  @override
+  String get featureSpotifyCanvas => 'Spotify Canvas';
+
+  @override
+  String get featureSpotifyCanvasDesc => '배경 동영상 비활성화됨';
+
+  @override
+  String get featureSpotifyCanvasLongDesc => '트랙 배경 동영상';
+
+  @override
+  String get fetchingAlacAppleMusic => 'Apple Music에서 ALAC Lossless 가져오는 중...';
 
   @override
   String get fetchingCanvas => 'Canvas 가져오는 중...';
@@ -877,7 +1106,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get general => '일반';
 
   @override
+  String get generateAiLyrics => 'Generate AI Lyrics';
+
+  @override
   String get generatingShareCode => '공유 코드 생성 중...';
+
+  @override
+  String get generationFailed => '생성 실패';
 
   @override
   String get genre => '장르';
@@ -907,6 +1142,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get goToLocalLibraryToSelect => '\'로컬 라이브러리\'로 이동하여 음악 폴더를 선택하세요.';
 
   @override
+  String get gofileDownloadFailedPrompt =>
+      '엄격한 네트워크 또는 서버 제한으로 인해 자동 다운로드에 실패했습니다.\\n\\n시스템 브라우저에서 Gofile 다운로드 페이지를 여시겠습니까, 아니면 링크를 복사하여 수동으로 다운로드하시겠습니까?';
+
+  @override
   String get goodAfternoon => '좋은 오후입니다';
 
   @override
@@ -923,6 +1162,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get grantPermission => '권한 허용';
+
+  @override
+  String get guestTier => '게스트';
 
   @override
   String get hallOfFameHeader => '명예의 전당 업적';
@@ -992,6 +1234,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get importFromGallery => '갤러리에서 불러오기';
 
   @override
+  String get importFromM3u => 'Import from M3U';
+
+  @override
+  String get importFromM3uSubtitle => 'Import an M3U playlist file';
+
+  @override
   String get importFromSpotify => 'Spotify에서 가져오기';
 
   @override
@@ -1011,6 +1259,79 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get importLyricsTooltip => '가사 가져오기';
+
+  @override
+  String get localFile => '로컬 파일';
+
+  @override
+  String get importLocalFileSubtitle => '.lrc, .ttml 또는 .txt 가져오기';
+
+  @override
+  String get searchFromAppleMusic => 'Apple Music에서 검색';
+
+  @override
+  String get searchAppleMusicSubtitle => 'LRC/TTML 자동 다운로드';
+
+  @override
+  String get searchFromSpotifyLyrics => 'Spotify에서 검색';
+
+  @override
+  String get searchSpotifyLyricsSubtitle => 'Spotify에서 동기화된 가사 다운로드';
+
+  @override
+  String get searchFromMusixmatch => 'Musixmatch에서 검색';
+
+  @override
+  String get searchMusixmatchSubtitle => 'Musixmatch에서 동기화된 가사 다운로드';
+
+  @override
+  String get searchingAppleMusic => 'Apple Music 검색 중...';
+
+  @override
+  String get findingMatches => '일치 항목 찾는 중...';
+
+  @override
+  String get noResultsAppleMusic => 'Apple Music에서 결과를 찾을 수 없습니다.';
+
+  @override
+  String get selectSong => '곡 선택';
+
+  @override
+  String get downloadingLyrics => '가사 다운로드 중...';
+
+  @override
+  String get fetchingLyricsFromServer => '서버에서 TTML/LRC 가져오는 중...';
+
+  @override
+  String get failedDownloadAppleMusic =>
+      '가사를 다운로드하지 못했습니다. Apple Music에 존재하지 않을 수 있습니다.';
+
+  @override
+  String get lyricsImportedSuccess => '가사를 성공적으로 가져왔습니다! 저장하여 유지하세요.';
+
+  @override
+  String get receivedEmptyLyrics => '서버에서 빈 가사를 받았습니다.';
+
+  @override
+  String get downloadingFromSpotify => 'Spotify에서 다운로드 중...';
+
+  @override
+  String get fetchingLyrics => '가사 가져오는 중...';
+
+  @override
+  String get lyricsImportedSpotify => 'Spotify에서 가사를 가져왔습니다!';
+
+  @override
+  String get noLyricsSpotify => 'Spotify에서 가사를 찾을 수 없습니다.';
+
+  @override
+  String get downloadingFromMusixmatch => 'Musixmatch에서 다운로드 중...';
+
+  @override
+  String get lyricsImportedMusixmatch => 'Musixmatch에서 가사를 가져왔습니다!';
+
+  @override
+  String get noLyricsMusixmatch => 'Musixmatch에서 가사를 찾을 수 없습니다.';
 
   @override
   String get importSpotifyPlaylist => 'Spotify 플레이리스트 가져오기';
@@ -1044,6 +1365,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get inputLabel => '입력';
 
   @override
+  String get insertAfter => '뒤에 삽입';
+
+  @override
   String get installNow => '지금 설치';
 
   @override
@@ -1054,6 +1378,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get invalidCode => '잘못된 액세스 코드';
+
+  @override
+  String get invalidM3uFile => 'Invalid M3U File';
 
   @override
   String get invalidSpotifyUrl => '유효하지 않은 Spotify 재생 목록 URL';
@@ -1117,6 +1444,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get linkAccountDesc => 'Google로 진행 상황 동기화 및 복구';
 
   @override
+  String get linkAccountToUpgrade =>
+      '업그레이드하려면 먼저 계정을 연결해야 합니다. Sociabuzz와 동일한 이메일을 사용해 주세요!';
+
+  @override
+  String get linkCopied => '링크가 클보드에 복사되었습니다!';
+
+  @override
   String listenMinutesTooltip(String minutes) {
     return '$minutes분 동안 음악 감상';
   }
@@ -1159,10 +1493,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get losslessQuality => '무손실 (자동)';
 
   @override
+  String get lrcFormat => 'LRC (표준 동기화)';
+
+  @override
+  String get lrcFormatDesc => '어디서나 작동하는 범용 형식입니다.';
+
+  @override
   String get lunarNewYear => '설날';
 
   @override
+  String get lyricTextHint => '가사 텍스트...';
+
+  @override
+  String get lyricsApplied => '가사가 패널에 적용되었습니다!';
+
+  @override
   String get lyricsByLRCLIB => '가사: LRCLIB';
+
+  @override
+  String get lyricsEditorTitle => '가사 편집기';
 
   @override
   String get lyricsSaveError => '가사 저장 실패';
@@ -1175,6 +1524,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get madeForYou => '당신을 위한 추천';
+
+  @override
+  String get manageIndividualFeatures => '개별 온라인 기능 관리';
 
   @override
   String get manualSearch => '수동 검색';
@@ -1406,6 +1758,39 @@ class AppLocalizationsKo extends AppLocalizations {
   String get offline => '오프라인';
 
   @override
+  String get offlineModeActive => '활성';
+
+  @override
+  String get offlineModeAllEnabledStatus => '모두 활성화됨';
+
+  @override
+  String get offlineModeConfirmationDesc =>
+      '모든 네트워크 통신이 완전히 중단됩니다. 다음 기능들이 종료됩니다:';
+
+  @override
+  String offlineModeDisabledStatus(int count) {
+    return '비활성화됨 ($count)';
+  }
+
+  @override
+  String get offlineModeEnabledStatus => '오프라인 모드 활성화됨';
+
+  @override
+  String get offlineModeHeader => '오프라인 모드';
+
+  @override
+  String get offlineModeLockdownDesc => '네트워크 차단 활성 상태입니다. 통계는 로컬에 저장됩니다.';
+
+  @override
+  String get offlineModeMainDesc => '모든 네트워크 서비스를 비활성화하고 로컬 라이브러리만 재생합니다.';
+
+  @override
+  String get offlineModeSyncRestoreNote => '이 기능을 끄면 통계가 자동으로 동기화됩니다.';
+
+  @override
+  String get offlineModeTitle => '오프라인 모드';
+
+  @override
   String get offlineStatus => '오프라인';
 
   @override
@@ -1415,7 +1800,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get online => '온라인';
 
   @override
+  String get onlineModeRestored => '온라인 모드 복구됨. 통계 동기화 중...';
+
+  @override
+  String get onlyAppleMusic => 'Apple Music만';
+
+  @override
   String get onlyScanSelected => '선택한 폴더만 스캔 (기본값: 켬)';
+
+  @override
+  String get onlySpotify => 'Spotify만';
 
   @override
   String get opacity => '불투명도';
@@ -1424,6 +1818,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String opacityLabel(int percent) {
     return '불투명도: $percent%';
   }
+
+  @override
+  String get openBrowser => '브라우저 열기';
 
   @override
   String get openProfile => '프로필 열기';
@@ -1441,7 +1838,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get overwriteLrcWarning => '이미 로컬 .lrc 파일이 있습니다.\\n덮어쓰시겠습니까?';
 
   @override
+  String get owned => '보유함';
+
+  @override
   String get parsingPlaylistData => '재생 목록 데이터를 분석하는 중...';
+
+  @override
+  String get pasteLyricsHint => '여기에 가사를 붙여넣으세요...';
 
   @override
   String get pathLabel => '경로';
@@ -1454,12 +1857,18 @@ class AppLocalizationsKo extends AppLocalizations {
       '태그를 편집하려면 \'모든 파일 액세스\' 권한이 필요합니다. 이를 통해 음악 파일을 직접 수정할 수 있습니다.';
 
   @override
+  String get plainMode => '일반 텍스트';
+
+  @override
   String get play => '재생';
 
   @override
   String playCountLabel(int count) {
     return '$count회 재생';
   }
+
+  @override
+  String get playFromLine => '이 줄부터 재생';
 
   @override
   String get playNext => '다음에 재생';
@@ -1516,7 +1925,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get portuguese => '포르투갈어';
 
   @override
+  String get preferAppleMusic => 'Apple Music 선호';
+
+  @override
+  String get preferSpotify => 'Spotify 선호';
+
+  @override
   String get preferredOutputFormat => '다운로드 기본 출력 형식';
+
+  @override
+  String get premiumMemberDesc => '무제한 ALAC 다운로드 및 우선 대기열 액세스 권한이 있습니다!';
+
+  @override
+  String get premiumMemberTitle => '프리미엄 회원';
 
   @override
   String get preparingDownload => '다운로드 준비 중';
@@ -1539,6 +1960,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get previousTrack => '이전 트랙';
 
   @override
+  String get priorityVipServerQueue => '우선 VIP 서버 대기열';
+
+  @override
+  String get processingOnServer => '서버에서 처리 중...';
+
+  @override
   String get profileSettings => '프로필 설정';
 
   @override
@@ -1558,6 +1985,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get queueIsEmpty => '대기열이 비어 있습니다';
+
+  @override
+  String queuePositionPleaseWait(int position) {
+    return '대기열 $position... 잠시 기다려주세요';
+  }
 
   @override
   String get queueTooltip => '대기열';
@@ -1638,10 +2070,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get refreshLyricsTooltip => '가사 새로고침';
 
   @override
+  String get registeredLinkedTier => '등록됨 (연결됨)';
+
+  @override
   String get removeAvatar => '현재 아바타 제거';
 
   @override
   String get removeFromPlaylist => '플레이리스트에서 제거';
+
+  @override
+  String get removeLine => '줄 삭제';
 
   @override
   String removedFolder(Object folder) {
@@ -1656,6 +2094,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeats => '반복';
+
+  @override
+  String get reportTrouble => '문제 신고';
 
   @override
   String get requiresAndroid14 => 'Android 14+ 및 USB DAC 필요';
@@ -1730,6 +2171,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get revert => '되돌리기';
 
   @override
+  String get romajiHint => '로마자 / 음역 (선택 사항)...';
+
+  @override
   String get russian => '러시아어';
 
   @override
@@ -1754,7 +2198,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get saveLabel => '저장';
 
   @override
+  String get saveLocallyBtn => '로컬에 저장';
+
+  @override
   String get saveLrcPrompt => '현재 가사를 오디오 파일 옆에 저장하시겠습니까?';
+
+  @override
+  String get saveLyricsTitle => '가사 저장';
 
   @override
   String get saveLyricsTooltip => '가사 저장';
@@ -1778,6 +2228,11 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String savedAsFormat(String format) {
     return '$format(으)로 저장됨';
+  }
+
+  @override
+  String savedSuccessfully(String extension) {
+    return '$extension 파일로 성공적으로 저장되었습니다!';
   }
 
   @override
@@ -1861,6 +2316,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get seeAll => '모두 보기';
 
   @override
+  String get seeBenefitsBtn => '혜택 보기';
+
+  @override
+  String get seePremiumBenefits => '프리미엄 혜택 보기';
+
+  @override
   String get selectDifferentFolder => '다른 폴더 선택';
 
   @override
@@ -1891,6 +2352,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get setCustomTimer => '사용자 지정 타이머 설정';
+
+  @override
+  String get setEndTooltip => '종료를 현재 위치로 설정';
+
+  @override
+  String get setStartTooltip => '시작을 현재 위치로 설정';
 
   @override
   String get settings => '설정';
@@ -1971,6 +2438,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get songLabelUpper => '곡';
 
   @override
+  String get songQueueTitle => '노래 대기열';
+
+  @override
   String get songTitleKeyword => '곡 제목 또는 키워드';
 
   @override
@@ -2007,6 +2477,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get standardDesc => 'MP3 - 작은 파일 크기, 빠른 버퍼링';
 
   @override
+  String get standardDownloadQueue => '표준 다운로드 대기열';
+
+  @override
   String get standardQuality => '표준 (MP3)';
 
   @override
@@ -2014,6 +2487,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get startBulkProcess => '일괄 작업 시작';
+
+  @override
+  String get startLabel => '시작: ';
 
   @override
   String get startedDownloadingAll => '모든 곡 다운로드 시작됨...';
@@ -2074,6 +2550,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get syncThemeAlbumArt => '앨범 아트와 테마 동기화';
+
+  @override
+  String get syncedMode => '동기화됨';
 
   @override
   String get system => '시스템';
@@ -2187,6 +2666,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get translationLanguage => '번역 언어';
 
   @override
+  String get ttmlFormat => 'TTML (고정밀)';
+
+  @override
+  String get ttmlFormatDesc => 'AI 생성 및 세부 동기화에 더 적합합니다.';
+
+  @override
   String get turnOffTimer => '타이머 끄기';
 
   @override
@@ -2214,6 +2699,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get unknownDevice => '알 수 없는 장치';
 
   @override
+  String get unlimitedAlacDownloads => '무제한 ALAC 다운로드';
+
+  @override
   String get unlink => '연결 해제';
 
   @override
@@ -2230,6 +2718,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get unlinkFolderClear => '폴더 연결 해제 및 곡 목록 지우기';
+
+  @override
+  String get unlockUnlimitedPremium => '무제한 프리미엄 잠금 해제';
 
   @override
   String unlockedCountLabel(int unlocked, int total) {
@@ -2288,6 +2779,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get useMixedColors => '혼합 색상 사용 (동기화 무시)';
 
   @override
+  String get useSameEmailCheckStatus => '상태를 자동으로 확인하려면 앱 내와 동일한 이메일을 사용하세요.';
+
+  @override
+  String usedToday(int used, int max) {
+    return '오늘 $used / $max 사용됨';
+  }
+
+  @override
   String get verifiedDeveloper => '인증된 개발자';
 
   @override
@@ -2309,6 +2808,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get visualizerStyle => '비주얼라이저 스타일';
+
+  @override
+  String get waitingForServerResponse => '서버 응답 대기 중...';
 
   @override
   String get wasapiExclusive => 'WASAPI 독점 모드';
@@ -2345,303 +2847,4 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ytDlpUpdateAvailable => 'yt-dlp의 새 버전을 사용할 수 있습니다.';
-
-  @override
-  String get importFromM3u => 'Import from M3U';
-
-  @override
-  String get importFromM3uSubtitle => 'Import an M3U playlist file';
-
-  @override
-  String get exportToM3u => 'Export to M3U';
-
-  @override
-  String get invalidM3uFile => 'Invalid M3U File';
-
-  @override
-  String get generateAiLyrics => 'Generate AI Lyrics';
-
-  @override
-  String get aiLyricsGenerating => 'Generating AI Lyrics...';
-
-  @override
-  String get aiLyricsFailed => 'Failed to generate AI lyrics.';
-
-  @override
-  String get aiLyricsError => 'Error generating AI lyrics.';
-
-  @override
-  String get offlineModeHeader => '오프라인 모드';
-
-  @override
-  String get offlineModeTitle => '오프라인 모드';
-
-  @override
-  String get offlineModeActive => '활성';
-
-  @override
-  String get offlineModeEnabledStatus => '오프라인 모드 활성화됨';
-
-  @override
-  String offlineModeDisabledStatus(int count) {
-    return '비활성화됨 ($count)';
-  }
-
-  @override
-  String get offlineModeAllEnabledStatus => '모두 활성화됨';
-
-  @override
-  String get offlineModeLockdownDesc => '네트워크 차단 활성 상태입니다. 통계는 로컬에 저장됩니다.';
-
-  @override
-  String get offlineModeMainDesc => '모든 네트워크 서비스를 비활성화하고 로컬 라이브러리만 재생합니다.';
-
-  @override
-  String get enableOfflineModeQuestion => '오프라인 모드를 활성화할까요?';
-
-  @override
-  String get offlineModeConfirmationDesc =>
-      '모든 네트워크 통신이 완전히 중단됩니다. 다음 기능들이 종료됩니다:';
-
-  @override
-  String get offlineModeSyncRestoreNote => '이 기능을 끄면 통계가 자동으로 동기화됩니다.';
-
-  @override
-  String get enableOfflineModeBtn => '오프라인 모드 활성화';
-
-  @override
-  String get onlineModeRestored => '온라인 모드 복구됨. 통계 동기화 중...';
-
-  @override
-  String get disableServicesTitle => '서비스 비활성화';
-
-  @override
-  String get manageIndividualFeatures => '개별 온라인 기능 관리';
-
-  @override
-  String get featureCloudSync => '클라우드 통계 동기화';
-
-  @override
-  String get featureCloudSyncDesc => '청취 통계가 로컬에만 저장됨';
-
-  @override
-  String get featureCloudSyncLongDesc => '청취 메트릭을 PocketBase와 동기화';
-
-  @override
-  String get featureLeaderboard => '글로벌 리더보드';
-
-  @override
-  String get featureLeaderboardDesc => '순위 업데이트 일시 중지됨';
-
-  @override
-  String get featureLeaderboardLongDesc => '순위를 공개적으로 표시 및 업데이트';
-
-  @override
-  String get featureOnlineLyrics => '온라인 가사 검색';
-
-  @override
-  String get featureOnlineLyricsDesc => '로컬 .lrc/.ttml 파일만 사용';
-
-  @override
-  String get featureOnlineLyricsLongDesc => 'LRCLIB/Spotify에서 가사 가져오기';
-
-  @override
-  String get featureAiLyrics => 'AI 가사 생성기';
-
-  @override
-  String get featureAiLyricsDesc => '자동 동기화 가사 비활성화됨';
-
-  @override
-  String get featureAiLyricsLongDesc => 'AI를 통한 동기화 가사 생성';
-
-  @override
-  String get featureSpotifyCanvas => 'Spotify Canvas';
-
-  @override
-  String get featureSpotifyCanvasDesc => '배경 동영상 비활성화됨';
-
-  @override
-  String get featureSpotifyCanvasLongDesc => '트랙 배경 동영상';
-
-  @override
-  String get featureOnlineSearch => '온라인 검색';
-
-  @override
-  String get featureOnlineSearchDesc => 'Spotify/YouTube 검색 비활성화됨';
-
-  @override
-  String get featureOnlineSearchLongDesc => 'Spotify 및 YouTube 원격 검색';
-
-  @override
-  String get featureConnectDevice => '기기에 연결';
-
-  @override
-  String get featureConnectDeviceDesc => '원격 제어 및 리스닝 파티 비활성화됨';
-
-  @override
-  String get featureConnectDeviceLongDesc => '원격 제어 및 리스닝 파티';
-
-  @override
-  String get lyricsEditorTitle => '가사 편집기';
-
-  @override
-  String get clearAllQuestion => '모두 지우시겠습니까?';
-
-  @override
-  String get clearAllDesc => '현재 편집기 상태를 지웁니다. 나중에 저장하지 않는 한 로컬 파일은 삭제되지 않습니다.';
-
-  @override
-  String get clearBtn => '지우기';
-
-  @override
-  String get lyricsApplied => '가사가 패널에 적용되었습니다!';
-
-  @override
-  String get chooseFormat => '선호하는 형식을 선택하세요:';
-
-  @override
-  String get lrcFormat => 'LRC (표준 동기화)';
-
-  @override
-  String get lrcFormatDesc => '어디서나 작동하는 범용 형식입니다.';
-
-  @override
-  String get ttmlFormat => 'TTML (고정밀)';
-
-  @override
-  String get ttmlFormatDesc => 'AI 생성 및 세부 동기화에 더 적합합니다.';
-
-  @override
-  String savedSuccessfully(String extension) {
-    return '$extension 파일로 성공적으로 저장되었습니다!';
-  }
-
-  @override
-  String get failedToSave => '가사 파일 저장에 실패했습니다.';
-
-  @override
-  String get generationFailed => '생성 실패';
-
-  @override
-  String get aiLyricsGenerationTitle => 'AI 가사 생성';
-
-  @override
-  String get syncedMode => '동기화됨';
-
-  @override
-  String get plainMode => '일반 텍스트';
-
-  @override
-  String get addLineToTop => '맨 위에 추가';
-
-  @override
-  String get addLineToEnd => '맨 뒤에 추가';
-
-  @override
-  String get lyricTextHint => '가사 텍스트...';
-
-  @override
-  String get insertAfter => '뒤에 삽입';
-
-  @override
-  String get removeLine => '줄 삭제';
-
-  @override
-  String get romajiHint => '로마자 / 음역 (선택 사항)...';
-
-  @override
-  String get startLabel => '시작: ';
-
-  @override
-  String get setStartTooltip => '시작을 현재 위치로 설정';
-
-  @override
-  String get endLabel => '종료: ';
-
-  @override
-  String get setEndTooltip => '종료를 현재 위치로 설정';
-
-  @override
-  String get playFromLine => '이 줄부터 재생';
-
-  @override
-  String get pasteLyricsHint => '여기에 가사를 붙여넣으세요...';
-
-  @override
-  String get applyBtn => '적용';
-
-  @override
-  String get saveLocallyBtn => '로컬에 저장';
-
-  @override
-  String get editLyricsTooltip => '가사 편집';
-
-  @override
-  String get saveLyricsTitle => '가사 저장';
-
-  @override
-  String get aiGenerate => 'AI 생성';
-
-  @override
-  String get aiLyricsInitializing => '초기화 중...';
-
-  @override
-  String get aiLyricsUploading => '노래를 서버에 업로드 중...';
-
-  @override
-  String get aiLyricsUploadFailed => '오류: 업로드 실패.';
-
-  @override
-  String get aiLyricsUploadSuccess => '업로드 완료!';
-
-  @override
-  String get aiLyricsVerifying => '서버 상태 확인 중...';
-
-  @override
-  String get aiLyricsStatusOk => '상태 코드 200 OK!';
-
-  @override
-  String get aiLyricsPolling => '가사 가져오는 중... 잠시만 기다려 주세요!';
-
-  @override
-  String get aiLyricsReceiving => '가사 수신됨';
-
-  @override
-  String get aiLyricsParsing => '가사 분석 중...';
-
-  @override
-  String get aiLyricsSuccess => '가사 생성 성공!';
-
-  @override
-  String get aiLyricsLocalFileMissing => '오류: 로컬 오디오 파일을 찾을 수 없습니다.';
-
-  @override
-  String get aiLyricsComplete => '완료!';
-
-  @override
-  String get externalLinkDetected => '외부 링크 감지됨';
-
-  @override
-  String get gofileDownloadFailedPrompt =>
-      '엄격한 네트워크 또는 서버 제한으로 인해 자동 다운로드에 실패했습니다.\\n\\n시스템 브라우저에서 Gofile 다운로드 페이지를 여시겠습니까, 아니면 링크를 복사하여 수동으로 다운로드하시겠습니까?';
-
-  @override
-  String get copyLink => '링크 복사';
-
-  @override
-  String get openBrowser => '브라우저 열기';
-
-  @override
-  String get linkCopied => '링크가 클보드에 복사되었습니다!';
-
-  @override
-  String get waitingForServerResponse => '서버 응답 대기 중...';
-
-  @override
-  String queuePositionPleaseWait(int position) {
-    return '대기열 $position... 잠시 기다려주세요';
-  }
-
-  @override
-  String get processingOnServer => '서버에서 처리 중...';
 }

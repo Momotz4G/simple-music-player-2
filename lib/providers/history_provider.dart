@@ -8,7 +8,7 @@ import '../services/sync_engine.dart';
 import 'db_provider.dart';
 import '../models/song_model.dart';
 
-// The provider now returns a List of HistoryEntry objects, not Strings
+// The provider returns a List of HistoryEntry objects, not Strings
 final historyProvider =
     StateNotifierProvider<HistoryNotifier, List<HistoryEntry>>((ref) {
   final db = ref.watch(dbServiceProvider);
@@ -16,8 +16,7 @@ final historyProvider =
 });
 
 class HistoryNotifier extends StateNotifier<List<HistoryEntry>> {
-  final DBService
-      _dbService; // Using dynamic to avoid circular dep issues for now
+  final DBService _dbService;
 
   HistoryNotifier(this._dbService) : super([]) {
     DebugLogService()
@@ -57,18 +56,20 @@ class HistoryNotifier extends StateNotifier<List<HistoryEntry>> {
     DebugLogService().info("📚 HISTORY: Loading history from Isar...");
     try {
       final isar = await _dbService.db;
-      
-      // 🚀 LOCAL FUTURE-TIMESTAMP AUTO-RECOVERY
+
+      // LOCAL FUTURE-TIMESTAMP AUTO-RECOVERY
       try {
         final List<HistoryEntry> entriesToSync = [];
         await isar.writeTxn(() async {
           final futureEntries = await isar.historyEntrys
               .filter()
-              .lastPlayedGreaterThan(DateTime.now().add(const Duration(minutes: 5)))
+              .lastPlayedGreaterThan(
+                  DateTime.now().add(const Duration(minutes: 5)))
               .findAll();
-              
+
           if (futureEntries.isNotEmpty) {
-            DebugLogService().warning("📚 HISTORY: Found ${futureEntries.length} entries trapped in the future. Correcting...");
+            DebugLogService().warning(
+                "📚 HISTORY: Found ${futureEntries.length} entries trapped in the future. Correcting...");
             final offset = DateTime.now().timeZoneOffset;
             for (final entry in futureEntries) {
               entry.lastPlayed = entry.lastPlayed.subtract(offset);
@@ -87,7 +88,8 @@ class HistoryNotifier extends StateNotifier<List<HistoryEntry>> {
           await SyncEngine().pushHistoryEntry(entry);
         }
       } catch (e) {
-        DebugLogService().error("📚 HISTORY: Auto-recovery failed, but continuing load: $e");
+        DebugLogService()
+            .error("📚 HISTORY: Auto-recovery failed, but continuing load: $e");
       }
 
       final history = await isar.historyEntrys
@@ -101,7 +103,7 @@ class HistoryNotifier extends StateNotifier<List<HistoryEntry>> {
     } catch (e, stack) {
       DebugLogService().error("📚 HISTORY: Failed to load history: $e");
 
-      // 🚀 AUTO-RECOVERY FOR CORRUPTED DATABASE
+      // AUTO-RECOVERY FOR CORRUPTED DATABASE
       if (e.toString().contains("MdbxError") ||
           e.toString().contains("IsarError")) {
         if (!_hasAttemptedRecovery) {
@@ -128,7 +130,17 @@ class HistoryNotifier extends StateNotifier<List<HistoryEntry>> {
   static String _primaryArtist(String artist) {
     String primary = artist.trim();
     // Split on common multi-artist separators and take the first
-    for (final sep in [',', ' feat.', ' feat ', ' ft.', ' ft ', ' & ', ' x ', ' X ', ' and ']) {
+    for (final sep in [
+      ',',
+      ' feat.',
+      ' feat ',
+      ' ft.',
+      ' ft ',
+      ' & ',
+      ' x ',
+      ' X ',
+      ' and '
+    ]) {
       final idx = primary.toLowerCase().indexOf(sep.toLowerCase());
       if (idx > 0) {
         primary = primary.substring(0, idx).trim();
@@ -152,19 +164,17 @@ class HistoryNotifier extends StateNotifier<List<HistoryEntry>> {
         ..album = song.album
         ..duration = song.duration
         ..originalFilePath = song.filePath
-        ..youtubeUrl = youtubeUrl ?? "" // Important for re-streaming
-        ..albumArtUrl = artUrl ?? "" // Important for UI
+        ..youtubeUrl = youtubeUrl ?? ""
+        ..albumArtUrl = artUrl ?? ""
         ..isStream = youtubeUrl != null && youtubeUrl.isNotEmpty
         ..lastPlayed = DateTime.now()
-        ..spotifyId = song.spotifyId // 🚀 EXTENDED METADATA
-        ..deezerId = song.deezerId; // 🚀 EXTENDED METADATA
+        ..spotifyId = song.spotifyId
+        ..deezerId = song.deezerId;
 
       await isar.writeTxn(() async {
         // 1. Remove existing entry for this song (so it moves to top)
-        //
-        // 🚀 FIX: Multi-strategy dedup to handle artist name mismatches
+        // Multi-strategy dedup to handle artist name mismatches
         // across sources (e.g. "Ziv Zaifman" vs "Ziv Zaifman, Hugh Jackman, Michelle Williams")
-        //
         // Strategy A: Match by stable ID (spotifyId or deezerId) — most reliable
         if (song.spotifyId != null && song.spotifyId!.isNotEmpty) {
           await isar.historyEntrys

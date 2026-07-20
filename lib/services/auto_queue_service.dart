@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import '../models/song_model.dart';
 import '../models/song_metadata.dart';
 import 'spotify_service.dart';
+import 'youtube_downloader_service.dart';
+import '../env/env.dart';
 
 /// Service for managing the Endless Queue feature.
 /// Primary: YouTube Music's "Up Next" radio algorithm (better variety).
@@ -21,7 +23,7 @@ class AutoQueueService {
   static const Duration _minFetchInterval = Duration(seconds: 10);
 
   // YT Music API base URL
-  static const String _ytMusicApiBase = 'https://ytmusic-api-omega.vercel.app';
+  static final String _ytMusicApiBase = Env.ytMusicApiUrl;
 
   AutoQueueService();
 
@@ -44,7 +46,7 @@ class AutoQueueService {
     _lastFetchTime = DateTime.now();
 
     try {
-      // 🚀 PRIMARY: YouTube Music radio (better variety, YouTube's algorithm)
+      // PRIMARY: YouTube Music radio (better variety, YouTube's algorithm)
       final ytSongs = await _getYouTubeMusicRadio(currentSong);
       if (ytSongs.isNotEmpty) {
         debugPrint(
@@ -52,7 +54,7 @@ class AutoQueueService {
         return ytSongs;
       }
 
-      // 🚀 FALLBACK: Spotify recommendations
+      // FALLBACK: Spotify recommendations
       debugPrint(
           "⚠️ AutoQueue: YT Music failed, falling back to Spotify for '${currentSong.title}'");
       final spotifySongs = await _getSpotifyRecommendations(currentSong);
@@ -221,24 +223,43 @@ class AutoQueueService {
   Future<String?> _searchYouTubeMusicVideoId(SongModel song) async {
     try {
       final query = Uri.encodeComponent('${song.artist} ${song.title}');
-      final searchUrl =
-          Uri.parse('$_ytMusicApiBase/api/search?q=$query&limit=3');
-      final response = await http.get(searchUrl).timeout(
-            const Duration(seconds: 10),
-          );
+      
+      // Try the Vercel API first
+      try {
+        final searchUrl =
+            Uri.parse('$_ytMusicApiBase/api/search?q=$query&limit=3');
+        final response = await http.get(searchUrl).timeout(
+              const Duration(seconds: 10),
+            );
 
-      if (response.statusCode != 200) return null;
+        if (response.statusCode == 200) {
+          final body = json.decode(response.body);
+          if (body['success'] == true && body['data'] != null) {
+            final results = body['data'] as List<dynamic>;
+            for (final result in results) {
+              if (result['videoId'] != null) {
+                return result['videoId'] as String;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("⚠️ AutoQueue [YT Music API]: Search failed: $e, falling back to local search");
+      }
 
-      final body = json.decode(response.body);
-      if (body['success'] != true || body['data'] == null) return null;
-
-      final results = body['data'] as List<dynamic>;
-      if (results.isEmpty) return null;
-
-      // Return the first result's videoId
-      return results[0]['videoId'] as String?;
+      // Fallback: Use local YoutubeDownloaderService
+      debugPrint("🔍 AutoQueue: Falling back to local YouTube search for '${song.title}'");
+      final localResults = await YoutubeDownloaderService().searchVideo('${song.artist} ${song.title}');
+      if (localResults.isNotEmpty) {
+        final firstUrl = localResults[0].url;
+        final uri = Uri.tryParse(firstUrl);
+        if (uri != null && uri.queryParameters.containsKey('v')) {
+          return uri.queryParameters['v'];
+        }
+      }
+      return null;
     } catch (e) {
-      debugPrint("⚠️ AutoQueue [YT Music]: Search failed: $e");
+      debugPrint("⚠️ AutoQueue [YT Music]: Search failed completely: $e");
       return null;
     }
   }

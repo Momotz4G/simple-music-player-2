@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'pocketbase_service.dart'; // 🔒 OFFLINE MODE
 
@@ -28,7 +29,7 @@ class WikipediaService {
         }
       }
     } catch (e) {
-      print("Wikipedia Search Error: $e");
+      debugPrint("Wikipedia Search Error: $e");
     }
     return null;
   }
@@ -60,7 +61,7 @@ class WikipediaService {
         }
       }
     } catch (e) {
-      print("Wikipedia Image Error: $e");
+      debugPrint("Wikipedia Image Error: $e");
     }
     return null;
   }

@@ -48,7 +48,7 @@ class _AuroraPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Random random = Random(42);
-    final int ribbonCount = 3;
+    const int ribbonCount = 3;
 
     for (int i = 0; i < ribbonCount; i++) {
       _drawRibbon(canvas, size, i, random);

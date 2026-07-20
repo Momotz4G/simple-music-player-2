@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
 import 'package:path/path.dart' as path_lib;
+import '../../utils/layout_engine.dart';
 
 // --- PROVIDERS ---
 import '../../providers/library_provider.dart';
@@ -60,7 +61,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    // 🚀 FIX: Pass the current market from settings
+    // FIX: Pass the current market from settings
     final market = ref.read(settingsProvider).spotifyMarket;
     _loadNewReleases(market);
 
@@ -93,7 +94,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  // 🚀 UPDATED: Accepts market parameter
+  // UPDATED: Accepts market parameter
   Future<void> _loadNewReleases(String market) async {
     final releases = await HybridService.getNewReleases(market: market);
     if (mounted) {
@@ -287,13 +288,13 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
     }
 
-    // 🚀 AUTO-RELOAD BANNER WHEN MARKET CHANGES
+    // AUTO-RELOAD BANNER WHEN MARKET CHANGES
     ref.listen<String>(settingsProvider.select((s) => s.spotifyMarket),
         (previous, next) {
       _loadNewReleases(next);
     });
 
-    // 🚀 TRIGGER BACKFILL ONCE AT STARTUP
+    // TRIGGER BACKFILL ONCE AT STARTUP
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && statsState.entries.isNotEmpty && !_isBackfilling) {
         _backfillMetadata([...recentSongs, ...topPlayedSongs]);
@@ -308,7 +309,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       backgroundColor: Colors.transparent,
       body: Listener(
         onPointerDown: (_) {
-          // 🚀 SAFETY FALLBACK: If user touches the page, ensure scroll is unlocked
+          // SAFETY FALLBACK: If user touches the page, ensure scroll is unlocked
           // unless they are actively dragging a horizontal section (which is handled by children)
           if (_pageScrollPhysics is NeverScrollableScrollPhysics) {
             _setScrollLock(false);
@@ -319,46 +320,70 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🚀 FIX: Align with Floating Menu Button (Status Bar + ~12px padding)
+              // FIX: Align with Floating Menu Button (Status Bar + ~12px padding)
               // Button in MainShell is at: padding.top + 16
               // We give slightly less top padding here so the localized text centers vertically with the button icon.
               SizedBox(height: MediaQuery.of(context).padding.top + 12),
               Padding(
                 padding: EdgeInsets.only(
-                    left: (Platform.isAndroid || Platform.isIOS) ? 72.0 : 32.0,
+                    // On mobile phone, offset 72px for the floating hamburger button.
+                    // On tablet (NavigationRail), no floating button — use 32px.
+                    left: (Platform.isAndroid || Platform.isIOS) && !LayoutEngine.isTablet(context)
+                        ? 72.0
+                        : 32.0,
                     right: 32.0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      _getGreeting(),
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        color: textColor,
-                        letterSpacing: -0.5,
+                    Flexible(
+                      child: Text(
+                        _getGreeting(),
+                        style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.width < 400 ? 28 : 36,
+                          fontWeight: FontWeight.w900,
+                          color: textColor,
+                          letterSpacing: -0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const Spacer(),
-                    // 🚀 REMOTE BUTTON MOVED TO PLAYER BAR
-                    const SizedBox(width: 8),
-                    FilledButton.icon(
-                      onPressed: () {
-                        if (allSongs.isNotEmpty) {
-                          ref
-                              .read(playerProvider.notifier)
-                              .playRandom(allSongs);
-                        }
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: accentColor,
-                        foregroundColor: Colors.white,
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                      ),
-                      icon: const Icon(Icons.shuffle, size: 18),
-                      label: Text(_l10n.shuffleAll),
-                    ),
+                    const SizedBox(width: 12),
+                    MediaQuery.of(context).size.width < 400
+                        ? IconButton(
+                            onPressed: () {
+                              if (allSongs.isNotEmpty) {
+                                ref
+                                    .read(playerProvider.notifier)
+                                    .playRandom(allSongs);
+                              }
+                            },
+                            style: IconButton.styleFrom(
+                              backgroundColor: accentColor,
+                              foregroundColor: Colors.white,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            icon: const Icon(Icons.shuffle, size: 20),
+                            tooltip: _l10n.shuffleAll,
+                          )
+                        : FilledButton.icon(
+                            onPressed: () {
+                              if (allSongs.isNotEmpty) {
+                                ref
+                                    .read(playerProvider.notifier)
+                                    .playRandom(allSongs);
+                              }
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: accentColor,
+                              foregroundColor: Colors.white,
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                            ),
+                            icon: const Icon(Icons.shuffle, size: 18),
+                            label: Text(_l10n.shuffleAll),
+                          ),
                   ],
                 ),
               ),
@@ -455,14 +480,14 @@ class _HomePageState extends ConsumerState<HomePage> {
   // METADATA BACKFILL LOGIC
   final Set<String> _processedBackfill = {};
 
-  // 🚀 Global lock to prevent overlapping backfill floods
+  // Global lock to prevent overlapping backfill floods
   static bool _isBackfilling = false;
   static DateTime? _rateLimitExpiry;
 
   Future<void> _backfillMetadata(List<SongModel> songs) async {
     if (_isBackfilling) return;
     
-    // 🚀 Global API Cooldown (5 Minutes Hard Lock)
+    // Global API Cooldown (5 Minutes Hard Lock)
     if (_rateLimitExpiry != null) {
       if (DateTime.now().isBefore(_rateLimitExpiry!)) {
         return; 
@@ -529,7 +554,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           DebugLogService().error("Backfill failed for ${song.title}: $e");
         }
 
-        // 🚀 Add a 1000ms delay to prevent rate-limiting and UI thread starvation
+        // Add a 1000ms delay to prevent rate-limiting and UI thread starvation
         await Future.delayed(const Duration(milliseconds: 1000));
       }
     } finally {

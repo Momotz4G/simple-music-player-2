@@ -64,7 +64,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
   }
 
   void _triggerSync() {
-    // 🔒 OFFLINE MODE: Skip cloud sync, stats are saved locally in Isar
+    // OFFLINE MODE: Skip cloud sync, stats are saved locally in Isar
     if (ref.read(settingsProvider).isOfflineMode) return;
     _syncTimer?.cancel();
     _syncTimer = Timer(const Duration(seconds: 2),
@@ -112,7 +112,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
     final automaticTitle =
         StatsUtils.getAutomaticTitle(calculated.totalMinutes);
 
-    // 👑 RANK VERIFICATION (Maintainable Competitive Titles)
+    // RANK VERIFICATION (Maintainable Competitive Titles)
     String? activeSelectedTitle = profile.selectedTitle;
     if (activeSelectedTitle == "Top 1 Global") {
       try {
@@ -122,7 +122,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
           final topId = topUsers.first['user_id'];
           final myId = PocketBaseService().userId;
           if (topId != myId) {
-            // ❌ LOST TOP 1! Revert immediately
+            // LOST TOP 1! Revert immediately
             DebugLogService()
                 .warning("👑 LOST GLOBAL TOP 1! Reverting title...");
             Future.microtask(
@@ -156,7 +156,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
       artistMinutes: calculated.artistMinutes,
     );
 
-    // 🚀 REFRESH LOCAL: Ensure local counters (wins, podiums, streak)
+    // REFRESH LOCAL: Ensure local counters (wins, podiums, streak)
     // are updated if the cloud has higher values.
     await pullAndSyncRemoteData();
   }
@@ -180,7 +180,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
 
       // 1. Fetch leaderboard from LAST week
       final lastWeekStart = StatsUtils.getStartOfLastWeekGMT7();
-      final lastWeekEnd = currentWeekStart; // Exclusive
+      final lastWeekEnd = currentWeekStart;
 
       // We filter by last_play_date in that window
       final results = await PocketBaseService().fetchLeaderboard(
@@ -240,7 +240,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
     }
   }
 
-  /// 📊 PULL & SYNC (Remote -> Local)
+  /// PULL & SYNC (Remote -> Local)
   /// Used to restore stats on a new device or merge stats when linking.
   Future<void> pullAndSyncRemoteData({bool isInitialLink = false}) async {
     try {
@@ -265,7 +265,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
       int finalMinutes = localMinutes;
 
       if (isInitialLink && !alreadyMigrated) {
-        // 🚀 ONE-TIME SAFE MERGE: First time this device joins a cloud account.
+        // ONE-TIME SAFE MERGE: First time this device joins a cloud account.
         // We take the MAX of key metrics to ensure the leaderboard reflects the best effort without doubling.
         final cloudPlayCount = metrics['play_count'] as int? ?? 0;
         final cloudDaily = metrics['daily_play_count'] as int? ?? 0;
@@ -295,7 +295,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
         DebugLogService().success(
             "📊 STATS: Safe Max-Merge Migration Success. New Minutes: $finalMinutes, Total Plays: $finalTotalPlays");
       } else {
-        // 🚀 SYNC/RESTORE MODE: Device has already migrated or is just syncing.
+        // SYNC/RESTORE MODE: Device has already migrated or is just syncing.
         if (cloudMinutes > localMinutes) {
           finalMinutes = cloudMinutes;
           DebugLogService().info(
@@ -310,22 +310,6 @@ class StatsNotifier extends StateNotifier<StatsState> {
       final cloudWins = metrics['weekly_wins_count'] as int? ?? 0;
       final cloudPodiums = metrics['weekly_podiums_count'] as int? ?? 0;
 
-      // Update local storage: Scale up Isar entries to match cloud minutes
-      if (finalMinutes > localMinutes && localMinutes > 0) {
-        final ratio = finalMinutes / localMinutes;
-        DebugLogService().info(
-            "📊 STATS: Scaling local entries by ${ratio.toStringAsFixed(2)}x to match cloud ($finalMinutes mins)");
-        final dbService = ref.read(dbServiceProvider);
-        final isar = await dbService.db;
-        await isar.writeTxn(() async {
-          final allStats = await isar.savedStats.where().findAll();
-          for (var s in allStats) {
-            s.totalSeconds = (s.totalSeconds * ratio).round();
-            await isar.savedStats.put(s);
-          }
-        });
-      }
-
       if (cloudStreak > state.maxRepeatStreak) {
         await prefs.setInt('max_repeat_streak', cloudStreak);
       }
@@ -337,7 +321,9 @@ class StatsNotifier extends StateNotifier<StatsState> {
       }
 
       // If anything changed, reload stats to refresh state (without re-syncing to avoid infinite loop)
-      if (finalMinutes > localMinutes || cloudStreak > state.maxRepeatStreak) {
+      if (cloudStreak > state.maxRepeatStreak ||
+          cloudWins > state.weeklyWinsCount ||
+          cloudPodiums > state.weeklyPodiumsCount) {
         await _loadStats(triggerSync: false);
       }
     } catch (e) {
@@ -369,7 +355,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
         playCount: s.playCount,
         totalSeconds: s.totalSeconds,
         lastKnownPath: s.lastKnownPath,
-        lastPlayed: s.lastPlayed, // 📅 NEW
+        lastPlayed: s.lastPlayed,
       );
     }
 
@@ -387,15 +373,14 @@ class StatsNotifier extends StateNotifier<StatsState> {
     );
     DebugLogService().info("📈 STATS: Loaded ${loaded.length} stat entries");
 
-    final history = await _getAccurateHistoryCounts();
-    final calculated = StatsUtils.calculate(state,
-        dailyPlaysOverride: history['daily'],
-        weeklyPlaysOverride: history['weekly']);
+    // final history = await _getAccurateHistoryCounts();
+    // The previously calculated stats were unused and cause type errors when assigned to state
+    // We rely on the raw stats from the DB and history counts instead.
 
-    // 🛡️ ANTI-CORRUPTION AUTO-REPAIR (v1.1 Mathematical Clamp)
+    // 🛡️ ANTI-CORRUPTION AUTO-REPAIR (v1.2 Mathematical Clamp)
     // The previous bug ONLY scaled totalSeconds, leaving playCount perfectly intact!
     // We mathematically clamp totalSeconds to a max of 5 mins (300s) per genuine play.
-    final hasRunRepair = prefs.getBool('has_run_v1_1_stats_repair') ?? false;
+    final hasRunRepair = prefs.getBool('has_run_v1_2_stats_repair') ?? false;
     if (!hasRunRepair) {
       bool neededRepair = false;
       await isar.writeTxn(() async {
@@ -417,13 +402,36 @@ class StatsNotifier extends StateNotifier<StatsState> {
           }
         }
       });
-      await prefs.setBool('has_run_v1_1_stats_repair', true);
+      await prefs.setBool('has_run_v1_2_stats_repair', true);
 
       if (neededRepair) {
-        DebugLogService().success("🔥 Auto-repaired corrupted local minutes mathematically based on genuine play counts.");
+        DebugLogService().success(
+            "🔥 Auto-repaired corrupted local minutes mathematically based on genuine play counts.");
         // Reload stats with the clamped seconds so syncNow() pushes the corrected total
+        await _loadStats(triggerSync: false);
+
+        // Force overwrite the cloud aggregate stats
+        final history = await _getAccurateHistoryCounts();
+        final calculated = StatsUtils.calculate(state,
+            dailyPlaysOverride: history['daily'],
+            weeklyPlaysOverride: history['weekly']);
+
+        await MetricsService().forceSyncAdvancedStats(
+          totalMinutes: calculated.totalMinutes,
+          playCount: calculated.totalPlays,
+          dailyPlayCount: calculated.dailyPlays,
+          weeklyPlayCount: calculated.weeklyPlays,
+          maxRepeatStreak: state.maxRepeatStreak,
+          weeklyWinsCount: state.weeklyWinsCount,
+          weeklyPodiumsCount: state.weeklyPodiumsCount,
+        );
+
+        // Overwrite individual song stats in cloud
+        await SyncEngine().fullUpload([]);
+
+        // Reload and sync
         await _loadStats(triggerSync: true);
-        return; 
+        return;
       }
     }
 
@@ -476,13 +484,12 @@ class StatsNotifier extends StateNotifier<StatsState> {
     }
   }
 
-  // --- LOGIC: ADD PLAY COUNT ---
+  // LOGIC: ADD PLAY COUNT
   Future<void> logPlay(SongModel song) async {
     DebugLogService().info("📈 STATS: logPlay called for: ${song.title}");
     final id = StatEntry.generateId(
         song.title.trim(), song.artist.trim(), song.album.trim());
 
-    // Update State (Optimistic UI)
     final currentEntries = {...state.entries};
     final current = currentEntries[id];
     StatEntry updatedEntry;
@@ -518,7 +525,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
       if (existing != null) {
         existing.playCount += 1;
         existing.lastKnownPath = song.filePath;
-        existing.lastPlayed = DateTime.now(); // 📅 NEW
+        existing.lastPlayed = DateTime.now();
 
         // Update metadata if available
         if (song.onlineArtUrl != null) {
@@ -538,7 +545,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
           ..playCount = 1
           ..totalSeconds = 0
           ..lastKnownPath = song.filePath
-          ..lastPlayed = DateTime.now() // 📅 NEW
+          ..lastPlayed = DateTime.now()
           ..onlineArtUrl = song.onlineArtUrl
           ..youtubeUrl = song.sourceUrl
           ..spotifyId = song.spotifyId
@@ -548,7 +555,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
       }
     });
 
-    // 🔄 CLOUD SYNC: Push per-song stat delta to SyncEngine
+    // CLOUD SYNC: Push per-song stat delta to SyncEngine
     final deviceId = await MetricsService().getDeviceIdentifier();
     final playDelta = StatDelta(
       id: const Uuid().v4(),
@@ -576,14 +583,14 @@ class StatsNotifier extends StateNotifier<StatsState> {
         localTotal: statsResult.totalPlays,
         totalMinutes: statsResult.totalMinutes);
 
-    // 🚀 BUMP PROFILE CLOUD STATS: Triggers reactive UI update for 'Total Plays'
+    // BUMP PROFILE CLOUD STATS: Triggers reactive UI update for 'Total Plays'
     ref.read(profileProvider.notifier).bumpCloudStats(
           playIncrement: 1,
           dailyIncrement: 1,
           weeklyIncrement: 1,
         );
 
-    // --- REPEAT OFFENDER TRACKING ---
+    // REPEAT OFFENDER TRACKING
     final prefs = ref.read(sharedPrefsProvider);
     String? lastTrackId = prefs.getString('last_played_track_id');
     int lastTrackTime = prefs.getInt('last_track_play_time') ?? 0;
@@ -591,7 +598,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
     int maxStreak = prefs.getInt('max_repeat_streak') ?? 0;
     final nowMs = DateTime.now().millisecondsSinceEpoch;
 
-    // ☁️ CLOUD HANDSHAKE: Check if we should inherit an active session from another device
+    // CLOUD HANDSHAKE: Check if we should inherit an active session from another device
     final profile = ref.read(profileProvider);
     final cloudStreak = profile.cloudCurrentRepeatStreak ?? 0;
     final cloudSongId = profile.cloudLastRepeatSongId;
@@ -654,7 +661,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
     _triggerSync();
   }
 
-  // --- LOGIC: ADD LISTENING TIME ---
+  // LOGIC: ADD LISTENING TIME
   Future<void> logTime(SongModel song, int seconds) async {
     if (seconds <= 0) return;
     /* DebugLogService()
@@ -689,8 +696,8 @@ class StatsNotifier extends StateNotifier<StatsState> {
       entries: currentEntries,
       maxRepeatStreak: state.maxRepeatStreak,
       currentRepeatStreak: state.currentRepeatStreak,
-      weeklyWinsCount: state.weeklyWinsCount, // 🚀 RESTORED
-      weeklyPodiumsCount: state.weeklyPodiumsCount, // 🚀 RESTORED
+      weeklyWinsCount: state.weeklyWinsCount,
+      weeklyPodiumsCount: state.weeklyPodiumsCount,
     );
 
     // Persist to Isar
@@ -703,7 +710,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
 
       if (existing != null) {
         existing.totalSeconds += seconds;
-        existing.lastPlayed = DateTime.now(); // 📅 NEW
+        existing.lastPlayed = DateTime.now();
 
         // Also update IDs on time log just in case
         if (song.spotifyId != null) existing.spotifyId = song.spotifyId;
@@ -727,7 +734,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
       }
     });
 
-    // 🔄 CLOUD SYNC: Push per-song time delta to SyncEngine
+    // CLOUD SYNC: Push per-song time delta to SyncEngine
     final deviceId = await MetricsService().getDeviceIdentifier();
     final timeDelta = StatDelta(
       id: const Uuid().v4(),
@@ -748,7 +755,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
     _triggerSync();
   }
 
-  /// 🛠️ SMART REPAIR: Adjust local stats to match cloud totals via ratio scaling.
+  /// SMART REPAIR: Adjust local stats to match cloud totals via ratio scaling.
   /// This restores accurate totals while preserving the relative ranking of your top tracks.
   Future<void> repairLocalFromCloud() async {
     try {
@@ -784,7 +791,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
     }
   }
 
-  /// 📉 PROPORTIONAL SCALING: Scales all local Isar entries by the given ratio.
+  /// PROPORTIONAL SCALING: Scales all local Isar entries by the given ratio.
   Future<void> applyGlobalAdjustment(double ratio) async {
     final dbService = ref.read(dbServiceProvider);
     final isar = await dbService.db;
@@ -813,6 +820,9 @@ class StatsNotifier extends StateNotifier<StatsState> {
     await isar.writeTxn(() async {
       await isar.savedStats.clear();
     });
+
+    final prefs = ref.read(sharedPrefsProvider);
+    await prefs.remove('last_synced_local_minutes');
   }
 
   Future<void> updateMetadata(String id,

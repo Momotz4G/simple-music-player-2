@@ -13,7 +13,7 @@ import '../../models/song_model.dart';
 import '../../services/canvas_service.dart';
 import '../../l10n/app_localizations.dart';
 
-import '../components/player/device_selector_dialog.dart';
+
 import '../components/smart_art.dart';
 import '../../providers/lyrics_provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -23,6 +23,7 @@ import '../../utils/korean_romanizer.dart';
 import '../../utils/translation_service.dart';
 import '../../services/spotify_service.dart';
 import '../../services/db_service.dart';
+import '../../services/debug_log_service.dart'; // Added for Debug Logs
 import 'package:flutter/scheduler.dart';
 import '../widgets/smooth_highlight_text.dart';
 
@@ -37,6 +38,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
     with WindowListener, SingleTickerProviderStateMixin {
   VideoPlayerController? _videoController;
   bool _isLoading = false;
+  bool _isAppleMusicVideo = false;
   String _loadingStatus = "";
 
   // UI State
@@ -136,7 +138,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
 
 
   // --------------------------------------------------------------------------
-  // 🚀 SIMPLE WINDOW LOGIC (No Hacks)
+  // SIMPLE WINDOW LOGIC (No Hacks)
   // --------------------------------------------------------------------------
 
   Future<void> _initWindowMode() async {
@@ -154,7 +156,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
 
     // Only go full screen if they were already maximized (desktop feel)
     if (isMaximized) {
-      // 🚀 WAIT FOR TRANSITION TO FINISH
+      // WAIT FOR TRANSITION TO FINISH
       // We wait for the animation to complete to avoid stuttering during the Hero/Fade transition.
       // The OS window resize is heavy and shouldn't happen while we are animating.
       if (!mounted) return;
@@ -181,7 +183,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
     }
   }
 
-  // 🚀 SIMPLE EXIT
+  // SIMPLE EXIT
   // Just revert full screen and close. No delays.
   Future<void> _exitAndPop() async {
     // Desktop-only: window management
@@ -225,14 +227,16 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
   // --------------------------------------------------------------------------
 
   Future<void> _autoLoadCanvas(String title, String artist) async {
-    // 🚀 Check if canvas is disabled in settings
     final settings = ref.read(settingsProvider);
-    if (settings.disableCanvas) {
+    final pref = settings.canvasSourcePreference;
+
+    if (pref == 'disabled') {
       if (mounted) {
         setState(() {
           _videoController?.dispose();
           _videoController = null;
           _isLoading = false;
+          _isAppleMusicVideo = false;
           _loadingStatus = "";
         });
       }
@@ -244,62 +248,125 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
       setState(() {
         _videoController = null;
         _isLoading = true;
-        _loadingStatus = "Searching Spotify...";
+        _isAppleMusicVideo = false;
+        _loadingStatus = "Searching Canvas...";
       });
     }
     if (oldController != null) await oldController.dispose();
 
-    // 🚀 TIER 1: Check Video URL Cache (FASTEST)
     try {
-      final String videoCacheKey = "canvas_video:$artist-$title";
-      final cachedVideoUrl = await DBService().getArtCache(videoCacheKey);
-      if (cachedVideoUrl != null && cachedVideoUrl.isNotEmpty) {
-        debugPrint("💾 [DB CACHE] Canvas Video Found: $artist - $title");
+      final String appleCacheKey = "canvas_video_apple:$artist-$title";
+      final String spotifyCacheKey = "canvas_video_spotify:$artist-$title";
+      final String legacyCacheKey = "canvas_video:$artist-$title";
+
+      String? preferredCachedUrl;
+      String? fallbackCachedUrl;
+
+      if (pref == 'apple_first' || pref == 'apple_only') {
+        preferredCachedUrl = await DBService().getArtCache(appleCacheKey);
+        if (pref == 'apple_first') {
+          fallbackCachedUrl = await DBService().getArtCache(spotifyCacheKey);
+        }
+      } else if (pref == 'spotify_first' || pref == 'spotify_only') {
+        preferredCachedUrl = await DBService().getArtCache(spotifyCacheKey);
+        if (pref == 'spotify_first') {
+          fallbackCachedUrl = await DBService().getArtCache(appleCacheKey);
+        }
+      }
+
+      // TIER 1: Check Video URL Cache (FASTEST)
+      if (preferredCachedUrl != null && preferredCachedUrl.isNotEmpty) {
+        debugPrint("💾 [DB CACHE] Preferred Canvas Video Found: $artist - $title");
         if (mounted) {
           setState(() => _loadingStatus = "[Cached] ${AppLocalizations.of(context)!.fetchingCanvas}");
         }
-        await _loadCanvasFromUrl(cachedVideoUrl, isDirectVideoUrl: true);
+        await _loadCanvasFromUrl(preferredCachedUrl, isDirectVideoUrl: true);
         if (_videoController != null) return; // Success!
       }
-    } catch (e) {
-      debugPrint("⚠️ Canvas Cache Read Error (Video): $e");
-    }
 
-    // 🚀 TIER 2: Check Spotify Link Cache (Saves API Quota)
-    String? spotifyUrl;
-    bool isLinkFromCache = false;
-    final String linkCacheKey = "spotify_link:$artist-$title";
-    try {
-      spotifyUrl = await DBService().getArtCache(linkCacheKey);
-      if (spotifyUrl != null && spotifyUrl.isNotEmpty) {
-        debugPrint("💾 [DB CACHE] Spotify Link Found: $artist - $title");
-        isLinkFromCache = true;
-      }
-    } catch (e) {
-      debugPrint("⚠️ Canvas Cache Read Error (Link): $e");
-    }
+      // Check legacy cache
+      final legacyCachedUrl = await DBService().getArtCache(legacyCacheKey);
+      if (legacyCachedUrl != null && legacyCachedUrl.isNotEmpty) {
+        final isLegacyApple = legacyCachedUrl.contains("apple.com") || legacyCachedUrl.contains("itunes");
+        
+        bool useAsPreferred = false;
+        bool useAsFallback = false;
 
-    // 🚀 TIER 3: Fetch from Official Spotify API
-    if (spotifyUrl == null || spotifyUrl.isEmpty) {
-      debugPrint("🌐 [NETWORK] Searching Spotify for: $artist - $title");
-      try {
-        spotifyUrl = await SpotifyService.getTrackLink(title, artist);
-        if (spotifyUrl != null) {
-          DBService().saveArtCache(linkCacheKey, spotifyUrl);
+        if (pref == 'apple_only' && isLegacyApple) useAsPreferred = true;
+        if (pref == 'spotify_only' && !isLegacyApple) useAsPreferred = true;
+        if (pref == 'apple_first') {
+          if (isLegacyApple) {
+            useAsPreferred = true;
+          } else {
+            useAsFallback = true;
+          }
         }
-      } catch (e) {
-        // 429 or other error - cannot load Canvas, gracefully degrade
-      }
-    }
+        if (pref == 'spotify_first') {
+          if (!isLegacyApple) {
+            useAsPreferred = true;
+          } else {
+            useAsFallback = true;
+          }
+        }
 
-    if (spotifyUrl != null) {
-      if (!mounted) return;
-      setState(() {
-        final prefix = isLinkFromCache ? "[Cached] " : "";
-        _loadingStatus = "$prefix${AppLocalizations.of(context)!.fetchingCanvas}";
-      });
-      await _loadCanvasFromUrl(spotifyUrl);
-    } else {
+        if (useAsPreferred) {
+          debugPrint("💾 [DB LEGACY CACHE] Legacy preferred video found: $artist - $title");
+          if (mounted) {
+            setState(() => _loadingStatus = "[Legacy Cached] ${AppLocalizations.of(context)!.fetchingCanvas}");
+          }
+          await _loadCanvasFromUrl(legacyCachedUrl, isDirectVideoUrl: true);
+          if (_videoController != null) return;
+        } else if (useAsFallback) {
+          fallbackCachedUrl ??= legacyCachedUrl;
+        }
+      }
+
+      // Use fallback from cache immediately to avoid network calls
+      if (fallbackCachedUrl != null && fallbackCachedUrl.isNotEmpty) {
+        debugPrint("💾 [DB CACHE] Fallback Canvas Video Found in Cache: $artist - $title");
+        if (mounted) {
+          setState(() => _loadingStatus = "[Cached Fallback] ${AppLocalizations.of(context)!.fetchingCanvas}");
+        }
+        await _loadCanvasFromUrl(fallbackCachedUrl, isDirectVideoUrl: true);
+        if (_videoController != null) return; // Success!
+      }
+
+      // TIER 2: Load preferred source from network
+      if (pref == 'apple_first' || pref == 'apple_only') {
+        final success = await _tryLoadAppleMusic(title, artist);
+        if (success && _videoController != null) return;
+      } else if (pref == 'spotify_first' || pref == 'spotify_only') {
+        final success = await _tryLoadSpotify(title, artist);
+        if (success && _videoController != null) return;
+      }
+
+      // TIER 3: Fallbacks
+      if (pref == 'apple_first') {
+        if (fallbackCachedUrl != null) {
+          debugPrint("💾 [DB CACHE] Using fallback Spotify canvas: $artist - $title");
+          if (mounted) {
+            setState(() => _loadingStatus = "[Cached Fallback] ${AppLocalizations.of(context)!.fetchingCanvas}");
+          }
+          await _loadCanvasFromUrl(fallbackCachedUrl, isDirectVideoUrl: true);
+          if (_videoController != null) return;
+        }
+        final success = await _tryLoadSpotify(title, artist);
+        if (success && _videoController != null) return;
+      } else if (pref == 'spotify_first') {
+        if (fallbackCachedUrl != null) {
+          debugPrint("💾 [DB CACHE] Using fallback Apple Music video: $artist - $title");
+          if (mounted) {
+            setState(() => _loadingStatus = "[Cached Fallback] ${AppLocalizations.of(context)!.fetchingCanvas}");
+          }
+          await _loadCanvasFromUrl(fallbackCachedUrl, isDirectVideoUrl: true);
+          if (_videoController != null) return;
+        }
+        final success = await _tryLoadAppleMusic(title, artist);
+        if (success && _videoController != null) return;
+      }
+    } catch (e) {
+      debugPrint("⚠️ Canvas loading error: $e");
+    } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -307,6 +374,63 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
         });
       }
     }
+  }
+
+  Future<bool> _tryLoadAppleMusic(String title, String artist) async {
+    try {
+      DebugLogService().info("🍎 [Apple Music] Searching Motion Artwork for: $artist - $title");
+      final appleVideoUrl = await CanvasService.getAppleMusicAnimatedArtworkUrl(title, artist, preferVertical: false);
+      if (appleVideoUrl != null && appleVideoUrl.isNotEmpty) {
+        DebugLogService().info("✅ [Apple Music] Found Motion Artwork URL: $appleVideoUrl");
+        await _loadCanvasFromUrl(appleVideoUrl, isDirectVideoUrl: true);
+        if (_videoController != null) {
+          DBService().saveArtCache("canvas_video_apple:$artist-$title", appleVideoUrl);
+          return true; // Success!
+        }
+      }
+    } catch (e) {
+      DebugLogService().error("⚠️ Apple Music Motion Artwork Fetch Error: $e");
+    }
+    return false;
+  }
+
+  Future<bool> _tryLoadSpotify(String title, String artist) async {
+    String? spotifyUrl;
+    bool isLinkFromCache = false;
+    final String linkCacheKey = "spotify_link:$artist-$title";
+    try {
+      spotifyUrl = await DBService().getArtCache(linkCacheKey);
+      if (spotifyUrl != null && spotifyUrl.isNotEmpty) {
+        DebugLogService().info("💾 [DB CACHE] Spotify Link Found: $artist - $title");
+        isLinkFromCache = true;
+      }
+    } catch (e) {
+      DebugLogService().error("⚠️ Canvas Cache Read Error (Link): $e");
+    }
+
+    if (spotifyUrl == null || spotifyUrl.isEmpty) {
+      DebugLogService().info("🌐 [NETWORK] Searching Spotify for: $artist - $title");
+      try {
+        spotifyUrl = await SpotifyService.getTrackLink(title, artist, fallbackToProxy: true)
+            .timeout(const Duration(seconds: 30), onTimeout: () => null);
+        if (spotifyUrl != null) {
+          DBService().saveArtCache(linkCacheKey, spotifyUrl);
+        }
+      } catch (e) {
+        DebugLogService().error("⚠️ Spotify Search Error: $e");
+      }
+    }
+
+    if (spotifyUrl != null) {
+      if (!mounted) return false;
+      setState(() {
+        final prefix = isLinkFromCache ? "[Cached] " : "";
+        _loadingStatus = "$prefix${AppLocalizations.of(context)!.fetchingCanvas}";
+      });
+      await _loadCanvasFromUrl(spotifyUrl);
+      if (_videoController != null) return true;
+    }
+    return false;
   }
 
   Future<void> _loadCanvasFromUrl(String url, {bool isDirectVideoUrl = false}) async {
@@ -320,7 +444,11 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
         // Save to Video Cache for next time
         final song = ref.read(playerProvider).currentSong;
         if (song != null) {
-          DBService().saveArtCache("canvas_video:${song.artist}-${song.title}", videoUrl);
+          final isApple = videoUrl.contains("apple.com") || videoUrl.contains("itunes");
+          final cacheKey = isApple 
+              ? "canvas_video_apple:${song.artist}-${song.title}"
+              : "canvas_video_spotify:${song.artist}-${song.title}";
+          DBService().saveArtCache(cacheKey, videoUrl);
           // Also save the Spotify Link if we were using an override or found it
           DBService().saveArtCache("spotify_link:${song.artist}-${song.title}", url);
         }
@@ -329,16 +457,37 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
 
     if (videoUrl != null) {
       if (!mounted) return;
-      setState(() => _loadingStatus = AppLocalizations.of(context)!.fetchingCanvas);
+      
+      final bool isAppleMusic = videoUrl.contains("apple.com") || videoUrl.contains("itunes");
+      setState(() {
+        _loadingStatus = AppLocalizations.of(context)!.fetchingCanvas;
+        _isAppleMusicVideo = isAppleMusic;
+      });
+      VideoPlayerController controller;
 
-      final cachedFile = await CanvasService.downloadCanvasToCache(videoUrl);
+      File? cachedFile = await CanvasService.getCachedCanvasFile(videoUrl);
 
-      if (cachedFile == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
+      final bool isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+
+      if (!isDesktop) {
+        // 📱 MOBILE: Stream video directly from URL without caching to disk
+        DebugLogService().info("🌐 [Mobile Canvas] Streaming video directly from: $videoUrl");
+        controller = VideoPlayerController.networkUrl(
+          Uri.parse(videoUrl),
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          httpHeaders: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+          },
+        );
+      } else {
+        // 💻 DESKTOP: Download and cache to disk
+        final file = cachedFile ?? await CanvasService.downloadCanvasToCache(videoUrl);
+        if (file == null) {
+          if (mounted) setState(() => _isLoading = false);
+          return;
+        }
+        controller = VideoPlayerController.file(file);
       }
-
-      final controller = VideoPlayerController.file(cachedFile);
       try {
         await controller.initialize();
         controller.setLooping(true);
@@ -436,20 +585,39 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
       }
     });
 
-    // 🚀 Reactive Canvas Disable: Watch settings and dispose if disabled mid-session
+    // Reactive Canvas Disable/Preference Change: Watch settings and update canvas
     ref.listen<SettingsState>(settingsProvider, (prev, next) {
-      if (next.disableCanvas && _videoController != null) {
+      final isNowDisabled = next.canvasSourcePreference == 'disabled';
+      final wasDisabled = prev?.canvasSourcePreference == 'disabled';
+      final preferenceChanged = prev?.canvasSourcePreference != next.canvasSourcePreference;
+
+      if (isNowDisabled && _videoController != null) {
         setState(() {
           _videoController?.dispose();
           _videoController = null;
           _isLoading = false;
+          _isAppleMusicVideo = false;
         });
-      } else if (!next.disableCanvas &&
-          prev?.disableCanvas == true &&
-          _videoController == null) {
-        // Re-load if enabled mid-session
+      } else if ((!isNowDisabled && wasDisabled && _videoController == null) ||
+                 (!isNowDisabled && preferenceChanged)) {
+        // Re-load if enabled or setting changed mid-session
         final song = ref.read(playerProvider).currentSong;
         if (song != null) {
+          _autoLoadCanvas(song.title, song.artist);
+        }
+      }
+    });
+
+    ref.listen<int>(canvasCacheInvalidationProvider, (previous, next) async {
+      if (previous != next) {
+        _videoController?.dispose();
+        if (mounted) {
+          setState(() {
+            _videoController = null;
+          });
+        }
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted && song != null) {
           _autoLoadCanvas(song.title, song.artist);
         }
       }
@@ -467,7 +635,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        _exitAndPop(); // 🚀 Uses Simple Exit
+        _exitAndPop(); // Uses Simple Exit
       },
       child: Consumer(
         builder: (context, ref, child) {
@@ -478,12 +646,15 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
             _smoothPosition = next;
           });
 
-          return MouseRegion(
-            onHover: (_) => _onUserInteraction(),
-            cursor: _showControls
-                ? SystemMouseCursors.basic
-                : SystemMouseCursors.none,
-            child: Scaffold(
+          return Listener(
+            onPointerHover: (_) => _onUserInteraction(),
+            onPointerMove: (_) => _onUserInteraction(),
+            child: MouseRegion(
+              onHover: (_) => _onUserInteraction(),
+              cursor: _showControls
+                  ? SystemMouseCursors.basic
+                  : SystemMouseCursors.none,
+              child: Scaffold(
               backgroundColor: Colors.black,
               extendBodyBehindAppBar: true,
               appBar: PreferredSize(
@@ -497,7 +668,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
                     leading: IconButton(
                       icon: const Icon(Icons.keyboard_arrow_down,
                           color: Colors.white),
-                      // 🚀 USES SIMPLE EXIT
+                      // USES SIMPLE EXIT
                       onPressed: _exitAndPop,
                     ),
                     actions: [
@@ -535,8 +706,12 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
                           ? FittedBox(
                               fit: BoxFit.cover,
                               child: SizedBox(
-                                width: _videoController!.value.size.width,
-                                height: _videoController!.value.size.height,
+                                width: _videoController!.value.size.width > 0
+                                    ? _videoController!.value.size.width
+                                    : MediaQuery.of(context).size.width,
+                                height: _videoController!.value.size.height > 0
+                                    ? _videoController!.value.size.height
+                                    : MediaQuery.of(context).size.height,
                                 child: VideoPlayer(_videoController!),
                               ),
                             )
@@ -582,7 +757,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
                             color: Colors.black.withValues(alpha: 0.5)),
                       ),
                     ),
-                    // 🚀 REMOTE PLAYBACK BANNER (Only show when in a remote session AND this device is a slave)
+                    // REMOTE PLAYBACK BANNER (Only show when in a remote session AND this device is a slave)
                     if (ref.read(playerProvider.notifier).isRemoteSessionActive && !ref.read(playerProvider.notifier).isMaster && playerState.activeDeviceName != null)
                       Positioned(
                         top: 100,
@@ -664,23 +839,49 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
                             );
                           },
                           child: (hasVideo && !(_showLyrics && isDesktop))
-                              ? AspectRatio(
-                                  key: const ValueKey('video_art'),
-                                  aspectRatio:
-                                      _videoController!.value.aspectRatio,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      boxShadow: [
-                                        BoxShadow(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.5),
-                                            blurRadius: 20,
-                                            spreadRadius: 2)
-                                      ],
-                                    ),
-                                    child: VideoPlayer(_videoController!),
-                                  ),
-                                )
+                              ? (_isAppleMusicVideo
+                                  ? SizedBox(
+                                      key: const ValueKey('video_art_apple'),
+                                      width: 400,
+                                      height: 400,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(8),
+                                          boxShadow: [
+                                            BoxShadow(
+                                                color: Colors.black
+                                                    .withValues(alpha: 0.5),
+                                                blurRadius: 30,
+                                                spreadRadius: 5)
+                                          ],
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: AspectRatio(
+                                            aspectRatio:
+                                                _videoController!.value.aspectRatio,
+                                            child: VideoPlayer(_videoController!),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : AspectRatio(
+                                      key: const ValueKey('video_art_spotify'),
+                                      aspectRatio:
+                                          _videoController!.value.aspectRatio,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          boxShadow: [
+                                            BoxShadow(
+                                                color: Colors.black
+                                                    .withValues(alpha: 0.5),
+                                                blurRadius: 20,
+                                                spreadRadius: 2)
+                                          ],
+                                        ),
+                                        child: VideoPlayer(_videoController!),
+                                      ),
+                                    ))
                               : Builder(
                                   key: const ValueKey('image_art'),
                                   builder: (context) {
@@ -1073,6 +1274,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
                   ],
                 ),
               ),
+              ),
             ),
           );
         },
@@ -1132,51 +1334,60 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
             itemCount: state.parsedLyrics.length,
             itemScrollController: _lyricScrollController,
             itemPositionsListener: _lyricPositionsListener,
-            padding: const EdgeInsets.only(top: 100, bottom: 300),
-          itemBuilder: (context, index) {
+            initialScrollIndex: 0,
+            initialAlignment: 0.4,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).size.height * 0.4,
+              bottom: MediaQuery.of(context).size.height * 0.5,
+            ),
+            itemBuilder: (context, index) {
             final line = state.parsedLyrics[index];
             final isActive = index == _activeLyricIndex;
 
-            return AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: isActive ? 1.0 : 0.3,
-              child: GestureDetector(
-                onTap: () {
-                  _onUserInteraction();
-                  ref.read(playerProvider.notifier).seek(line.time);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                        !isActive
-                            ? Text(
-                                line.text,
-                                style: TextStyle(
-                                  fontSize: 28,
+            return ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 80),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: isActive ? 1.0 : 0.3,
+                child: GestureDetector(
+                  onTap: () {
+                    _onUserInteraction();
+                    ref.read(playerProvider.notifier).seek(line.time);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                          !isActive
+                              ? Text(
+                                  line.text,
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1.3,
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
+                                )
+                              : SmoothHighlightText(
+                                  text: line.text,
+                                  startTime: line.time,
+                                  endTime: index + 1 < state.parsedLyrics.length
+                                      ? state.parsedLyrics[index + 1].time
+                                      : line.time + 5.0,
+                                  initialPosition: _smoothPosition,
+                                  isPlaying: ref.watch(playerProvider).isPlaying,
+                                  syncOffset: state.syncOffset,
+                                  activeColor: Colors.white,
+                                  inactiveColor: Colors.white.withValues(alpha: 0.3),
+                                  fontSize: 32,
                                   fontWeight: FontWeight.bold,
-                                  height: 1.3,
-                                  color: Colors.white.withValues(alpha: 0.3),
                                 ),
-                              )
-                            : SmoothHighlightText(
-                                text: line.text,
-                                startTime: line.time,
-                                endTime: index + 1 < state.parsedLyrics.length
-                                    ? state.parsedLyrics[index + 1].time
-                                    : line.time + 5.0,
-                                initialPosition: _smoothPosition,
-                                isPlaying: ref.watch(playerProvider).isPlaying,
-                                syncOffset: state.syncOffset,
-                                activeColor: Colors.white,
-                                inactiveColor: Colors.white.withValues(alpha: 0.3),
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
-                      // Optional: Romanization/Translation
-                      _buildSubLine(line.text, index, state),
-                    ],
+                        // Optional: Romanization/Translation
+                        _buildSubLine(line.text, index, state),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1289,7 +1500,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
     }
 
     if (index != _activeLyricIndex) {
-      // 🚀 Handle song restart/seek to start (index becomes -1)
+      // Handle song restart/seek to start (index becomes -1)
       if (index == -1 && _activeLyricIndex >= 0) {
         if (mounted) setState(() => _activeLyricIndex = -1);
         if (_lyricScrollController.isAttached) {
@@ -1297,7 +1508,7 @@ class _FullScreenPlayerState extends ConsumerState<FullScreenPlayer>
             index: 0,
             duration: const Duration(milliseconds: 600),
             curve: Curves.easeOutCubic,
-            alignment: 0.0, // Top
+            alignment: 0.4, // Centered
           );
         }
         return;

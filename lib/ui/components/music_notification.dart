@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../main.dart';
 import 'smart_art.dart';
 
 class MusicNotification extends StatelessWidget {
@@ -192,7 +193,7 @@ class MusicNotification extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               title,
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -203,7 +204,7 @@ class MusicNotification extends StatelessWidget {
                             if (subtitle != null)
                               Text(
                                 subtitle!,
-                                maxLines: 1,
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.7),
@@ -237,7 +238,12 @@ void showCenterNotification(
   if (!context.mounted) return;
 
   try {
-    final overlayState = Overlay.of(context);
+    final overlayState = Overlay.maybeOf(context) ?? globalNavigatorKey.currentState?.overlay;
+    if (overlayState == null) {
+      debugPrint("⚠️ Notification Error: No Overlay widget found in context or global fallback.");
+      return;
+    }
+
     late OverlayEntry overlayEntry;
 
     overlayEntry = OverlayEntry(
@@ -258,7 +264,7 @@ void showCenterNotification(
               onlineArtUrl: onlineArtUrl,
               backgroundColor: backgroundColor,
               icon: icon,
-              centered: centered, // 🚀 Passed down
+              centered: centered, // Passed down
             ),
           ),
         );

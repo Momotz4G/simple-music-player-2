@@ -176,6 +176,12 @@ abstract class AppLocalizations {
   /// **'Account linked successfully!'**
   String get accountLinkedSuccessfully;
 
+  /// No description provided for @accountTiers.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Tiers'**
+  String get accountTiers;
+
   /// No description provided for @achievementsUnlocked.
   ///
   /// In en, this message translates to:
@@ -211,6 +217,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add more folders to scan'**
   String get addFoldersScan;
+
+  /// No description provided for @addLineToEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to End'**
+  String get addLineToEnd;
+
+  /// No description provided for @addLineToTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Top'**
+  String get addLineToTop;
 
   /// No description provided for @addToFavorite.
   ///
@@ -253,6 +271,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added to Queue'**
   String get addedToQueue;
+
+  /// No description provided for @aiGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Generate'**
+  String get aiGenerate;
+
+  /// No description provided for @aiLyricsComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete!'**
+  String get aiLyricsComplete;
+
+  /// No description provided for @aiLyricsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error generating AI lyrics.'**
+  String get aiLyricsError;
+
+  /// No description provided for @aiLyricsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate AI lyrics.'**
+  String get aiLyricsFailed;
+
+  /// No description provided for @aiLyricsGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating AI Lyrics...'**
+  String get aiLyricsGenerating;
+
+  /// No description provided for @aiLyricsGenerationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Lyrics Generation'**
+  String get aiLyricsGenerationTitle;
+
+  /// No description provided for @aiLyricsInitializing.
+  ///
+  /// In en, this message translates to:
+  /// **'Initializing...'**
+  String get aiLyricsInitializing;
+
+  /// No description provided for @aiLyricsLocalFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: Local audio file not found.'**
+  String get aiLyricsLocalFileMissing;
+
+  /// No description provided for @aiLyricsParsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Parsing Lyrics...'**
+  String get aiLyricsParsing;
+
+  /// No description provided for @aiLyricsPolling.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting Lyrics... Please be patient!'**
+  String get aiLyricsPolling;
+
+  /// No description provided for @aiLyricsReceiving.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics Received'**
+  String get aiLyricsReceiving;
+
+  /// No description provided for @aiLyricsStatusOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Status code 200 OK!'**
+  String get aiLyricsStatusOk;
+
+  /// No description provided for @aiLyricsSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics generated successful!'**
+  String get aiLyricsSuccess;
+
+  /// No description provided for @aiLyricsUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: Upload failed.'**
+  String get aiLyricsUploadFailed;
+
+  /// No description provided for @aiLyricsUploadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload completed!'**
+  String get aiLyricsUploadSuccess;
+
+  /// No description provided for @aiLyricsUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading song to server...'**
+  String get aiLyricsUploading;
+
+  /// No description provided for @aiLyricsVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify status server...'**
+  String get aiLyricsVerifying;
+
+  /// No description provided for @alacDownloadsPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} ALAC Downloads / day'**
+  String alacDownloadsPerDay(int count);
+
+  /// No description provided for @alacHighResDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'ALAC High-Res Downloads'**
+  String get alacHighResDownloads;
 
   /// No description provided for @album.
   ///
@@ -308,6 +440,12 @@ abstract class AppLocalizations {
   /// **'ALREADY IN LIKED SONGS'**
   String get alreadyInLikedSongs;
 
+  /// No description provided for @alreadyPaidCheckStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Already Paid? Check Status'**
+  String get alreadyPaidCheckStatus;
+
   /// No description provided for @android14BitPerfect.
   ///
   /// In en, this message translates to:
@@ -343,6 +481,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Appearance'**
   String get appearance;
+
+  /// No description provided for @applyBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get applyBtn;
 
   /// No description provided for @applyOnRestart.
   ///
@@ -488,6 +632,18 @@ abstract class AppLocalizations {
   /// **'Automatic'**
   String get automatic;
 
+  /// No description provided for @automaticGainControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic Gain Control'**
+  String get automaticGainControl;
+
+  /// No description provided for @automaticGainControlDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Normalize volume across songs so nothing is too loud or too quiet.'**
+  String get automaticGainControlDesc;
+
   /// No description provided for @automaticTitleLabel.
   ///
   /// In en, this message translates to:
@@ -506,12 +662,6 @@ abstract class AppLocalizations {
   /// **'Select a template or import your own photo'**
   String get avatarPickerDesc;
 
-  /// No description provided for @beFirstToClaim.
-  ///
-  /// In en, this message translates to:
-  /// **'Be the first to claim the top spot!'**
-  String get beFirstToClaim;
-
   /// No description provided for @backgroundCacheFlacStreams.
   ///
   /// In en, this message translates to:
@@ -523,6 +673,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Silently downloads streamed lossless tracks to your local disk so replay is instantaneous and uses zero data.'**
   String get backgroundCacheFlacStreamsSubtitle;
+
+  /// No description provided for @beFirstToClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to claim the top spot!'**
+  String get beFirstToClaim;
 
   /// No description provided for @behavioralHeader.
   ///
@@ -547,6 +703,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bit Depth'**
   String get bitDepthLabel;
+
+  /// No description provided for @bitPerfectBypassSub14.
+  ///
+  /// In en, this message translates to:
+  /// **'Bypass system mixer using Android 14+ Bit-Perfect API'**
+  String get bitPerfectBypassSub14;
+
+  /// No description provided for @bitPerfectBypassSubLegacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Bypass system mixer using C++ Audio Engine (Android 13 and below)'**
+  String get bitPerfectBypassSubLegacy;
+
+  /// No description provided for @bitPerfectBypassSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Bit-Perfect playback enabled.'**
+  String get bitPerfectBypassSuccess;
+
+  /// No description provided for @bitPerfectBypassTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bit-Perfect / USB Audio Bypass'**
+  String get bitPerfectBypassTitle;
+
+  /// No description provided for @bitPerfectBypassWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You must plug your USB DAC first.'**
+  String get bitPerfectBypassWarning;
 
   /// No description provided for @bitPerfectEnabled.
   ///
@@ -613,6 +799,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// No description provided for @cancelAllBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel All'**
+  String get cancelAllBtn;
+
+  /// No description provided for @canvasSourcePreferenceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where to load background animated loops from'**
+  String get canvasSourcePreferenceSubtitle;
+
+  /// No description provided for @canvasSourcePreferenceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas / Animated Artwork Source'**
+  String get canvasSourcePreferenceTitle;
 
   /// No description provided for @championChampionTooltip.
   ///
@@ -716,6 +920,12 @@ abstract class AppLocalizations {
   /// **'Choose Avatar'**
   String get chooseAvatar;
 
+  /// No description provided for @chooseFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your preferred format:'**
+  String get chooseFormat;
+
   /// No description provided for @chooseYourTitle.
   ///
   /// In en, this message translates to:
@@ -733,6 +943,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear All'**
   String get clearAll;
+
+  /// No description provided for @clearAllDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This will clear the current editor state. It will NOT delete your local files unless you Save afterwards.'**
+  String get clearAllDesc;
+
+  /// No description provided for @clearAllQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All?'**
+  String get clearAllQuestion;
+
+  /// No description provided for @clearBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearBtn;
 
   /// No description provided for @clearHistory.
   ///
@@ -775,6 +1003,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cloud'**
   String get cloud;
+
+  /// No description provided for @cloudStatsAndRankings.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Stats & Rankings'**
+  String get cloudStatsAndRankings;
 
   /// No description provided for @codeCopied.
   ///
@@ -878,11 +1112,23 @@ abstract class AppLocalizations {
   /// **'Content Region'**
   String get contentRegion;
 
+  /// No description provided for @continueToSociabuzz.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to Sociabuzz'**
+  String get continueToSociabuzz;
+
   /// No description provided for @copyCode.
   ///
   /// In en, this message translates to:
   /// **'Copy Code'**
   String get copyCode;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Link'**
+  String get copyLink;
 
   /// No description provided for @couldNotDownloadFlac.
   ///
@@ -925,6 +1171,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CROWNED CHAMPION TITLES'**
   String get crownedChampionTitlesHeader;
+
+  /// No description provided for @currentTierLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get currentTierLabel;
 
   /// No description provided for @customDevice.
   ///
@@ -1076,6 +1328,18 @@ abstract class AppLocalizations {
   /// **'Disable Romanization'**
   String get disableRomanization;
 
+  /// No description provided for @disableServicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Services'**
+  String get disableServicesTitle;
+
+  /// No description provided for @disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get disabled;
+
   /// No description provided for @disablingSharingWarning.
   ///
   /// In en, this message translates to:
@@ -1111,6 +1375,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Donate'**
   String get donate;
+
+  /// No description provided for @donateMinToObtain.
+  ///
+  /// In en, this message translates to:
+  /// **'Donate min 10,000 IDR to obtain (Permanent)'**
+  String get donateMinToObtain;
 
   /// No description provided for @download.
   ///
@@ -1220,6 +1490,12 @@ abstract class AppLocalizations {
   /// **'DSP'**
   String get dspLabel;
 
+  /// No description provided for @editLyricsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Lyrics'**
+  String get editLyricsTooltip;
+
   /// No description provided for @editMetadata.
   ///
   /// In en, this message translates to:
@@ -1285,6 +1561,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enable Bar Visualizer'**
   String get enableBarVisualizer;
+
+  /// No description provided for @enableOfflineModeBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Offline Mode'**
+  String get enableOfflineModeBtn;
+
+  /// No description provided for @enableOfflineModeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Offline Mode?'**
+  String get enableOfflineModeQuestion;
+
+  /// No description provided for @endLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End: '**
+  String get endLabel;
 
   /// No description provided for @endlessQueue.
   ///
@@ -1394,6 +1688,12 @@ abstract class AppLocalizations {
   /// **'Warning: Exclusive Mode works best when a specific device is selected above, rather than System Default.'**
   String get exclusiveModeWarning;
 
+  /// No description provided for @exclusiveSupporterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclusive Supporter title and Discord role'**
+  String get exclusiveSupporterTitle;
+
   /// No description provided for @exclusiveTitles.
   ///
   /// In en, this message translates to:
@@ -1424,11 +1724,23 @@ abstract class AppLocalizations {
   /// **'Expand'**
   String get expand;
 
+  /// No description provided for @exportToM3u.
+  ///
+  /// In en, this message translates to:
+  /// **'Export to M3U'**
+  String get exportToM3u;
+
   /// No description provided for @externalFiles.
   ///
   /// In en, this message translates to:
   /// **'External Files'**
   String get externalFiles;
+
+  /// No description provided for @externalLinkDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'External Link Detected'**
+  String get externalLinkDetected;
 
   /// No description provided for @fadingAtEnd.
   ///
@@ -1466,6 +1778,12 @@ abstract class AppLocalizations {
   /// **'Failed to generate share code. Check your connection.'**
   String get failedToGenerateCode;
 
+  /// No description provided for @failedToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save lyrics file.'**
+  String get failedToSave;
+
   /// No description provided for @failedToSetAvatar.
   ///
   /// In en, this message translates to:
@@ -1483,6 +1801,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Favorite Track'**
   String get favoriteTrack;
+
+  /// No description provided for @featureAiLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Lyrics Generator'**
+  String get featureAiLyrics;
+
+  /// No description provided for @featureAiLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic synchronized lyrics disabled'**
+  String get featureAiLyricsDesc;
+
+  /// No description provided for @featureAiLyricsLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate synchronized lyrics via AI'**
+  String get featureAiLyricsLongDesc;
+
+  /// No description provided for @featureCloudSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Stats Sync'**
+  String get featureCloudSync;
+
+  /// No description provided for @featureCloudSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening stats saved locally only'**
+  String get featureCloudSyncDesc;
+
+  /// No description provided for @featureCloudSyncLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync listening metrics with PocketBase'**
+  String get featureCloudSyncLongDesc;
+
+  /// No description provided for @featureConnectDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a Device'**
+  String get featureConnectDevice;
+
+  /// No description provided for @featureConnectDeviceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote control & Listening parties disabled'**
+  String get featureConnectDeviceDesc;
+
+  /// No description provided for @featureConnectDeviceLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote control and listening parties'**
+  String get featureConnectDeviceLongDesc;
+
+  /// No description provided for @featureLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Global Leaderboard'**
+  String get featureLeaderboard;
+
+  /// No description provided for @featureLeaderboardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank updates paused'**
+  String get featureLeaderboardDesc;
+
+  /// No description provided for @featureLeaderboardLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Show and update your rank publicly'**
+  String get featureLeaderboardLongDesc;
+
+  /// No description provided for @featureOnlineLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Online Lyrics Search'**
+  String get featureOnlineLyrics;
+
+  /// No description provided for @featureOnlineLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Only local .lrc/.ttml files'**
+  String get featureOnlineLyricsDesc;
+
+  /// No description provided for @featureOnlineLyricsLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch lyrics from LRCLIB/Spotify'**
+  String get featureOnlineLyricsLongDesc;
+
+  /// No description provided for @featureOnlineSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Online Search'**
+  String get featureOnlineSearch;
+
+  /// No description provided for @featureOnlineSearchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify/YouTube search disabled'**
+  String get featureOnlineSearchDesc;
+
+  /// No description provided for @featureOnlineSearchLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify and YouTube remote search'**
+  String get featureOnlineSearchLongDesc;
+
+  /// No description provided for @featureSpotifyCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify Canvas'**
+  String get featureSpotifyCanvas;
+
+  /// No description provided for @featureSpotifyCanvasDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Background videos disabled'**
+  String get featureSpotifyCanvasDesc;
+
+  /// No description provided for @featureSpotifyCanvasLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Background videos for tracks'**
+  String get featureSpotifyCanvasLongDesc;
+
+  /// No description provided for @fetchingAlacAppleMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching ALAC Lossless from Apple Music...'**
+  String get fetchingAlacAppleMusic;
 
   /// No description provided for @fetchingCanvas.
   ///
@@ -1736,11 +2186,23 @@ abstract class AppLocalizations {
   /// **'General'**
   String get general;
 
+  /// No description provided for @generateAiLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate AI Lyrics'**
+  String get generateAiLyrics;
+
   /// No description provided for @generatingShareCode.
   ///
   /// In en, this message translates to:
   /// **'Generating share code...'**
   String get generatingShareCode;
+
+  /// No description provided for @generationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation Failed'**
+  String get generationFailed;
 
   /// No description provided for @genre.
   ///
@@ -1796,6 +2258,12 @@ abstract class AppLocalizations {
   /// **'Go to \'Local Library\' to select your music folder.'**
   String get goToLocalLibraryToSelect;
 
+  /// No description provided for @gofileDownloadFailedPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic download failed due to strict network or server restrictions.\\n\\nWould you like to open the Gofile download page in your system browser, or copy the link to download manually?'**
+  String get gofileDownloadFailedPrompt;
+
   /// No description provided for @goodAfternoon.
   ///
   /// In en, this message translates to:
@@ -1831,6 +2299,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Grant Permission'**
   String get grantPermission;
+
+  /// No description provided for @guestTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get guestTier;
 
   /// No description provided for @hallOfFameHeader.
   ///
@@ -1946,6 +2420,18 @@ abstract class AppLocalizations {
   /// **'Import from Gallery'**
   String get importFromGallery;
 
+  /// No description provided for @importFromM3u.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from M3U'**
+  String get importFromM3u;
+
+  /// No description provided for @importFromM3uSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import an M3U playlist file'**
+  String get importFromM3uSubtitle;
+
   /// No description provided for @importFromSpotify.
   ///
   /// In en, this message translates to:
@@ -1987,6 +2473,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import Lyrics'**
   String get importLyricsTooltip;
+
+  /// No description provided for @localFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Local File'**
+  String get localFile;
+
+  /// No description provided for @importLocalFileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import .lrc, .ttml, or .txt'**
+  String get importLocalFileSubtitle;
+
+  /// No description provided for @searchFromAppleMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Search from Apple Music'**
+  String get searchFromAppleMusic;
+
+  /// No description provided for @searchAppleMusicSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads LRC/TTML automatically'**
+  String get searchAppleMusicSubtitle;
+
+  /// No description provided for @searchFromSpotifyLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Search from Spotify'**
+  String get searchFromSpotifyLyrics;
+
+  /// No description provided for @searchSpotifyLyricsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads synced lyrics from Spotify'**
+  String get searchSpotifyLyricsSubtitle;
+
+  /// No description provided for @searchFromMusixmatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search from Musixmatch'**
+  String get searchFromMusixmatch;
+
+  /// No description provided for @searchMusixmatchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads synced lyrics from Musixmatch'**
+  String get searchMusixmatchSubtitle;
+
+  /// No description provided for @searchingAppleMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching Apple Music...'**
+  String get searchingAppleMusic;
+
+  /// No description provided for @findingMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding matches...'**
+  String get findingMatches;
+
+  /// No description provided for @noResultsAppleMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found on Apple Music.'**
+  String get noResultsAppleMusic;
+
+  /// No description provided for @selectSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Song'**
+  String get selectSong;
+
+  /// No description provided for @downloadingLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading Lyrics...'**
+  String get downloadingLyrics;
+
+  /// No description provided for @fetchingLyricsFromServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching TTML/LRC from server...'**
+  String get fetchingLyricsFromServer;
+
+  /// No description provided for @failedDownloadAppleMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download lyrics. They might not exist on Apple Music.'**
+  String get failedDownloadAppleMusic;
+
+  /// No description provided for @lyricsImportedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics imported successfully! Press Save to keep them.'**
+  String get lyricsImportedSuccess;
+
+  /// No description provided for @receivedEmptyLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Received empty lyrics from server.'**
+  String get receivedEmptyLyrics;
+
+  /// No description provided for @downloadingFromSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading from Spotify...'**
+  String get downloadingFromSpotify;
+
+  /// No description provided for @fetchingLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching lyrics...'**
+  String get fetchingLyrics;
+
+  /// No description provided for @lyricsImportedSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics imported from Spotify!'**
+  String get lyricsImportedSpotify;
+
+  /// No description provided for @noLyricsSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics found on Spotify.'**
+  String get noLyricsSpotify;
+
+  /// No description provided for @downloadingFromMusixmatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading from Musixmatch...'**
+  String get downloadingFromMusixmatch;
+
+  /// No description provided for @lyricsImportedMusixmatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics imported from Musixmatch!'**
+  String get lyricsImportedMusixmatch;
+
+  /// No description provided for @noLyricsMusixmatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics found on Musixmatch.'**
+  String get noLyricsMusixmatch;
 
   /// No description provided for @importSpotifyPlaylist.
   ///
@@ -2042,6 +2672,12 @@ abstract class AppLocalizations {
   /// **'Input'**
   String get inputLabel;
 
+  /// No description provided for @insertAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert After'**
+  String get insertAfter;
+
   /// No description provided for @installNow.
   ///
   /// In en, this message translates to:
@@ -2065,6 +2701,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid Access Code'**
   String get invalidCode;
+
+  /// No description provided for @invalidM3uFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid M3U File'**
+  String get invalidM3uFile;
 
   /// No description provided for @invalidSpotifyUrl.
   ///
@@ -2180,6 +2822,18 @@ abstract class AppLocalizations {
   /// **'Sync and restore your progress with Google'**
   String get linkAccountDesc;
 
+  /// No description provided for @linkAccountToUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to link your account first to upgrade. Please use the same email on Sociabuzz!'**
+  String get linkAccountToUpgrade;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied to clipboard!'**
+  String get linkCopied;
+
   /// No description provided for @listenMinutesTooltip.
   ///
   /// In en, this message translates to:
@@ -2258,17 +2912,47 @@ abstract class AppLocalizations {
   /// **'Lossless (Auto)'**
   String get losslessQuality;
 
+  /// No description provided for @lrcFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'LRC (Standard Synced)'**
+  String get lrcFormat;
+
+  /// No description provided for @lrcFormatDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Universal format, works everywhere.'**
+  String get lrcFormatDesc;
+
   /// No description provided for @lunarNewYear.
   ///
   /// In en, this message translates to:
   /// **'Lunar New Year'**
   String get lunarNewYear;
 
+  /// No description provided for @lyricTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyric text...'**
+  String get lyricTextHint;
+
+  /// No description provided for @lyricsApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics applied to panel!'**
+  String get lyricsApplied;
+
   /// No description provided for @lyricsByLRCLIB.
   ///
   /// In en, this message translates to:
   /// **'Lyrics by LRCLIB'**
   String get lyricsByLRCLIB;
+
+  /// No description provided for @lyricsEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics Editor'**
+  String get lyricsEditorTitle;
 
   /// No description provided for @lyricsSaveError.
   ///
@@ -2293,6 +2977,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Made For You'**
   String get madeForYou;
+
+  /// No description provided for @manageIndividualFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage individual online features'**
+  String get manageIndividualFeatures;
 
   /// No description provided for @manualSearch.
   ///
@@ -2720,6 +3410,66 @@ abstract class AppLocalizations {
   /// **'Offline'**
   String get offline;
 
+  /// No description provided for @offlineModeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE'**
+  String get offlineModeActive;
+
+  /// No description provided for @offlineModeAllEnabledStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'All Enabled'**
+  String get offlineModeAllEnabledStatus;
+
+  /// No description provided for @offlineModeConfirmationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This will completely disable all network communication. The following features will be turned off:'**
+  String get offlineModeConfirmationDesc;
+
+  /// No description provided for @offlineModeDisabledStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled ({count})'**
+  String offlineModeDisabledStatus(int count);
+
+  /// No description provided for @offlineModeEnabledStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Mode Enabled'**
+  String get offlineModeEnabledStatus;
+
+  /// No description provided for @offlineModeHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'OFFLINE MODE'**
+  String get offlineModeHeader;
+
+  /// No description provided for @offlineModeLockdownDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Network lockdown active. Stats are saved locally.'**
+  String get offlineModeLockdownDesc;
+
+  /// No description provided for @offlineModeMainDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable all network services and play local library only.'**
+  String get offlineModeMainDesc;
+
+  /// No description provided for @offlineModeSyncRestoreNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stats will sync automatically when you turn this off.'**
+  String get offlineModeSyncRestoreNote;
+
+  /// No description provided for @offlineModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Mode'**
+  String get offlineModeTitle;
+
   /// No description provided for @offlineStatus.
   ///
   /// In en, this message translates to:
@@ -2738,11 +3488,29 @@ abstract class AppLocalizations {
   /// **'Online'**
   String get online;
 
+  /// No description provided for @onlineModeRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Online mode restored. Syncing stats...'**
+  String get onlineModeRestored;
+
+  /// No description provided for @onlyAppleMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Apple Music'**
+  String get onlyAppleMusic;
+
   /// No description provided for @onlyScanSelected.
   ///
   /// In en, this message translates to:
   /// **'Only scan selected folder (Default: On)'**
   String get onlyScanSelected;
+
+  /// No description provided for @onlySpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Spotify'**
+  String get onlySpotify;
 
   /// No description provided for @opacity.
   ///
@@ -2755,6 +3523,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Opacity: {percent}%'**
   String opacityLabel(int percent);
+
+  /// No description provided for @openBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Browser'**
+  String get openBrowser;
 
   /// No description provided for @openProfile.
   ///
@@ -2786,11 +3560,23 @@ abstract class AppLocalizations {
   /// **'This song already has a local .lrc file.\nDo you want to overwrite it?'**
   String get overwriteLrcWarning;
 
+  /// No description provided for @owned.
+  ///
+  /// In en, this message translates to:
+  /// **'Owned'**
+  String get owned;
+
   /// No description provided for @parsingPlaylistData.
   ///
   /// In en, this message translates to:
   /// **'Parsing playlist data...'**
   String get parsingPlaylistData;
+
+  /// No description provided for @pasteLyricsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste your lyrics here...'**
+  String get pasteLyricsHint;
 
   /// No description provided for @pathLabel.
   ///
@@ -2810,6 +3596,12 @@ abstract class AppLocalizations {
   /// **'To edit tags, we need \'All Files Access\' permission. This allows us to modify your music files directly.'**
   String get permissionRequiredDesc;
 
+  /// No description provided for @plainMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain'**
+  String get plainMode;
+
   /// No description provided for @play.
   ///
   /// In en, this message translates to:
@@ -2821,6 +3613,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} plays'**
   String playCountLabel(int count);
+
+  /// No description provided for @playFromLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Play from this line'**
+  String get playFromLine;
 
   /// No description provided for @playNext.
   ///
@@ -2930,11 +3728,35 @@ abstract class AppLocalizations {
   /// **'Portuguese'**
   String get portuguese;
 
+  /// No description provided for @preferAppleMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer Apple Music'**
+  String get preferAppleMusic;
+
+  /// No description provided for @preferSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer Spotify'**
+  String get preferSpotify;
+
   /// No description provided for @preferredOutputFormat.
   ///
   /// In en, this message translates to:
   /// **'Preferred output format for downloads'**
   String get preferredOutputFormat;
+
+  /// No description provided for @premiumMemberDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You have Unlimited ALAC Downloads and Priority Queue access!'**
+  String get premiumMemberDesc;
+
+  /// No description provided for @premiumMemberTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Member'**
+  String get premiumMemberTitle;
 
   /// No description provided for @preparingDownload.
   ///
@@ -2971,6 +3793,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Previous Track'**
   String get previousTrack;
+
+  /// No description provided for @priorityVipServerQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority VIP Server Queue'**
+  String get priorityVipServerQueue;
+
+  /// No description provided for @processingOnServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing on server...'**
+  String get processingOnServer;
 
   /// No description provided for @profileSettings.
   ///
@@ -3013,6 +3847,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Queue is empty'**
   String get queueIsEmpty;
+
+  /// No description provided for @queuePositionPleaseWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue {position}... please wait'**
+  String queuePositionPleaseWait(int position);
 
   /// No description provided for @queueTooltip.
   ///
@@ -3146,6 +3986,12 @@ abstract class AppLocalizations {
   /// **'Refresh Lyrics'**
   String get refreshLyricsTooltip;
 
+  /// No description provided for @registeredLinkedTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered (Linked)'**
+  String get registeredLinkedTier;
+
   /// No description provided for @removeAvatar.
   ///
   /// In en, this message translates to:
@@ -3157,6 +4003,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove from Playlist'**
   String get removeFromPlaylist;
+
+  /// No description provided for @removeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Line'**
+  String get removeLine;
 
   /// No description provided for @removedFolder.
   ///
@@ -3181,6 +4033,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'repeats'**
   String get repeats;
+
+  /// No description provided for @reportTrouble.
+  ///
+  /// In en, this message translates to:
+  /// **'Report trouble'**
+  String get reportTrouble;
 
   /// No description provided for @requiresAndroid14.
   ///
@@ -3320,6 +4178,12 @@ abstract class AppLocalizations {
   /// **'Revert'**
   String get revert;
 
+  /// No description provided for @romajiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Romaji / Transliteration (Optional)...'**
+  String get romajiHint;
+
   /// No description provided for @russian.
   ///
   /// In en, this message translates to:
@@ -3368,11 +4232,23 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get saveLabel;
 
+  /// No description provided for @saveLocallyBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Locally'**
+  String get saveLocallyBtn;
+
   /// No description provided for @saveLrcPrompt.
   ///
   /// In en, this message translates to:
   /// **'Save current lyrics next to the audio file?'**
   String get saveLrcPrompt;
+
+  /// No description provided for @saveLyricsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Lyrics'**
+  String get saveLyricsTitle;
 
   /// No description provided for @saveLyricsTooltip.
   ///
@@ -3409,6 +4285,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved as {format}'**
   String savedAsFormat(String format);
+
+  /// No description provided for @savedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {extension} file successfully!'**
+  String savedSuccessfully(String extension);
 
   /// No description provided for @savedTo.
   ///
@@ -3554,6 +4436,18 @@ abstract class AppLocalizations {
   /// **'See all'**
   String get seeAll;
 
+  /// No description provided for @seeBenefitsBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'See benefits'**
+  String get seeBenefitsBtn;
+
+  /// No description provided for @seePremiumBenefits.
+  ///
+  /// In en, this message translates to:
+  /// **'See Premium Benefits'**
+  String get seePremiumBenefits;
+
   /// No description provided for @selectDifferentFolder.
   ///
   /// In en, this message translates to:
@@ -3613,6 +4507,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set Custom Timer'**
   String get setCustomTimer;
+
+  /// No description provided for @setEndTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Set End to Current Position'**
+  String get setEndTooltip;
+
+  /// No description provided for @setStartTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Start to Current Position'**
+  String get setStartTooltip;
 
   /// No description provided for @settings.
   ///
@@ -3758,6 +4664,12 @@ abstract class AppLocalizations {
   /// **'SONG'**
   String get songLabelUpper;
 
+  /// No description provided for @songQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Song Queue'**
+  String get songQueueTitle;
+
   /// No description provided for @songTitleKeyword.
   ///
   /// In en, this message translates to:
@@ -3818,6 +4730,12 @@ abstract class AppLocalizations {
   /// **'MP3 - Smaller files, faster buffering'**
   String get standardDesc;
 
+  /// No description provided for @standardDownloadQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard Download Queue'**
+  String get standardDownloadQueue;
+
   /// No description provided for @standardQuality.
   ///
   /// In en, this message translates to:
@@ -3835,6 +4753,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start Bulk Process'**
   String get startBulkProcess;
+
+  /// No description provided for @startLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Start: '**
+  String get startLabel;
 
   /// No description provided for @startedDownloadingAll.
   ///
@@ -3943,6 +4867,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync Theme with Album Art'**
   String get syncThemeAlbumArt;
+
+  /// No description provided for @syncedMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get syncedMode;
 
   /// No description provided for @system.
   ///
@@ -4142,6 +5072,18 @@ abstract class AppLocalizations {
   /// **'Translation Language'**
   String get translationLanguage;
 
+  /// No description provided for @ttmlFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'TTML (High Precision)'**
+  String get ttmlFormat;
+
+  /// No description provided for @ttmlFormatDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Better for AI generation & detailed sync.'**
+  String get ttmlFormatDesc;
+
   /// No description provided for @turnOffTimer.
   ///
   /// In en, this message translates to:
@@ -4196,6 +5138,12 @@ abstract class AppLocalizations {
   /// **'Unknown Device'**
   String get unknownDevice;
 
+  /// No description provided for @unlimitedAlacDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited ALAC Downloads'**
+  String get unlimitedAlacDownloads;
+
   /// No description provided for @unlink.
   ///
   /// In en, this message translates to:
@@ -4231,6 +5179,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlink folder and clear song list'**
   String get unlinkFolderClear;
+
+  /// No description provided for @unlockUnlimitedPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Unlimited Premium'**
+  String get unlockUnlimitedPremium;
 
   /// No description provided for @unlockedCountLabel.
   ///
@@ -4328,6 +5282,18 @@ abstract class AppLocalizations {
   /// **'Use mixed colors (Overrides sync)'**
   String get useMixedColors;
 
+  /// No description provided for @useSameEmailCheckStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the same email as in-app to automatically check status.'**
+  String get useSameEmailCheckStatus;
+
+  /// No description provided for @usedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} / {max} Used Today'**
+  String usedToday(int used, int max);
+
   /// No description provided for @verifiedDeveloper.
   ///
   /// In en, this message translates to:
@@ -4369,6 +5335,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Visualizer Style'**
   String get visualizerStyle;
+
+  /// No description provided for @waitingForServerResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for server response...'**
+  String get waitingForServerResponse;
 
   /// No description provided for @wasapiExclusive.
   ///
@@ -4441,588 +5413,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A new version of yt-dlp is available.'**
   String get ytDlpUpdateAvailable;
-
-  /// No description provided for @importFromM3u.
-  ///
-  /// In en, this message translates to:
-  /// **'Import from M3U'**
-  String get importFromM3u;
-
-  /// No description provided for @importFromM3uSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Import an M3U playlist file'**
-  String get importFromM3uSubtitle;
-
-  /// No description provided for @exportToM3u.
-  ///
-  /// In en, this message translates to:
-  /// **'Export to M3U'**
-  String get exportToM3u;
-
-  /// No description provided for @invalidM3uFile.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid M3U File'**
-  String get invalidM3uFile;
-
-  /// No description provided for @generateAiLyrics.
-  ///
-  /// In en, this message translates to:
-  /// **'Generate AI Lyrics'**
-  String get generateAiLyrics;
-
-  /// No description provided for @aiLyricsGenerating.
-  ///
-  /// In en, this message translates to:
-  /// **'Generating AI Lyrics...'**
-  String get aiLyricsGenerating;
-
-  /// No description provided for @aiLyricsFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to generate AI lyrics.'**
-  String get aiLyricsFailed;
-
-  /// No description provided for @aiLyricsError.
-  ///
-  /// In en, this message translates to:
-  /// **'Error generating AI lyrics.'**
-  String get aiLyricsError;
-
-  /// No description provided for @offlineModeHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'OFFLINE MODE'**
-  String get offlineModeHeader;
-
-  /// No description provided for @offlineModeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline Mode'**
-  String get offlineModeTitle;
-
-  /// No description provided for @offlineModeActive.
-  ///
-  /// In en, this message translates to:
-  /// **'ACTIVE'**
-  String get offlineModeActive;
-
-  /// No description provided for @offlineModeEnabledStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline Mode Enabled'**
-  String get offlineModeEnabledStatus;
-
-  /// No description provided for @offlineModeDisabledStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Disabled ({count})'**
-  String offlineModeDisabledStatus(int count);
-
-  /// No description provided for @offlineModeAllEnabledStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'All Enabled'**
-  String get offlineModeAllEnabledStatus;
-
-  /// No description provided for @offlineModeLockdownDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Network lockdown active. Stats are saved locally.'**
-  String get offlineModeLockdownDesc;
-
-  /// No description provided for @offlineModeMainDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Disable all network services and play local library only.'**
-  String get offlineModeMainDesc;
-
-  /// No description provided for @enableOfflineModeQuestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable Offline Mode?'**
-  String get enableOfflineModeQuestion;
-
-  /// No description provided for @offlineModeConfirmationDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'This will completely disable all network communication. The following features will be turned off:'**
-  String get offlineModeConfirmationDesc;
-
-  /// No description provided for @offlineModeSyncRestoreNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Your stats will sync automatically when you turn this off.'**
-  String get offlineModeSyncRestoreNote;
-
-  /// No description provided for @enableOfflineModeBtn.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable Offline Mode'**
-  String get enableOfflineModeBtn;
-
-  /// No description provided for @onlineModeRestored.
-  ///
-  /// In en, this message translates to:
-  /// **'Online mode restored. Syncing stats...'**
-  String get onlineModeRestored;
-
-  /// No description provided for @disableServicesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Disable Services'**
-  String get disableServicesTitle;
-
-  /// No description provided for @manageIndividualFeatures.
-  ///
-  /// In en, this message translates to:
-  /// **'Manage individual online features'**
-  String get manageIndividualFeatures;
-
-  /// No description provided for @featureCloudSync.
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud Stats Sync'**
-  String get featureCloudSync;
-
-  /// No description provided for @featureCloudSyncDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Listening stats saved locally only'**
-  String get featureCloudSyncDesc;
-
-  /// No description provided for @featureCloudSyncLongDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync listening metrics with PocketBase'**
-  String get featureCloudSyncLongDesc;
-
-  /// No description provided for @featureLeaderboard.
-  ///
-  /// In en, this message translates to:
-  /// **'Global Leaderboard'**
-  String get featureLeaderboard;
-
-  /// No description provided for @featureLeaderboardDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Rank updates paused'**
-  String get featureLeaderboardDesc;
-
-  /// No description provided for @featureLeaderboardLongDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Show and update your rank publicly'**
-  String get featureLeaderboardLongDesc;
-
-  /// No description provided for @featureOnlineLyrics.
-  ///
-  /// In en, this message translates to:
-  /// **'Online Lyrics Search'**
-  String get featureOnlineLyrics;
-
-  /// No description provided for @featureOnlineLyricsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Only local .lrc/.ttml files'**
-  String get featureOnlineLyricsDesc;
-
-  /// No description provided for @featureOnlineLyricsLongDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Fetch lyrics from LRCLIB/Spotify'**
-  String get featureOnlineLyricsLongDesc;
-
-  /// No description provided for @featureAiLyrics.
-  ///
-  /// In en, this message translates to:
-  /// **'AI Lyrics Generator'**
-  String get featureAiLyrics;
-
-  /// No description provided for @featureAiLyricsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic synchronized lyrics disabled'**
-  String get featureAiLyricsDesc;
-
-  /// No description provided for @featureAiLyricsLongDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Generate synchronized lyrics via AI'**
-  String get featureAiLyricsLongDesc;
-
-  /// No description provided for @featureSpotifyCanvas.
-  ///
-  /// In en, this message translates to:
-  /// **'Spotify Canvas'**
-  String get featureSpotifyCanvas;
-
-  /// No description provided for @featureSpotifyCanvasDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Background videos disabled'**
-  String get featureSpotifyCanvasDesc;
-
-  /// No description provided for @featureSpotifyCanvasLongDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Background videos for tracks'**
-  String get featureSpotifyCanvasLongDesc;
-
-  /// No description provided for @featureOnlineSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Online Search'**
-  String get featureOnlineSearch;
-
-  /// No description provided for @featureOnlineSearchDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Spotify/YouTube search disabled'**
-  String get featureOnlineSearchDesc;
-
-  /// No description provided for @featureOnlineSearchLongDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Spotify and YouTube remote search'**
-  String get featureOnlineSearchLongDesc;
-
-  /// No description provided for @featureConnectDevice.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to a Device'**
-  String get featureConnectDevice;
-
-  /// No description provided for @featureConnectDeviceDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Remote control & Listening parties disabled'**
-  String get featureConnectDeviceDesc;
-
-  /// No description provided for @featureConnectDeviceLongDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Remote control and listening parties'**
-  String get featureConnectDeviceLongDesc;
-
-  /// No description provided for @lyricsEditorTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Lyrics Editor'**
-  String get lyricsEditorTitle;
-
-  /// No description provided for @clearAllQuestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear All?'**
-  String get clearAllQuestion;
-
-  /// No description provided for @clearAllDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'This will clear the current editor state. It will NOT delete your local files unless you Save afterwards.'**
-  String get clearAllDesc;
-
-  /// No description provided for @clearBtn.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get clearBtn;
-
-  /// No description provided for @lyricsApplied.
-  ///
-  /// In en, this message translates to:
-  /// **'Lyrics applied to panel!'**
-  String get lyricsApplied;
-
-  /// No description provided for @chooseFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose your preferred format:'**
-  String get chooseFormat;
-
-  /// No description provided for @lrcFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'LRC (Standard Synced)'**
-  String get lrcFormat;
-
-  /// No description provided for @lrcFormatDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Universal format, works everywhere.'**
-  String get lrcFormatDesc;
-
-  /// No description provided for @ttmlFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'TTML (High Precision)'**
-  String get ttmlFormat;
-
-  /// No description provided for @ttmlFormatDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Better for AI generation & detailed sync.'**
-  String get ttmlFormatDesc;
-
-  /// No description provided for @savedSuccessfully.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved to {extension} file successfully!'**
-  String savedSuccessfully(String extension);
-
-  /// No description provided for @failedToSave.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to save lyrics file.'**
-  String get failedToSave;
-
-  /// No description provided for @generationFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Generation Failed'**
-  String get generationFailed;
-
-  /// No description provided for @aiLyricsGenerationTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'AI Lyrics Generation'**
-  String get aiLyricsGenerationTitle;
-
-  /// No description provided for @syncedMode.
-  ///
-  /// In en, this message translates to:
-  /// **'Synced'**
-  String get syncedMode;
-
-  /// No description provided for @plainMode.
-  ///
-  /// In en, this message translates to:
-  /// **'Plain'**
-  String get plainMode;
-
-  /// No description provided for @addLineToTop.
-  ///
-  /// In en, this message translates to:
-  /// **'Add to Top'**
-  String get addLineToTop;
-
-  /// No description provided for @addLineToEnd.
-  ///
-  /// In en, this message translates to:
-  /// **'Add to End'**
-  String get addLineToEnd;
-
-  /// No description provided for @lyricTextHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Lyric text...'**
-  String get lyricTextHint;
-
-  /// No description provided for @insertAfter.
-  ///
-  /// In en, this message translates to:
-  /// **'Insert After'**
-  String get insertAfter;
-
-  /// No description provided for @removeLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove Line'**
-  String get removeLine;
-
-  /// No description provided for @romajiHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Romaji / Transliteration (Optional)...'**
-  String get romajiHint;
-
-  /// No description provided for @startLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Start: '**
-  String get startLabel;
-
-  /// No description provided for @setStartTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Set Start to Current Position'**
-  String get setStartTooltip;
-
-  /// No description provided for @endLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'End: '**
-  String get endLabel;
-
-  /// No description provided for @setEndTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Set End to Current Position'**
-  String get setEndTooltip;
-
-  /// No description provided for @playFromLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Play from this line'**
-  String get playFromLine;
-
-  /// No description provided for @pasteLyricsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Paste your lyrics here...'**
-  String get pasteLyricsHint;
-
-  /// No description provided for @applyBtn.
-  ///
-  /// In en, this message translates to:
-  /// **'Apply'**
-  String get applyBtn;
-
-  /// No description provided for @saveLocallyBtn.
-  ///
-  /// In en, this message translates to:
-  /// **'Save Locally'**
-  String get saveLocallyBtn;
-
-  /// No description provided for @editLyricsTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Lyrics'**
-  String get editLyricsTooltip;
-
-  /// No description provided for @saveLyricsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Save Lyrics'**
-  String get saveLyricsTitle;
-
-  /// No description provided for @aiGenerate.
-  ///
-  /// In en, this message translates to:
-  /// **'AI Generate'**
-  String get aiGenerate;
-
-  /// No description provided for @aiLyricsInitializing.
-  ///
-  /// In en, this message translates to:
-  /// **'Initializing...'**
-  String get aiLyricsInitializing;
-
-  /// No description provided for @aiLyricsUploading.
-  ///
-  /// In en, this message translates to:
-  /// **'Uploading song to server...'**
-  String get aiLyricsUploading;
-
-  /// No description provided for @aiLyricsUploadFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Error: Upload failed.'**
-  String get aiLyricsUploadFailed;
-
-  /// No description provided for @aiLyricsUploadSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload completed!'**
-  String get aiLyricsUploadSuccess;
-
-  /// No description provided for @aiLyricsVerifying.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify status server...'**
-  String get aiLyricsVerifying;
-
-  /// No description provided for @aiLyricsStatusOk.
-  ///
-  /// In en, this message translates to:
-  /// **'Status code 200 OK!'**
-  String get aiLyricsStatusOk;
-
-  /// No description provided for @aiLyricsPolling.
-  ///
-  /// In en, this message translates to:
-  /// **'Getting Lyrics... Please be patient!'**
-  String get aiLyricsPolling;
-
-  /// No description provided for @aiLyricsReceiving.
-  ///
-  /// In en, this message translates to:
-  /// **'Lyrics Received'**
-  String get aiLyricsReceiving;
-
-  /// No description provided for @aiLyricsParsing.
-  ///
-  /// In en, this message translates to:
-  /// **'Parsing Lyrics...'**
-  String get aiLyricsParsing;
-
-  /// No description provided for @aiLyricsSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Lyrics generated successful!'**
-  String get aiLyricsSuccess;
-
-  /// No description provided for @aiLyricsLocalFileMissing.
-  ///
-  /// In en, this message translates to:
-  /// **'Error: Local audio file not found.'**
-  String get aiLyricsLocalFileMissing;
-
-  /// No description provided for @aiLyricsComplete.
-  ///
-  /// In en, this message translates to:
-  /// **'Complete!'**
-  String get aiLyricsComplete;
-
-  /// No description provided for @externalLinkDetected.
-  ///
-  /// In en, this message translates to:
-  /// **'External Link Detected'**
-  String get externalLinkDetected;
-
-  /// No description provided for @gofileDownloadFailedPrompt.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic download failed due to strict network or server restrictions.\\n\\nWould you like to open the Gofile download page in your system browser, or copy the link to download manually?'**
-  String get gofileDownloadFailedPrompt;
-
-  /// No description provided for @copyLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy Link'**
-  String get copyLink;
-
-  /// No description provided for @openBrowser.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Browser'**
-  String get openBrowser;
-
-  /// No description provided for @linkCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'Link copied to clipboard!'**
-  String get linkCopied;
-
-  /// No description provided for @waitingForServerResponse.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for server response...'**
-  String get waitingForServerResponse;
-
-  /// No description provided for @queuePositionPleaseWait.
-  ///
-  /// In en, this message translates to:
-  /// **'Queue {position}... please wait'**
-  String queuePositionPleaseWait(int position);
-
-  /// No description provided for @processingOnServer.
-  ///
-  /// In en, this message translates to:
-  /// **'Processing on server...'**
-  String get processingOnServer;
 }
 
 class _AppLocalizationsDelegate

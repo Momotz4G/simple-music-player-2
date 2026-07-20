@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/song_metadata.dart';
@@ -41,12 +42,12 @@ class DeezerService {
             isrc:
                 null, // Search result usually lacks ISRC, needs detailed fetch if critical
             spotifyId: null, // It's Deezer
-            deezerId: item['id'].toString(), // 🚀 CAPTURE DEEZER ID
+            deezerId: item['id'].toString(), // CAPTURE DEEZER ID
           );
         }).toList();
       }
     } catch (e) {
-      print("Deezer Search Error: $e");
+      debugPrint("Deezer Search Error: $e");
     }
     return <SongMetadata>[];
   }
@@ -60,7 +61,7 @@ class DeezerService {
         return results.first.albumArtUrl;
       }
     } catch (e) {
-      print("Deezer getTrackImage Error: $e");
+      debugPrint("Deezer getTrackImage Error: $e");
     }
     return null;
   }
@@ -84,7 +85,7 @@ class DeezerService {
         }
       }
     } catch (e) {
-      print("Deezer Artist Error: $e");
+      debugPrint("Deezer Artist Error: $e");
     }
     return null;
   }
@@ -106,7 +107,7 @@ class DeezerService {
         );
       }
     } catch (e) {
-      print("Deezer Artist ID Error: $e");
+      debugPrint("Deezer Artist ID Error: $e");
     }
     return null;
   }
@@ -134,11 +135,11 @@ class DeezerService {
           year: data['release_date']?.split('-')?.first ?? "",
           isrc: data['isrc'],
           spotifyId: null,
-          deezerId: data['id'].toString(), // 🚀 CAPTURE DEEZER ID
+          deezerId: data['id'].toString(), // CAPTURE DEEZER ID
         );
       }
     } catch (e) {
-      print("Deezer Track Error: $e");
+      debugPrint("Deezer Track Error: $e");
     }
     return null;
   }
@@ -167,11 +168,11 @@ class DeezerService {
           year: data['release_date']?.split('-')?.first ?? "",
           isrc: data['isrc'],
           spotifyId: null,
-          deezerId: data['id'].toString(), // 🚀 CAPTURE DEEZER ID
+          deezerId: data['id'].toString(), // CAPTURE DEEZER ID
         );
       }
     } catch (e) {
-      print("Deezer ISRC Search Error: $e");
+      debugPrint("Deezer ISRC Search Error: $e");
     }
     return null;
   }
@@ -203,12 +204,12 @@ class DeezerService {
             genre: "Pop",
             year: "",
             isrc: item['isrc'], // Deezer album tracks often HAVE ISRC
-            deezerId: item['id'].toString(), // 🚀 CAPTURE DEEZER ID
+            deezerId: item['id'].toString(), // CAPTURE DEEZER ID
           );
         }).toList();
       }
     } catch (e) {
-      print("Deezer Album Tracks Error: $e");
+      debugPrint("Deezer Album Tracks Error: $e");
     }
     return <SongMetadata>[];
   }
@@ -236,12 +237,12 @@ class DeezerService {
             discNumber: 0,
             genre: "Pop",
             year: "",
-            deezerId: item['id'].toString(), // 🚀 CAPTURE DEEZER ID
+            deezerId: item['id'].toString(), // CAPTURE DEEZER ID
           );
         }).toList();
       }
     } catch (e) {
-      print("Deezer Top Tracks Error: $e");
+      debugPrint("Deezer Top Tracks Error: $e");
     }
     return <SongMetadata>[];
   }
@@ -262,7 +263,7 @@ class DeezerService {
         'artists': futures[2],
       };
     } catch (e) {
-      print("Deezer Search All Error: $e");
+      debugPrint("Deezer Search All Error: $e");
     }
     return {'songs': [], 'albums': [], 'artists': []};
   }
@@ -291,7 +292,9 @@ class DeezerService {
           );
         }).toList();
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("Deezer Search Albums Error: $e");
+    }
     return <AlbumModel>[];
   }
 
@@ -316,7 +319,7 @@ class DeezerService {
         }).toList();
       }
     } catch (e) {
-      print("Deezer Artist Albums Error: $e");
+      debugPrint("Deezer Artist Albums Error: $e");
     }
     return <AlbumModel>[];
   }
@@ -343,7 +346,7 @@ class DeezerService {
         }).toList();
       }
     } catch (e) {
-      print("Deezer Chart Error: $e");
+      debugPrint("Deezer Chart Error: $e");
     }
     return <Map<String, dynamic>>[];
   }
@@ -365,7 +368,9 @@ class DeezerService {
           );
         }).toList();
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("Deezer Search Artists Error: $e");
+    }
     return <ArtistModel>[];
   }
 }
