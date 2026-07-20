@@ -77,4 +77,10 @@ ai-lyrics-generator/
 backend/
 vps-monitor/
 Apple-Music-API/
-
+Update/
+Apple-Music-API-v2/
+Apple-Music-API-v2_backup/
+tidal-api-go/
+cpp_audio_engine/*
+!cpp_audio_engine/NOTICE.md
+releases.json
