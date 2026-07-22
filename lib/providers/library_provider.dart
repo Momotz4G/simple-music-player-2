@@ -221,16 +221,16 @@ class LibraryProvider extends ChangeNotifier {
         ? CuePath.extractAudioPath(dbSong.path)
         : dbSong.path;
     return SongModel(
-      title: dbSong.title,
-      artist: dbSong.artist,
-      album: dbSong.album ?? "Unknown Album",
+      title: MetadataService.fixMojibake(dbSong.title),
+      artist: MetadataService.fixMojibake(dbSong.artist),
+      album: MetadataService.fixMojibake(dbSong.album ?? "Unknown Album"),
       duration: dbSong.duration,
       filePath: dbSong.path,
       fileExtension: p.extension(effectivePath),
       year: dbSong.year,
       trackNumber: dbSong.trackNumber,
       discNumber: dbSong.discNumber,
-      genre: dbSong.genre,
+      genre: dbSong.genre != null ? MetadataService.fixMojibake(dbSong.genre!) : null,
       dateAdded: dbSong.dateAdded,
     );
   }

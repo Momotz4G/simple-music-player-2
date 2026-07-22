@@ -1265,6 +1265,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         size: 16,
                         color: isDark ? Colors.white54 : Colors.black54),
                     onDeleted: () async {
+                      await ref.read(libraryProvider.notifier).removeFolderByPath(folder);
                       await settingsNotifier.removeMusicFolder(folder);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
