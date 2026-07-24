@@ -636,6 +636,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         final pos = _musicService.position;
         final currentSecs = pos.inMilliseconds / 1000.0;
         
+        // Ignore stale position updates from a previous song during transition/crossfade
+        if (state.totalDuration > 0 && currentSecs > state.totalDuration) return;
+        if (state.currentPosition < 1.0 && currentSecs > 5.0) return;
+        
         // If the native engine position is completely stuck but we are still in a playing state,
         // we force the slider to interpolate forward.
         if (currentSecs == _lastEngineSecs && state.isPlaying && state.totalDuration > 0) {
@@ -702,6 +706,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       final currentSecs = position.inMilliseconds / 1000.0;
       final duration = state.totalDuration;
 
+      // Ignore stale position updates from a previous song during transition/crossfade
+      if (duration > 0 && currentSecs > duration) return;
+      if (state.currentPosition < 1.0 && currentSecs > 5.0) return;
+
       // Stale position stream protection:
       // Completely block position stream events while the engine is being swapped
       if (_isTransitioning) return;
@@ -749,7 +757,14 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         return;
       }
 
-      if (_isHandlingCompletion) return;
+      if (_isHandlingCompletion) {
+        final timeSinceRequest = DateTime.now().difference(_lastPlayRequestTime).inMilliseconds;
+        if (timeSinceRequest < 1500) {
+          DebugLogService().info(
+              "[Player] Ignoring spurious error during transition ($timeSinceRequest ms since request): $error");
+          return;
+        }
+      }
 
       // RETRY CURRENT SONG: If we haven't exhausted retries, try to resume
       // the same song at the last known position instead of skipping.
@@ -849,12 +864,18 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       if (processingState == ja.ProcessingState.idle &&
           isPlaying &&
           state.isPlaying) {
-        if (_isHandlingCompletion ||
+        final timeSinceRequest = DateTime.now().difference(_lastPlayRequestTime).inMilliseconds;
+        final isRecentTransition = _isHandlingCompletion && timeSinceRequest < 1500;
+        if (isRecentTransition ||
             _isLooping ||
             _isRecoveringFromCrash ||
             _musicService.isSeeking ||
             _musicService.isLoading ||
             _musicService.isCrossfading) {
+          if (isRecentTransition) {
+            DebugLogService().info(
+                "[Player] Ignoring unexpected idle during transition ($timeSinceRequest ms since request)");
+          }
           return;
         }
         _isRecoveringFromCrash = true;
@@ -2406,6 +2427,27 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
 
     if (_playlistIndex == -1) _playlistIndex = 0;
+
+    // 0. PRE-EMPTIVE CACHE CHECK
+    // Even if the DB says it's an HTTP URL or 'cloud_stream', check if it's already downloaded.
+    final meta = SongMetadata(
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      albumArtUrl: song.onlineArtUrl ?? "",
+      durationSeconds: song.duration.toInt(),
+      year: "",
+      genre: "",
+      isrc: song.isrc,
+      spotifyId: song.spotifyId,
+      spotifyArtistId: song.spotifyArtistId,
+      deezerId: song.deezerId,
+    );
+    
+    final preCheckPath = await _smartService.getPredictedCachePath(meta);
+    if (await File(preCheckPath).exists() && await File(preCheckPath).length() > 1024) {
+      song = song.copyWith(filePath: preCheckPath);
+    }
 
     // JIT CACHING CHECK
     final isHttp = song.filePath.startsWith('http://') ||

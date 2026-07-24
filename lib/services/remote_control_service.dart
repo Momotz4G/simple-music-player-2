@@ -56,6 +56,7 @@ class RemoteControlService {
   }
 
   Timer? _pollingTimer;
+  bool _isListening = false;
 
   // Start listening for commands
   Future<void> startListening(
@@ -63,27 +64,44 @@ class RemoteControlService {
     
     if (PocketBaseService.isOffline || !PocketBaseService.enableRemoteControl) return; // 🔒 OFFLINE or Remote Disabled
     
+    _isListening = true;
+
     // 0. FETCH INITIAL STATE IMMEDIATELY
     final initialSession = await PocketBaseService().getSessionData();
-    if (initialSession != null) {
+    if (initialSession != null && _isListening) {
       _checkAndProcessCommand(initialSession, onCommand, isInitial: true);
     }
     
     // 1. Setup Realtime Subscription (Best Effort)
     await PocketBaseService().subscribeToSession((data) {
-      _checkAndProcessCommand(data, onCommand);
+      if (_isListening) {
+        _checkAndProcessCommand(data, onCommand);
+      }
     });
 
     // 2. Setup Polling Fallback (Reliability)
-    // Run every 1.5 seconds to ensure fast remote control feeling if Realtime SSE drops
+    // Runs sequentially with a 1.5 second delay between the completion of one request and the start of the next.
+    // This prevents request flooding and piling on slow connections.
     _pollingTimer?.cancel();
-    _pollingTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) async {
-      if (_userId == null) return;
-      final sessionData = await PocketBaseService().getSessionData();
-      if (sessionData != null) {
-        _checkAndProcessCommand(sessionData, onCommand);
+    _pollingTimer = null;
+    _runPollingLoop(onCommand);
+  }
+
+  Future<void> _runPollingLoop(Function(String action, dynamic value) onCommand) async {
+    while (_isListening) {
+      if (_userId != null && !PocketBaseService.isOffline && PocketBaseService.enableRemoteControl) {
+        try {
+          final sessionData = await PocketBaseService().getSessionData();
+          if (sessionData != null && _isListening) {
+            _checkAndProcessCommand(sessionData, onCommand);
+          }
+        } catch (e) {
+          DebugLogService().error("⚠️ Remote Control Polling failed: $e");
+        }
       }
-    });
+      // Wait 1.5 seconds AFTER the previous request finishes before starting the next one.
+      await Future.delayed(const Duration(milliseconds: 1500));
+    }
   }
 
   final DateTime _serviceStartTime = DateTime.now();
@@ -320,7 +338,9 @@ class RemoteControlService {
   }
 
   void stopListening() {
+    _isListening = false;
     _pollingTimer?.cancel();
+    _pollingTimer = null;
     _heartbeatTimer?.cancel();
     PocketBaseService().unsubscribe();
   }

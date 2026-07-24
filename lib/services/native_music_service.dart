@@ -800,7 +800,7 @@ class NativeMusicService {
 
       var uri = isHttp ? Uri.parse(song.filePath) : Uri.file(song.filePath);
 
-      final String censoredUriStr = uri.toString().replaceAll(RegExp(r'(&|\?)key=[^&]*'), r'\1key=HIDDEN');
+      final String censoredUriStr = uri.toString().replaceAll(RegExp(r'(&|\?)key=[^&]*'), r'$1key=HIDDEN');
       debugPrint("🎵 [Native] final URI: $censoredUriStr");
 
       // Update preloaded tracking for crossfade consumption
@@ -1431,7 +1431,7 @@ class NativeMusicService {
 
       if (initialPosition != null) _isSeeking = true;
       try {
-        final String censoredUriStr = uri.toString().replaceAll(RegExp(r'(&|\?)key=[^&]*'), r'\1key=HIDDEN');
+        final String censoredUriStr = uri.toString().replaceAll(RegExp(r'(&|\?)key=[^&]*'), r'$1key=HIDDEN');
         DebugLogService().info("[Native] play() setting audio source URI: $censoredUriStr");
         await _player.setAudioSource(
           _createAudioSource(uri, song),
