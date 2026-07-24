@@ -49,11 +49,18 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   String? _lastFilePath;
   bool _isLoadingQuality = false;
 
-  Future<void> _fetchAudioInfo(String? filePath) async {
-    if (filePath == null) {
-      if (mounted) setState(() => _audioInfo = null);
+  Future<void> _fetchAudioInfo(SongModel? song) async {
+    if (song == null) {
+      if (mounted) {
+        setState(() {
+          _audioInfo = null;
+          _isLoadingQuality = false;
+        });
+      }
       return;
     }
+
+    final filePath = song.filePath;
 
     // Redundancy check: If we already have info OR are currently fetching for this path, stop.
     if (_lastFilePath == filePath && (_audioInfo != null || _isLoadingQuality)) {
@@ -61,20 +68,28 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     }
 
     _lastFilePath = filePath;
-    if (mounted) setState(() => _isLoadingQuality = true);
+    if (mounted) {
+      setState(() {
+        _isLoadingQuality = true;
+      });
+    }
 
     try {
-      // Ensure we pass a non-null String
       final info =
-          await AudioInfoService().getAudioInfo(filePath, isPriority: true);
+          await AudioInfoService().getAudioInfoForSong(song, isPriority: true);
       if (mounted && _lastFilePath == filePath) {
         setState(() {
           _audioInfo = info;
-          _isLoadingQuality = false;
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoadingQuality = false);
+      debugPrint("⚠️ [PlayerBar] Error fetching audio info: $e");
+    } finally {
+      if (mounted && _lastFilePath == filePath) {
+        setState(() {
+          _isLoadingQuality = false;
+        });
+      }
     }
   }
 
@@ -142,36 +157,36 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     final song = playerState.currentSong;
     final hasSong = song != null;
 
-    // 1. Handle Song Changes and Initial Load
-
-    if (song?.filePath != _lastFilePath) {
-      // Update tracker immediately to prevent loop
-      _lastFilePath = song?.filePath;
-
-      // Reset info and fetch new
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        // ALWAYS clear old quality info when file path changes to prevent stale badges
-        if (mounted) setState(() => _audioInfo = null);
-
-        // Fetch new info (either for new song or new path)
-        _fetchAudioInfo(song?.filePath);
-      });
-    }
+    // 1. Listen for Song Changes to fetch new audio info
+    ref.listen<SongModel?>(playerProvider.select((s) => s.currentSong), (prevSong, nextSong) {
+      if (prevSong?.filePath != nextSong?.filePath ||
+          prevSong?.title != nextSong?.title ||
+          prevSong?.artist != nextSong?.artist) {
+        if (mounted) {
+          setState(() {
+            _audioInfo = null;
+          });
+        }
+        if (nextSong != null) {
+          _fetchAudioInfo(nextSong);
+        }
+      }
+    });
 
     // 2. Listen for buffering completion (when file is fully downloaded/ready)
     // This allows updating the badge from "Unknown" (or nothing) to actual quality once file exists
     ref.listen(playerProvider.select((s) => s.isBuffering), (prev, next) {
       if (prev == true && next == false) {
         // Buffering finished, force re-fetch properly
-        _fetchAudioInfo(song?.filePath);
+        _fetchAudioInfo(song);
       }
     });
 
-    // Initial fetch if needed (e.g. on first load)
+    // 3. Initial fetch if needed (e.g. on first load/creation)
     if (hasSong && _lastFilePath != song.filePath) {
       _lastFilePath = song.filePath;
       // Use microtask to avoid setState during build
-      Future.microtask(() => _fetchAudioInfo(song.filePath));
+      Future.microtask(() => _fetchAudioInfo(song));
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
